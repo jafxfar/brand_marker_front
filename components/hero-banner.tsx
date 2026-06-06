@@ -51,7 +51,7 @@ const stats = [
   { value: "50 000+", label: "Исполнителей", Icon: Users },
   { value: "120+", label: "Категорий услуг", Icon: Layers },
   { value: "98%", label: "Довольных клиентов", Icon: ThumbsUp },
-  { value: "15 млрд ₽", label: "Сделок в месяц", Icon: TrendingUp },
+  { value: "15 млрд  TJS", label: "Сделок в месяц", Icon: TrendingUp },
 ]
 
 const sidebarItems = [

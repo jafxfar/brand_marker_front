@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'БизнесМаркет — B2B Маркетплейс услуг',
+  title: 'БрендМаркет — B2B Маркетплейс услуг',
   description: 'Крупнейшая российская B2B платформа для поиска и заказа бизнес-услуг. ИТ, маркетинг, юриспруденция, логистика, консалтинг и тысячи других услуг.',
   generator: 'v0.app',
   icons: {

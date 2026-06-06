@@ -37,8 +37,8 @@ const footerLinks = {
 }
 
 const cities = [
-  "Москва", "Санкт-Петербург", "Казань", "Екатеринбург",
-  "Новосибирск", "Краснодар", "Нижний Новгород", "Ростов-на-Дону",
+  "Душанбе", "Худжанд", "Казань", "Бохтар",
+  "Куляб", "Краснодар", "Нижний Новгород", "Ростов-на-Дону",
   "Уфа", "Самара", "Красноярск", "Воронеж",
 ]
 
@@ -81,7 +81,7 @@ export default function Footer() {
                 <Briefcase size={17} className="text-white" />
               </div>
               <div className="flex items-baseline gap-0.5">
-                <span className="text-xl font-black text-primary">Бизнес</span>
+                <span className="text-xl font-black text-primary">Бренд</span>
                 <span className="text-xl font-black text-white">Маркет</span>
               </div>
             </Link>
@@ -105,7 +105,7 @@ export default function Footer() {
                 <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <MapPin size={13} />
                 </div>
-                <span>125009, Москва,<br />ул. Тверская, 22</span>
+                <span>125009, Худжанд,<br />ул. И. Сомони, 22</span>
               </div>
             </div>
 
@@ -164,7 +164,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-8 pt-6 border-t border-white/8 flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="text-xs text-white/30">
-            © 2024 БизнесМаркет. Все права защищены. ООО «БизнесМаркет», ИНН 7701234567
+            © 2024 БрендМаркет. Все права защищены. ООО «БрендМаркет», ИНН 7701234567
           </div>
           <div className="flex items-center gap-5 flex-wrap justify-center">
             <Link href="#" className="text-xs text-white/35 hover:text-primary transition-colors">Пользовательское соглашение</Link>
