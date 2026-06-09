@@ -1,9 +1,24 @@
+import type { Currency } from "@/types"
+
 export const formatPrice = (value: number): string =>
+  formatCurrency(value, "RUB")
+
+export const formatCurrency = (value: number, currency: Currency | string = "RUB"): string =>
   new Intl.NumberFormat("ru-RU", {
     style: "currency",
-    currency: "RUB",
+    currency,
     maximumFractionDigits: 0,
   }).format(value)
+
+export const formatIsoDate = (iso: string): string =>
+  new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(iso))
+
+export const formatRating = (value: number): string =>
+  value.toFixed(1)
 
 export const formatRelativeTime = (timestamp: number): string => {
   const diffMs = Date.now() - timestamp
@@ -14,4 +29,24 @@ export const formatRelativeTime = (timestamp: number): string => {
   if (hours < 24) return `${hours} ч назад`
   const days = Math.floor(hours / 24)
   return `${days} дн назад`
+}
+
+export const formatRelativeIso = (iso: string): string =>
+  formatRelativeTime(new Date(iso).getTime())
+
+export const formatRfqBudget = (
+  budgetType: string,
+  budgetFrom: number | null,
+  budgetTo: number | null,
+  currency: string,
+): string => {
+  if (budgetType === "open") return "Открытый бюджет"
+  if (budgetType === "fixed" && budgetFrom != null) {
+    return formatCurrency(budgetFrom, currency)
+  }
+  if (budgetType === "range" && budgetFrom != null && budgetTo != null) {
+    return `${formatCurrency(budgetFrom, currency)} – ${formatCurrency(budgetTo, currency)}`
+  }
+  if (budgetFrom != null) return formatCurrency(budgetFrom, currency)
+  return "Не указан"
 }

@@ -16,6 +16,14 @@ export const ITEM_ATTRIBUTE_VALUE_TYPES = [
 export type ItemAttributeValueType =
   (typeof ITEM_ATTRIBUTE_VALUE_TYPES)[number]
 
+export const PRICING_TYPES = ["fixed", "tiered", "hourly", "monthly"] as const
+
+export type PricingType = (typeof PRICING_TYPES)[number]
+
+export const ITEM_MEDIA_TYPES = ["image", "document", "video"] as const
+
+export type ItemMediaType = (typeof ITEM_MEDIA_TYPES)[number]
+
 export type Category = {
   id: number
   parent_id: number | null
@@ -30,6 +38,37 @@ export type ItemAttribute = {
   value: string
   value_type: ItemAttributeValueType
   sort_order: number
+}
+
+export type ItemPricingTier = {
+  min_qty: number
+  price: number
+}
+
+export type ItemPricing = {
+  id: number
+  item_id: number
+  pricing_type: PricingType
+  currency: string
+  fixed_price: number | null
+  hourly_rate: number | null
+  monthly_rate: number | null
+  tiers: ItemPricingTier[]
+}
+
+export type ItemMedia = {
+  id: number
+  item_id: number
+  file_name: string
+  file_url: string
+  media_type: ItemMediaType
+  sort_order: number
+}
+
+export type ItemStats = {
+  item_id: number
+  views: number
+  leads: number
 }
 
 export type Item = {
@@ -48,6 +87,12 @@ export type ItemWithRelations = Item & {
   attributes: ItemAttribute[]
 }
 
+export type CatalogItemWithRelations = ItemWithRelations & {
+  pricing: ItemPricing | null
+  media: ItemMedia[]
+  stats: ItemStats | null
+}
+
 export type ItemCreate = Omit<Item, "id" | "created_at"> & {
   status?: ItemStatus
 }
@@ -63,3 +108,20 @@ export type ItemAttributeCreate = Omit<ItemAttribute, "id">
 export type ItemAttributeUpdate = Partial<
   Omit<ItemAttributeCreate, "item_id">
 >
+
+export type ItemPricingCreate = Omit<ItemPricing, "id" | "item_id">
+
+export type ItemMediaCreate = Omit<ItemMedia, "id" | "item_id" | "sort_order"> & {
+  sort_order?: number
+}
+
+export type CatalogItemInput = {
+  type: CatalogItemType
+  category_id: number
+  title: string
+  description: string
+  status: ItemStatus
+  attributes: Array<Omit<ItemAttributeCreate, "item_id" | "sort_order"> & { sort_order?: number }>
+  media: ItemMediaCreate[]
+  pricing: ItemPricingCreate
+}

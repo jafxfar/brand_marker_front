@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Boxes, Inbox, Users, Crown, User,
-  Briefcase, Plus, type LucideIcon,
+  Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -16,7 +16,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/supplier", label: "Дашборд", Icon: LayoutDashboard },
-  { href: "/supplier/listings", label: "Товары и услуги", Icon: Boxes },
+  { href: "/supplier/contracts", label: "Контракты", Icon: FileCheck },
+  { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
+  { href: "/supplier/rfqs", label: "Маркетплейс RFQ", Icon: Inbox },
+  { href: "/supplier/proposals", label: "Мои предложения", Icon: Send },
+  { href: "/supplier/messages", label: "Сообщения", Icon: MessageSquare },
+  { href: "/supplier/catalog", label: "Каталог", Icon: Boxes },
   { href: "/supplier/orders", label: "Заказы", Icon: Inbox },
   { href: "/supplier/customers", label: "Заказчики", Icon: Users },
   { href: "/supplier/subscription", label: "Подписка", Icon: Crown },
@@ -48,7 +53,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
 
       <div className="p-4">
         <Link
-          href="/supplier/listings/new"
+          href="/supplier/catalog/new"
           onClick={onNavigate}
           className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors shadow-sm"
         >

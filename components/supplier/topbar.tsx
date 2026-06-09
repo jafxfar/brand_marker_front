@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import SupplierSidebar from "@/components/supplier/sidebar"
 import { useAuthStore } from "@/lib/store/auth-store"
+import { getUserDisplayName, getUserInitials } from "@/lib/auth-display"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 
@@ -73,11 +74,11 @@ export default function SupplierTopbar() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2.5 pl-1.5 pr-2 py-1.5 rounded-lg hover:bg-secondary transition-colors">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                {hydrated && user ? user.name.charAt(0).toUpperCase() : <User size={15} />}
+                {hydrated && user ? getUserInitials(user) : <User size={15} />}
               </div>
               <div className="hidden sm:flex flex-col leading-tight text-left">
                 <span className="text-xs font-semibold text-foreground max-w-[120px] truncate">
-                  {hydrated && user ? (user.company?.trim() || user.name) : "Гость"}
+                  {hydrated && user ? getUserDisplayName(user) : "Гость"}
                 </span>
                 <span className="text-[10px] text-muted-foreground">Поставщик</span>
               </div>

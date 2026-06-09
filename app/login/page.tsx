@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Briefcase, ShoppingBag, Store, ArrowRight, ShieldCheck } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
-import type { Role } from "@/types"
+import type { SessionRole } from "@/lib/store/auth-store"
 
 const schema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -17,7 +17,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-const roleCards: { role: Role; title: string; desc: string; Icon: typeof ShoppingBag }[] = [
+const roleCards: { role: SessionRole; title: string; desc: string; Icon: typeof ShoppingBag }[] = [
   {
     role: "customer",
     title: "Я заказчик",
@@ -36,7 +36,7 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const login = useAuthStore((s) => s.login)
-  const [role, setRole] = useState<Role>("customer")
+  const [role, setRole] = useState<SessionRole>("customer")
 
   const {
     register,
