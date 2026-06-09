@@ -61,7 +61,7 @@ export default function Header() {
               <span>Русский · TJS</span>
               <ChevronDown size={10} />
             </button>
-            <Link href="#" className="hover:text-orange-300 transition-colors font-medium">Стать исполнителем</Link>
+            <Link href="/login" className="hover:text-orange-300 transition-colors font-medium">Стать исполнителем</Link>
             <Link href="#" className="hover:text-orange-300 transition-colors">Помощь</Link>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function Header() {
               <Briefcase size={16} className="text-white" />
             </div>
             <div className="flex items-baseline gap-0.5">
-              <span className="text-xl font-black text-primary tracking-tight">Бизнес</span>
+              <span className="text-xl font-black text-primary tracking-tight">Бренд</span>
               <span className="text-xl font-black tracking-tight" style={{ color: "oklch(0.22 0.055 255)" }}>Маркет</span>
             </div>
           </Link>
@@ -140,7 +140,7 @@ export default function Header() {
             </button>
             <div className="h-8 w-px bg-border hidden lg:block mx-1" />
             <Link
-              href="#"
+              href="/login"
               className="hidden lg:flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-secondary transition-colors group"
             >
               <div className="w-8 h-8 rounded-full bg-secondary border-2 border-border flex items-center justify-center group-hover:border-primary transition-colors">
@@ -202,7 +202,7 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-b border-border shadow-xl">
           <div className="p-5 space-y-1">
-            <Link href="#" className="flex items-center gap-3 py-3 px-3 rounded-xl text-sm hover:bg-secondary hover:text-primary transition-colors">
+            <Link href="/login" className="flex items-center gap-3 py-3 px-3 rounded-xl text-sm hover:bg-secondary hover:text-primary transition-colors">
               <User size={17} /> Войти / Регистрация
             </Link>
             <Link href="#" className="flex items-center gap-3 py-3 px-3 rounded-xl text-sm hover:bg-secondary hover:text-primary transition-colors">
