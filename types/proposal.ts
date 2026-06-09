@@ -1,0 +1,55 @@
+export const CURRENCIES = ["RUB", "USD", "EUR", "KZT", "CNY"] as const
+
+export type Currency = (typeof CURRENCIES)[number]
+
+export const PROPOSAL_STATUSES = [
+  "submitted",
+  "viewed",
+  "shortlisted",
+  "accepted",
+  "rejected",
+  "withdrawn",
+] as const
+
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number]
+
+export type ProposalAttachment = {
+  id: number
+  proposal_id: number
+  file_name: string
+  file_url: string
+  file_type: string
+}
+
+export type Proposal = {
+  id: number
+  rfq_id: string
+  supplier_actor_id: number
+  price: number
+  currency: Currency
+  delivery_time: string | null
+  message: string | null
+  status: ProposalStatus
+  created_at: string
+}
+
+export type ProposalWithRelations = Proposal & {
+  attachment: ProposalAttachment | null
+}
+
+export type ProposalCreate = Omit<
+  Proposal,
+  "id" | "status" | "created_at"
+> & {
+  status?: ProposalStatus
+}
+
+export type ProposalUpdate = Partial<
+  Omit<Proposal, "id" | "rfq_id" | "supplier_actor_id" | "created_at">
+>
+
+export type ProposalAttachmentCreate = Omit<ProposalAttachment, "id">
+
+export type ProposalAttachmentUpdate = Partial<
+  Omit<ProposalAttachmentCreate, "proposal_id">
+>

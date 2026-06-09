@@ -58,7 +58,7 @@ export default function Header() {
           <div className="flex items-center gap-5">
             <button className="flex items-center gap-1.5 hover:text-orange-300 transition-colors">
               <Globe size={12} />
-              <span>Русский · ₽</span>
+              <span>Русский · TJS</span>
               <ChevronDown size={10} />
             </button>
             <Link href="#" className="hover:text-orange-300 transition-colors font-medium">Стать исполнителем</Link>
