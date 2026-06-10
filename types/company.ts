@@ -1,4 +1,8 @@
-import type { UserPublic } from "./user"
+import type { CompanyRole, UserPublic } from "./user"
+
+export const ACTOR_TYPES = ["buyer", "supplier"] as const
+
+export type ActorType = (typeof ACTOR_TYPES)[number]
 
 export const VERIFICATION_STATUSES = [
   "pending",
@@ -45,6 +49,8 @@ export type CompanyUser = {
   id: number
   company_id: number
   user_id: number
+  role: CompanyRole
+  email?: string
 }
 
 export type Review = {
@@ -60,6 +66,7 @@ export type Review = {
 export type Company = {
   id: number
   title: string
+  actor_type: ActorType
   owner_id: number
   team_members: number[]
   legal_name: string | null
@@ -109,3 +116,56 @@ export type CompanyCertificateCreate = Omit<CompanyCertificate, "id">
 export type CompanyCertificateUpdate = Partial<CompanyCertificateCreate>
 
 export type ReviewCreate = Omit<Review, "id" | "created_at">
+
+export type CompanyWizardCertificate = {
+  title: string
+  issuer: string
+  issue_date: string
+  expiry_date: string
+  file_url: string
+}
+
+export type CompanyWizardTeamMember = {
+  email: string
+  role: CompanyRole
+}
+
+export type CompanyWizardInput = {
+  title: string
+  legal_name: string
+  tax_number: string
+  description: string
+  logo: string
+  country: string
+  city: string
+  address: string
+  website: string
+  founded_year: string
+  employees_count: string
+  annual_revenue_range: string
+  languages: string[]
+  industries: string[]
+  category_ids: number[]
+  certificates: CompanyWizardCertificate[]
+  team: CompanyWizardTeamMember[]
+}
+
+export const emptyCompanyWizardInput = (): CompanyWizardInput => ({
+  title: "",
+  legal_name: "",
+  tax_number: "",
+  description: "",
+  logo: "",
+  country: "",
+  city: "",
+  address: "",
+  website: "",
+  founded_year: "",
+  employees_count: "",
+  annual_revenue_range: "",
+  languages: [],
+  industries: [],
+  category_ids: [],
+  certificates: [],
+  team: [],
+})

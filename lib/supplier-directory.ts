@@ -1,8 +1,15 @@
 import type { CatalogItemWithRelations, Category, CompanyWithRelations } from "@/types"
 import { DEMO_BUYER_ACTOR_IDS } from "@/lib/mock/companies"
 
-export const isSupplierCompany = (company: CompanyWithRelations): boolean =>
-  !DEMO_BUYER_ACTOR_IDS.includes(company.id as (typeof DEMO_BUYER_ACTOR_IDS)[number])
+export const isSupplierCompany = (company: CompanyWithRelations): boolean => {
+  if (company.actor_type) return company.actor_type === "supplier"
+  return !DEMO_BUYER_ACTOR_IDS.includes(
+    company.id as (typeof DEMO_BUYER_ACTOR_IDS)[number],
+  )
+}
+
+export const isBuyerCompany = (company: CompanyWithRelations): boolean =>
+  !isSupplierCompany(company)
 
 export const getSupplierCategories = (
   items: CatalogItemWithRelations[],

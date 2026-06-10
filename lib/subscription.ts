@@ -19,6 +19,7 @@ export const plans: PlanMeta[] = [
       "Бейдж «Продвигается» на откликах",
       "Приоритет в ленте заказов",
       "До 10 активных позиций",
+      "До 2 компаний",
     ],
   },
   {
@@ -31,6 +32,7 @@ export const plans: PlanMeta[] = [
       "Топ-размещение профиля",
       "Расширенная аналитика",
       "До 50 активных позиций",
+      "До 5 компаний",
     ],
     highlighted: true,
   },
@@ -44,9 +46,29 @@ export const plans: PlanMeta[] = [
       "Закрепление в топе категории",
       "Персональный менеджер",
       "Безлимит позиций",
+      "Безлимит компаний",
     ],
   },
 ]
 
 export const planName = (plan: SubscriptionPlan): string =>
   plan === "none" ? "Нет подписки" : plans.find((p) => p.id === plan)?.name ?? plan
+
+export const companyLimits: Record<SubscriptionPlan, number | null> = {
+  none: 1,
+  start: 2,
+  pro: 5,
+  business: null,
+}
+
+export const getCompanyLimit = (plan: SubscriptionPlan): number | null =>
+  companyLimits[plan]
+
+export const canCreateMoreCompanies = (
+  ownedCount: number,
+  plan: SubscriptionPlan,
+): boolean => {
+  const limit = getCompanyLimit(plan)
+  if (limit === null) return true
+  return ownedCount < limit
+}

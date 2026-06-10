@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { User, Truck, Check, LogOut } from "lucide-react"
+import Link from "next/link"
+import { User, Truck, Check, LogOut, Building2, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -18,7 +19,6 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [city, setCity] = useState("")
-  const [company, setCompany] = useState("")
   const [hasDelivery, setHasDelivery] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -28,8 +28,7 @@ export default function ProfilePage() {
       setEmail(user.email)
       setPhone(user.phone ?? "")
       setCity(user.city ?? "")
-      setCompany(user.company ?? "")
-      setHasDelivery(user.hasDelivery)
+      setHasDelivery(user.hasDelivery ?? false)
     }
   }, [user])
 
@@ -39,7 +38,6 @@ export default function ProfilePage() {
       name: name.trim() || user?.name || "",
       phone: phone.trim() || undefined,
       city: city.trim() || undefined,
-      company: company.trim() || undefined,
       hasDelivery,
     })
     setSaved(true)
@@ -75,9 +73,24 @@ export default function ProfilePage() {
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Имя / контактное лицо</label>
               <input id="name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
             </div>
-            <div>
-              <label htmlFor="company" className="block text-sm font-medium text-foreground mb-1.5">Компания</label>
-              <input id="company" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="ООО «Ромашка»" className={inputClass} />
+            <div className="sm:col-span-2">
+              <Link
+                href="/customer/company"
+                className="flex items-center justify-between gap-3 p-4 rounded-xl border border-border hover:border-primary/40 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
+                    <Building2 size={16} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Мои компании</p>
+                    <p className="text-xs text-muted-foreground">
+                      Создание и управление профилем компании
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
+              </Link>
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">Email</label>

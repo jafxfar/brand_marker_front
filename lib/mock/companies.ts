@@ -7,6 +7,7 @@ export const mockCompanies: CompanyWithRelations[] = [
   {
     id: DEMO_SUPPLIER_ACTOR_ID,
     title: "ТехноСнаб",
+    actor_type: "supplier",
     owner_id: 1,
     team_members: [1],
     legal_name: "ООО «ТехноСнаб»",
@@ -81,6 +82,7 @@ export const mockCompanies: CompanyWithRelations[] = [
   {
     id: 201,
     title: "Альфа Ритейл",
+    actor_type: "buyer",
     owner_id: 2,
     team_members: [2],
     legal_name: "ООО «Альфа Ритейл»",
@@ -105,6 +107,7 @@ export const mockCompanies: CompanyWithRelations[] = [
   {
     id: 202,
     title: "СтройГрад",
+    actor_type: "buyer",
     owner_id: 3,
     team_members: [3],
     legal_name: "АО «СтройГрад»",
@@ -129,6 +132,7 @@ export const mockCompanies: CompanyWithRelations[] = [
   {
     id: 102,
     title: "СерверПро",
+    actor_type: "supplier",
     owner_id: 5,
     team_members: [5],
     legal_name: "ООО «СерверПро»",
@@ -159,6 +163,7 @@ export const mockCompanies: CompanyWithRelations[] = [
   {
     id: 103,
     title: "КодМастер",
+    actor_type: "supplier",
     owner_id: 6,
     team_members: [6],
     legal_name: "ООО «КодМастер»",
@@ -189,6 +194,7 @@ export const mockCompanies: CompanyWithRelations[] = [
   {
     id: 203,
     title: "МедЛаб",
+    actor_type: "buyer",
     owner_id: 4,
     team_members: [4],
     legal_name: "ООО «МедЛаб»",

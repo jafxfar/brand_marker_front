@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Boxes, Inbox, Users, Crown, User,
-  Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, type LucideIcon,
+  Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, Building2, type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -24,6 +24,7 @@ const navItems: NavItem[] = [
   { href: "/supplier/catalog", label: "Каталог", Icon: Boxes },
   { href: "/supplier/orders", label: "Заказы", Icon: Inbox },
   { href: "/supplier/customers", label: "Заказчики", Icon: Users },
+  { href: "/supplier/company", label: "Мои компании", Icon: Building2 },
   { href: "/supplier/subscription", label: "Подписка", Icon: Crown },
   { href: "/supplier/profile", label: "Профиль", Icon: User },
 ]
