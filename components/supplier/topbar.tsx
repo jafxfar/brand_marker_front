@@ -64,7 +64,7 @@ export default function SupplierTopbar() {
         >
           <Bell size={20} className="text-foreground" />
           {hydrated && unread > 0 && (
-            <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
               {unread}
             </span>
           )}
@@ -73,7 +73,7 @@ export default function SupplierTopbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2.5 pl-1.5 pr-2 py-1.5 rounded-lg hover:bg-secondary transition-colors">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
                 {hydrated && user ? getUserInitials(user) : <User size={15} />}
               </div>
               <div className="hidden sm:flex flex-col leading-tight text-left">

@@ -42,8 +42,8 @@ const slides = [
     subtitle: "Грузоперевозки, таможня, склад — надёжная логистика по всей стране",
     cta: "Заказать перевозку",
     ctaSecondary: "Рассчитать стоимость",
-    bg: "oklch(0.54 0.22 38)",
-    bgTo: "oklch(0.66 0.22 43)",
+    bg: "oklch(0.38 0.14 128)",
+    bgTo: "oklch(0.55 0.20 128)",
   },
 ]
 
@@ -139,7 +139,7 @@ export default function HeroBanner() {
               <div className="flex items-center gap-3 flex-wrap">
                 <Link
                   href="#"
-                  className="bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white font-bold px-6 py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg hover:-translate-y-px"
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground font-bold px-6 py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg hover:-translate-y-px"
                 >
                   {slide.cta}
                 </Link>

@@ -59,9 +59,9 @@ export const mockProposals: Proposal[] = [
     price: 750000,
     currency: "RUB",
     delivery_time: "6 недель",
-    message: "Отозвали предложение — нет свободных ресурсов.",
-    status: "withdrawn",
-    created_at: daysAgo(15),
+    message: "Готовы провести аудит по методологии OWASP и PCI DSS.",
+    status: "submitted",
+    created_at: daysAgo(0),
   },
   {
     id: 5003,

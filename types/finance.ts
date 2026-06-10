@@ -69,3 +69,17 @@ export type SupplierBalanceSummary = {
 export type WithdrawalCreate = Omit<Withdrawal, "id" | "created_at" | "completed_at" | "status"> & {
   status?: WithdrawalStatus
 }
+
+export type BuyerInvoice = Invoice & {
+  buyer_actor_id: number
+}
+
+export type BuyerRefund = {
+  id: number
+  buyer_actor_id: number
+  contract_id: number
+  amount: number
+  currency: Currency
+  reason: string
+  created_at: string
+}

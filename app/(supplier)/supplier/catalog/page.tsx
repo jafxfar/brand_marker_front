@@ -49,7 +49,7 @@ export default function SupplierCatalogPage() {
         </div>
         <Link
           href="/supplier/catalog/new"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors"
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
           <Plus size={17} /> Создать позицию
         </Link>
@@ -64,7 +64,7 @@ export default function SupplierCatalogPage() {
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
               tab === t.value
-                ? "bg-primary text-white"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -88,7 +88,7 @@ export default function SupplierCatalogPage() {
           </p>
           <Link
             href="/supplier/catalog/new"
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-white text-sm font-bold"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold"
           >
             <Plus size={15} /> Создать позицию
           </Link>

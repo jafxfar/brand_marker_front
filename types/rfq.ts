@@ -47,6 +47,7 @@ type RfqBase = {
   deadline: string
   visibility: RfqVisibility
   status: RfqStatus
+  invited_supplier_ids?: number[]
   created_at: string
   updated_at: string
 }
@@ -79,6 +80,7 @@ type RfqBaseCreate = Omit<
   "id" | "created_at" | "updated_at"
 > & {
   status?: RfqStatus
+  invited_supplier_ids?: number[]
 }
 
 export type ProductRfqCreate = RfqBaseCreate & {

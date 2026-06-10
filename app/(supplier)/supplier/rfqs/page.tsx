@@ -78,7 +78,7 @@ export default function SupplierRfqsPage() {
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
               typeFilter === value
-                ? "bg-primary text-white"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

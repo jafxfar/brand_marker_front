@@ -49,20 +49,20 @@ export default function Header() {
       <div style={{ backgroundColor: "oklch(0.22 0.055 255)" }} className="text-white text-xs">
         <div className="max-w-[1440px] mx-auto px-6 flex items-center justify-between h-9">
           <div className="flex items-center gap-5">
-            <Link href="#" className="hover:text-orange-300 transition-colors">Проверенные исполнители</Link>
-            <Link href="#" className="hover:text-orange-300 transition-colors">Условия размещения</Link>
-            <Link href="#" className="hover:text-orange-300 transition-colors flex items-center gap-1">
+            <Link href="#" className="hover:text-primary transition-colors">Проверенные исполнители</Link>
+            <Link href="#" className="hover:text-primary transition-colors">Условия размещения</Link>
+            <Link href="#" className="hover:text-primary transition-colors flex items-center gap-1">
               <Phone size={11} /> 8 800 555-35-35
             </Link>
           </div>
           <div className="flex items-center gap-5">
-            <button className="flex items-center gap-1.5 hover:text-orange-300 transition-colors">
+            <button className="flex items-center gap-1.5 hover:text-primary transition-colors">
               <Globe size={12} />
               <span>Русский · TJS</span>
               <ChevronDown size={10} />
             </button>
-            <Link href="/login" className="hover:text-orange-300 transition-colors font-medium">Стать исполнителем</Link>
-            <Link href="#" className="hover:text-orange-300 transition-colors">Помощь</Link>
+            <Link href="/login" className="hover:text-primary transition-colors font-medium">Стать исполнителем</Link>
+            <Link href="#" className="hover:text-primary transition-colors">Помощь</Link>
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center gap-2 mr-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-              <Briefcase size={16} className="text-white" />
+              <Briefcase size={16} className="text-primary-foreground" />
             </div>
             <div className="flex items-baseline gap-0.5">
               <span className="text-xl font-black text-primary tracking-tight">Бренд</span>
@@ -97,7 +97,7 @@ export default function Header() {
                 onFocus={() => setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               />
-              <button className="bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white px-5 h-11 transition-colors flex items-center gap-2 font-semibold text-sm">
+              <button className="bg-primary hover:bg-primary-dark text-primary-foreground px-5 h-11 transition-colors flex items-center gap-2 font-semibold text-sm">
                 <Search size={16} />
                 <span className="hidden md:block">Найти</span>
               </button>
@@ -132,7 +132,7 @@ export default function Header() {
             <button className="hidden lg:flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg text-foreground hover:bg-secondary hover:text-primary transition-all group relative">
               <MessageSquare size={20} className="group-hover:text-primary transition-colors" />
               <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">Сообщения</span>
-              <span className="absolute top-1.5 right-2.5 w-4 h-4 bg-primary rounded-full text-[9px] text-white flex items-center justify-center font-bold">3</span>
+              <span className="absolute top-1.5 right-2.5 w-4 h-4 bg-primary rounded-full text-[9px] text-primary-foreground flex items-center justify-center font-bold">3</span>
             </button>
             <button className="hidden lg:flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg text-foreground hover:bg-secondary hover:text-primary transition-all group">
               <ShoppingBag size={20} className="group-hover:text-primary transition-colors" />

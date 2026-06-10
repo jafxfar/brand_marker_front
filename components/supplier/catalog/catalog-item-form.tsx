@@ -278,7 +278,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
         <button
           type="button"
           onClick={() => handleSubmit("active")}
-          className="h-11 px-5 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors"
+          className="h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
           Опубликовать
         </button>

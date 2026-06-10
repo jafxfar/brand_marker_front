@@ -41,7 +41,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
         className="flex items-center gap-2.5 h-[68px] px-5 border-b border-border flex-shrink-0"
       >
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-          <Briefcase size={16} className="text-white" />
+          <Briefcase size={16} className="text-primary-foreground" />
         </div>
         <div className="flex items-baseline gap-0.5">
           <span className="text-lg font-black text-primary tracking-tight">Бизнес</span>
@@ -55,7 +55,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
         <Link
           href="/supplier/catalog/new"
           onClick={onNavigate}
-          className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors shadow-sm"
         >
           <Plus size={17} />
           Добавить позицию

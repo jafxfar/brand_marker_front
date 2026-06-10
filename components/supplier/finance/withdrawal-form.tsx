@@ -121,7 +121,7 @@ export const WithdrawalForm = ({
         type="button"
         onClick={handleSubmit}
         disabled={balances.available <= 0}
-        className="w-full h-11 rounded-xl bg-primary text-white text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
+        className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
       >
         <ArrowDownToLine size={16} />
         Вывести средства

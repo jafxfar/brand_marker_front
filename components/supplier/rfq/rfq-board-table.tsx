@@ -73,7 +73,7 @@ export const RfqBoardTable = ({
                         e.stopPropagation()
                         onSubmitProposal(rfq.id)
                       }}
-                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-xs font-bold transition-colors"
+                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-xs font-bold transition-colors"
                     >
                       <Send size={13} /> Отправить предложение
                     </button>
@@ -124,7 +124,7 @@ export const RfqBoardTable = ({
               <button
                 type="button"
                 onClick={() => onSubmitProposal(rfq.id)}
-                className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-primary text-white text-sm font-bold"
+                className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold"
               >
                 <Send size={14} /> Отправить предложение
               </button>

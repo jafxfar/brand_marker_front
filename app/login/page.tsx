@@ -83,7 +83,7 @@ function LoginContent() {
             безопасно через эскроу — деньги переводятся только после приёмки работы.
           </p>
           <div className="flex items-center gap-2.5 text-sm text-white/80">
-            <ShieldCheck size={18} className="text-orange-300" />
+            <ShieldCheck size={18} className="text-primary" />
             Гарантия сделки и защита платежей
           </div>
         </div>
@@ -124,7 +124,7 @@ function LoginContent() {
                 >
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2.5 ${
-                      active ? "bg-primary text-white" : "bg-secondary text-primary"
+                      active ? "bg-primary text-primary-foreground" : "bg-secondary text-primary"
                     }`}
                   >
                     <Icon size={18} />
@@ -174,7 +174,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
               Войти как {role === "customer" ? "заказчик" : "поставщик"}
               <ArrowRight size={16} />

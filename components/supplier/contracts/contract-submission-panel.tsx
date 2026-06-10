@@ -122,7 +122,7 @@ export const ContractSubmissionPanel = ({
             type="button"
             onClick={handleSubmit}
             disabled={!note.trim()}
-            className="h-10 px-5 rounded-xl bg-primary text-white text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             Отправить на проверку
           </button>

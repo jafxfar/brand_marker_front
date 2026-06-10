@@ -96,7 +96,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
                   active ? "border-primary bg-secondary shadow-sm" : "border-border bg-white hover:border-primary/40",
                 )}
               >
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-2.5", active ? "bg-primary text-white" : "bg-secondary text-primary")}>
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-2.5", active ? "bg-primary text-primary-foreground" : "bg-secondary text-primary")}>
                   <Icon size={18} />
                 </div>
                 <div className="text-sm font-bold text-foreground">{t}</div>
@@ -167,7 +167,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
           <button type="button" onClick={() => router.push("/supplier/listings")} className="h-11 px-5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors flex items-center">
             Отмена
           </button>
-          <button type="submit" className="h-11 px-6 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors flex items-center gap-2">
+          <button type="submit" className="h-11 px-6 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2">
             <Check size={16} /> {submitLabel}
           </button>
         </div>

@@ -73,7 +73,7 @@ export const ContractMessagesPanel = ({
           type="button"
           onClick={handleSubmit}
           disabled={!text.trim()}
-          className="h-auto px-4 rounded-xl bg-primary text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+          className="h-auto px-4 rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
           aria-label="Отправить сообщение"
         >
           <Send size={18} />

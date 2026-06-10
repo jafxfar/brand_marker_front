@@ -47,7 +47,7 @@ export const RfqSubmitProposalCard = ({
         <button
           type="button"
           onClick={onSubmit}
-          className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors"
+          className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
           <Send size={16} /> Отправить предложение
         </button>

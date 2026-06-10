@@ -78,7 +78,7 @@ export default function SupplierProposalsPage() {
             className={cn(
               "px-3 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap",
               tab === t.value
-                ? "bg-primary text-white"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -98,7 +98,7 @@ export default function SupplierProposalsPage() {
           <p className="text-xs text-muted-foreground mt-1 mb-4">{emptyText[tab]}</p>
           <Link
             href="/supplier/rfqs"
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-white text-sm font-bold hover:bg-[oklch(0.58_0.22_38)] transition-colors"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
           >
             Перейти к маркетплейсу RFQ <ArrowRight size={15} />
           </Link>

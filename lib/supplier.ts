@@ -1,7 +1,7 @@
 import type { Supplier, User } from "@/types"
 
 const palette = [
-  "bg-blue-600", "bg-orange-500", "bg-violet-600", "bg-emerald-600",
+  "bg-blue-600", "bg-primary", "bg-violet-600", "bg-emerald-600",
   "bg-amber-600", "bg-teal-600", "bg-pink-500", "bg-indigo-600",
 ]
 

@@ -52,7 +52,7 @@ export default function CartPage() {
           </p>
           <Link
             href="/customer/suppliers"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-[oklch(0.58_0.22_38)] transition-colors"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-dark transition-colors"
           >
             Перейти в каталог
           </Link>
@@ -166,7 +166,7 @@ export default function CartPage() {
               onClick={() => setPayOpen(true)}
               className={cn(
                 "w-full h-11 rounded-xl text-white text-sm font-bold transition-colors flex items-center justify-center gap-2",
-                "bg-primary hover:bg-[oklch(0.58_0.22_38)]",
+                "bg-primary hover:bg-primary-dark",
               )}
             >
               <ShieldCheck size={16} /> Оформить через эскроу

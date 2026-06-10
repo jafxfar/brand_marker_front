@@ -169,7 +169,7 @@ export const ProposalDialog = ({
           <button
             type="button"
             onClick={handleConfirm}
-            className="h-10 px-5 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors flex items-center gap-2"
+            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2"
           >
             <Send size={15} /> Отправить предложение
           </button>

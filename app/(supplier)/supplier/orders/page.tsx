@@ -64,7 +64,7 @@ export default function SupplierOrdersPage() {
             onClick={() => setTab(t.value)}
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
-              tab === t.value ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground",
+              tab === t.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t.label}

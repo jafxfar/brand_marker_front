@@ -2,187 +2,139 @@
 
 import Link from "next/link"
 import {
-  FileText, Clock, Users, Wallet, Plus, Store, ArrowRight,
-  ShoppingCart, type LucideIcon,
+  FileText, Inbox, FileCheck, Wallet, AlertTriangle, MessageSquare, Plus, ArrowRight,
 } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
-import { useOrdersStore } from "@/lib/store/orders-store"
-import { useCartStore } from "@/lib/store/cart-store"
+import { useRfqsStore } from "@/lib/store/rfqs-store"
+import { useProposalsStore } from "@/lib/store/proposals-store"
+import { useContractsStore } from "@/lib/store/contracts-store"
+import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { formatPrice, formatRelativeTime } from "@/lib/format"
-import { orderStatusMeta } from "@/lib/order-display"
-
-function StatCard({
-  Icon, label, value, accent,
-}: {
-  Icon: LucideIcon; label: string; value: string; accent: string
-}) {
-  return (
-    <div className="bg-white border border-border rounded-2xl p-5">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${accent}`}>
-        <Icon size={18} />
-      </div>
-      <div className="text-2xl font-black text-foreground leading-none">{value}</div>
-      <div className="text-xs text-muted-foreground mt-1.5">{label}</div>
-    </div>
-  )
-}
+import { getActorId, getUserDisplayName } from "@/lib/auth-display"
+import { formatPrice } from "@/lib/format"
+import { StatCard } from "@/components/supplier/dashboard/stat-card"
+import { ActiveRfqsPanel } from "@/components/cabinet/dashboard/active-rfqs-panel"
+import { IncomingProposalsPanel } from "@/components/cabinet/dashboard/incoming-proposals-panel"
+import { BuyerActiveContractsPanel } from "@/components/cabinet/dashboard/buyer-active-contracts-panel"
+import { BuyerPendingPaymentsPanel } from "@/components/cabinet/dashboard/buyer-pending-payments-panel"
+import { BuyerDisputesPanel } from "@/components/cabinet/dashboard/buyer-disputes-panel"
+import { BuyerMessagesPanel } from "@/components/cabinet/dashboard/buyer-messages-panel"
 
 export default function CustomerDashboard() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
-  const orders = useOrdersStore((s) => s.orders)
-  const cartTotal = useCartStore((s) => s.items.reduce((sum, i) => sum + i.price * i.qty, 0))
+  const actorId = getActorId(user)
 
-  const activeOrders = orders.filter((o) =>
-    ["published", "in_progress", "disputed"].includes(o.status),
-  )
-  const totalOffers = orders.reduce((sum, o) => sum + o.offers.length, 0)
-  const inEscrow = orders.reduce(
-    (sum, o) => (o.payment?.escrow === "held" ? sum + (o.payment.amount - o.payment.releasedAmount) : sum),
-    0,
-  )
-  const recentOrders = orders.slice(0, 5)
+  const getActiveRfqsByBuyer = useRfqsStore((s) => s.getActiveRfqsByBuyer)
+  const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
+  const getIncomingProposalsForBuyer = useProposalsStore((s) => s.getIncomingProposalsForBuyer)
+  const getNewProposalsCountForBuyer = useProposalsStore((s) => s.getNewProposalsCountForBuyer)
+  const getActiveContractsForBuyer = useContractsStore((s) => s.getActiveContractsForBuyer)
+  const getPendingPaymentsForBuyer = useContractsStore((s) => s.getPendingPaymentsForBuyer)
+  const getPendingMilestonesForBuyer = useContractsStore((s) => s.getPendingMilestonesForBuyer)
+  const getDisputesForBuyer = useContractsStore((s) => s.getDisputesForBuyer)
+  const getIncomingMessagesForBuyer = useContractsStore((s) => s.getIncomingMessagesForBuyer)
+  const getUnreadMessageCountForBuyer = useContractsStore((s) => s.getUnreadMessageCountForBuyer)
+  const getCompany = useCompaniesStore((s) => s.getCompany)
+
+  const getRfqTitle = (rfqId: string) => getRfqWithRelations(rfqId)?.title ?? "RFQ"
+  const getRfqActorId = (rfqId: string) => getRfqWithRelations(rfqId)?.actor_id
+  const getSupplierName = (supplierId: number) =>
+    getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
+
+  const activeRfqs = hydrated ? getActiveRfqsByBuyer(actorId) : []
+  const incomingProposals = hydrated
+    ? getIncomingProposalsForBuyer(actorId, getRfqTitle, getRfqActorId)
+    : []
+  const newProposalsCount = hydrated
+    ? getNewProposalsCountForBuyer(actorId, getRfqActorId)
+    : 0
+  const activeContracts = hydrated ? getActiveContractsForBuyer(actorId) : []
+  const pendingAmount = hydrated ? getPendingPaymentsForBuyer(actorId) : 0
+  const pendingMilestones = hydrated ? getPendingMilestonesForBuyer(actorId) : []
+  const disputes = hydrated ? getDisputesForBuyer(actorId) : []
+  const messages = hydrated ? getIncomingMessagesForBuyer(actorId, getSupplierName) : []
+  const unreadCount = hydrated ? getUnreadMessageCountForBuyer(actorId) : 0
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
-      {/* Greeting */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-foreground">
-            Здравствуйте{hydrated && user ? `, ${user.name}` : ""}!
+            Здравствуйте{hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Обзор ваших заказов и активности на платформе
+            Обзор RFQ, предложений и контрактов
           </p>
         </div>
         <Link
-          href="/customer/orders/new"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors"
+          href="/customer/rfqs/new"
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
-          <Plus size={17} /> Создать заказ
+          <Plus size={17} /> Создать RFQ
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           Icon={FileText}
-          label="Всего заказов"
-          value={hydrated ? String(orders.length) : "—"}
+          label="Активные RFQ"
+          value={hydrated ? String(activeRfqs.length) : "—"}
           accent="bg-blue-100 text-blue-600"
         />
         <StatCard
-          Icon={Clock}
-          label="Активных заказов"
-          value={hydrated ? String(activeOrders.length) : "—"}
-          accent="bg-amber-100 text-amber-600"
-        />
-        <StatCard
-          Icon={Users}
-          label="Получено откликов"
-          value={hydrated ? String(totalOffers) : "—"}
+          Icon={Inbox}
+          label="Входящие предложения"
+          value={hydrated ? String(newProposalsCount) : "—"}
           accent="bg-emerald-100 text-emerald-600"
         />
         <StatCard
-          Icon={Wallet}
-          label="В эскроу"
-          value={hydrated ? formatPrice(inEscrow) : "—"}
+          Icon={FileCheck}
+          label="Активные контракты"
+          value={hydrated ? String(activeContracts.length) : "—"}
           accent="bg-violet-100 text-violet-600"
+        />
+        <StatCard
+          Icon={Wallet}
+          label="Ожидают оплаты"
+          value={hydrated ? formatPrice(pendingAmount) : "—"}
+          accent="bg-secondary text-secondary-foreground"
+        />
+        <StatCard
+          Icon={AlertTriangle}
+          label="Споры"
+          value={hydrated ? String(disputes.length) : "—"}
+          accent="bg-red-100 text-red-600"
+        />
+        <StatCard
+          Icon={MessageSquare}
+          label="Сообщения"
+          value={hydrated ? String(unreadCount) : "—"}
+          subValue={hydrated && unreadCount > 0 ? "непрочитанных" : undefined}
+          accent="bg-amber-100 text-amber-600"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent orders */}
-        <div className="lg:col-span-2 bg-white border border-border rounded-2xl">
-          <div className="flex items-center justify-between p-5 border-b border-border">
-            <h2 className="text-base font-bold text-foreground">Последние заказы</h2>
-            <Link href="/customer/orders" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
-              Все заказы <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          {!hydrated || recentOrders.length === 0 ? (
-            <div className="p-10 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                <FileText size={22} className="text-primary" />
-              </div>
-              <p className="text-sm font-semibold text-foreground">Заказов пока нет</p>
-              <p className="text-xs text-muted-foreground mt-1 mb-4">
-                Создайте первый заказ — товар или услугу
-              </p>
-              <Link
-                href="/customer/orders/new"
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-[oklch(0.58_0.22_38)] transition-colors"
-              >
-                <Plus size={15} /> Создать заказ
-              </Link>
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {recentOrders.map((o) => {
-                const meta = orderStatusMeta[o.status]
-                return (
-                  <Link
-                    key={o.id}
-                    href={`/customer/orders/${o.id}`}
-                    className="flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-                      {o.kind === "product" ? (
-                        <ShoppingCart size={17} className="text-primary" />
-                      ) : (
-                        <FileText size={17} className="text-primary" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">{o.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {o.category} · {formatRelativeTime(o.createdAt)}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-sm font-bold text-primary">{formatPrice(o.budget)}</div>
-                      <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${meta.className}`}>
-                        {meta.label}
-                      </span>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
+        <div className="lg:col-span-2 space-y-6">
+          <ActiveRfqsPanel rfqs={activeRfqs} hydrated={hydrated} />
+          <IncomingProposalsPanel items={incomingProposals} hydrated={hydrated} />
+          <BuyerActiveContractsPanel
+            contracts={activeContracts}
+            hydrated={hydrated}
+            getSupplierName={getSupplierName}
+          />
         </div>
 
-        {/* Quick actions */}
         <div className="space-y-4">
+          <BuyerPendingPaymentsPanel milestones={pendingMilestones} hydrated={hydrated} />
+          <BuyerDisputesPanel contracts={disputes} hydrated={hydrated} />
+          <BuyerMessagesPanel messages={messages} hydrated={hydrated} />
           <Link
             href="/customer/suppliers"
-            className="block bg-white border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-md transition-all group"
+            className="block bg-white border border-border rounded-2xl p-5 hover:border-primary/30 transition-all text-sm font-bold text-foreground hover:text-primary"
           >
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mb-3">
-              <Store size={18} className="text-primary" />
-            </div>
-            <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-              Каталог поставщиков
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Найдите проверенных поставщиков товаров и услуг
-            </p>
-          </Link>
-
-          <Link
-            href="/customer/cart"
-            className="block rounded-2xl p-5 text-white hover:-translate-y-px transition-all"
-            style={{ background: "linear-gradient(135deg, oklch(0.22 0.055 255) 0%, oklch(0.3 0.09 255) 100%)" }}
-          >
-            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center mb-3">
-              <ShoppingCart size={18} className="text-white" />
-            </div>
-            <p className="text-sm font-bold">Корзина</p>
-            <p className="text-xs text-white/70 mt-1">
-              {hydrated && cartTotal > 0 ? `Сумма: ${formatPrice(cartTotal)}` : "Корзина пуста"}
-            </p>
+            Каталог поставщиков <ArrowRight size={14} className="inline ml-1" />
           </Link>
         </div>
       </div>

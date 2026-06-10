@@ -14,7 +14,7 @@ import {
 
 const mainCategories = [
   { Icon: Monitor,    label: "ИТ и разработка",         count: "8 420", color: "bg-blue-50 hover:bg-blue-100/80",     iconBg: "bg-blue-100",    iconColor: "text-blue-600" },
-  { Icon: Megaphone,  label: "Маркетинг и реклама",     count: "5 310", color: "bg-orange-50 hover:bg-orange-100/80", iconBg: "bg-orange-100",  iconColor: "text-orange-500" },
+  { Icon: Megaphone,  label: "Маркетинг и реклама",     count: "5 310", color: "bg-primary-light hover:bg-secondary", iconBg: "bg-secondary",  iconColor: "text-secondary-foreground" },
   { Icon: Scale,      label: "Юридические услуги",      count: "3 780", color: "bg-violet-50 hover:bg-violet-100/80", iconBg: "bg-violet-100",  iconColor: "text-violet-600" },
   { Icon: BarChart2,  label: "Финансы и аудит",         count: "2 960", color: "bg-emerald-50 hover:bg-emerald-100/80", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
   { Icon: Truck,      label: "Логистика и склад",       count: "4 150", color: "bg-amber-50 hover:bg-amber-100/80",  iconBg: "bg-amber-100",   iconColor: "text-amber-600" },
@@ -100,7 +100,7 @@ const featuredServices: Service[] = [
     price: "от 80 000  TJS",
     tags: ["React", "Next.js", "SEO"],
     verified: true,
-    badge: { label: "Топ исполнитель", className: "bg-primary text-white" },
+    badge: { label: "Топ исполнитель", className: "bg-primary text-primary-foreground" },
     Icon: Monitor,
     iconBg: "bg-blue-50",
     iconColor: "text-blue-600",
@@ -168,10 +168,10 @@ const featuredServices: Service[] = [
     price: "от 8 000  TJS",
     tags: ["FTL", "LTL", "Рефрижератор"],
     verified: true,
-    badge: { label: "Быстрая доставка", className: "bg-orange-500 text-white" },
+    badge: { label: "Быстрая доставка", className: "bg-primary text-primary-foreground" },
     Icon: Truck,
-    iconBg: "bg-orange-50",
-    iconColor: "text-orange-500",
+    iconBg: "bg-primary-light",
+    iconColor: "text-secondary-foreground",
     saves: 156,
     views: "4.2к",
   },
@@ -402,7 +402,7 @@ const topProviders = [
     clients: "180+",
     years: "8 лет",
     initials: "РМ",
-    color: "bg-orange-500",
+    color: "bg-primary",
     specialties: ["SEO", "Контекстная реклама", "SMM"],
     verified: true,
     Icon: Megaphone,
@@ -591,8 +591,8 @@ export function TrustBanners() {
             </div>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-3">
-                <BadgeCheck size={15} className="text-orange-300" />
-                <span className="text-orange-300 text-xs font-bold uppercase tracking-widest">Для заказчиков</span>
+                <BadgeCheck size={15} className="text-primary" />
+                <span className="text-primary text-xs font-bold uppercase tracking-widest">Для заказчиков</span>
               </div>
               <h3 className="text-white text-xl font-black leading-tight mb-1.5">
                 Найдите исполнителя<br />за 24 часа
@@ -602,7 +602,7 @@ export function TrustBanners() {
               </p>
               <Link
                 href="/login?redirect=/customer/orders/new"
-                className="inline-flex items-center gap-2 bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg hover:-translate-y-px"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg hover:-translate-y-px"
               >
                 Разместить заказ <ChevronRight size={15} />
               </Link>

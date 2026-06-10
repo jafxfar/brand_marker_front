@@ -40,7 +40,9 @@ export default function SupplierDashboard() {
     getCompany(buyerId)?.title ?? `Заказчик #${buyerId}`
 
   const activeContracts = hydrated ? getActiveContracts(actorId) : []
-  const newRfqs = hydrated ? getNewRfqsForSupplier(actorId, hasProposal) : []
+  const newRfqs = hydrated
+    ? getNewRfqsForSupplier(actorId, (rfqId) => hasProposal(rfqId, actorId))
+    : []
   const revenue = hydrated ? getRevenue(actorId) : 0
   const pendingAmount = hydrated ? getPendingPaymentsAmount(actorId) : 0
   const pendingMilestones = hydrated ? getPendingMilestones(actorId) : []
@@ -67,7 +69,7 @@ export default function SupplierDashboard() {
         </div>
         <Link
           href="/supplier/rfqs"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors"
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
           Откликнуться на RFQ <ArrowRight size={17} />
         </Link>
@@ -103,7 +105,7 @@ export default function SupplierDashboard() {
           Icon={Wallet}
           label="Ожидают выплаты"
           value={hydrated ? formatPrice(pendingAmount) : "—"}
-          accent="bg-orange-100 text-orange-600"
+          accent="bg-secondary text-secondary-foreground"
         />
         <StatCard
           Icon={Star}

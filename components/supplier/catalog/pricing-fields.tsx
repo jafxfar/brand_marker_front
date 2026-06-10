@@ -54,7 +54,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             className={cn(
               "h-10 px-3 rounded-xl border text-xs font-semibold transition-colors",
               values.pricing_type === type
-                ? "bg-primary text-white border-primary"
+                ? "bg-primary text-primary-foreground border-primary"
                 : "border-border text-muted-foreground hover:text-foreground",
             )}
           >

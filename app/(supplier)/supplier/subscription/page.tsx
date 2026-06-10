@@ -48,7 +48,7 @@ export default function SubscriptionPage() {
       >
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center">
-            <Crown size={20} className="text-orange-300" />
+            <Crown size={20} className="text-primary" />
           </div>
           <div>
             <p className="text-sm font-bold">
@@ -84,7 +84,7 @@ export default function SubscriptionPage() {
               )}
             >
               {p.highlighted && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary text-white">
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground">
                   Популярный
                 </span>
               )}
@@ -110,7 +110,7 @@ export default function SubscriptionPage() {
                   current
                     ? "bg-secondary text-primary cursor-default"
                     : p.highlighted
-                      ? "bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white"
+                      ? "bg-primary hover:bg-primary-dark text-primary-foreground"
                       : "border border-primary text-primary hover:bg-secondary",
                 )}
               >

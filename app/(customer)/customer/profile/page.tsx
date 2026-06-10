@@ -105,7 +105,7 @@ export default function ProfilePage() {
               type="checkbox"
               checked={hasDelivery}
               onChange={(e) => setHasDelivery(e.target.checked)}
-              className="w-4 h-4 accent-[oklch(0.66_0.22_43)]"
+              className="w-4 h-4 accent-primary"
             />
             <Truck size={18} className="text-primary" />
             <div>
@@ -127,7 +127,7 @@ export default function ProfilePage() {
             type="submit"
             className={cn(
               "h-11 px-6 rounded-xl text-white text-sm font-bold transition-colors flex items-center gap-2",
-              saved ? "bg-emerald-600" : "bg-primary hover:bg-[oklch(0.58_0.22_38)]",
+              saved ? "bg-emerald-600" : "bg-primary hover:bg-primary-dark",
             )}
           >
             {saved ? (

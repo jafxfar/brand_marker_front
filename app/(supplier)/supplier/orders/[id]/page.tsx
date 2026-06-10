@@ -200,7 +200,7 @@ export default function SupplierOrderDetailPage() {
                 </p>
                 <button
                   onClick={() => setRespondOpen(true)}
-                  className="w-full h-11 rounded-xl bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  className="w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors flex items-center justify-center gap-2"
                 >
                   <Send size={16} /> Откликнуться
                 </button>

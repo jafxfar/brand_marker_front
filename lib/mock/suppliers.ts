@@ -21,7 +21,7 @@ export const suppliers: Supplier[] = [
     id: "sup-2",
     name: "РостМаркет Агентство",
     initials: "РМ",
-    color: "bg-orange-500",
+    color: "bg-primary",
     categoryId: "marketing",
     category: "Маркетинг и реклама",
     city: "Худжанд",

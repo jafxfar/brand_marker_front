@@ -68,7 +68,7 @@ export default function OfferCard({ offer, accepted, locked, onAccept }: OfferCa
               "w-full h-9 rounded-xl text-sm font-bold transition-colors",
               locked
                 ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-primary hover:bg-[oklch(0.58_0.22_38)] text-white",
+                : "bg-primary hover:bg-primary-dark text-primary-foreground",
             )}
           >
             {locked ? "Недоступно" : "Выбрать исполнителя"}

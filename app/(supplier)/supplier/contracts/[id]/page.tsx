@@ -154,7 +154,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
       <ContractDisputeDialog
         open={disputeOpen}
         onOpenChange={setDisputeOpen}
-        onConfirm={(reason) => openDispute(contractId, reason)}
+        onConfirm={(reason) => openDispute(contractId, reason, actorId)}
       />
     </div>
   )

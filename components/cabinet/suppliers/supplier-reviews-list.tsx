@@ -1,0 +1,59 @@
+import { Star } from "lucide-react"
+import type { Review } from "@/types"
+import { formatRelativeTime } from "@/lib/format"
+
+type SupplierReviewsListProps = {
+  reviews: Review[]
+}
+
+export const SupplierReviewsList = ({ reviews }: SupplierReviewsListProps) => {
+  if (reviews.length === 0) {
+    return (
+      <div className="bg-white border border-border rounded-2xl p-6">
+        <h2 className="text-base font-bold text-foreground mb-2">Отзывы</h2>
+        <p className="text-sm text-muted-foreground">Отзывов пока нет</p>
+      </div>
+    )
+  }
+
+  const sorted = [...reviews].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  )
+
+  return (
+    <div className="bg-white border border-border rounded-2xl p-6">
+      <h2 className="text-base font-bold text-foreground mb-4">
+        Отзывы ({reviews.length})
+      </h2>
+      <div className="space-y-4">
+        {sorted.slice(0, 5).map((review) => (
+          <div key={review.id} className="border-b border-border last:border-0 pb-4 last:pb-0">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={12}
+                    className={
+                      i < review.rating
+                        ? "text-amber-400 fill-amber-400"
+                        : "text-muted-foreground/30"
+                    }
+                  />
+                ))}
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                {formatRelativeTime(review.created_at)}
+              </span>
+            </div>
+            {review.comment && (
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                {review.comment}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

@@ -1,118 +1,141 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { Star, BadgeCheck, MapPin, Users, Clock, Truck, Store } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Search, Store } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { suppliers } from "@/lib/mock/suppliers"
-import { categories } from "@/lib/mock/categories"
+import { catalogCategories } from "@/lib/mock/catalog-categories"
+import { useCompaniesStore } from "@/lib/store/companies-store"
+import { useItemsStore } from "@/lib/store/items-store"
+import { useHydrated } from "@/hooks/use-hydrated"
+import {
+  formatSupplierCatalogSummary,
+  getActiveCatalogItemsCount,
+  getSupplierCategories,
+} from "@/lib/supplier-directory"
+import { SupplierDirectoryCard } from "@/components/cabinet/suppliers/supplier-directory-card"
 
 export default function SuppliersPage() {
-  const [categoryId, setCategoryId] = useState<string>("")
+  const hydrated = useHydrated()
+  const [query, setQuery] = useState("")
+  const [categorySlug, setCategorySlug] = useState("")
 
-  const filtered = categoryId
-    ? suppliers.filter((s) => s.categoryId === categoryId)
-    : suppliers
+  const getSupplierCompaniesByCategory = useCompaniesStore((s) => s.getSupplierCompaniesByCategory)
+  const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
+
+  const getCategoriesForSupplier = (companyId: number) =>
+    getSupplierCategories(getItemsBySupplier(companyId))
+
+  const companies = useMemo(() => {
+    if (!hydrated) return []
+    const byCategory = getSupplierCompaniesByCategory(categorySlug, (id) =>
+      getCategoriesForSupplier(id),
+    )
+    if (!query.trim()) return byCategory
+    const q = query.trim().toLowerCase()
+    return byCategory.filter((c) => {
+      const haystack = [
+        c.title,
+        c.description,
+        ...getCategoriesForSupplier(c.id).map((cat) => cat.name),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+      return haystack.includes(q)
+    })
+  }, [
+    hydrated,
+    query,
+    categorySlug,
+    getSupplierCompaniesByCategory,
+    getItemsBySupplier,
+  ])
 
   return (
-    <div className="max-w-[1100px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="max-w-[1100px] mx-auto space-y-6">
+      <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
           <Store size={20} className="text-primary" />
         </div>
         <div>
           <h1 className="text-2xl font-black text-foreground">Каталог поставщиков</h1>
-          <p className="text-sm text-muted-foreground">Проверенные поставщики товаров и услуг</p>
+          <p className="text-sm text-muted-foreground">
+            Поиск компаний и приглашение на RFQ
+          </p>
         </div>
       </div>
 
-      {/* Category filter */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-5">
+      <div className="relative">
+        <Search
+          size={18}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Поиск по названию, описанию, категории..."
+          className="w-full h-11 pl-11 pr-4 rounded-xl border border-border bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          aria-label="Поиск поставщиков"
+        />
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
         <button
-          onClick={() => setCategoryId("")}
+          type="button"
+          onClick={() => setCategorySlug("")}
           className={cn(
             "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors",
-            categoryId === "" ? "bg-primary text-white" : "bg-white border border-border text-muted-foreground hover:text-foreground",
+            categorySlug === ""
+              ? "bg-primary text-primary-foreground"
+              : "bg-white border border-border text-muted-foreground hover:text-foreground",
           )}
         >
           Все
         </button>
-        {categories.map((c) => (
+        {catalogCategories.map((c) => (
           <button
             key={c.id}
-            onClick={() => setCategoryId(c.id)}
+            type="button"
+            onClick={() => setCategorySlug(c.slug)}
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors",
-              categoryId === c.id ? "bg-primary text-white" : "bg-white border border-border text-muted-foreground hover:text-foreground",
+              categorySlug === c.slug
+                ? "bg-primary text-primary-foreground"
+                : "bg-white border border-border text-muted-foreground hover:text-foreground",
             )}
           >
-            {c.label}
+            {c.name}
           </button>
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {!hydrated ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-40 bg-secondary rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      ) : companies.length === 0 ? (
         <div className="bg-white border border-border rounded-2xl p-12 text-center text-sm text-muted-foreground">
-          В этой категории пока нет поставщиков
+          Поставщики не найдены. Попробуйте изменить фильтры.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((s) => (
-            <Link
-              key={s.id}
-              href={`/customer/suppliers/${s.id}`}
-              className="bg-white border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg transition-all group"
-            >
-              <div className="flex items-start gap-3">
-                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0", s.color)}>
-                  {s.initials}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-sm text-foreground truncate group-hover:text-primary transition-colors">
-                      {s.name}
-                    </span>
-                    {s.verified && <BadgeCheck size={14} className="text-primary flex-shrink-0" />}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{s.category}</div>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <div className="flex items-center gap-0.5">
-                      <Star size={11} className="text-amber-400 fill-amber-400" />
-                      <span className="text-xs font-bold">{s.rating}</span>
-                      <span className="text-xs text-muted-foreground">({s.reviews})</span>
-                    </div>
-                    <span className="text-muted-foreground/40 text-xs">•</span>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin size={10} /> {s.city}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground border-t border-border pt-3">
-                <span className="flex items-center gap-1.5">
-                  <Users size={12} className="text-primary" />
-                  <span className="font-semibold text-foreground">{s.clients}</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Clock size={12} className="text-primary" /> {s.years}
-                </span>
-                {s.hasDelivery && (
-                  <span className="flex items-center gap-1.5 text-emerald-600 font-semibold ml-auto">
-                    <Truck size={12} /> Доставка
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                {s.specialties.map((spec) => (
-                  <span key={spec} className="text-[10px] bg-muted text-muted-foreground px-2.5 py-1 rounded-lg font-medium">
-                    {spec}
-                  </span>
-                ))}
-              </div>
-            </Link>
-          ))}
+          {companies.map((company) => {
+            const items = getItemsBySupplier(company.id)
+            const categories = getSupplierCategories(items)
+            const activeCount = getActiveCatalogItemsCount(items)
+            return (
+              <SupplierDirectoryCard
+                key={company.id}
+                company={company}
+                summary={formatSupplierCatalogSummary(company, activeCount, categories)}
+                activeItemsCount={activeCount}
+                categoryNames={categories.map((c) => c.name)}
+              />
+            )
+          })}
         </div>
       )}
     </div>
