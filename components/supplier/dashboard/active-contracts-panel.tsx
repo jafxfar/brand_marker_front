@@ -4,7 +4,8 @@ import Link from "next/link"
 import { FileCheck, ArrowRight } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
 import { contractStatusMeta } from "@/lib/contract-display"
-import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { formatCurrency } from "@/lib/format"
+import { DeadlineCountdown } from "@/components/contracts/deadline-countdown"
 
 type ActiveContractsPanelProps = {
   contracts: ContractWithRelations[]
@@ -54,8 +55,14 @@ export const ActiveContractsPanel = ({
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{contract.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {getBuyerName(contract.buyer_actor_id)} · до {formatIsoDate(contract.due_date)}
+                  {getBuyerName(contract.buyer_actor_id)}
                 </p>
+                <DeadlineCountdown
+                  dueDate={contract.due_date}
+                  status={contract.status}
+                  variant="compact"
+                  className="mt-1"
+                />
               </div>
               <div className="text-right flex-shrink-0">
                 <div className="text-sm font-bold text-primary">

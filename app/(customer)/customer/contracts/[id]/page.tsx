@@ -10,6 +10,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
 import { ContractSupplierCard } from "@/components/cabinet/contracts/contract-supplier-card"
 import { BuyerContractMilestonesPanel } from "@/components/cabinet/contracts/buyer-contract-milestones-panel"
 import { ContractPaymentHistoryPanel } from "@/components/cabinet/contracts/contract-payment-history-panel"
@@ -125,10 +126,19 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
                   {formatCurrency(contract.agreed_amount, contract.currency)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  с {formatIsoDate(contract.start_date)} до {formatIsoDate(contract.due_date)}
+                  с {formatIsoDate(contract.start_date)}
                 </p>
+                <DeadlineCountdown
+                  dueDate={contract.due_date}
+                  status={contract.status}
+                  variant="prominent"
+                  showAbsoluteDate
+                  className="mt-1"
+                />
               </div>
             </div>
+
+            <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
 
             {contract.description && (
               <p className="text-sm text-muted-foreground mt-4 leading-relaxed">

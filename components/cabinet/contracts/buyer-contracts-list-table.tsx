@@ -4,7 +4,8 @@ import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
 import { contractStatusMeta } from "@/lib/contract-display"
-import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { formatCurrency } from "@/lib/format"
+import { DeadlineCountdown } from "@/components/contracts/deadline-countdown"
 
 type BuyerContractsListTableProps = {
   contracts: ContractWithRelations[]
@@ -47,8 +48,13 @@ export const BuyerContractsListTable = ({
                 <td className="px-4 py-3 font-medium text-primary whitespace-nowrap">
                   {formatCurrency(contract.agreed_amount, contract.currency)}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                  {formatIsoDate(contract.due_date)}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <DeadlineCountdown
+                    dueDate={contract.due_date}
+                    status={contract.status}
+                    variant="compact"
+                    showAbsoluteDate
+                  />
                 </td>
                 <td className="px-4 py-3">
                   <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
@@ -98,9 +104,14 @@ export const BuyerContractsListTable = ({
               </div>
               <div>
                 <p className="text-muted-foreground">Срок</p>
-                <p className="font-semibold text-foreground mt-0.5">
-                  {formatIsoDate(contract.due_date)}
-                </p>
+                <div className="mt-0.5">
+                  <DeadlineCountdown
+                    dueDate={contract.due_date}
+                    status={contract.status}
+                    variant="compact"
+                    showAbsoluteDate
+                  />
+                </div>
               </div>
             </div>
             <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mt-3 ${meta.className}`}>
