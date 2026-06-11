@@ -54,7 +54,7 @@ export const CompanyListPage = ({
           </div>
         </div>
 
-        {canCreate ? (
+        {/* {canCreate ? (
           <Link
             href={`${basePath}/new`}
             className="h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
@@ -69,7 +69,7 @@ export const CompanyListPage = ({
           >
             Лимит исчерпан
           </Link>
-        )}
+        )} */}
       </div>
 
       {companies.length === 0 ? (

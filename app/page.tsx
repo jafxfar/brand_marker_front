@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import Header from "@/components/header"
 import HeroBanner from "@/components/hero-banner"
 import Footer from "@/components/footer"
@@ -12,7 +13,9 @@ import {
 export default function Home() {
   return (
     <main className="min-h-screen bg-background">
-      <Header />
+      <Suspense fallback={<div className="h-[140px] bg-white border-b border-border" />}>
+        <Header />
+      </Suspense>
       <HeroBanner />
       <CategoryGrid />
       <FeaturedServices />

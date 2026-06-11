@@ -59,7 +59,7 @@ export default function CustomerTopbar() {
       </div>
 
       <div className="flex items-center gap-1.5 ml-auto">
-        <CompanySwitcher actorType="buyer" basePath="/customer/company" />
+        {/* <CompanySwitcher actorType="buyer" basePath="/customer/company" /> */}
 
         {/* Notifications */}
         <Link

@@ -26,7 +26,7 @@ const navItems: NavItem[] = [
   { href: "/customer/reviews", label: "Мои отзывы", Icon: Star },
   { href: "/customer/cart", label: "Корзина", Icon: ShoppingCart, badge: "cart" },
   { href: "/customer/suppliers", label: "Поставщики", Icon: Store },
-  { href: "/customer/company", label: "Мои компании", Icon: Building2 },
+  // { href: "/customer/company", label: "Мои компании", Icon: Building2 },
   { href: "/customer/notifications", label: "Уведомления", Icon: Bell, badge: "notifications" },
   { href: "/customer/profile", label: "Профиль", Icon: User },
 ]

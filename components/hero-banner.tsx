@@ -5,11 +5,18 @@ import Image from "next/image"
 import Link from "next/link"
 import {
   ChevronLeft, ChevronRight, CheckCircle2, Users, Layers,
-  ThumbsUp, TrendingUp, Monitor, Megaphone, Scale, BarChart2,
-  Truck, HardHat, Palette, UserCheck, LineChart, Lock, Globe2,
-  BookOpen, ChevronRight as ChevronRightIcon, ShieldCheck,
-  Star, FileText,
+  ThumbsUp, TrendingUp, ChevronRight as ChevronRightIcon, ShieldCheck,
+  FileText,
 } from "lucide-react"
+import { getAllCategories } from "@/lib/mock/categories"
+import { getIcon } from "@/lib/icon-map"
+import {
+  categoryUrl,
+  guaranteeUrl,
+  newRfqRedirect,
+  performersUrl,
+  verificationUrl,
+} from "@/lib/marketplace-routes"
 
 const slides = [
   {
@@ -19,7 +26,9 @@ const slides = [
     title: "Найдите лучших\nB2B исполнителей",
     subtitle: "Более 50 000 проверенных компаний и специалистов по всей России",
     cta: "Найти исполнителя",
+    ctaHref: performersUrl(),
     ctaSecondary: "Разместить заказ",
+    ctaSecondaryHref: newRfqRedirect(),
     bg: "oklch(0.22 0.055 255)",
     bgTo: "oklch(0.3 0.08 255)",
   },
@@ -30,7 +39,9 @@ const slides = [
     title: "Разработка\nи цифровизация",
     subtitle: "Сайты, приложения, 1С, CRM — всё для вашего бизнеса под ключ",
     cta: "Смотреть ИТ услуги",
+    ctaHref: categoryUrl("it"),
     ctaSecondary: "Стать партнёром",
+    ctaSecondaryHref: "/login",
     bg: "oklch(0.19 0.05 225)",
     bgTo: "oklch(0.27 0.07 240)",
   },
@@ -41,7 +52,9 @@ const slides = [
     title: "Логистика\nи цепочки поставок",
     subtitle: "Грузоперевозки, таможня, склад — надёжная логистика по всей стране",
     cta: "Заказать перевозку",
+    ctaHref: categoryUrl("logistics"),
     ctaSecondary: "Рассчитать стоимость",
+    ctaSecondaryHref: newRfqRedirect(),
     bg: "oklch(0.38 0.14 128)",
     bgTo: "oklch(0.55 0.20 128)",
   },
@@ -52,21 +65,6 @@ const stats = [
   { value: "120+", label: "Категорий услуг", Icon: Layers },
   { value: "98%", label: "Довольных клиентов", Icon: ThumbsUp },
   { value: "15 млрд  TJS", label: "Сделок в месяц", Icon: TrendingUp },
-]
-
-const sidebarItems = [
-  { Icon: Monitor, label: "ИТ и разработка" },
-  { Icon: Megaphone, label: "Маркетинг и реклама" },
-  { Icon: Scale, label: "Юридические услуги" },
-  { Icon: BarChart2, label: "Финансы и аудит" },
-  { Icon: Truck, label: "Логистика и склад" },
-  { Icon: HardHat, label: "Строительство" },
-  { Icon: Palette, label: "Дизайн и брендинг" },
-  { Icon: UserCheck, label: "Кадры и HR" },
-  { Icon: LineChart, label: "Консалтинг" },
-  { Icon: Lock, label: "Безопасность" },
-  { Icon: Globe2, label: "ВЭД и экспорт" },
-  { Icon: BookOpen, label: "Обучение и тренинги" },
 ]
 
 export default function HeroBanner() {
@@ -90,6 +88,7 @@ export default function HeroBanner() {
   }, [current])
 
   const slide = slides[current]
+  const sidebarCategories = getAllCategories()
 
   return (
     <section className="bg-background">
@@ -98,17 +97,20 @@ export default function HeroBanner() {
           {/* Left sidebar */}
           <aside className="hidden lg:block w-[210px] flex-shrink-0">
             <nav className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm h-full">
-              {sidebarItems.map(({ Icon, label }, i) => (
-                <Link
-                  key={i}
-                  href="#"
-                  className="flex items-center gap-2.5 px-3.5 py-[9px] text-xs font-medium hover:bg-secondary hover:text-primary border-b border-border/60 last:border-0 transition-colors group"
-                >
-                  <Icon size={14} className="text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                  <span className="text-foreground group-hover:text-primary transition-colors leading-tight">{label}</span>
-                  <ChevronRightIcon size={12} className="ml-auto text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
-                </Link>
-              ))}
+              {sidebarCategories.map((category) => {
+                const Icon = getIcon(category.icon)
+                return (
+                  <Link
+                    key={category.id}
+                    href={categoryUrl(category.slug)}
+                    className="flex items-center gap-2.5 px-3.5 py-[9px] text-xs font-medium hover:bg-secondary hover:text-primary border-b border-border/60 last:border-0 transition-colors group"
+                  >
+                    <Icon size={14} className="text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                    <span className="text-foreground group-hover:text-primary transition-colors leading-tight">{category.label}</span>
+                    <ChevronRightIcon size={12} className="ml-auto text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
+                  </Link>
+                )
+              })}
             </nav>
           </aside>
 
@@ -138,13 +140,13 @@ export default function HeroBanner() {
               </p>
               <div className="flex items-center gap-3 flex-wrap">
                 <Link
-                  href="#"
+                  href={slide.ctaHref}
                   className="bg-primary hover:bg-primary-dark text-primary-foreground font-bold px-6 py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg hover:-translate-y-px"
                 >
                   {slide.cta}
                 </Link>
                 <Link
-                  href="#"
+                  href={slide.ctaSecondaryHref}
                   className="bg-white/15 hover:bg-white/25 text-white font-medium px-6 py-2.5 rounded-xl transition-all text-sm border border-white/25 hover:-translate-y-px"
                 >
                   {slide.ctaSecondary}
@@ -184,6 +186,7 @@ export default function HeroBanner() {
           {/* Right promo blocks */}
           <div className="hidden xl:flex flex-col gap-3 w-[210px] flex-shrink-0">
             <PromoCard
+              href={guaranteeUrl()}
               bg="bg-[oklch(0.97_0.04_60)]"
               border="border-primary/20"
               accentClass="text-primary"
@@ -194,6 +197,7 @@ export default function HeroBanner() {
               cta="Подробнее"
             />
             <PromoCard
+              href={verificationUrl()}
               bg="bg-[oklch(0.96_0.008_255)]"
               border="border-[oklch(0.22_0.055_255)]/15"
               accentClass="text-[oklch(0.22_0.055_255)]"
@@ -204,6 +208,7 @@ export default function HeroBanner() {
               cta="Смотреть"
             />
             <PromoCard
+              href={newRfqRedirect()}
               bg="bg-[oklch(0.96_0.06_155)]"
               border="border-green-200"
               accentClass="text-green-700"
@@ -239,13 +244,18 @@ export default function HeroBanner() {
 }
 
 function PromoCard({
-  bg, border, accentClass, title, subtitle, Icon, iconClass, cta,
+  href, bg, border, accentClass, title, subtitle, Icon, iconClass, cta,
 }: {
+  href: string
   bg: string; border: string; accentClass: string; title: string
   subtitle: string; Icon: React.ElementType; iconClass: string; cta: string
 }) {
   return (
-    <div className={`${bg} rounded-2xl p-4 flex flex-col gap-2.5 border ${border} hover:shadow-md transition-all cursor-pointer flex-1`}>
+    <Link
+      href={href}
+      className={`${bg} rounded-2xl p-4 flex flex-col gap-2.5 border ${border} hover:shadow-md transition-all flex-1 group`}
+      aria-label={title}
+    >
       <div className={`w-9 h-9 rounded-xl bg-white/70 flex items-center justify-center border ${border}`}>
         <Icon size={17} className={iconClass} />
       </div>
@@ -253,9 +263,9 @@ function PromoCard({
         <div className={`text-sm font-bold ${accentClass} leading-tight`}>{title}</div>
         <div className="text-xs text-muted-foreground mt-0.5 leading-snug">{subtitle}</div>
       </div>
-      <Link href="#" className={`text-xs font-semibold ${accentClass} hover:underline flex items-center gap-1`}>
+      <span className={`text-xs font-semibold ${accentClass} group-hover:underline flex items-center gap-1`}>
         {cta} <ChevronRightIcon size={11} />
-      </Link>
-    </div>
+      </span>
+    </Link>
   )
 }
