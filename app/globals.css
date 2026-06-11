@@ -12,7 +12,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0.015 255);
   /* Vivid lime primary */
-  --primary: #00a71c;
+  --primary: #16A34A;
   --primary-foreground: oklch(0.18 0.04 130);
   --primary-dark: #7ed632;
   --primary-light: oklch(0.96 0.05 128);
