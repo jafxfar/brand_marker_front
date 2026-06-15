@@ -34,12 +34,19 @@ export const companyToWizardInput = (
     email: u.email ?? "",
     role: u.role,
   })),
+  actor_types:
+    company.actor_types && company.actor_types.length > 0
+      ? company.actor_types
+      : [company.actor_type],
 })
 
 export const filterCompaniesByActorType = (
   companies: CompanyWithRelations[],
   actorType: "buyer" | "supplier",
 ): CompanyWithRelations[] =>
-  companies.filter((c) => c.actor_type === actorType)
+  companies.filter((c) => {
+    const types = c.actor_types?.length ? c.actor_types : [c.actor_type]
+    return types.includes(actorType)
+  })
 
 export { emptyCompanyWizardInput }

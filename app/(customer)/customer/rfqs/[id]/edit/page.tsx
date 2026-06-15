@@ -8,7 +8,15 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
-import type { RfqCreate, RfqUpdate } from "@/types"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  usePublishRfqMutation,
+  useRfqQuery,
+  useUpdateRfqMutation,
+  useUploadRfqAttachmentMutation,
+  useDeleteRfqAttachmentMutation,
+} from "@/hooks/api/use-rfqs-query"
+import type { RfqCreate, RfqUpdate, RfqWithRelations } from "@/types"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -19,15 +27,24 @@ export default function EditRfqPage({ params }: PageProps) {
   const router = useRouter()
   const hydrated = useHydrated()
   const actorId = getActorId(useAuthStore((s) => s.user))
+  const useApi = isApiEnabled()
+
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
-  const updateRfq = useRfqsStore((s) => s.updateRfq)
-  const publishRfq = useRfqsStore((s) => s.publishRfq)
-  const addAttachment = useRfqsStore((s) => s.addAttachment)
-  const removeAttachment = useRfqsStore((s) => s.removeAttachment)
+  const updateRfqLocal = useRfqsStore((s) => s.updateRfq)
+  const publishRfqLocal = useRfqsStore((s) => s.publishRfq)
+  const addAttachmentLocal = useRfqsStore((s) => s.addAttachment)
+  const removeAttachmentLocal = useRfqsStore((s) => s.removeAttachment)
 
-  const rfq = hydrated ? getRfqWithRelations(id) : undefined
+  const { data: apiRfq, isLoading } = useRfqQuery(id, hydrated && useApi)
+  const updateMutation = useUpdateRfqMutation()
+  const publishMutation = usePublishRfqMutation()
+  const uploadMutation = useUploadRfqAttachmentMutation()
+  const deleteAttachmentMutation = useDeleteRfqAttachmentMutation()
 
-  if (!hydrated) {
+  const localRfq = hydrated ? getRfqWithRelations(id) : undefined
+  const rfq: RfqWithRelations | undefined = useApi ? apiRfq : localRfq
+
+  if (!hydrated || (useApi && isLoading)) {
     return (
       <div className="max-w-[820px] mx-auto animate-pulse h-96 bg-secondary rounded-2xl" />
     )
@@ -56,9 +73,18 @@ export default function EditRfqPage({ params }: PageProps) {
     )
   }
 
-  const applyUpdate = (input: RfqCreate) => {
+  const applyUpdateLocal = (input: RfqCreate) => {
     const patch: RfqUpdate = { ...input }
-    updateRfq(id, patch)
+    updateRfqLocal(id, patch)
+  }
+
+  const applyUpdateApi = async (input: RfqCreate, publish: boolean) => {
+    const patch: RfqUpdate = { ...input }
+    await updateMutation.mutateAsync({ id, data: patch })
+    if (publish) {
+      await publishMutation.mutateAsync(id)
+    }
+    router.push(`/customer/rfqs/${id}`)
   }
 
   return (
@@ -66,22 +92,40 @@ export default function EditRfqPage({ params }: PageProps) {
       initial={rfq}
       cancelHref={`/customer/rfqs/${id}`}
       onSaveDraft={(input) => {
-        applyUpdate(input)
+        if (useApi) {
+          void applyUpdateApi(input, false)
+          return
+        }
+        applyUpdateLocal(input)
         router.push(`/customer/rfqs/${id}`)
       }}
       onPublish={(input) => {
-        applyUpdate(input)
-        publishRfq(id)
+        if (useApi) {
+          void applyUpdateApi(input, true)
+          return
+        }
+        applyUpdateLocal(input)
+        publishRfqLocal(id)
         router.push(`/customer/rfqs/${id}`)
       }}
       onAddAttachment={(file) => {
-        addAttachment(id, {
+        if (useApi) {
+          uploadMutation.mutate({ id, file })
+          return
+        }
+        addAttachmentLocal(id, {
           file_name: file.name,
           file_url: URL.createObjectURL(file),
           file_type: file.type || "application/octet-stream",
         })
       }}
-      onRemoveAttachment={(attachmentId) => removeAttachment(id, attachmentId)}
+      onRemoveAttachment={(attachmentId) => {
+        if (useApi) {
+          deleteAttachmentMutation.mutate({ id, attachmentId })
+          return
+        }
+        removeAttachmentLocal(id, attachmentId)
+      }}
     />
   )
 }

@@ -67,6 +67,7 @@ export type Company = {
   id: number
   title: string
   actor_type: ActorType
+  actor_types?: ActorType[]
   owner_id: number
   team_members: number[]
   legal_name: string | null
@@ -148,6 +149,7 @@ export type CompanyWizardInput = {
   category_ids: number[]
   certificates: CompanyWizardCertificate[]
   team: CompanyWizardTeamMember[]
+  actor_types: ActorType[]
 }
 
 export const emptyCompanyWizardInput = (): CompanyWizardInput => ({
@@ -168,4 +170,5 @@ export const emptyCompanyWizardInput = (): CompanyWizardInput => ({
   category_ids: [],
   certificates: [],
   team: [],
+  actor_types: ["buyer"],
 })

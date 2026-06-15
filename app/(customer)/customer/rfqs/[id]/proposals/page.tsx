@@ -10,6 +10,14 @@ import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
+import { isApiEnabled } from "@/lib/api/config"
+import { useRfqQuery } from "@/hooks/api/use-rfqs-query"
+import {
+  useAcceptProposalMutation,
+  useProposalsForRfqQuery,
+  useRejectProposalMutation,
+  useShortlistProposalMutation,
+} from "@/hooks/api/use-proposals-query"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
 import { RfqStatusBadge } from "@/components/rfq/rfq-status-badge"
 import { ProposalReviewCard } from "@/components/cabinet/rfq/proposal-review-card"
@@ -19,7 +27,7 @@ import {
 } from "@/components/cabinet/rfq/proposals-review-toolbar"
 import { AcceptProposalDialog } from "@/components/cabinet/rfq/accept-proposal-dialog"
 import { filterProposalsByStatus, sortProposalsForReview } from "@/lib/proposals-review"
-import type { Proposal, ProposalStatus } from "@/types"
+import type { Proposal, ProposalStatus, RfqWithRelations } from "@/types"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -32,28 +40,42 @@ export default function ProposalsReviewPage({ params }: PageProps) {
   const router = useRouter()
   const hydrated = useHydrated()
   const actorId = getActorId(useAuthStore((s) => s.user))
+  const useApi = isApiEnabled()
+
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const updateProposalStatus = useProposalsStore((s) => s.updateProposalStatus)
-  const acceptProposal = useProposalsStore((s) => s.acceptProposal)
+  const acceptProposalLocal = useProposalsStore((s) => s.acceptProposal)
   const getCompany = useCompaniesStore((s) => s.getCompany)
+
+  const { data: apiRfq, isLoading: rfqLoading } = useRfqQuery(id, hydrated && useApi)
+  const { data: apiProposals = [] } = useProposalsForRfqQuery(id, hydrated && useApi)
+  const shortlistMutation = useShortlistProposalMutation()
+  const rejectMutation = useRejectProposalMutation()
+  const acceptMutation = useAcceptProposalMutation()
 
   const [sortMode, setSortMode] = useState<ProposalSortMode>("priority")
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | "all">("all")
   const [acceptTarget, setAcceptTarget] = useState<Proposal | null>(null)
 
-  const rfq = hydrated ? getRfqWithRelations(id) : undefined
-  const allProposals = rfq ? getProposalsForRfq(rfq.id) : []
+  const localRfq = hydrated ? getRfqWithRelations(id) : undefined
+  const rfq: RfqWithRelations | undefined = useApi ? apiRfq : localRfq
+  const allProposals = useApi
+    ? apiProposals
+    : rfq
+      ? getProposalsForRfq(rfq.id)
+      : []
 
   const proposals = useMemo(
-    () => sortProposalsForReview(
-      filterProposalsByStatus(allProposals, statusFilter),
-      sortMode,
-    ),
+    () =>
+      sortProposalsForReview(
+        filterProposalsByStatus(allProposals, statusFilter),
+        sortMode,
+      ),
     [allProposals, statusFilter, sortMode],
   )
 
-  if (!hydrated) {
+  if (!hydrated || (useApi && rfqLoading)) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
@@ -77,8 +99,13 @@ export default function ProposalsReviewPage({ params }: PageProps) {
     rfq.status as (typeof MANAGE_PROPOSAL_STATUSES)[number],
   )
 
-  const handleAccept = (proposalId: number) => {
-    const contractId = acceptProposal(proposalId, rfq.id, actorId)
+  const handleAccept = async (proposalId: number) => {
+    if (useApi) {
+      const result = await acceptMutation.mutateAsync(proposalId)
+      router.push(`/customer/contracts/${result.contract_id}`)
+      return
+    }
+    const contractId = acceptProposalLocal(proposalId, rfq.id, actorId)
     if (contractId) {
       router.push(`/customer/contracts/${contractId}`)
     }
@@ -139,8 +166,20 @@ export default function ProposalsReviewPage({ params }: PageProps) {
               proposal={proposal}
               supplier={getCompany(proposal.supplier_actor_id)}
               canManage={canManage}
-              onShortlist={() => updateProposalStatus(proposal.id, "shortlisted")}
-              onReject={() => updateProposalStatus(proposal.id, "rejected")}
+              onShortlist={() => {
+                if (useApi) {
+                  shortlistMutation.mutate(proposal.id)
+                  return
+                }
+                updateProposalStatus(proposal.id, "shortlisted")
+              }}
+              onReject={() => {
+                if (useApi) {
+                  rejectMutation.mutate(proposal.id)
+                  return
+                }
+                updateProposalStatus(proposal.id, "rejected")
+              }}
               onAccept={() => setAcceptTarget(proposal)}
             />
           ))}
@@ -157,7 +196,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
           }
           price={acceptTarget.price}
           currency={acceptTarget.currency}
-          onConfirm={() => handleAccept(acceptTarget.id)}
+          onConfirm={() => void handleAccept(acceptTarget.id)}
         />
       )}
     </div>

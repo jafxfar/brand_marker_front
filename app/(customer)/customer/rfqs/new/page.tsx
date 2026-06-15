@@ -8,13 +8,19 @@ import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { getActorId } from "@/lib/auth-display"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useCreateRfqMutation,
+  useInviteSuppliersMutation,
+  usePublishRfqMutation,
+  useUploadRfqAttachmentMutation,
+} from "@/hooks/api/use-rfqs-query"
 import type { RfqCreate } from "@/types"
 
 type PendingFile = {
   id: string
+  file: File
   file_name: string
-  file_url: string
-  file_type: string
 }
 
 export default function NewRfqPage() {
@@ -25,13 +31,21 @@ export default function NewRfqPage() {
 
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
-  const createRfq = useRfqsStore((s) => s.createRfq)
-  const publishRfq = useRfqsStore((s) => s.publishRfq)
-  const inviteSupplierToRfq = useRfqsStore((s) => s.inviteSupplierToRfq)
-  const addAttachment = useRfqsStore((s) => s.addAttachment)
+  const createRfqLocal = useRfqsStore((s) => s.createRfq)
+  const publishRfqLocal = useRfqsStore((s) => s.publishRfq)
+  const inviteSupplierToRfqLocal = useRfqsStore((s) => s.inviteSupplierToRfq)
+  const addAttachmentLocal = useRfqsStore((s) => s.addAttachment)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const notify = useNotificationsStore((s) => s.add)
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const useApi = isApiEnabled()
+  const createMutation = useCreateRfqMutation()
+  const publishMutation = usePublishRfqMutation()
+  const inviteMutation = useInviteSuppliersMutation()
+  const uploadMutation = useUploadRfqAttachmentMutation()
 
   const invitedSupplier = invitedSupplierId ? getCompany(invitedSupplierId) : undefined
 
@@ -44,18 +58,22 @@ export default function NewRfqPage() {
     }
   }
 
-  const handleCreate = (input: RfqCreate, publish: boolean) => {
+  const handleCreateLocal = (input: RfqCreate, publish: boolean) => {
     if (!user) return
     const payload = buildInput(input)
-    const rfq = createRfq(payload, actorId, user.id)
+    const rfq = createRfqLocal(payload, actorId, user.id)
     for (const file of pendingFiles) {
-      addAttachment(rfq.id, file)
+      addAttachmentLocal(rfq.id, {
+        file_name: file.file_name,
+        file_url: URL.createObjectURL(file.file),
+        file_type: file.file.type || "application/octet-stream",
+      })
     }
     if (invitedSupplierId) {
-      inviteSupplierToRfq(rfq.id, invitedSupplierId)
+      inviteSupplierToRfqLocal(rfq.id, invitedSupplierId)
     }
     if (publish) {
-      publishRfq(rfq.id)
+      publishRfqLocal(rfq.id)
       notify({
         type: "order",
         title: "RFQ опубликован",
@@ -75,28 +93,73 @@ export default function NewRfqPage() {
     router.push(`/customer/rfqs/${rfq.id}`)
   }
 
+  const handleCreateApi = async (input: RfqCreate, publish: boolean) => {
+    if (!user) return
+    setError(null)
+    setSubmitting(true)
+    try {
+      const payload = buildInput(input)
+      let rfq = await createMutation.mutateAsync(payload)
+
+      for (const pending of pendingFiles) {
+        rfq = await uploadMutation.mutateAsync({ id: rfq.id, file: pending.file })
+      }
+
+      if (invitedSupplierId) {
+        rfq = await inviteMutation.mutateAsync({
+          id: rfq.id,
+          supplierIds: [invitedSupplierId],
+        })
+      }
+
+      if (publish) {
+        rfq = await publishMutation.mutateAsync(rfq.id)
+      }
+
+      router.push(`/customer/rfqs/${rfq.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось создать RFQ")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleCreate = (input: RfqCreate, publish: boolean) => {
+    if (useApi) {
+      void handleCreateApi(input, publish)
+      return
+    }
+    handleCreateLocal(input, publish)
+  }
+
   return (
-    <RfqForm
-      cancelHref="/customer/rfqs"
-      invitedSupplierId={invitedSupplierId}
-      invitedSupplierName={invitedSupplier?.title}
-      pendingAttachments={pendingFiles.map((f) => ({ id: f.id, file_name: f.file_name }))}
-      onSaveDraft={(input) => handleCreate(input, false)}
-      onPublish={(input) => handleCreate(input, true)}
-      onAddAttachment={(file) => {
-        setPendingFiles((prev) => [
-          ...prev,
-          {
-            id: `pending-${Date.now()}`,
-            file_name: file.name,
-            file_url: URL.createObjectURL(file),
-            file_type: file.type || "application/octet-stream",
-          },
-        ])
-      }}
-      onRemovePendingAttachment={(id) => {
-        setPendingFiles((prev) => prev.filter((f) => f.id !== id))
-      }}
-    />
+    <div className="space-y-4">
+      {error && (
+        <p className="max-w-[820px] mx-auto text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3">
+          {error}
+        </p>
+      )}
+      <RfqForm
+        cancelHref="/customer/rfqs"
+        invitedSupplierId={invitedSupplierId}
+        invitedSupplierName={invitedSupplier?.title}
+        pendingAttachments={pendingFiles.map((f) => ({ id: f.id, file_name: f.file_name }))}
+        onSaveDraft={(input) => handleCreate(input, false)}
+        onPublish={(input) => handleCreate(input, true)}
+        onAddAttachment={(file) => {
+          setPendingFiles((prev) => [
+            ...prev,
+            {
+              id: `pending-${Date.now()}`,
+              file,
+              file_name: file.name,
+            },
+          ])
+        }}
+        onRemovePendingAttachment={(id) => {
+          setPendingFiles((prev) => prev.filter((f) => f.id !== id))
+        }}
+      />
+    </div>
   )
 }

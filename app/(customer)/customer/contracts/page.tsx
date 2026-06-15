@@ -14,6 +14,10 @@ import {
   type BuyerContractListTab,
 } from "@/lib/buyer-contract-display"
 import { BuyerContractsListTable } from "@/components/cabinet/contracts/buyer-contracts-list-table"
+import { isApiEnabled } from "@/lib/api/config"
+import { useContractsQuery } from "@/hooks/api/use-contracts-query"
+import { filterContractsByTab } from "@/lib/contract-display"
+import type { ContractWithRelations } from "@/types"
 
 export default function BuyerContractsPage() {
   const hydrated = useHydrated()
@@ -21,8 +25,13 @@ export default function BuyerContractsPage() {
   const getContractsByTabForBuyer = useContractsStore((s) => s.getContractsByTabForBuyer)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [tab, setTab] = useState<BuyerContractListTab>("active")
+  const useApi = isApiEnabled()
+  const { data: apiContracts } = useContractsQuery(hydrated && useApi)
 
-  const contracts = hydrated ? getContractsByTabForBuyer(actorId, tab) : []
+  const localContracts = hydrated ? getContractsByTabForBuyer(actorId, tab) : []
+  const contracts: ContractWithRelations[] = useApi
+    ? filterContractsByTab((apiContracts ?? []) as ContractWithRelations[], tab)
+    : localContracts
 
   return (
     <div className="max-w-[1000px] mx-auto">

@@ -6,7 +6,7 @@ import { CompanyWizard } from "@/components/company/company-wizard"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { companyToWizardInput } from "@/lib/company-wizard-utils"
+import { companyToWizardInput, filterCompaniesByActorType } from "@/lib/company-wizard-utils"
 import type { CompanyWizardInput } from "@/types"
 
 type PageProps = {
@@ -25,8 +25,9 @@ export default function SupplierCompanyEditPage({ params }: PageProps) {
   if (!hydrated || !user) return null
 
   const company = getCompany(companyId)
+  const actorType = "supplier" as const
 
-  if (!company || company.actor_type !== "supplier") {
+  if (!company || !filterCompaniesByActorType([company], actorType).length) {
     return (
       <div className="max-w-md mx-auto text-center py-12">
         <p className="text-muted-foreground">Компания не найдена</p>

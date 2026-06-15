@@ -12,6 +12,10 @@ import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId, getUserDisplayName } from "@/lib/auth-display"
 import { formatPrice } from "@/lib/format"
+import { isApiEnabled } from "@/lib/api/config"
+import { useActiveRfqsQuery } from "@/hooks/api/use-rfqs-query"
+import { useContractsQuery } from "@/hooks/api/use-contracts-query"
+import { usePendingPaymentsQuery } from "@/hooks/api/use-payments-query"
 import { StatCard } from "@/components/supplier/dashboard/stat-card"
 import { ActiveRfqsPanel } from "@/components/cabinet/dashboard/active-rfqs-panel"
 import { IncomingProposalsPanel } from "@/components/cabinet/dashboard/incoming-proposals-panel"
@@ -19,11 +23,14 @@ import { BuyerActiveContractsPanel } from "@/components/cabinet/dashboard/buyer-
 import { BuyerPendingPaymentsPanel } from "@/components/cabinet/dashboard/buyer-pending-payments-panel"
 import { BuyerDisputesPanel } from "@/components/cabinet/dashboard/buyer-disputes-panel"
 import { BuyerMessagesPanel } from "@/components/cabinet/dashboard/buyer-messages-panel"
+import { ActivateRoleBanner } from "@/components/company/activate-role-banner"
+import type { ContractWithRelations, RfqWithRelations } from "@/types"
 
 export default function CustomerDashboard() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const useApi = isApiEnabled()
 
   const getActiveRfqsByBuyer = useRfqsStore((s) => s.getActiveRfqsByBuyer)
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
@@ -37,27 +44,93 @@ export default function CustomerDashboard() {
   const getUnreadMessageCountForBuyer = useContractsStore((s) => s.getUnreadMessageCountForBuyer)
   const getCompany = useCompaniesStore((s) => s.getCompany)
 
-  const getRfqTitle = (rfqId: string) => getRfqWithRelations(rfqId)?.title ?? "RFQ"
-  const getRfqActorId = (rfqId: string) => getRfqWithRelations(rfqId)?.actor_id
+  const { data: apiActiveRfqs = [] } = useActiveRfqsQuery(hydrated && useApi)
+  const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
+  const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
+
+  const getRfqTitle = (rfqId: string) => {
+    if (useApi) {
+      return apiActiveRfqs.find((r) => r.id === rfqId)?.title ?? "RFQ"
+    }
+    return getRfqWithRelations(rfqId)?.title ?? "RFQ"
+  }
+
+  const getRfqActorId = (rfqId: string) => {
+    if (useApi) {
+      return apiActiveRfqs.find((r) => r.id === rfqId)?.actor_id
+    }
+    return getRfqWithRelations(rfqId)?.actor_id
+  }
+
   const getSupplierName = (supplierId: number) =>
     getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
 
-  const activeRfqs = hydrated ? getActiveRfqsByBuyer(actorId) : []
-  const incomingProposals = hydrated
+  const localActiveRfqs = hydrated ? getActiveRfqsByBuyer(actorId) : []
+  const activeRfqs: RfqWithRelations[] = useApi ? apiActiveRfqs : localActiveRfqs
+
+  const incomingProposals = hydrated && !useApi
     ? getIncomingProposalsForBuyer(actorId, getRfqTitle, getRfqActorId)
     : []
-  const newProposalsCount = hydrated
+
+  const newProposalsCount = hydrated && !useApi
     ? getNewProposalsCountForBuyer(actorId, getRfqActorId)
     : 0
-  const activeContracts = hydrated ? getActiveContractsForBuyer(actorId) : []
-  const pendingAmount = hydrated ? getPendingPaymentsForBuyer(actorId) : 0
-  const pendingMilestones = hydrated ? getPendingMilestonesForBuyer(actorId) : []
-  const disputes = hydrated ? getDisputesForBuyer(actorId) : []
-  const messages = hydrated ? getIncomingMessagesForBuyer(actorId, getSupplierName) : []
-  const unreadCount = hydrated ? getUnreadMessageCountForBuyer(actorId) : 0
+
+  const localActiveContracts = hydrated ? getActiveContractsForBuyer(actorId) : []
+  const apiActiveContracts = (apiContracts as ContractWithRelations[]).filter(
+    (c) => c.status === "active" || c.status === "pending_payment" || c.status === "delivered",
+  )
+  const activeContracts = useApi ? apiActiveContracts : localActiveContracts
+
+  const pendingAmount = useApi
+    ? (pendingPayments?.items.reduce((sum, p) => sum + p.amount, 0) ?? 0)
+    : hydrated
+      ? getPendingPaymentsForBuyer(actorId)
+      : 0
+
+  const pendingMilestones = useApi
+    ? (pendingPayments?.items.map((p) => {
+        const contract = (apiContracts as ContractWithRelations[]).find(
+          (c) => c.id === p.contract_id,
+        )
+        return {
+          contract: {
+            id: p.contract_id,
+            title: contract?.title ?? `Контракт #${p.contract_id}`,
+          },
+          title: p.title,
+          amount: p.amount,
+          currency: p.currency,
+        }
+      }) ?? [])
+    : hydrated
+      ? getPendingMilestonesForBuyer(actorId).map((m) => ({
+          contract: { id: m.contract.id, title: m.contract.title },
+          title: m.title,
+          amount: m.amount,
+          currency: m.currency,
+        }))
+      : []
+
+  const disputes = useApi
+    ? (apiContracts as ContractWithRelations[]).filter((c) => c.status === "disputed")
+    : hydrated
+      ? getDisputesForBuyer(actorId)
+      : []
+
+  const messages = hydrated && !useApi
+    ? getIncomingMessagesForBuyer(actorId, getSupplierName)
+    : []
+
+  const unreadCount = hydrated && !useApi ? getUnreadMessageCountForBuyer(actorId) : 0
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
+      <ActivateRoleBanner
+        targetSide="supplier"
+        redirectTo="/supplier"
+        label="Хотите продавать на платформе? Активируйте роль поставщика на этом же аккаунте."
+      />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-foreground">

@@ -11,16 +11,21 @@ import { getActorId } from "@/lib/auth-display"
 import { BUYER_RFQ_LIST_TABS, type BuyerRfqListTab } from "@/lib/buyer-rfq-display"
 import { RfqListTable } from "@/components/cabinet/rfq/rfq-list-table"
 import { cn } from "@/lib/utils"
+import { isApiEnabled } from "@/lib/api/config"
+import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 
 export default function MyRfqsPage() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
-  const [tab, setTab] = useState<BuyerRfqListTab>("collecting")
+  const [tab, setTab] = useState<BuyerRfqListTab>("draft")
   const getRfqsByBuyerTab = useRfqsStore((s) => s.getRfqsByBuyerTab)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
+  const useApi = isApiEnabled()
+  const { data: apiRfqs, isLoading } = useRfqsQuery(tab, hydrated && useApi)
 
-  const rfqs = hydrated ? getRfqsByBuyerTab(actorId, tab) : []
+  const localRfqs = hydrated ? getRfqsByBuyerTab(actorId, tab) : []
+  const rfqs = useApi ? (apiRfqs ?? []) : localRfqs
 
   return (
     <div className="max-w-[900px] mx-auto space-y-6">
@@ -58,11 +63,15 @@ export default function MyRfqsPage() {
       </div>
 
       <div className="bg-white border border-border rounded-2xl overflow-hidden">
-        <RfqListTable
-          rfqs={rfqs}
-          hydrated={hydrated}
-          getProposalCount={(rfqId) => getProposalsForRfq(rfqId).length}
-        />
+        {useApi && isLoading ? (
+          <p className="p-8 text-sm text-muted-foreground text-center">Загрузка…</p>
+        ) : (
+          <RfqListTable
+            rfqs={rfqs}
+            hydrated={hydrated}
+            getProposalCount={(rfqId) => getProposalsForRfq(rfqId).length}
+          />
+        )}
       </div>
     </div>
   )

@@ -58,7 +58,7 @@ export default function SupplierTopbar() {
       </div>
 
       <div className="flex items-center gap-1.5 ml-auto">
-        {/* <CompanySwitcher actorType="supplier" basePath="/supplier/company" /> */}
+        <CompanySwitcher actorType="supplier" basePath="/supplier/company" />
 
         <Link
           href="/supplier/notifications"

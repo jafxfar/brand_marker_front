@@ -8,6 +8,17 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useContractQuery,
+  useOpenDisputeMutation,
+  useSendMessageMutation,
+} from "@/hooks/api/use-contracts-query"
+import {
+  useFundAndConfirmMilestoneMutation,
+  useApproveMilestoneMutation,
+  usePaymentHistoryQuery,
+} from "@/hooks/api/use-payments-query"
 import { contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
@@ -19,6 +30,8 @@ import { ContractEscrowCard } from "@/components/supplier/contracts/contract-esc
 import { ContractFilesPanel } from "@/components/supplier/contracts/contract-files-panel"
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
 import { ContractDisputeDialog } from "@/components/supplier/contracts/contract-dispute-dialog"
+import type { PaymentHistoryEvent } from "@/lib/buyer-payments-display"
+import type { ContractWithRelations } from "@/types"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -31,21 +44,33 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const contractId = Number(id)
   const hydrated = useHydrated()
   const actorId = getActorId(useAuthStore((s) => s.user))
-  const getContract = useContractsStore((s) => s.getContract)
-  const fundMilestone = useContractsStore((s) => s.fundMilestone)
-  const approveMilestone = useContractsStore((s) => s.approveMilestone)
-  const getPaymentHistory = useContractsStore((s) => s.getPaymentHistory)
-  const openDispute = useContractsStore((s) => s.openDispute)
-  const addMessage = useContractsStore((s) => s.addMessage)
-  const markConversationRead = useContractsStore((s) => s.markConversationRead)
+  const useApi = isApiEnabled()
+
+  const getContractLocal = useContractsStore((s) => s.getContract)
+  const fundMilestoneLocal = useContractsStore((s) => s.fundMilestone)
+  const approveMilestoneLocal = useContractsStore((s) => s.approveMilestone)
+  const getPaymentHistoryLocal = useContractsStore((s) => s.getPaymentHistory)
+  const openDisputeLocal = useContractsStore((s) => s.openDispute)
+  const addMessageLocal = useContractsStore((s) => s.addMessage)
+  const markConversationReadLocal = useContractsStore((s) => s.markConversationRead)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const submitReview = useCompaniesStore((s) => s.submitReview)
   const hasReviewForContract = useCompaniesStore((s) => s.hasReviewForContract)
   const [disputeOpen, setDisputeOpen] = useState(false)
 
-  const contract = hydrated ? getContract(contractId) : undefined
+  const { data: apiContract, isLoading } = useContractQuery(contractId, hydrated && useApi)
+  const { data: paymentHistoryApi = [] } = usePaymentHistoryQuery(hydrated && useApi)
+  const sendMessageMutation = useSendMessageMutation()
+  const openDisputeMutation = useOpenDisputeMutation()
+  const fundAndConfirmMutation = useFundAndConfirmMilestoneMutation()
+  const approveMilestoneMutation = useApproveMilestoneMutation()
 
-  if (!hydrated) {
+  const localContract = hydrated ? getContractLocal(contractId) : undefined
+  const contract: ContractWithRelations | undefined = useApi
+    ? (apiContract as ContractWithRelations | undefined)
+    : localContract
+
+  if (!hydrated || (useApi && isLoading)) {
     return (
       <div className="max-w-[1000px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
@@ -70,7 +95,24 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const canDispute = !DISPUTE_DISABLED_STATUSES.includes(
     contract.status as (typeof DISPUTE_DISABLED_STATUSES)[number],
   )
-  const paymentHistory = getPaymentHistory(contractId)
+  const paymentHistory: PaymentHistoryEvent[] = useApi
+    ? paymentHistoryApi
+        .filter((p) => p.contract_id === contractId)
+        .map((p) => ({
+          id: `${p.contract_id}-${p.milestone_id}-${p.event}`,
+          contractId: p.contract_id,
+          milestoneId: p.milestone_id,
+          title: p.title,
+          amount: p.amount,
+          currency: p.currency as PaymentHistoryEvent["currency"],
+          type: (p.event === "release"
+            ? "release"
+            : p.event === "refund"
+              ? "refund"
+              : "funding") as PaymentHistoryEvent["type"],
+          at: p.created_at,
+        }))
+    : getPaymentHistoryLocal(contractId)
   const hasReview = hasReviewForContract(actorId, contractId)
 
   const getSenderName = (senderId: number) => {
@@ -82,8 +124,12 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   }
 
   const handleSendMessage = (text: string) => {
-    addMessage(contractId, actorId, text)
-    markConversationRead(contractId)
+    if (useApi) {
+      sendMessageMutation.mutate({ contractId, text })
+      return
+    }
+    addMessageLocal(contractId, actorId, text)
+    markConversationReadLocal(contractId)
   }
 
   const handleSubmitReview = (rating: number, text: string) => {
@@ -94,6 +140,22 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
       rating,
       comment: text || null,
     })
+  }
+
+  const handleFund = (milestoneId: number) => {
+    if (useApi) {
+      fundAndConfirmMutation.mutate(milestoneId)
+      return
+    }
+    fundMilestoneLocal(contractId, milestoneId, actorId)
+  }
+
+  const handleApprove = (milestoneId: number) => {
+    if (useApi) {
+      approveMilestoneMutation.mutate(milestoneId)
+      return
+    }
+    approveMilestoneLocal(contractId, milestoneId, actorId)
   }
 
   return (
@@ -149,8 +211,8 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
 
           <BuyerContractMilestonesPanel
             contract={contract}
-            onFund={(milestoneId) => fundMilestone(contractId, milestoneId, actorId)}
-            onApprove={(milestoneId) => approveMilestone(contractId, milestoneId, actorId)}
+            onFund={handleFund}
+            onApprove={handleApprove}
           />
           <ContractPaymentHistoryPanel events={paymentHistory} />
           <ContractFilesPanel files={contract.files} />
@@ -198,7 +260,13 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
       <ContractDisputeDialog
         open={disputeOpen}
         onOpenChange={setDisputeOpen}
-        onConfirm={(reason) => openDispute(contractId, reason, actorId)}
+        onConfirm={(reason) => {
+          if (useApi) {
+            openDisputeMutation.mutate({ contractId, reason })
+            return
+          }
+          openDisputeLocal(contractId, reason, actorId)
+        }}
       />
     </div>
   )

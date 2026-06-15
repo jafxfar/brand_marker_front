@@ -49,9 +49,11 @@ export const CompanyWizard = ({
   onSubmit,
 }: CompanyWizardProps) => {
   const [stepIndex, setStepIndex] = useState(0)
-  const [data, setData] = useState<CompanyWizardInput>(
-    initial ?? emptyCompanyWizardInput(),
-  )
+  const [data, setData] = useState<CompanyWizardInput>(() => {
+    if (initial) return initial
+    const base = emptyCompanyWizardInput()
+    return { ...base, actor_types: [actorType] }
+  })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const currentStep = WIZARD_STEPS[stepIndex]

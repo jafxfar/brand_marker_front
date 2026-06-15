@@ -9,6 +9,7 @@ import { z } from "zod"
 import { Briefcase, ShoppingBag, Store, ArrowRight, ShieldCheck } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import type { SessionRole } from "@/lib/store/auth-store"
+import { isApiEnabled } from "@/lib/api/config"
 
 const schema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -36,7 +37,10 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const login = useAuthStore((s) => s.login)
+  const loginWithCredentials = useAuthStore((s) => s.loginWithCredentials)
   const [role, setRole] = useState<SessionRole>("customer")
+  const [apiError, setApiError] = useState<string | null>(null)
+  const useApi = isApiEnabled()
 
   const {
     register,
@@ -47,14 +51,27 @@ function LoginContent() {
     defaultValues: { email: "", password: "" },
   })
 
-  const onSubmit = (values: FormValues) => {
-    login({ email: values.email, role })
-    const redirect = searchParams.get("redirect")
-    if (role === "customer") {
-      router.push(redirect || "/customer")
-      return
+  const onSubmit = async (values: FormValues) => {
+    setApiError(null)
+    try {
+      if (useApi) {
+        await loginWithCredentials({
+          email: values.email,
+          password: values.password,
+          role,
+        })
+      } else {
+        login({ email: values.email, role })
+      }
+      const redirect = searchParams.get("redirect")
+      if (role === "customer") {
+        router.push(redirect || "/customer")
+        return
+      }
+      router.push(redirect || "/supplier")
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : "Ошибка входа")
     }
-    router.push(redirect || "/supplier")
   }
 
   return (
@@ -179,10 +196,15 @@ function LoginContent() {
               Войти как {role === "customer" ? "заказчик" : "поставщик"}
               <ArrowRight size={16} />
             </button>
+            {apiError && (
+              <p className="text-xs text-destructive text-center">{apiError}</p>
+            )}
           </form>
 
           <p className="text-xs text-muted-foreground text-center mt-6">
-            Это демо-вход: данные не проверяются и хранятся локально в браузере.
+            {useApi
+              ? "Вход через API BrandMarket. Демо: buyer@example.com / Buyer123!"
+              : "Это демо-вход: данные не проверяются и хранятся локально в браузере."}
           </p>
           <p className="text-sm text-center mt-4">
             <Link href="/" className="text-primary font-semibold hover:underline">

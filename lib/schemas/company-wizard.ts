@@ -19,6 +19,7 @@ const basicSchema = z.object({
   tax_number: z.string(),
   description: z.string(),
   logo: z.string(),
+  actor_types: z.array(z.enum(["buyer", "supplier"])).min(1, "Выберите хотя бы одну роль"),
 })
 
 const locationSchema = z.object({

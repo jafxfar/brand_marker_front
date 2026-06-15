@@ -107,13 +107,15 @@ const recalculateRating = (reviews: Review[]): number => {
 }
 
 const migrateCompany = (company: CompanyWithRelations): CompanyWithRelations => {
-  if (company.actor_type) return company
-  const actor_type = DEMO_BUYER_ACTOR_IDS.includes(
-    company.id as (typeof DEMO_BUYER_ACTOR_IDS)[number],
-  )
-    ? "buyer"
-    : "supplier"
-  return { ...company, actor_type }
+  const actor_types =
+    company.actor_types && company.actor_types.length > 0
+      ? company.actor_types
+      : company.actor_type
+        ? [company.actor_type]
+        : DEMO_BUYER_ACTOR_IDS.includes(company.id as (typeof DEMO_BUYER_ACTOR_IDS)[number])
+          ? ["buyer"]
+          : ["supplier"]
+  return { ...company, actor_type: company.actor_type ?? actor_types[0], actor_types }
 }
 
 const buildCompanyFromWizard = (
@@ -156,7 +158,8 @@ const buildCompanyFromWizard = (
   return {
     id: companyId,
     title: input.title.trim(),
-    actor_type: ctx.actorType,
+    actor_type: input.actor_types[0] ?? ctx.actorType,
+    actor_types: input.actor_types.length > 0 ? input.actor_types : [ctx.actorType],
     owner_id: ctx.userId,
     team_members: [ctx.userId],
     legal_name: input.legal_name.trim() || null,
@@ -351,6 +354,8 @@ export const useCompaniesStore = create<CompaniesState>()(
 
             return {
               ...company,
+              actor_type: input.actor_types[0] ?? company.actor_type,
+              actor_types: input.actor_types,
               certificates,
               company_users,
               updated_at: new Date().toISOString(),

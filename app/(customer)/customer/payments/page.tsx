@@ -18,6 +18,13 @@ import { OutgoingPaymentsTable } from "@/components/cabinet/payments/outgoing-pa
 import { EscrowFundingTable } from "@/components/cabinet/payments/escrow-funding-table"
 import { BuyerInvoicesTable } from "@/components/cabinet/payments/buyer-invoices-table"
 import { BuyerRefundsTable } from "@/components/cabinet/payments/buyer-refunds-table"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  usePaymentHistoryQuery,
+  usePendingPaymentsQuery,
+  useFundAndConfirmMilestoneMutation,
+} from "@/hooks/api/use-payments-query"
+import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 
 export default function BuyerPaymentsPage() {
   const hydrated = useHydrated()
@@ -38,14 +45,48 @@ export default function BuyerPaymentsPage() {
   const invoices = hydrated ? getBuyerInvoices(actorId) : []
   const refunds = hydrated ? getBuyerRefunds(actorId) : []
   const buyerContracts = hydrated ? getContractsForBuyer(actorId) : []
+  const useApi = isApiEnabled()
+  const { data: paymentHistory } = usePaymentHistoryQuery(hydrated && useApi)
+  const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
+  const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
+  const fundMutation = useFundAndConfirmMilestoneMutation()
 
-  const totalOutgoing = outgoing.reduce((sum, p) => sum + p.amount, 0)
-  const inEscrow = buyerContracts.reduce(
+  const apiOutgoing =
+    paymentHistory?.map((p) => ({
+      id: `${p.contract_id}-${p.milestone_id}`,
+      contractId: p.contract_id,
+      supplierId: 0,
+      title: p.title,
+      amount: p.amount,
+      currency: p.currency,
+      status: p.status,
+      date: p.created_at,
+    })) ?? []
+
+  const apiEscrowQueue =
+    pendingPayments?.items.map((p) => ({
+      contractId: p.contract_id,
+      milestoneId: p.milestone_id,
+      supplierId: 0,
+      title: p.title,
+      amount: p.amount,
+      currency: p.currency,
+      status: p.status,
+    })) ?? []
+
+  const effectiveOutgoing = useApi ? apiOutgoing : outgoing
+  const effectiveEscrowQueue = useApi ? apiEscrowQueue : escrowQueue
+  const effectiveContracts = useApi
+    ? (apiContracts as typeof buyerContracts)
+    : buyerContracts
+
+  const totalOutgoing = effectiveOutgoing.reduce((sum, p) => sum + p.amount, 0)
+  const inEscrow = effectiveContracts.reduce(
     (sum, c) => sum + getEscrowSummary(c).held,
     0,
   )
-  const pendingFunding = escrowQueue.reduce((sum, r) => sum + r.amount, 0)
-  const currency = buyerContracts[0]?.currency ?? "RUB"
+  const pendingFunding = effectiveEscrowQueue.reduce((sum, r) => sum + r.amount, 0)
+  const currency = effectiveContracts[0]?.currency ?? "RUB"
 
   const getContractTitle = (contractId: number | null) => {
     if (!contractId) return "—"
@@ -53,6 +94,10 @@ export default function BuyerPaymentsPage() {
   }
 
   const handleFund = (contractId: number, milestoneId: number) => {
+    if (useApi) {
+      fundMutation.mutate(milestoneId)
+      return
+    }
     fundMilestone(contractId, milestoneId, actorId)
   }
 
@@ -81,13 +126,13 @@ export default function BuyerPaymentsPage() {
       <section className="bg-white border border-border rounded-2xl p-6">
         {tab === "outgoing" && (
           <OutgoingPaymentsTable
-            payments={outgoing}
+            payments={effectiveOutgoing}
             getSupplierName={(id) => getCompany(id)?.title ?? "Поставщик"}
           />
         )}
         {tab === "escrow" && (
           <EscrowFundingTable
-            rows={escrowQueue}
+            rows={effectiveEscrowQueue}
             getSupplierName={(id) => getCompany(id)?.title ?? "Поставщик"}
             onFund={handleFund}
           />

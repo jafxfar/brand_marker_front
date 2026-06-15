@@ -11,6 +11,19 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useCloseRfqMutation,
+  usePublishRfqMutation,
+  useRfqQuery,
+} from "@/hooks/api/use-rfqs-query"
+import {
+  useAcceptProposalMutation,
+  useProposalsForRfqQuery,
+  useRejectProposalMutation,
+  useShortlistProposalMutation,
+} from "@/hooks/api/use-proposals-query"
+import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 import { getRfqCategoryLabel } from "@/lib/mock/rfq-categories"
 import { getRfqRequirements } from "@/lib/rfq-requirements"
 import { rfqTypeLabel } from "@/lib/rfq-display"
@@ -21,7 +34,7 @@ import { RfqAttachmentsSection } from "@/components/rfq/rfq-attachments-section"
 import { RfqStatusBadge } from "@/components/rfq/rfq-status-badge"
 import { ProposalsPreviewPanel } from "@/components/cabinet/rfq/proposals-preview-panel"
 import { AcceptProposalDialog } from "@/components/cabinet/rfq/accept-proposal-dialog"
-import type { Proposal } from "@/types"
+import type { Proposal, RfqWithRelations } from "@/types"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -35,22 +48,43 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const useApi = isApiEnabled()
+
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
-  const publishRfq = useRfqsStore((s) => s.publishRfq)
-  const closeRfq = useRfqsStore((s) => s.closeRfq)
+  const publishRfqLocal = useRfqsStore((s) => s.publishRfq)
+  const closeRfqLocal = useRfqsStore((s) => s.closeRfq)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const updateProposalStatus = useProposalsStore((s) => s.updateProposalStatus)
-  const acceptProposal = useProposalsStore((s) => s.acceptProposal)
+  const acceptProposalLocal = useProposalsStore((s) => s.acceptProposal)
   const getContractByRfqId = useContractsStore((s) => s.getContractByRfqId)
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [publishing, setPublishing] = useState(false)
+
+  const { data: apiRfq, isLoading } = useRfqQuery(id, hydrated && useApi)
+  const { data: apiProposals = [] } = useProposalsForRfqQuery(id, hydrated && useApi)
+  const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
+
+  const publishMutation = usePublishRfqMutation()
+  const closeMutation = useCloseRfqMutation()
+  const shortlistMutation = useShortlistProposalMutation()
+  const rejectMutation = useRejectProposalMutation()
+  const acceptMutation = useAcceptProposalMutation()
+
   const [acceptTarget, setAcceptTarget] = useState<Proposal | null>(null)
 
-  const rfq = hydrated ? getRfqWithRelations(id) : undefined
-  const proposals = rfq ? getProposalsForRfq(rfq.id) : []
-  const contract = rfq ? getContractByRfqId(rfq.id) : undefined
+  const localRfq = hydrated ? getRfqWithRelations(id) : undefined
+  const rfq: RfqWithRelations | undefined = useApi ? apiRfq : localRfq
+  const proposals = useApi
+    ? apiProposals
+    : rfq
+      ? getProposalsForRfq(rfq.id)
+      : []
+  const contract = useApi
+    ? apiContracts.find((c) => c.rfq_id === id)
+    : rfq
+      ? getContractByRfqId(rfq.id)
+      : undefined
 
-  if (!hydrated) {
+  if (!hydrated || (useApi && isLoading)) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
@@ -75,17 +109,48 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
     rfq.status as (typeof MANAGE_PROPOSAL_STATUSES)[number],
   )
 
-  const handleAccept = (proposalId: number) => {
-    const contractId = acceptProposal(proposalId, rfq.id, actorId)
+  const handleAccept = async (proposalId: number) => {
+    if (useApi) {
+      const result = await acceptMutation.mutateAsync(proposalId)
+      router.push(`/customer/contracts/${result.contract_id}`)
+      return
+    }
+    const contractId = acceptProposalLocal(proposalId, rfq.id, actorId)
     if (contractId) {
       router.push(`/customer/contracts/${contractId}`)
     }
   }
 
   const handlePublish = () => {
-    setPublishing(true)
-    publishRfq(rfq.id)
-    setPublishing(false)
+    if (useApi) {
+      publishMutation.mutate(rfq.id)
+      return
+    }
+    publishRfqLocal(rfq.id)
+  }
+
+  const handleClose = () => {
+    if (useApi) {
+      closeMutation.mutate(rfq.id)
+      return
+    }
+    closeRfqLocal(rfq.id)
+  }
+
+  const handleShortlist = (proposalId: number) => {
+    if (useApi) {
+      shortlistMutation.mutate(proposalId)
+      return
+    }
+    updateProposalStatus(proposalId, "shortlisted")
+  }
+
+  const handleReject = (proposalId: number) => {
+    if (useApi) {
+      rejectMutation.mutate(proposalId)
+      return
+    }
+    updateProposalStatus(proposalId, "rejected")
   }
 
   return (
@@ -146,8 +211,8 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
             proposals={proposals}
             canManage={canManageProposals}
             getCompany={getCompany}
-            onShortlist={(proposalId) => updateProposalStatus(proposalId, "shortlisted")}
-            onReject={(proposalId) => updateProposalStatus(proposalId, "rejected")}
+            onShortlist={handleShortlist}
+            onReject={handleReject}
             onAccept={(proposalId) => {
               const target = proposals.find((p) => p.id === proposalId)
               if (target) setAcceptTarget(target)
@@ -168,7 +233,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
               <button
                 type="button"
                 onClick={handlePublish}
-                disabled={publishing}
+                disabled={publishMutation.isPending}
                 className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
               >
                 Опубликовать
@@ -198,8 +263,9 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
           {canManageProposals && (
             <button
               type="button"
-              onClick={() => closeRfq(rfq.id)}
-              className="w-full h-10 rounded-xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 transition-colors"
+              onClick={handleClose}
+              disabled={closeMutation.isPending}
+              className="w-full h-10 rounded-xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 transition-colors disabled:opacity-50"
             >
               Закрыть RFQ
             </button>
@@ -217,7 +283,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
           }
           price={acceptTarget.price}
           currency={acceptTarget.currency}
-          onConfirm={() => handleAccept(acceptTarget.id)}
+          onConfirm={() => void handleAccept(acceptTarget.id)}
         />
       )}
     </div>

@@ -1,16 +1,67 @@
 "use client"
 
-import type { CompanyWizardInput } from "@/types"
+import type { ActorType, CompanyWizardInput } from "@/types"
 import { WizardField, wizardInputClass, wizardTextareaClass } from "@/components/company/wizard-field"
 
 type BasicInfoStepProps = {
   data: CompanyWizardInput
   errors: Record<string, string>
   onChange: (patch: Partial<CompanyWizardInput>) => void
+  showActorTypes?: boolean
 }
 
-export const BasicInfoStep = ({ data, errors, onChange }: BasicInfoStepProps) => (
+const toggleActorType = (
+  current: ActorType[],
+  side: ActorType,
+): ActorType[] => {
+  if (current.includes(side)) {
+    const next = current.filter((t) => t !== side)
+    return next.length > 0 ? next : current
+  }
+  return [...current, side]
+}
+
+export const BasicInfoStep = ({
+  data,
+  errors,
+  onChange,
+  showActorTypes = true,
+}: BasicInfoStepProps) => (
   <div className="space-y-5">
+    {showActorTypes && (
+      <WizardField label="Роли компании" required error={errors.actor_types}>
+        <div className="flex flex-wrap gap-3">
+          {(["buyer", "supplier"] as const).map((side) => {
+            const checked = data.actor_types.includes(side)
+            const label = side === "buyer" ? "Заказчик" : "Поставщик"
+            return (
+              <label
+                key={side}
+                className={`flex items-center gap-2 h-11 px-4 rounded-xl border cursor-pointer transition-colors ${
+                  checked
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-input hover:bg-secondary"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    onChange({ actor_types: toggleActorType(data.actor_types, side) })
+                  }
+                  className="accent-primary"
+                />
+                <span className="text-sm font-medium">{label}</span>
+              </label>
+            )
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Компания может участвовать как заказчик, поставщик или в обеих ролях
+        </p>
+      </WizardField>
+    )}
+
     <WizardField label="Название компании" required error={errors.title}>
       <input
         type="text"

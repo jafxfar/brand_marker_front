@@ -24,7 +24,7 @@ export const CompanyListPage = ({
 }: CompanyListPageProps) => {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
-  const switchCompany = useAuthStore((s) => s.switchCompany)
+  const switchActor = useAuthStore((s) => s.switchActor)
   const getCompaniesForUser = useCompaniesStore((s) => s.getCompaniesForUser)
   const canUserCreateCompany = useCompaniesStore((s) => s.canUserCreateCompany)
   const getOwnedCompaniesCount = useCompaniesStore((s) => s.getOwnedCompaniesCount)
@@ -54,7 +54,7 @@ export const CompanyListPage = ({
           </div>
         </div>
 
-        {/* {canCreate ? (
+        {canCreate ? (
           <Link
             href={`${basePath}/new`}
             className="h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
@@ -69,7 +69,7 @@ export const CompanyListPage = ({
           >
             Лимит исчерпан
           </Link>
-        )} */}
+        )}
       </div>
 
       {companies.length === 0 ? (
@@ -97,7 +97,16 @@ export const CompanyListPage = ({
               company={company}
               isActive={company.id === user.activeCompanyId}
               editHref={`${basePath}/${company.id}`}
-              onSwitch={() => switchCompany(company.id)}
+              onSwitch={() => {
+                const actor = user.actors.find(
+                  (a) => a.company_id === company.id && a.side === actorType,
+                )
+                if (actor) {
+                  switchActor(actor.id)
+                  return
+                }
+                switchActor(company.id)
+              }}
             />
           ))}
         </div>
