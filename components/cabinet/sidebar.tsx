@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCartStore } from "@/lib/store/cart-store"
-import { useNotificationsStore } from "@/lib/store/notifications-store"
+import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 interface NavItem {
@@ -35,7 +35,7 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
   const pathname = usePathname()
   const hydrated = useHydrated()
   const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0))
-  const unread = useNotificationsStore((s) => s.items.filter((i) => !i.read).length)
+  const unread = useUnreadNotificationsCount("buyer")
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0

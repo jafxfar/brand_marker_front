@@ -9,10 +9,17 @@ import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
+import { getRfqBuyerName, getRfqBuyerSummary } from "@/lib/buyer-display"
 import { getRfqCategoryLabel } from "@/lib/mock/rfq-categories"
 import { getRfqRequirements } from "@/lib/rfq-requirements"
 import { rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useSubmitSupplierProposalMutation,
+  useSupplierProposalsQuery,
+  useSupplierRfqQuery,
+} from "@/hooks/api/use-supplier-rfqs-query"
 import { RfqDescriptionSection } from "@/components/rfq/rfq-description-section"
 import { RfqRequirementsSection } from "@/components/rfq/rfq-requirements-section"
 import { RfqAttachmentsSection } from "@/components/rfq/rfq-attachments-section"
@@ -34,16 +41,27 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
   const getProposalForRfq = useProposalsStore((s) => s.getProposalForRfq)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
-  const submitProposal = useProposalsStore((s) => s.submitProposal)
+  const submitProposalLocal = useProposalsStore((s) => s.submitProposal)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [dialogOpen, setDialogOpen] = useState(false)
 
-  const rfq = hydrated ? getRfqWithRelations(id) : undefined
-  const myProposal = rfq ? getProposalForRfq(rfq.id, actorId) : undefined
-  const proposals = rfq ? getProposalsForRfq(rfq.id) : []
-  const buyer = rfq ? getCompany(Number(rfq.actor_id)) : undefined
+  const useApi = isApiEnabled()
+  const { data: apiRfq, isLoading } = useSupplierRfqQuery(id, hydrated && useApi)
+  const { data: apiProposals } = useSupplierProposalsQuery(hydrated && useApi)
+  const submitProposalMutation = useSubmitSupplierProposalMutation()
 
-  if (!hydrated) {
+  const localRfq = hydrated ? getRfqWithRelations(id) : undefined
+  const rfq = useApi ? apiRfq : localRfq
+  const myProposal = useApi
+    ? apiProposals?.find((p) => p.rfq_id === id)
+    : rfq
+      ? getProposalForRfq(rfq.id, actorId)
+      : undefined
+  const proposals = rfq ? (useApi ? [] : getProposalsForRfq(rfq.id)) : []
+  const buyer = rfq ? getRfqBuyerSummary(rfq, getCompany) : undefined
+  const buyerName = rfq ? getRfqBuyerName(rfq, getCompany) : "Заказчик"
+
+  if (!hydrated || (useApi && isLoading)) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
@@ -71,7 +89,20 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
     delivery_time: string
     message: string
   }) => {
-    submitProposal({
+    if (useApi) {
+      void submitProposalMutation.mutateAsync({
+        rfqId: rfq.id,
+        data: {
+          price: values.price,
+          currency: rfq.currency,
+          delivery_time: values.delivery_time,
+          message: values.message,
+        },
+      })
+      setDialogOpen(false)
+      return
+    }
+    submitProposalLocal({
       rfq_id: rfq.id,
       supplier_actor_id: actorId,
       price: values.price,
@@ -102,7 +133,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-black text-foreground">{rfq.title}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {getRfqCategoryLabel(rfq.category_id)} · {buyer?.title ?? "Заказчик"}
+              {getRfqCategoryLabel(rfq.category_id)} · {buyerName}
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.className}`}>
@@ -136,13 +167,15 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           <RfqDescriptionSection description={rfq.description} />
           <RfqRequirementsSection requirements={requirements} />
           <RfqAttachmentsSection attachments={rfq.attachments} />
-          <RfqProposalsList
-            proposals={proposals}
-            currentActorId={actorId}
-            getSupplierName={(supplierId) =>
-              getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
-            }
-          />
+          {!useApi && (
+            <RfqProposalsList
+              proposals={proposals}
+              currentActorId={actorId}
+              getSupplierName={(supplierId) =>
+                getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
+              }
+            />
+          )}
         </div>
 
         <div className="space-y-4">

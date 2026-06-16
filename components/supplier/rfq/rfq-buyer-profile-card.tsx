@@ -1,10 +1,10 @@
 import Link from "next/link"
-import { Building2, MapPin, ShieldCheck } from "lucide-react"
-import type { CompanyWithRelations } from "@/types"
+import { Building2, MapPin, ShieldCheck, User } from "lucide-react"
+import type { RfqBuyerSummary } from "@/types/rfq"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 
 type RfqBuyerProfileCardProps = {
-  buyer: CompanyWithRelations | undefined
+  buyer: RfqBuyerSummary | undefined
 }
 
 const verificationLabel = {
@@ -23,18 +23,24 @@ export const RfqBuyerProfileCard = ({ buyer }: RfqBuyerProfileCardProps) => {
     )
   }
 
+  const isIndividual = buyer.kind === "individual"
+  const BuyerIcon = isIndividual ? User : Building2
+
   return (
     <section className="bg-white border border-border rounded-2xl p-6 lg:sticky lg:top-24">
       <h2 className="text-base font-bold text-foreground mb-4">Профиль заказчика</h2>
 
       <div className="flex items-start gap-3 mb-4">
         <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-          <Building2 size={22} className="text-primary" />
+          <BuyerIcon size={22} className="text-primary" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-foreground">{buyer.title}</p>
+          <p className="text-sm font-bold text-foreground">{buyer.display_name}</p>
           {buyer.legal_name && (
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{buyer.legal_name}</p>
+          )}
+          {isIndividual && (
+            <p className="text-[10px] font-semibold text-muted-foreground mt-1">Физическое лицо</p>
           )}
           <div className="mt-2">
             <BuyerRating rating={buyer.rating} />
@@ -49,13 +55,15 @@ export const RfqBuyerProfileCard = ({ buyer }: RfqBuyerProfileCardProps) => {
             <span>{[buyer.city, buyer.country].filter(Boolean).join(", ")}</span>
           </div>
         )}
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <ShieldCheck size={14} className="flex-shrink-0" />
-          <span>{verificationLabel[buyer.verification_status]}</span>
-        </div>
-        {buyer.stats && (
+        {buyer.verification_status && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <ShieldCheck size={14} className="flex-shrink-0" />
+            <span>{verificationLabel[buyer.verification_status]}</span>
+          </div>
+        )}
+        {buyer.completed_contracts != null && buyer.completed_contracts > 0 && (
           <p className="text-xs text-muted-foreground pt-1">
-            {buyer.stats.completed_contracts} завершённых контрактов на платформе
+            {buyer.completed_contracts} завершённых контрактов на платформе
           </p>
         )}
       </div>
@@ -73,7 +81,7 @@ export const RfqBuyerProfileCard = ({ buyer }: RfqBuyerProfileCardProps) => {
           rel="noopener noreferrer"
           className="inline-block text-xs font-semibold text-primary hover:underline mt-3"
         >
-          Сайт компании
+          {isIndividual ? "Сайт" : "Сайт компании"}
         </Link>
       )}
     </section>

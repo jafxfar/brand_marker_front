@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react"
 import SupplierSidebar from "@/components/supplier/sidebar"
 import SupplierTopbar from "@/components/supplier/topbar"
 import { useAuthStore } from "@/lib/store/auth-store"
+import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 export default function SupplierShell({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,8 @@ export default function SupplierShell({ children }: { children: React.ReactNode 
   const user = useAuthStore((s) => s.user)
 
   const allowed = isAuthenticated && user?.role === "supplier"
+
+  useNotificationsSocket("supplier", hydrated && allowed)
 
   useEffect(() => {
     if (hydrated && !allowed) {

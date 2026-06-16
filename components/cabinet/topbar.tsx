@@ -12,7 +12,7 @@ import {
 import CustomerSidebar from "@/components/cabinet/sidebar"
 import { CompanySwitcher } from "@/components/company/company-switcher"
 import { useAuthStore } from "@/lib/store/auth-store"
-import { useNotificationsStore } from "@/lib/store/notifications-store"
+import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 export default function CustomerTopbar() {
@@ -21,7 +21,7 @@ export default function CustomerTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const unread = useNotificationsStore((s) => s.items.filter((i) => !i.read).length)
+  const unread = useUnreadNotificationsCount("buyer")
 
   const handleLogout = () => {
     logout()

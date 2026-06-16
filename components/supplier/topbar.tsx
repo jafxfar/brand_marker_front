@@ -13,7 +13,7 @@ import SupplierSidebar from "@/components/supplier/sidebar"
 import { CompanySwitcher } from "@/components/company/company-switcher"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { getUserDisplayName, getUserInitials } from "@/lib/auth-display"
-import { useNotificationsStore } from "@/lib/store/notifications-store"
+import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 export default function SupplierTopbar() {
@@ -22,7 +22,7 @@ export default function SupplierTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const unread = useNotificationsStore((s) => s.items.filter((i) => !i.read).length)
+  const unread = useUnreadNotificationsCount("supplier")
 
   const handleLogout = () => {
     logout()

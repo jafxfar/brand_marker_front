@@ -4,6 +4,7 @@ import type { Proposal, ProposalCreate, ProposalStatus } from "@/types"
 import { mockProposals } from "@/lib/mock/proposals"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
+import { useNotificationsStore } from "@/lib/store/notifications-store"
 
 export type IncomingProposalItem = {
   proposal: Proposal
@@ -103,6 +104,15 @@ export const useProposalsStore = create<ProposalsState>()(
           created_at: new Date().toISOString(),
         }
         set((state) => ({ proposals: [proposal, ...state.proposals] }))
+        const rfq = useRfqsStore.getState().getRfqWithRelations(input.rfq_id)
+        if (rfq) {
+          useNotificationsStore.getState().add({
+            type: "proposal",
+            title: "Новый отклик",
+            body: `Поставщик отправил предложение на RFQ «${rfq.title}»`,
+            href: `/customer/rfqs/${rfq.id}/proposals`,
+          })
+        }
         return proposal
       },
 
@@ -134,6 +144,13 @@ export const useProposalsStore = create<ProposalsState>()(
         }))
 
         useRfqsStore.getState().updateRfqStatus(rfqId, "contract_created")
+
+        useNotificationsStore.getState().add({
+          type: "contract",
+          title: "Предложение принято",
+          body: `Заказчик принял ваше предложение на RFQ «${rfq.title}»`,
+          href: `/supplier/contracts/${contractId}`,
+        })
 
         return contractId
       },

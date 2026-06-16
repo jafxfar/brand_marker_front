@@ -9,10 +9,18 @@ import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
+import { getRfqBuyerName, getRfqBuyerRating } from "@/lib/buyer-display"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  hasSupplierProposalForRfq,
+  useSubmitSupplierProposalMutation,
+  useSupplierProposalsQuery,
+  useSupplierRfqBoardQuery,
+} from "@/hooks/api/use-supplier-rfqs-query"
 import { RfqBoardTable } from "@/components/supplier/rfq/rfq-board-table"
 import { ProposalDialog } from "@/components/supplier/proposal-dialog"
 import type { Currency } from "@/types"
-import type { RfqType } from "@/types"
+import type { RfqType, RfqWithRelations } from "@/types"
 
 type TypeFilter = "all" | RfqType
 
@@ -22,19 +30,32 @@ export default function SupplierRfqsPage() {
   const actorId = getActorId(user)
   const getOpenRfqs = useRfqsStore((s) => s.getOpenRfqs)
   const getRfq = useRfqsStore((s) => s.getRfq)
-  const hasProposal = useProposalsStore((s) => s.hasProposal)
-  const submitProposal = useProposalsStore((s) => s.submitProposal)
+  const hasProposalLocal = useProposalsStore((s) => s.hasProposal)
+  const submitProposalLocal = useProposalsStore((s) => s.submitProposal)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
-  const openRfqs = hydrated ? getOpenRfqs() : []
+  const useApi = isApiEnabled()
+  const { data: apiRfqs, isLoading } = useSupplierRfqBoardQuery(hydrated && useApi)
+  const { data: apiProposals } = useSupplierProposalsQuery(hydrated && useApi)
+  const submitProposalMutation = useSubmitSupplierProposalMutation()
+
+  const localRfqs = hydrated ? getOpenRfqs() : []
+  const openRfqs: RfqWithRelations[] = useApi ? (apiRfqs ?? []) : localRfqs
   const filtered = typeFilter === "all"
     ? openRfqs
     : openRfqs.filter((r) => r.type === typeFilter)
 
-  const selectedRfq = selectedRfqId ? getRfq(selectedRfqId) : undefined
+  const selectedRfq = selectedRfqId
+    ? (useApi ? apiRfqs?.find((r) => r.id === selectedRfqId) : getRfq(selectedRfqId))
+    : undefined
+
+  const hasProposal = (rfqId: string, supplierActorId: number) => {
+    if (useApi) return hasSupplierProposalForRfq(apiProposals, rfqId)
+    return hasProposalLocal(rfqId, supplierActorId)
+  }
 
   const handleOpenProposal = (rfqId: string) => {
     setSelectedRfqId(rfqId)
@@ -47,7 +68,20 @@ export default function SupplierRfqsPage() {
     message: string
   }) => {
     if (!selectedRfq) return
-    submitProposal({
+    if (useApi) {
+      void submitProposalMutation.mutateAsync({
+        rfqId: selectedRfq.id,
+        data: {
+          price: values.price,
+          currency: selectedRfq.currency,
+          delivery_time: values.delivery_time,
+          message: values.message,
+        },
+      })
+      setDialogOpen(false)
+      return
+    }
+    submitProposalLocal({
       rfq_id: selectedRfq.id,
       supplier_actor_id: actorId,
       price: values.price,
@@ -56,6 +90,8 @@ export default function SupplierRfqsPage() {
       message: values.message,
     })
   }
+
+  const isEmpty = !hydrated || isLoading || filtered.length === 0
 
   return (
     <div className="max-w-[1100px] mx-auto">
@@ -87,20 +123,25 @@ export default function SupplierRfqsPage() {
         ))}
       </div>
 
-      {!hydrated || filtered.length === 0 ? (
+      {isEmpty ? (
         <div className="bg-white border border-border rounded-2xl p-12 text-center">
           <Inbox size={32} className="text-primary mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground">Открытых RFQ нет</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Новые запросы заказчиков появятся на доске
+          <p className="text-sm font-semibold text-foreground">
+            {isLoading ? "Загрузка RFQ..." : "Открытых RFQ нет"}
           </p>
+          {!isLoading && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Новые запросы заказчиков появятся на доске
+            </p>
+          )}
         </div>
       ) : (
         <RfqBoardTable
           rfqs={filtered}
           actorId={actorId}
           hasProposal={hasProposal}
-          getBuyerRating={(buyerId) => getCompany(buyerId)?.rating ?? 0}
+          getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
+          getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}
           onSubmitProposal={handleOpenProposal}
         />
       )}

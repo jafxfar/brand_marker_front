@@ -11,7 +11,8 @@ type RfqBoardTableProps = {
   rfqs: RfqWithRelations[]
   actorId: number
   hasProposal: (rfqId: string, actorId: number) => boolean
-  getBuyerRating: (buyerId: number) => number
+  getBuyerName: (rfq: RfqWithRelations) => string
+  getBuyerRating: (rfq: RfqWithRelations) => number
   onSubmitProposal: (rfqId: string) => void
 }
 
@@ -19,6 +20,7 @@ export const RfqBoardTable = ({
   rfqs,
   actorId,
   hasProposal,
+  getBuyerName,
   getBuyerRating,
   onSubmitProposal,
 }: RfqBoardTableProps) => (
@@ -28,6 +30,7 @@ export const RfqBoardTable = ({
         <thead>
           <tr className="border-b border-border bg-secondary/40">
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">RFQ</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Заказчик</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Категория</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Бюджет</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дедлайн</th>
@@ -38,7 +41,8 @@ export const RfqBoardTable = ({
         <tbody className="divide-y divide-border">
           {rfqs.map((rfq) => {
             const responded = hasProposal(rfq.id, actorId)
-            const buyerRating = getBuyerRating(Number(rfq.actor_id))
+            const buyerName = getBuyerName(rfq)
+            const buyerRating = getBuyerRating(rfq)
             return (
               <tr key={rfq.id} className="hover:bg-secondary/30 transition-colors">
                 <td className="px-4 py-3">
@@ -48,6 +52,12 @@ export const RfqBoardTable = ({
                   >
                     {rfq.title}
                   </Link>
+                </td>
+                <td className="px-4 py-3">
+                  <p className="font-medium text-foreground line-clamp-1">{buyerName}</p>
+                  {rfq.buyer?.kind === "individual" && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Физлицо</p>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {getRfqCategoryLabel(rfq.category_id)}
@@ -89,12 +99,17 @@ export const RfqBoardTable = ({
     <div className="md:hidden space-y-3">
       {rfqs.map((rfq) => {
         const responded = hasProposal(rfq.id, actorId)
-        const buyerRating = getBuyerRating(Number(rfq.actor_id))
+        const buyerName = getBuyerName(rfq)
+        const buyerRating = getBuyerRating(rfq)
         return (
           <div key={rfq.id} className="bg-white border border-border rounded-2xl p-4 space-y-3">
             <Link href={`/supplier/rfqs/${rfq.id}`} className="block">
               <p className="text-sm font-bold text-foreground">{rfq.title}</p>
               <p className="text-xs text-muted-foreground mt-1">
+                {buyerName}
+                {rfq.buyer?.kind === "individual" ? " · Физлицо" : ""}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {getRfqCategoryLabel(rfq.category_id)}
               </p>
             </Link>

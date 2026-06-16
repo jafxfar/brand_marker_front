@@ -8,6 +8,13 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useSupplierContractQuery,
+  useSupplierOpenDisputeMutation,
+  useSupplierSendMessageMutation,
+  useSupplierSubmitWorkMutation,
+} from "@/hooks/api/use-contracts-query"
 import { contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
@@ -18,6 +25,7 @@ import { ContractFilesPanel } from "@/components/supplier/contracts/contract-fil
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
 import { ContractSubmissionPanel } from "@/components/supplier/contracts/contract-submission-panel"
 import { ContractDisputeDialog } from "@/components/supplier/contracts/contract-dispute-dialog"
+import type { ContractWithRelations } from "@/types"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -31,16 +39,29 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
-  const getContract = useContractsStore((s) => s.getContract)
-  const submitWork = useContractsStore((s) => s.submitWork)
-  const openDispute = useContractsStore((s) => s.openDispute)
-  const addMessage = useContractsStore((s) => s.addMessage)
+  const useApi = isApiEnabled()
+
+  const getContractLocal = useContractsStore((s) => s.getContract)
+  const submitWorkLocal = useContractsStore((s) => s.submitWork)
+  const openDisputeLocal = useContractsStore((s) => s.openDispute)
+  const addMessageLocal = useContractsStore((s) => s.addMessage)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [disputeOpen, setDisputeOpen] = useState(false)
 
-  const contract = hydrated ? getContract(contractId) : undefined
+  const { data: apiContract, isLoading } = useSupplierContractQuery(
+    contractId,
+    hydrated && useApi,
+  )
+  const sendMessageMutation = useSupplierSendMessageMutation()
+  const openDisputeMutation = useSupplierOpenDisputeMutation()
+  const submitWorkMutation = useSupplierSubmitWorkMutation()
 
-  if (!hydrated) {
+  const localContract = hydrated ? getContractLocal(contractId) : undefined
+  const contract: ContractWithRelations | undefined = useApi
+    ? (apiContract as ContractWithRelations | undefined)
+    : localContract
+
+  if (!hydrated || (useApi && isLoading)) {
     return (
       <div className="max-w-[1000px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
@@ -49,7 +70,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
     )
   }
 
-  if (!contract) {
+  if (!contract || contract.supplier_actor_id !== actorId) {
     return (
       <div className="max-w-[1000px] mx-auto text-center py-16">
         <p className="text-sm font-semibold text-foreground">Контракт не найден</p>
@@ -72,6 +93,26 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
     return getCompany(senderId)?.title ?? "Участник"
   }
 
+  const handleSendMessage = (text: string) => {
+    if (useApi) {
+      sendMessageMutation.mutate({ contractId, text })
+      return
+    }
+    addMessageLocal(contractId, actorId, text)
+  }
+
+  const handleSubmitWork = (input: { note: string; fileNames: string[] }) => {
+    if (useApi) {
+      submitWorkMutation.mutate({
+        contractId,
+        note: input.note,
+        fileNames: input.fileNames,
+      })
+      return
+    }
+    submitWorkLocal(contractId, input)
+  }
+
   return (
     <div className="max-w-[1000px] mx-auto space-y-6">
       <Link
@@ -85,7 +126,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-border rounded-2xl p-6">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
                 <FileCheck size={20} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
@@ -97,7 +138,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
                   {meta.label}
                 </span>
               </div>
-              <div className="text-right flex-shrink-0">
+              <div className="text-right shrink-0">
                 <p className="text-lg font-black text-primary">
                   {formatCurrency(contract.agreed_amount, contract.currency)}
                 </p>
@@ -129,11 +170,11 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             contract={contract}
             currentSenderId={actorId}
             getSenderName={getSenderName}
-            onSendMessage={(text) => addMessage(contractId, actorId, text)}
+            onSendMessage={handleSendMessage}
           />
           <ContractSubmissionPanel
             contract={contract}
-            onSubmit={(input) => submitWork(contractId, input)}
+            onSubmit={handleSubmitWork}
           />
         </div>
 
@@ -164,7 +205,13 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
       <ContractDisputeDialog
         open={disputeOpen}
         onOpenChange={setDisputeOpen}
-        onConfirm={(reason) => openDispute(contractId, reason, actorId)}
+        onConfirm={(reason) => {
+          if (useApi) {
+            openDisputeMutation.mutate({ contractId, reason })
+            return
+          }
+          openDisputeLocal(contractId, reason, actorId)
+        }}
       />
     </div>
   )

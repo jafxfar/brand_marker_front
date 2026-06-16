@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react"
 import CustomerSidebar from "@/components/cabinet/sidebar"
 import CustomerTopbar from "@/components/cabinet/topbar"
 import { useAuthStore } from "@/lib/store/auth-store"
+import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 export default function CustomerShell({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,8 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
   const user = useAuthStore((s) => s.user)
 
   const allowed = isAuthenticated && user?.role === "customer"
+
+  useNotificationsSocket("buyer", hydrated && allowed)
 
   useEffect(() => {
     if (hydrated && !allowed) {

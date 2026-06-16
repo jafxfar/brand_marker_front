@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.git/
+.gitignore
+.env*
+!.env.local.example
+README.md
+.DS_Store
+*.log
+.v0-trash/
+.snowflake/

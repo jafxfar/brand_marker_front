@@ -33,6 +33,20 @@ export type RfqAttachment = {
   file_type: string
 }
 
+export type RfqBuyerSummary = {
+  id: number
+  kind: "individual" | "company"
+  display_name: string
+  rating: number
+  verification_status: "pending" | "verified" | "rejected" | null
+  city: string | null
+  country: string | null
+  legal_name?: string | null
+  description?: string | null
+  website?: string | null
+  completed_contracts?: number
+}
+
 type RfqBase = {
   id: string
   actor_id: string
@@ -73,6 +87,7 @@ export type Rfq = ProductRfq | ServiceRfq
 
 export type RfqWithRelations = Rfq & {
   attachments: RfqAttachment[]
+  buyer?: RfqBuyerSummary
 }
 
 type RfqBaseCreate = Omit<
