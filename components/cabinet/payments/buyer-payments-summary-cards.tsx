@@ -20,7 +20,7 @@ export const BuyerPaymentsSummaryCards = ({
 }: BuyerPaymentsSummaryCardsProps) => {
   const cards = [
     { label: "Исходящие", value: totalOutgoing },
-    { label: "В эскроу", value: inEscrow },
+    { label: "Заморожено", value: inEscrow },
     { label: "К оплате", value: pendingFunding },
   ]
 

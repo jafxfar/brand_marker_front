@@ -9,13 +9,18 @@ import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useSupplierProposalsQuery,
+  useWithdrawProposalMutation,
+} from "@/hooks/api/use-supplier-rfqs-query"
 import {
   MY_PROPOSAL_FILTER_STATUSES,
   myProposalTabLabels,
   type MyProposalFilterStatus,
 } from "@/lib/proposal-display"
 import { MyProposalsTable } from "@/components/supplier/proposals/my-proposals-table"
-import type { Proposal } from "@/types"
+import type { Proposal, ProposalWithRelations } from "@/types"
 
 type Tab = "all" | MyProposalFilterStatus
 
@@ -27,15 +32,15 @@ const tabs: { value: Tab; label: string }[] = [
   })),
 ]
 
-const filterProposals = (proposals: Proposal[], tab: Tab): Proposal[] => {
+const filterProposals = <T extends Proposal>(proposals: T[], tab: Tab): T[] => {
   if (tab === "all") return proposals
   return proposals.filter((p) => p.status === tab)
 }
 
 const emptyText: Record<Tab, string> = {
-  all: "Вы ещё не отправляли предложений на RFQ.",
+  all: "Вы ещё не отправляли откликов на заявки.",
   submitted: "Нет предложений со статусом «Отправлено».",
-  shortlisted: "Нет предложений в шорт-листе.",
+  shortlisted: "Нет предложений в избранном у заказчика.",
   accepted: "Нет принятых предложений.",
   rejected: "Нет отклонённых предложений.",
   withdrawn: "Нет отозванных предложений.",
@@ -49,11 +54,22 @@ export default function SupplierProposalsPage() {
   const getRfq = useRfqsStore((s) => s.getRfq)
   const [tab, setTab] = useState<Tab>("all")
 
-  const allProposals = hydrated ? getProposalsBySupplier(actorId) : []
+  const useApi = isApiEnabled()
+  const { data: apiProposals, isLoading } = useSupplierProposalsQuery(hydrated && useApi)
+  const withdrawMutation = useWithdrawProposalMutation()
+
+  const localProposals = hydrated ? getProposalsBySupplier(actorId) : []
+  const allProposals: ProposalWithRelations[] = useApi
+    ? (apiProposals ?? [])
+    : localProposals
   const filtered = filterProposals(allProposals, tab)
 
-  const getRfqTitle = (rfqId: string) =>
-    getRfq(rfqId)?.title ?? rfqId
+  const getRfqTitle = (rfqId: string) => getRfq(rfqId)?.title ?? rfqId
+
+  const handleWithdraw = (proposalId: number) => {
+    if (!useApi) return
+    withdrawMutation.mutate(proposalId)
+  }
 
   return (
     <div className="max-w-[1100px] mx-auto">
@@ -64,7 +80,7 @@ export default function SupplierProposalsPage() {
         <div>
           <h1 className="text-2xl font-black text-foreground">Мои предложения</h1>
           <p className="text-sm text-muted-foreground">
-            Отслеживайте статус ваших откликов на RFQ
+            Отслеживайте статус ваших откликов на заявки
           </p>
         </div>
       </div>
@@ -87,7 +103,7 @@ export default function SupplierProposalsPage() {
         ))}
       </div>
 
-      {!hydrated ? (
+      {!hydrated || (useApi && isLoading) ? (
         <div className="bg-white border border-border rounded-2xl p-12 animate-pulse">
           <div className="h-4 bg-secondary rounded w-1/3 mx-auto" />
         </div>
@@ -100,11 +116,16 @@ export default function SupplierProposalsPage() {
             href="/supplier/rfqs"
             className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
           >
-            Перейти к маркетплейсу RFQ <ArrowRight size={15} />
+            Перейти к заявкам заказчиков <ArrowRight size={15} />
           </Link>
         </div>
       ) : (
-        <MyProposalsTable proposals={filtered} getRfqTitle={getRfqTitle} />
+        <MyProposalsTable
+          proposals={filtered}
+          getRfqTitle={getRfqTitle}
+          onWithdraw={useApi ? handleWithdraw : undefined}
+          withdrawingId={withdrawMutation.isPending ? withdrawMutation.variables : undefined}
+        />
       )}
     </div>
   )

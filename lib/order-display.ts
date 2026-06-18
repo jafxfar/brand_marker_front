@@ -10,14 +10,14 @@ export const orderStatusMeta: Record<OrderStatus, { label: string; className: st
 }
 
 export const paymentSchemeMeta: Record<PaymentScheme, { label: string; desc: string }> = {
-  prepay: { label: "Предоплата 100%", desc: "Вся сумма удерживается в эскроу до приёмки" },
+  prepay: { label: "Предоплата 100%", desc: "Вся сумма под защитой до приёмки" },
   half: { label: "50% / 50%", desc: "Половина авансом, остаток после выполнения" },
   postpay: { label: "Постоплата", desc: "Оплата после выполнения (только для услуг)" },
 }
 
 export const escrowMeta: Record<EscrowStatus, { label: string; className: string }> = {
   none: { label: "Без оплаты", className: "bg-muted text-muted-foreground" },
-  held: { label: "Удержано в эскроу", className: "bg-amber-100 text-amber-700" },
+  held: { label: "Под защитой", className: "bg-amber-100 text-amber-700" },
   released: { label: "Выплачено", className: "bg-emerald-100 text-emerald-700" },
   disputed: { label: "Заморожено (спор)", className: "bg-red-100 text-red-700" },
   refunded: { label: "Возвращено", className: "bg-blue-100 text-blue-700" },

@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils"
 import { formatPrice } from "@/lib/format"
 import { availableSchemes, paymentSchemeMeta } from "@/lib/order-display"
+import { TermHint } from "@/components/ui/term-hint"
 import type { OrderKind, PaymentScheme } from "@/types"
 
 interface PaymentDialogProps {
@@ -39,10 +40,13 @@ export default function PaymentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Оплата заказа через эскроу</DialogTitle>
+          <DialogTitle className="flex items-center gap-1.5">
+            Безопасная оплата заказа
+            <TermHint term="escrow" iconOnly />
+          </DialogTitle>
           <DialogDescription>
-            Выберите схему оплаты. Средства удерживаются на эскроу-счёте и переводятся
-            поставщику только после приёмки работы.
+            Выберите схему оплаты. Деньги замораживаются на счёте площадки и переводятся
+            поставщику только после того, как вы примете работу.
           </DialogDescription>
         </DialogHeader>
 

@@ -41,6 +41,8 @@ export const ordersUrl = () => "/orders"
 
 export const helpUrl = () => "/help"
 
+export const registerUrl = () => "/register"
+
 export const loginRedirect = (path: string) =>
   `/login?redirect=${encodeURIComponent(path)}`
 

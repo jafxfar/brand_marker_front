@@ -73,9 +73,9 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   if (!rfq) {
     return (
       <div className="max-w-[900px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">RFQ не найден</p>
+        <p className="text-sm font-semibold text-foreground">Заявка не найдена</p>
         <Link href="/supplier/rfqs" className="text-sm text-primary hover:underline mt-2 inline-block">
-          Вернуться к маркетплейсу
+          Вернуться к заявкам заказчиков
         </Link>
       </div>
     )

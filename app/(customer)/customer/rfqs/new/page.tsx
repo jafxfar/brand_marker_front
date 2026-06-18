@@ -76,7 +76,7 @@ export default function NewRfqPage() {
       publishRfqLocal(rfq.id)
       notify({
         type: "order",
-        title: "RFQ опубликован",
+        title: "Заявка опубликована",
         body: invitedSupplier
           ? `Запрос «${rfq.title}» отправлен поставщику «${invitedSupplier.title}».`
           : `Запрос «${rfq.title}» доступен поставщикам на маркетплейсе.`,
@@ -86,7 +86,7 @@ export default function NewRfqPage() {
       notify({
         type: "order",
         title: "Черновик сохранён",
-        body: `RFQ «${rfq.title}» можно опубликовать позже.`,
+        body: `Заявку «${rfq.title}» можно опубликовать позже.`,
         href: `/customer/rfqs/${rfq.id}/edit`,
       })
     }
@@ -118,7 +118,7 @@ export default function NewRfqPage() {
 
       router.push(`/customer/rfqs/${rfq.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось создать RFQ")
+      setError(err instanceof Error ? err.message : "Не удалось создать заявку")
     } finally {
       setSubmitting(false)
     }

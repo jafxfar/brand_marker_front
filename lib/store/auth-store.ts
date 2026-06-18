@@ -39,6 +39,14 @@ interface AuthState {
     password: string
     role: SessionRole
   }) => Promise<void>
+  registerWithCredentials: (params: {
+    email: string
+    password: string
+    first_name: string
+    last_name: string
+    phone?: string
+    role: SessionRole
+  }) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (patch: Partial<SessionUser>) => void
   switchActor: (actorId: number) => Promise<void>
@@ -187,6 +195,46 @@ export const useAuthStore = create<AuthState>()(
 
       loginWithCredentials: async ({ email, password, role }) => {
         await authApi.login(email, password)
+        const me = await authApi.me()
+        const active = pickActorForRole(me.actors, role, me.active_actor_id)
+        if (!active) {
+          const sideLabel = role === "customer" ? "заказчика" : "поставщика"
+          throw new Error(
+            `Нет профиля ${sideLabel}. Активируйте роль в настройках или создайте компанию.`,
+          )
+        }
+        set({
+          isAuthenticated: true,
+          user: sessionFromMe(me, role),
+        })
+      },
+
+      registerWithCredentials: async ({
+        email,
+        password,
+        first_name,
+        last_name,
+        phone,
+        role,
+      }) => {
+        if (!isApiEnabled()) {
+          get().login({
+            email,
+            role,
+            name: `${first_name} ${last_name}`.trim(),
+          })
+          return
+        }
+
+        const apiRole = role === "supplier" ? "supplier" : "buyer"
+        await authApi.register({
+          email,
+          password,
+          first_name,
+          last_name,
+          phone: phone || undefined,
+          role: apiRole,
+        })
         const me = await authApi.me()
         const active = pickActorForRole(me.actors, role, me.active_actor_id)
         if (!active) {

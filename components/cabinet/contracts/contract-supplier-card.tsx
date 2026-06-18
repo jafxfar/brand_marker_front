@@ -4,6 +4,7 @@ import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 
 type ContractSupplierCardProps = {
   supplier: CompanyWithRelations | undefined
+  supplierTitle?: string
 }
 
 const verificationLabel = {
@@ -12,12 +13,12 @@ const verificationLabel = {
   rejected: "Отклонён",
 } as const
 
-export const ContractSupplierCard = ({ supplier }: ContractSupplierCardProps) => {
+export const ContractSupplierCard = ({ supplier, supplierTitle }: ContractSupplierCardProps) => {
   if (!supplier) {
     return (
       <section className="bg-white border border-border rounded-2xl p-6">
         <h2 className="text-base font-bold text-foreground mb-3">Поставщик</h2>
-        <p className="text-sm text-muted-foreground">Данные недоступны</p>
+        <p className="text-sm font-bold text-foreground">{supplierTitle ?? "Данные недоступны"}</p>
       </section>
     )
   }

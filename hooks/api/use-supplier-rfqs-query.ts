@@ -56,6 +56,40 @@ export const useSubmitSupplierProposalMutation = () => {
   })
 }
 
+export const useWithdrawProposalMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => supplierProposalsApi.withdraw(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: supplierRfqKeys.all })
+      qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+      qc.invalidateQueries({ queryKey: notificationKeys.all })
+    },
+  })
+}
+
+export const useUpdateSupplierProposalMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: {
+        price?: number
+        currency?: string
+        delivery_time?: string
+        message?: string
+      }
+    }) => supplierProposalsApi.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: supplierRfqKeys.all })
+      qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+    },
+  })
+}
+
 export const hasSupplierProposalForRfq = (
   proposals: ProposalWithRelations[] | undefined,
   rfqId: string,

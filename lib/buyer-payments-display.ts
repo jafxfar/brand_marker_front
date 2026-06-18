@@ -1,4 +1,5 @@
 import type { ContractWithRelations, Currency } from "@/types"
+import type { PaymentHistoryItem } from "@/lib/api/payments"
 
 export type PaymentHistoryEventType = "funding" | "release" | "refund"
 
@@ -38,6 +39,23 @@ const historyTypeForStatus = (
   return null
 }
 
+export const mapApiPaymentHistoryEvent = (
+  item: PaymentHistoryItem,
+): PaymentHistoryEvent => ({
+  id: `${item.contract_id}-${item.milestone_id}-${item.event}`,
+  contractId: item.contract_id,
+  milestoneId: item.milestone_id,
+  title: item.title,
+  amount: item.amount,
+  currency: item.currency as Currency,
+  type: (item.event === "release"
+    ? "release"
+    : item.event === "refund"
+      ? "refund"
+      : "funding") as PaymentHistoryEventType,
+  at: item.created_at,
+})
+
 export const buildPaymentHistoryFromContract = (
   contract: ContractWithRelations,
   eventsAt?: Record<string, string>,
@@ -67,7 +85,7 @@ export const buildPaymentHistoryFromContract = (
 }
 
 export const paymentHistoryTypeLabel: Record<PaymentHistoryEventType, string> = {
-  funding: "Пополнение эскроу",
+  funding: "Безопасная оплата",
   release: "Выплата поставщику",
   refund: "Возврат",
 }

@@ -112,7 +112,7 @@ export const SupplierProfileHeader = ({
         onClick={onInvite}
         className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
       >
-        <UserPlus size={16} /> Пригласить на RFQ
+        <UserPlus size={16} /> Пригласить к заявке
       </button>
       {company.website && (
         <a

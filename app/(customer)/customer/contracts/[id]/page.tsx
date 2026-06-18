@@ -14,6 +14,8 @@ import {
   useOpenDisputeMutation,
   useSendMessageMutation,
 } from "@/hooks/api/use-contracts-query"
+import { useCreateReviewMutation, useBuyerReviewsQuery } from "@/hooks/api/use-reviews-query"
+import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
 import {
   useFundAndConfirmMilestoneMutation,
   useApproveMilestoneMutation,
@@ -31,6 +33,7 @@ import { ContractFilesPanel } from "@/components/supplier/contracts/contract-fil
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
 import { ContractDisputeDialog } from "@/components/supplier/contracts/contract-dispute-dialog"
 import type { PaymentHistoryEvent } from "@/lib/buyer-payments-display"
+import { mapApiPaymentHistoryEvent } from "@/lib/buyer-payments-display"
 import type { ContractWithRelations } from "@/types"
 
 type PageProps = {
@@ -60,10 +63,18 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
 
   const { data: apiContract, isLoading } = useContractQuery(contractId, hydrated && useApi)
   const { data: paymentHistoryApi = [] } = usePaymentHistoryQuery(hydrated && useApi)
+  const { data: buyerReviews = [] } = useBuyerReviewsQuery(hydrated && useApi)
   const sendMessageMutation = useSendMessageMutation()
   const openDisputeMutation = useOpenDisputeMutation()
   const fundAndConfirmMutation = useFundAndConfirmMilestoneMutation()
   const approveMilestoneMutation = useApproveMilestoneMutation()
+  const createReviewMutation = useCreateReviewMutation()
+
+  const supplierActorId =
+    (useApi ? apiContract?.supplier_actor_id : getContractLocal(contractId)?.supplier_actor_id) ?? 0
+  const resolveSupplierName = useSupplierActorName(
+    supplierActorId ? [supplierActorId] : [],
+  )
 
   const localContract = hydrated ? getContractLocal(contractId) : undefined
   const contract: ContractWithRelations | undefined = useApi
@@ -92,33 +103,25 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
 
   const meta = contractStatusMeta[contract.status]
   const supplier = getCompany(contract.supplier_actor_id)
+  const supplierName = useApi
+    ? resolveSupplierName(contract.supplier_actor_id)
+    : (supplier?.title ?? "Поставщик")
   const canDispute = !DISPUTE_DISABLED_STATUSES.includes(
     contract.status as (typeof DISPUTE_DISABLED_STATUSES)[number],
   )
   const paymentHistory: PaymentHistoryEvent[] = useApi
     ? paymentHistoryApi
         .filter((p) => p.contract_id === contractId)
-        .map((p) => ({
-          id: `${p.contract_id}-${p.milestone_id}-${p.event}`,
-          contractId: p.contract_id,
-          milestoneId: p.milestone_id,
-          title: p.title,
-          amount: p.amount,
-          currency: p.currency as PaymentHistoryEvent["currency"],
-          type: (p.event === "release"
-            ? "release"
-            : p.event === "refund"
-              ? "refund"
-              : "funding") as PaymentHistoryEvent["type"],
-          at: p.created_at,
-        }))
+        .map(mapApiPaymentHistoryEvent)
     : getPaymentHistoryLocal(contractId)
-  const hasReview = hasReviewForContract(actorId, contractId)
+  const hasReview = useApi
+    ? buyerReviews.some((r) => r.contract_id === contractId)
+    : hasReviewForContract(actorId, contractId)
 
   const getSenderName = (senderId: number) => {
     if (senderId === actorId) return "Вы"
     if (senderId === contract.supplier_actor_id) {
-      return supplier?.title ?? "Поставщик"
+      return supplierName
     }
     return getCompany(senderId)?.title ?? "Участник"
   }
@@ -133,6 +136,15 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   }
 
   const handleSubmitReview = (rating: number, text: string) => {
+    if (useApi) {
+      createReviewMutation.mutate({
+        contract_id: contractId,
+        target_actor_id: contract.supplier_actor_id,
+        rating,
+        comment: text || null,
+      })
+      return
+    }
     submitReview({
       contractId,
       reviewerActorId: actorId,
@@ -225,7 +237,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         </div>
 
         <div className="space-y-6 lg:sticky lg:top-24">
-          <ContractSupplierCard supplier={supplier} />
+          <ContractSupplierCard supplier={supplier} supplierTitle={supplierName} />
           <ContractEscrowCard contract={contract} />
 
           <section className="bg-white border border-border rounded-2xl p-6">
@@ -242,7 +254,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
           </section>
 
           <ContractReviewSection
-            supplierName={supplier?.title ?? "Поставщик"}
+            supplierName={supplierName}
             canReview={contract.status === "completed"}
             hasReview={hasReview}
             onSubmit={handleSubmitReview}
@@ -252,7 +264,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
             href={`/customer/rfqs/${contract.rfq_id}`}
             className="block text-center text-sm font-semibold text-primary hover:underline"
           >
-            Перейти к RFQ
+            Перейти к заявке
           </Link>
         </div>
       </div>

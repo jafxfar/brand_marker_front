@@ -27,7 +27,7 @@ export const ContractEscrowCard = ({ contract }: ContractEscrowCardProps) => {
         <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
           <Shield size={16} className="text-primary" />
         </div>
-        <h2 className="text-base font-bold text-foreground">Эскроу</h2>
+        <h2 className="text-base font-bold text-foreground">Безопасная оплата</h2>
       </div>
 
       <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mb-4 ${statusMeta.className}`}>
@@ -35,7 +35,7 @@ export const ContractEscrowCard = ({ contract }: ContractEscrowCardProps) => {
       </span>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Нет активных движений по эскроу</p>
+        <p className="text-sm text-muted-foreground">Нет активных движений по оплате</p>
       ) : (
         <div className="space-y-3">
           {rows.map((row) => {

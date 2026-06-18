@@ -44,7 +44,7 @@ export default function DisputeDialog({ open, onOpenChange, onConfirm }: Dispute
           </div>
           <DialogTitle>Открыть спор по заказу</DialogTitle>
           <DialogDescription>
-            Средства в эскроу будут заморожены до разрешения спора. Опишите проблему — мы
+            Деньги по безопасной сделке будут заморожены до разрешения спора. Опишите проблему — мы
             рассмотрим обращение.
           </DialogDescription>
         </DialogHeader>

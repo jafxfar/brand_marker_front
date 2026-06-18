@@ -20,6 +20,11 @@ import { BuyerInvoicesTable } from "@/components/cabinet/payments/buyer-invoices
 import { BuyerRefundsTable } from "@/components/cabinet/payments/buyer-refunds-table"
 import { isApiEnabled } from "@/lib/api/config"
 import {
+  mapApiPaymentHistoryEvent,
+  type EscrowFundingRow,
+  type OutgoingPaymentRow,
+} from "@/lib/buyer-payments-display"
+import {
   usePaymentHistoryQuery,
   usePendingPaymentsQuery,
   useFundAndConfirmMilestoneMutation,
@@ -51,28 +56,37 @@ export default function BuyerPaymentsPage() {
   const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
   const fundMutation = useFundAndConfirmMilestoneMutation()
 
-  const apiOutgoing =
-    paymentHistory?.map((p) => ({
-      id: `${p.contract_id}-${p.milestone_id}`,
-      contractId: p.contract_id,
-      supplierId: 0,
-      title: p.title,
-      amount: p.amount,
-      currency: p.currency,
-      status: p.status,
-      date: p.created_at,
-    })) ?? []
+  const contractById = new Map(apiContracts.map((c) => [c.id, c]))
 
-  const apiEscrowQueue =
-    pendingPayments?.items.map((p) => ({
-      contractId: p.contract_id,
-      milestoneId: p.milestone_id,
-      supplierId: 0,
-      title: p.title,
-      amount: p.amount,
-      currency: p.currency,
-      status: p.status,
-    })) ?? []
+  const apiOutgoing: OutgoingPaymentRow[] =
+    paymentHistory
+      ?.map((item) => {
+        const event = mapApiPaymentHistoryEvent(item)
+        if (event.type !== "funding" && event.type !== "release") return null
+        const contract = contractById.get(event.contractId)
+        return {
+          ...event,
+          contractTitle: contract?.title ?? `Контракт #${event.contractId}`,
+          supplierActorId: contract?.supplier_actor_id ?? 0,
+        }
+      })
+      .filter((row): row is OutgoingPaymentRow => row !== null)
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()) ?? []
+
+  const apiEscrowQueue: EscrowFundingRow[] =
+    pendingPayments?.items.map((p) => {
+      const contract = contractById.get(p.contract_id)
+      return {
+        contractId: p.contract_id,
+        contractTitle: contract?.title ?? `Контракт #${p.contract_id}`,
+        milestoneId: p.milestone_id,
+        title: p.title,
+        amount: p.amount,
+        currency: p.currency as EscrowFundingRow["currency"],
+        status: p.status,
+        supplierActorId: contract?.supplier_actor_id ?? 0,
+      }
+    }) ?? []
 
   const effectiveOutgoing = useApi ? apiOutgoing : outgoing
   const effectiveEscrowQueue = useApi ? apiEscrowQueue : escrowQueue
@@ -109,7 +123,7 @@ export default function BuyerPaymentsPage() {
         </div>
         <div>
           <h1 className="text-2xl font-black text-foreground">Платежи</h1>
-          <p className="text-sm text-muted-foreground">Исходящие платежи, эскроу и документы</p>
+          <p className="text-sm text-muted-foreground">Платежи, безопасные сделки и документы</p>
         </div>
       </div>
 

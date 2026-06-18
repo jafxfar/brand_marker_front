@@ -8,18 +8,29 @@ import { PageShell } from "@/components/marketplace/page-shell"
 import { ServiceCard } from "@/components/marketplace/service-card"
 import { searchServices } from "@/lib/mock/marketplace-services"
 import { getAllCategories } from "@/lib/mock/categories"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicCatalogQuery } from "@/hooks/api/use-public-query"
+import { mergeByKey, mapCatalogItemToService } from "@/lib/marketplace-hybrid"
 import { servicesUrl } from "@/lib/marketplace-routes"
 
 export const ServicesPageContent = () => {
   const searchParams = useSearchParams()
   const query = searchParams.get("q") ?? ""
   const category = searchParams.get("category") ?? ""
+  const useApi = isApiEnabled()
+  const { data: apiCatalog } = usePublicCatalogQuery(
+    query || undefined,
+    category || undefined,
+    useApi,
+  )
   const categories = getAllCategories()
 
-  const services = useMemo(
-    () => searchServices(query, category || undefined),
-    [query, category],
-  )
+  const services = useMemo(() => {
+    const mockServices = searchServices(query, category || undefined)
+    if (!useApi || !apiCatalog?.length) return mockServices
+    const apiServices = apiCatalog.map((item) => mapCatalogItemToService(item))
+    return mergeByKey(mockServices, apiServices, "id")
+  }, [query, category, useApi, apiCatalog])
 
   return (
     <PageShell>

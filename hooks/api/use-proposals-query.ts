@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import type { ProposalAcceptInput } from "@/types"
 import { proposalsApi } from "@/lib/api/proposals"
 import { isApiEnabled } from "@/lib/api/config"
 import { rfqKeys } from "./use-rfqs-query"
@@ -41,7 +42,8 @@ export const useRejectProposalMutation = () => {
 export const useAcceptProposalMutation = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => proposalsApi.accept(id),
+    mutationFn: ({ id, terms }: { id: number; terms: ProposalAcceptInput }) =>
+      proposalsApi.accept(id, terms),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["proposals"] })
       qc.invalidateQueries({ queryKey: rfqKeys.all })

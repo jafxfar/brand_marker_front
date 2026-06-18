@@ -23,7 +23,7 @@ const sortOptions: { value: ProposalSortMode; label: string }[] = [
 const statusFilters: { value: ProposalStatus | "all"; label: string }[] = [
   { value: "all", label: "Все" },
   { value: "submitted", label: "Новые" },
-  { value: "shortlisted", label: "Шортлист" },
+  { value: "shortlisted", label: "Избранное" },
   { value: "accepted", label: "Принятые" },
   { value: "rejected", label: "Отклонённые" },
 ]

@@ -100,8 +100,8 @@ export default function SupplierRfqsPage() {
           <Inbox size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Маркетплейс RFQ</h1>
-          <p className="text-sm text-muted-foreground">Доска открытых запросов от заказчиков</p>
+          <h1 className="text-2xl font-black text-foreground">Заявки заказчиков</h1>
+          <p className="text-sm text-muted-foreground">Открытые заявки, на которые можно откликнуться</p>
         </div>
       </div>
 
@@ -127,11 +127,11 @@ export default function SupplierRfqsPage() {
         <div className="bg-white border border-border rounded-2xl p-12 text-center">
           <Inbox size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">
-            {isLoading ? "Загрузка RFQ..." : "Открытых RFQ нет"}
+            {isLoading ? "Загрузка заявок..." : "Открытых заявок нет"}
           </p>
           {!isLoading && (
             <p className="text-xs text-muted-foreground mt-1">
-              Новые запросы заказчиков появятся на доске
+              Новые заявки заказчиков появятся здесь
             </p>
           )}
         </div>

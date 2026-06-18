@@ -89,7 +89,7 @@ export const ProposalDialog = ({
         <DialogHeader>
           <DialogTitle>Отправить предложение</DialogTitle>
           <DialogDescription>
-            RFQ: {rfqTitle}. Бюджет:{" "}
+            Заявка: {rfqTitle}. Бюджет:{" "}
             {formatRfqBudget(budgetType, budgetFrom, budgetTo, currency)}.
           </DialogDescription>
         </DialogHeader>

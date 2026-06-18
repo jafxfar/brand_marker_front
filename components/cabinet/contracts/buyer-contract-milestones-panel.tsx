@@ -87,7 +87,7 @@ export const BuyerContractMilestonesPanel = ({
                         onClick={() => onFund(milestone.id)}
                         className="h-8 px-3 rounded-lg bg-primary hover:bg-primary-dark text-primary-foreground text-xs font-bold transition-colors"
                       >
-                        Оплатить в эскроу
+                        Оплатить безопасно
                       </button>
                     )}
                     {canApprove && (

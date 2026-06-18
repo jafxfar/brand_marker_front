@@ -247,17 +247,17 @@ export const RfqForm = ({
       </Link>
 
       <h1 className="text-2xl font-black text-foreground mb-1">
-        {initial ? "Редактирование RFQ" : "Создание RFQ"}
+        {initial ? "Редактирование заявки" : "Создание заявки"}
       </h1>
       <p className="text-sm text-muted-foreground mb-6">
-        Заполните детали запроса — поставщики смогут отправить предложения
+        Опишите, что вам нужно — поставщики смогут прислать предложения
       </p>
 
       {invitedSupplierName && (
         <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
           <span className="font-semibold text-foreground">Приглашение: </span>
           <span className="text-muted-foreground">
-            RFQ будет доступен только для {invitedSupplierName}
+            Заявка будет доступна только для {invitedSupplierName}
           </span>
         </div>
       )}

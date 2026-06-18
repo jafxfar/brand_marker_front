@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Proposal, ProposalCreate, ProposalStatus } from "@/types"
+import type { Proposal, ProposalAcceptInput, ProposalCreate, ProposalStatus } from "@/types"
 import { mockProposals } from "@/lib/mock/proposals"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
@@ -29,7 +29,12 @@ interface ProposalsState {
   ) => number
   updateProposalStatus: (id: number, status: ProposalStatus) => void
   submitProposal: (input: ProposalCreate) => Proposal
-  acceptProposal: (proposalId: number, rfqId: string, buyerActorId: number) => number
+  acceptProposal: (
+    proposalId: number,
+    rfqId: string,
+    buyerActorId: number,
+    terms: ProposalAcceptInput,
+  ) => number
 }
 
 const nextProposalId = (proposals: Proposal[]): number =>
@@ -109,14 +114,14 @@ export const useProposalsStore = create<ProposalsState>()(
           useNotificationsStore.getState().add({
             type: "proposal",
             title: "Новый отклик",
-            body: `Поставщик отправил предложение на RFQ «${rfq.title}»`,
+            body: `Поставщик отправил предложение на заявку «${rfq.title}»`,
             href: `/customer/rfqs/${rfq.id}/proposals`,
           })
         }
         return proposal
       },
 
-      acceptProposal: (proposalId, rfqId, buyerActorId) => {
+      acceptProposal: (proposalId, rfqId, buyerActorId, terms) => {
         const proposal = get().proposals.find((p) => p.id === proposalId)
         const rfq = useRfqsStore.getState().getRfqWithRelations(rfqId)
         if (!proposal || !rfq) return 0
@@ -130,6 +135,8 @@ export const useProposalsStore = create<ProposalsState>()(
           description: rfq.description,
           agreed_amount: proposal.price,
           currency: proposal.currency,
+          payment_type: terms.payment_type,
+          milestones: terms.milestones,
         })
 
         set((state) => ({
@@ -148,7 +155,7 @@ export const useProposalsStore = create<ProposalsState>()(
         useNotificationsStore.getState().add({
           type: "contract",
           title: "Предложение принято",
-          body: `Заказчик принял ваше предложение на RFQ «${rfq.title}»`,
+          body: `Заказчик принял ваш отклик на заявку «${rfq.title}»`,
           href: `/supplier/contracts/${contractId}`,
         })
 

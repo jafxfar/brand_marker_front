@@ -6,6 +6,13 @@ export type ApiError = {
   code?: string
 }
 
+export const getApiErrorMessage = (err: unknown, fallback: string): string =>
+  err && typeof err === "object" && "message" in err
+    ? String((err as ApiError).message)
+    : err instanceof Error
+      ? err.message
+      : fallback
+
 export type TokenPair = {
   access_token: string
   refresh_token: string

@@ -1,5 +1,6 @@
 ﻿"use client"
 
+import { useMemo } from "react"
 import Link from "next/link"
 import {
   TrendingUp, ChevronRight, Users, Clock, Zap, Award,
@@ -10,6 +11,20 @@ import { getAllCategories } from "@/lib/mock/categories"
 import { getFeaturedServices } from "@/lib/mock/marketplace-services"
 import { getTopPerformers } from "@/lib/mock/marketplace-performers"
 import { getRecentRequests } from "@/lib/mock/marketplace-requests"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  usePublicCategoriesQuery,
+  usePublicCatalogQuery,
+  usePublicSuppliersQuery,
+  usePublicRfqsQuery,
+} from "@/hooks/api/use-public-query"
+import {
+  mergeByKey,
+  mapCategoryTreeToMarketplace,
+  mapCatalogItemToService,
+  mapCompanyToPerformer,
+  mapRfqToRequest,
+} from "@/lib/marketplace-hybrid"
 import { getIcon } from "@/lib/icon-map"
 import { CategoryCard } from "@/components/marketplace/category-card"
 import { ServiceCard } from "@/components/marketplace/service-card"
@@ -26,7 +41,14 @@ import {
 } from "@/lib/marketplace-routes"
 
 export function CategoryGrid() {
-  const categories = getAllCategories()
+  const useApi = isApiEnabled()
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const mockCategories = getAllCategories()
+  const categories = useMemo(() => {
+    if (!useApi || !apiCategories?.length) return mockCategories
+    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
+    return mergeByKey(mockCategories, apiMapped, "slug")
+  }, [useApi, apiCategories, mockCategories])
 
   return (
     <section className="bg-white border-b border-border py-9">
@@ -51,7 +73,14 @@ export function CategoryGrid() {
 }
 
 export function FeaturedServices() {
-  const featuredServices = getFeaturedServices(10)
+  const useApi = isApiEnabled()
+  const { data: apiCatalog } = usePublicCatalogQuery(undefined, undefined, useApi)
+  const mockServices = getFeaturedServices(10)
+  const featuredServices = useMemo(() => {
+    if (!useApi || !apiCatalog?.length) return mockServices
+    const apiServices = apiCatalog.map((item) => mapCatalogItemToService(item))
+    return mergeByKey(mockServices, apiServices, "id").slice(0, 10)
+  }, [useApi, apiCatalog, mockServices])
 
   return (
     <section className="bg-background py-9">
@@ -82,7 +111,14 @@ export function FeaturedServices() {
 }
 
 export function ProviderShowcase() {
-  const topProviders = getTopPerformers(6)
+  const useApi = isApiEnabled()
+  const { data: apiSuppliers } = usePublicSuppliersQuery(undefined, undefined, useApi)
+  const mockPerformers = getTopPerformers(6)
+  const topProviders = useMemo(() => {
+    if (!useApi || !apiSuppliers?.length) return mockPerformers
+    const apiPerformers = apiSuppliers.map(mapCompanyToPerformer)
+    return mergeByKey(mockPerformers, apiPerformers, "id").slice(0, 6)
+  }, [useApi, apiSuppliers, mockPerformers])
 
   return (
     <section className="bg-white border-t border-b border-border py-9">
@@ -199,7 +235,14 @@ export function TrustBanners() {
 }
 
 export function RecentRequests() {
-  const recentRequests = getRecentRequests(6)
+  const useApi = isApiEnabled()
+  const { data: apiRfqs } = usePublicRfqsQuery(useApi)
+  const mockRequests = getRecentRequests(6)
+  const recentRequests = useMemo(() => {
+    if (!useApi || !apiRfqs?.length) return mockRequests
+    const apiRequests = apiRfqs.map(mapRfqToRequest)
+    return mergeByKey(mockRequests, apiRequests, "id").slice(0, 6)
+  }, [useApi, apiRfqs, mockRequests])
 
   return (
     <section className="bg-white border-t border-b border-border py-9">

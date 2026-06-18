@@ -8,6 +8,7 @@ import {
   helpUrl,
   newRfqRedirect,
   performersUrl,
+  registerUrl,
   servicesUrl,
   verificationUrl,
 } from "@/lib/marketplace-routes"
@@ -30,7 +31,7 @@ const footerLinkGroups: Record<string, { label: string; href: string }[]> = {
     { label: "FAQ для заказчиков", href: helpUrl() },
   ],
   "Для исполнителей": [
-    { label: "Зарегистрироваться", href: "/login" },
+    { label: "Зарегистрироваться", href: registerUrl() },
     { label: "Тарифы и комиссии", href: helpUrl() },
     { label: "Продвижение профиля", href: performersUrl({ featured: true }) },
     { label: "Правила работы", href: helpUrl() },

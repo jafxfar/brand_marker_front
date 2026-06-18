@@ -20,15 +20,15 @@ export const RfqListTable = ({ rfqs, getProposalCount, hydrated }: RfqListTableP
         <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
           <FileText size={22} className="text-primary" />
         </div>
-        <p className="text-sm font-semibold text-foreground">RFQ не найдены</p>
+        <p className="text-sm font-semibold text-foreground">Заявки не найдены</p>
         <p className="text-xs text-muted-foreground mt-1 mb-4">
-          Создайте запрос или смените фильтр
+          Создайте заявку или смените фильтр
         </p>
         <Link
           href="/customer/rfqs/new"
           className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-dark transition-colors"
         >
-          Создать RFQ
+          Создать заявку
         </Link>
       </div>
     )

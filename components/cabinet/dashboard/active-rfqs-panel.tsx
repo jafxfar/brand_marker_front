@@ -15,12 +15,12 @@ type ActiveRfqsPanelProps = {
 export const ActiveRfqsPanel = ({ rfqs, hydrated }: ActiveRfqsPanelProps) => (
   <div className="bg-white border border-border rounded-2xl">
     <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-base font-bold text-foreground">Активные RFQ</h2>
+      <h2 className="text-base font-bold text-foreground">Активные заявки</h2>
       <Link
         href="/customer/rfqs"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
       >
-        Все RFQ <ArrowRight size={14} />
+        Все заявки <ArrowRight size={14} />
       </Link>
     </div>
 
@@ -29,8 +29,16 @@ export const ActiveRfqsPanel = ({ rfqs, hydrated }: ActiveRfqsPanelProps) => (
         <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
           <FileText size={22} className="text-primary" />
         </div>
-        <p className="text-sm font-semibold text-foreground">Активных RFQ нет</p>
-        <p className="text-xs text-muted-foreground mt-1">Создайте запрос для поставщиков</p>
+        <p className="text-sm font-semibold text-foreground">Активных заявок нет</p>
+        <p className="text-xs text-muted-foreground mt-1 mb-4">
+          Создайте заявку, и поставщики пришлют вам предложения
+        </p>
+        <Link
+          href="/customer/rfqs/new"
+          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-dark transition-colors"
+        >
+          Создать заявку
+        </Link>
       </div>
     ) : (
       <div className="divide-y divide-border">

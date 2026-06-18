@@ -1,9 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { getAllCategories } from "@/lib/mock/categories"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
+import { mergeByKey, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import { categoryUrl } from "@/lib/marketplace-routes"
 
 type MobileCategoryAccordionProps = {
@@ -11,7 +14,14 @@ type MobileCategoryAccordionProps = {
 }
 
 export const MobileCategoryAccordion = ({ onNavigate }: MobileCategoryAccordionProps) => {
-  const categories = getAllCategories()
+  const useApi = isApiEnabled()
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const mockCategories = getAllCategories()
+  const categories = useMemo(() => {
+    if (!useApi || !apiCategories?.length) return mockCategories
+    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
+    return mergeByKey(mockCategories, apiMapped, "slug")
+  }, [useApi, apiCategories, mockCategories])
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const handleToggle = (id: string) => {

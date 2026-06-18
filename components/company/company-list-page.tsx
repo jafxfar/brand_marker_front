@@ -6,10 +6,14 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useSubscriptionStore } from "@/lib/store/subscription-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { isApiEnabled } from "@/lib/api/config"
+import { useBuyerCompaniesQuery } from "@/hooks/api/use-buyer-companies-query"
+import { useSupplierCompaniesQuery } from "@/hooks/api/use-supplier-companies-query"
+import { useSupplierSubscriptionQuery } from "@/hooks/api/use-supplier-subscription-query"
 import { CompanyCard } from "@/components/company/company-card"
 import { filterCompaniesByActorType } from "@/lib/company-wizard-utils"
 import { getCompanyLimit } from "@/lib/subscription"
-import type { ActorType } from "@/types"
+import type { ActorType, CompanyWithRelations } from "@/types"
 
 type CompanyListPageProps = {
   actorType: ActorType
@@ -28,15 +32,58 @@ export const CompanyListPage = ({
   const getCompaniesForUser = useCompaniesStore((s) => s.getCompaniesForUser)
   const canUserCreateCompany = useCompaniesStore((s) => s.canUserCreateCompany)
   const getOwnedCompaniesCount = useCompaniesStore((s) => s.getOwnedCompaniesCount)
-  const plan = useSubscriptionStore((s) => s.plan)
+  const localPlan = useSubscriptionStore((s) => s.plan)
+
+  const useApi = isApiEnabled()
+  const { data: apiSupplierCompanies, isLoading: supplierLoading } =
+    useSupplierCompaniesQuery(hydrated && useApi && actorType === "supplier")
+  const { data: apiBuyerCompanies, isLoading: buyerLoading } =
+    useBuyerCompaniesQuery(hydrated && useApi && actorType === "buyer")
+  const { data: apiSub } = useSupplierSubscriptionQuery(
+    hydrated && useApi && actorType === "supplier",
+  )
+
+  const apiCompanies =
+    actorType === "supplier" ? apiSupplierCompanies : apiBuyerCompanies
+  const isLoading = actorType === "supplier" ? supplierLoading : buyerLoading
+
+  const plan = useApi && actorType === "supplier"
+    ? ((apiSub?.is_active ? apiSub.plan : "none") as typeof localPlan)
+    : localPlan
 
   if (!hydrated || !user) return null
 
-  const allUserCompanies = getCompaniesForUser(user.userId)
-  const companies = filterCompaniesByActorType(allUserCompanies, actorType)
-  const ownedCount = getOwnedCompaniesCount(user.userId)
-  const canCreate = canUserCreateCompany(user.userId, plan)
+  const localCompanies = filterCompaniesByActorType(
+    getCompaniesForUser(user.userId),
+    actorType,
+  )
+  const companies: CompanyWithRelations[] = useApi
+    ? filterCompaniesByActorType(apiCompanies ?? [], actorType)
+    : localCompanies
+
+  const ownedCount = useApi
+    ? companies.filter((c) => c.owner_id === user.userId).length
+    : getOwnedCompaniesCount(user.userId)
+  const canCreate = useApi
+    ? (() => {
+        const limit = getCompanyLimit(plan)
+        if (limit === null) return true
+        return ownedCount < limit
+      })()
+    : canUserCreateCompany(user.userId, plan)
   const limit = getCompanyLimit(plan)
+
+  if (useApi && isLoading) {
+    return (
+      <div className="max-w-[900px] mx-auto animate-pulse">
+        <div className="h-10 bg-secondary rounded w-1/3 mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="h-40 bg-secondary rounded-2xl" />
+          <div className="h-40 bg-secondary rounded-2xl" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-[900px] mx-auto">

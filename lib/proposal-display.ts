@@ -12,7 +12,7 @@ export type MyProposalFilterStatus = (typeof MY_PROPOSAL_FILTER_STATUSES)[number
 
 export const myProposalTabLabels: Record<MyProposalFilterStatus, string> = {
   submitted: "Отправлено",
-  shortlisted: "В шорт-листе",
+  shortlisted: "В избранном",
   accepted: "Принято",
   rejected: "Отклонено",
   withdrawn: "Отозвано",
@@ -31,7 +31,7 @@ export const proposalStatusMeta: Record<
     className: "bg-violet-100 text-violet-700",
   },
   shortlisted: {
-    label: "В шорт-листе",
+    label: "В избранном",
     className: "bg-amber-100 text-amber-700",
   },
   accepted: {

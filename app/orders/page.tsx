@@ -1,12 +1,26 @@
+"use client"
+
 import Link from "next/link"
+import { useMemo } from "react"
 import { Clock, FileText, MapPin, Users } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { getRecentRequests } from "@/lib/mock/marketplace-requests"
 import { getIcon } from "@/lib/icon-map"
 import { newRfqRedirect, supplierRfqRedirect } from "@/lib/marketplace-routes"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicRfqsQuery } from "@/hooks/api/use-public-query"
+import { mergeByKey, mapRfqToRequest } from "@/lib/marketplace-hybrid"
 
 export default function OrdersPage() {
-  const orders = getRecentRequests()
+  const useApi = isApiEnabled()
+  const { data: apiRfqs } = usePublicRfqsQuery(useApi)
+  const mockOrders = getRecentRequests()
+
+  const orders = useMemo(() => {
+    if (!useApi || !apiRfqs?.length) return mockOrders
+    const apiOrders = apiRfqs.map(mapRfqToRequest)
+    return mergeByKey(mockOrders, apiOrders, "id")
+  }, [useApi, apiRfqs, mockOrders])
 
   return (
     <PageShell>

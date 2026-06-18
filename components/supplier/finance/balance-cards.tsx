@@ -26,10 +26,10 @@ export const BalanceCards = ({ balances, hydrated }: BalanceCardsProps) => (
     />
     <StatCard
       Icon={Lock}
-      label="В эскроу"
+      label="Под защитой"
       value={hydrated ? formatCurrency(balances.escrowLocked, balances.currency) : "—"}
       accent="bg-blue-100 text-blue-600"
-      subValue="Заблокировано по контрактам"
+      subValue="Заморожено по договорам до приёмки"
     />
   </div>
 )

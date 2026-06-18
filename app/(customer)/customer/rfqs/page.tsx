@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Plus } from "lucide-react"
+import { useQueries } from "@tanstack/react-query"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
@@ -13,6 +14,8 @@ import { RfqListTable } from "@/components/cabinet/rfq/rfq-list-table"
 import { cn } from "@/lib/utils"
 import { isApiEnabled } from "@/lib/api/config"
 import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
+import { proposalsApi } from "@/lib/api/proposals"
+import { proposalKeys } from "@/hooks/api/use-proposals-query"
 
 export default function MyRfqsPage() {
   const hydrated = useHydrated()
@@ -27,20 +30,34 @@ export default function MyRfqsPage() {
   const localRfqs = hydrated ? getRfqsByBuyerTab(actorId, tab) : []
   const rfqs = useApi ? (apiRfqs ?? []) : localRfqs
 
+  const proposalQueries = useQueries({
+    queries: (useApi ? rfqs : []).map((rfq) => ({
+      queryKey: proposalKeys.forRfq(rfq.id),
+      queryFn: () => proposalsApi.listForRfq(rfq.id),
+      enabled: hydrated && useApi,
+    })),
+  })
+
+  const getProposalCount = (rfqId: string) => {
+    if (!useApi) return getProposalsForRfq(rfqId).length
+    const index = rfqs.findIndex((r) => r.id === rfqId)
+    return proposalQueries[index]?.data?.length ?? 0
+  }
+
   return (
     <div className="max-w-[900px] mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-foreground">Мои RFQ</h1>
+          <h1 className="text-2xl font-black text-foreground">Мои заявки</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Управление запросами и статусами
+            Ваши запросы поставщикам и их статусы
           </p>
         </div>
         <Link
           href="/customer/rfqs/new"
           className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
-          <Plus size={17} /> Создать RFQ
+          <Plus size={17} /> Создать заявку
         </Link>
       </div>
 
@@ -69,7 +86,7 @@ export default function MyRfqsPage() {
           <RfqListTable
             rfqs={rfqs}
             hydrated={hydrated}
-            getProposalCount={(rfqId) => getProposalsForRfq(rfqId).length}
+            getProposalCount={getProposalCount}
           />
         )}
       </div>

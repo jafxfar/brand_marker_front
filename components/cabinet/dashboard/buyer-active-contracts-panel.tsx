@@ -36,7 +36,7 @@ export const BuyerActiveContractsPanel = ({
         </div>
         <p className="text-sm font-semibold text-foreground">Активных контрактов нет</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Примите предложение по RFQ, чтобы начать сделку
+          Примите предложение по заявке, чтобы начать сделку
         </p>
       </div>
     ) : (

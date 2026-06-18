@@ -5,28 +5,54 @@ import { cn } from "@/lib/utils"
 import { useSubscriptionStore } from "@/lib/store/subscription-store"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useActivateSubscriptionMutation,
+  useCancelSubscriptionMutation,
+  useSupplierSubscriptionQuery,
+} from "@/hooks/api/use-supplier-subscription-query"
 import { formatPrice } from "@/lib/format"
 import { plans, planName } from "@/lib/subscription"
+import type { SubscriptionPlan } from "@/lib/store/subscription-store"
 
 export default function SubscriptionPage() {
   const hydrated = useHydrated()
-  const plan = useSubscriptionStore((s) => s.plan)
+  const useApi = isApiEnabled()
+  const localPlan = useSubscriptionStore((s) => s.plan)
   const activeUntil = useSubscriptionStore((s) => s.activeUntil)
   const activate = useSubscriptionStore((s) => s.activate)
   const cancel = useSubscriptionStore((s) => s.cancel)
   const isActive = useSubscriptionStore((s) => s.isActive)
   const notify = useNotificationsStore((s) => s.add)
 
-  const active = hydrated && isActive()
+  const { data: apiSub } = useSupplierSubscriptionQuery(hydrated && useApi)
+  const activateMutation = useActivateSubscriptionMutation()
+  const cancelMutation = useCancelSubscriptionMutation()
 
-  const handleActivate = (planId: (typeof plans)[number]["id"], name: string) => {
-    activate(planId)
+  const plan = (useApi ? (apiSub?.plan ?? "none") : localPlan) as SubscriptionPlan
+  const active = useApi ? Boolean(apiSub?.is_active) : hydrated && isActive()
+  const until = useApi ? apiSub?.active_until : activeUntil
+
+  const handleActivate = async (planId: (typeof plans)[number]["id"], name: string) => {
+    if (useApi) {
+      await activateMutation.mutateAsync(planId)
+    } else {
+      activate(planId)
+    }
     notify({
       type: "payment",
       title: "Подписка оформлена",
       body: `Тариф «${name}» активирован на 30 дней. Ваши отклики продвигаются.`,
       href: "/supplier/subscription",
     })
+  }
+
+  const handleCancel = async () => {
+    if (useApi) {
+      await cancelMutation.mutateAsync()
+      return
+    }
+    cancel()
   }
 
   return (
@@ -41,7 +67,6 @@ export default function SubscriptionPage() {
         </div>
       </div>
 
-      {/* Current status */}
       <div
         className="rounded-2xl p-5 mb-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         style={{ background: "linear-gradient(135deg, oklch(0.22 0.055 255) 0%, oklch(0.3 0.09 255) 100%)" }}
@@ -55,15 +80,16 @@ export default function SubscriptionPage() {
               {active ? `Активен тариф «${planName(plan)}»` : "Подписка не активна"}
             </p>
             <p className="text-xs text-white/70 mt-0.5">
-              {active && activeUntil
-                ? `Действует до ${new Date(activeUntil).toLocaleDateString("ru-RU")}`
+              {active && until
+                ? `Действует до ${new Date(until).toLocaleDateString("ru-RU")}`
                 : "Оформите тариф, чтобы продвигать предложения"}
             </p>
           </div>
         </div>
         {active && (
           <button
-            onClick={cancel}
+            type="button"
+            onClick={handleCancel}
             className="h-10 px-4 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-semibold transition-colors self-start sm:self-auto"
           >
             Отменить подписку
@@ -71,7 +97,6 @@ export default function SubscriptionPage() {
         )}
       </div>
 
-      {/* Plans */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {plans.map((p) => {
           const current = hydrated && active && plan === p.id
@@ -103,6 +128,7 @@ export default function SubscriptionPage() {
                 ))}
               </ul>
               <button
+                type="button"
                 onClick={() => handleActivate(p.id, p.name)}
                 disabled={current}
                 className={cn(

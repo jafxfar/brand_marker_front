@@ -1,9 +1,13 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useMemo } from "react"
 import Link from "next/link"
 import { ChevronDown, ChevronRight, Menu } from "lucide-react"
 import { getAllCategories } from "@/lib/mock/categories"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
+import { mergeByKey, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import { getIcon } from "@/lib/icon-map"
 import { categoriesUrl, categoryUrl } from "@/lib/marketplace-routes"
 import type { MarketplaceCategory } from "@/types/marketplace"
@@ -14,7 +18,14 @@ type CategoryMegaMenuProps = {
 }
 
 export const CategoryMegaMenu = ({ variant = "nav", onNavigate }: CategoryMegaMenuProps) => {
-  const categories = getAllCategories()
+  const useApi = isApiEnabled()
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const mockCategories = getAllCategories()
+  const categories = useMemo(() => {
+    if (!useApi || !apiCategories?.length) return mockCategories
+    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
+    return mergeByKey(mockCategories, apiMapped, "slug")
+  }, [useApi, apiCategories, mockCategories])
   const [isOpen, setIsOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState<MarketplaceCategory>(categories[0])
   const containerRef = useRef<HTMLDivElement>(null)

@@ -20,7 +20,7 @@ export const EscrowFundingTable = ({
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-6">
-        Нет этапов, ожидающих пополнения эскроу
+        Нет этапов, ожидающих оплаты
       </p>
     )
   }
@@ -110,7 +110,7 @@ export const EscrowFundingTable = ({
                 onClick={() => onFund(row.contractId, row.milestoneId)}
                 className="w-full h-9 mt-3 rounded-lg bg-primary hover:bg-primary-dark text-primary-foreground text-xs font-bold transition-colors"
               >
-                Оплатить в эскроу
+                Оплатить безопасно
               </button>
             </div>
           )

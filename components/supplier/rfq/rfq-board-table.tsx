@@ -29,7 +29,7 @@ export const RfqBoardTable = ({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-secondary/40">
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">RFQ</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Заявка</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Заказчик</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Категория</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Бюджет</th>

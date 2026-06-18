@@ -39,9 +39,9 @@ export const InviteRfqDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Пригласить на RFQ</DialogTitle>
+          <DialogTitle>Пригласить к заявке</DialogTitle>
           <DialogDescription>
-            Выберите существующий запрос или создайте новый для {supplierName}
+            Выберите существующую заявку или создайте новую для {supplierName}
           </DialogDescription>
         </DialogHeader>
 
@@ -50,12 +50,12 @@ export const InviteRfqDialog = ({
           onClick={handleNewRfq}
           className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
         >
-          Создать новый RFQ
+          Создать новую заявку
         </button>
 
         {invitableRfqs.length > 0 ? (
           <div className="space-y-2 mt-2">
-            <p className="text-xs font-semibold text-muted-foreground">Существующие RFQ</p>
+            <p className="text-xs font-semibold text-muted-foreground">Существующие заявки</p>
             {invitableRfqs.map((rfq) => {
               const alreadyInvited = rfq.invited_supplier_ids?.includes(supplierId)
               return (
@@ -82,7 +82,7 @@ export const InviteRfqDialog = ({
           </div>
         ) : (
           <p className="text-xs text-muted-foreground text-center py-2">
-            Нет активных RFQ для приглашения
+            Нет активных заявок для приглашения
           </p>
         )}
       </DialogContent>

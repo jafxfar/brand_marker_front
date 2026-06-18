@@ -72,7 +72,7 @@ export const getEscrowSummary = (
 }
 
 export const escrowSummaryMeta = {
-  held: { label: "В эскроу", className: "bg-blue-100 text-blue-700" },
+  held: { label: "Под защитой", className: "bg-blue-100 text-blue-700" },
   released: { label: "Выплачено", className: "bg-emerald-100 text-emerald-700" },
   disputed: { label: "Заморожено", className: "bg-red-100 text-red-700" },
 } as const
@@ -120,7 +120,7 @@ export const milestoneStatusMeta: Record<
     className: "bg-amber-100 text-amber-700",
   },
   funded: {
-    label: "В эскроу",
+    label: "Оплачено",
     className: "bg-blue-100 text-blue-700",
   },
   in_progress: {

@@ -18,7 +18,7 @@ export const IncomingProposalsPanel = ({ items, hydrated }: IncomingProposalsPan
         href="/customer/rfqs"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
       >
-        К RFQ <ArrowRight size={14} />
+        К заявкам <ArrowRight size={14} />
       </Link>
     </div>
 

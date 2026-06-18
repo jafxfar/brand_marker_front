@@ -14,12 +14,12 @@ type NewRfqPanelProps = {
 export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
   <div className="bg-white border border-border rounded-2xl">
     <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-base font-bold text-foreground">Новые запросы RFQ</h2>
+      <h2 className="text-base font-bold text-foreground">Новые заявки</h2>
       <Link
         href="/supplier/rfqs"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
       >
-        Все RFQ <ArrowRight size={14} />
+        Все заявки <ArrowRight size={14} />
       </Link>
     </div>
 
@@ -28,10 +28,16 @@ export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
         <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
           <Inbox size={22} className="text-primary" />
         </div>
-        <p className="text-sm font-semibold text-foreground">Новых RFQ нет</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Открытые запросы заказчиков появятся здесь
+        <p className="text-sm font-semibold text-foreground">Новых заявок нет</p>
+        <p className="text-xs text-muted-foreground mt-1 mb-4">
+          Открытые заявки заказчиков появятся здесь
         </p>
+        <Link
+          href="/supplier/rfqs"
+          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-dark transition-colors"
+        >
+          Смотреть заявки
+        </Link>
       </div>
     ) : (
       <div className="divide-y divide-border">

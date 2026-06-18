@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import Link from "next/link"
 import {
   FileText, Inbox, FileCheck, Wallet, AlertTriangle, MessageSquare, Plus, ArrowRight,
@@ -16,6 +17,17 @@ import { isApiEnabled } from "@/lib/api/config"
 import { useActiveRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 import { usePendingPaymentsQuery } from "@/hooks/api/use-payments-query"
+import { useQueries } from "@tanstack/react-query"
+import { proposalsApi } from "@/lib/api/proposals"
+import { proposalKeys } from "@/hooks/api/use-proposals-query"
+import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
+import {
+  getActiveBuyerContracts,
+  getBuyerIncomingMessages,
+  getBuyerIncomingProposals,
+  getBuyerNewProposalsCount,
+  getBuyerUnreadMessageCount,
+} from "@/lib/buyer-dashboard"
 import { StatCard } from "@/components/supplier/dashboard/stat-card"
 import { ActiveRfqsPanel } from "@/components/cabinet/dashboard/active-rfqs-panel"
 import { IncomingProposalsPanel } from "@/components/cabinet/dashboard/incoming-proposals-panel"
@@ -24,6 +36,7 @@ import { BuyerPendingPaymentsPanel } from "@/components/cabinet/dashboard/buyer-
 import { BuyerDisputesPanel } from "@/components/cabinet/dashboard/buyer-disputes-panel"
 import { BuyerMessagesPanel } from "@/components/cabinet/dashboard/buyer-messages-panel"
 import { ActivateRoleBanner } from "@/components/company/activate-role-banner"
+import { HowItWorks } from "@/components/onboarding/how-it-works"
 import type { ContractWithRelations, RfqWithRelations } from "@/types"
 
 export default function CustomerDashboard() {
@@ -48,11 +61,29 @@ export default function CustomerDashboard() {
   const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
   const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
 
+  const proposalQueries = useQueries({
+    queries: (useApi ? apiActiveRfqs : []).map((rfq) => ({
+      queryKey: proposalKeys.forRfq(rfq.id),
+      queryFn: () => proposalsApi.listForRfq(rfq.id),
+      enabled: hydrated && useApi,
+    })),
+  })
+
+  const proposalsByRfq = useMemo(() => {
+    const map = new Map<string, import("@/types").Proposal[]>()
+    if (!useApi) return map
+    apiActiveRfqs.forEach((rfq, index) => {
+      const data = proposalQueries[index]?.data
+      if (data) map.set(rfq.id, data)
+    })
+    return map
+  }, [useApi, apiActiveRfqs, proposalQueries])
+
   const getRfqTitle = (rfqId: string) => {
     if (useApi) {
-      return apiActiveRfqs.find((r) => r.id === rfqId)?.title ?? "RFQ"
+      return apiActiveRfqs.find((r) => r.id === rfqId)?.title ?? "Заявка"
     }
-    return getRfqWithRelations(rfqId)?.title ?? "RFQ"
+    return getRfqWithRelations(rfqId)?.title ?? "Заявка"
   }
 
   const getRfqActorId = (rfqId: string) => {
@@ -62,23 +93,35 @@ export default function CustomerDashboard() {
     return getRfqWithRelations(rfqId)?.actor_id
   }
 
-  const getSupplierName = (supplierId: number) =>
+  const getSupplierNameLocal = (supplierId: number) =>
     getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
+
+  const supplierIds = useApi
+    ? (apiContracts as ContractWithRelations[]).map((c) => c.supplier_actor_id)
+    : []
+  const resolveSupplierName = useSupplierActorName(supplierIds)
+
+  const getSupplierName = (supplierId: number) =>
+    useApi ? resolveSupplierName(supplierId) : getSupplierNameLocal(supplierId)
 
   const localActiveRfqs = hydrated ? getActiveRfqsByBuyer(actorId) : []
   const activeRfqs: RfqWithRelations[] = useApi ? apiActiveRfqs : localActiveRfqs
 
-  const incomingProposals = hydrated && !useApi
-    ? getIncomingProposalsForBuyer(actorId, getRfqTitle, getRfqActorId)
+  const incomingProposals = hydrated
+    ? useApi
+      ? getBuyerIncomingProposals(apiActiveRfqs, proposalsByRfq, actorId)
+      : getIncomingProposalsForBuyer(actorId, getRfqTitle, getRfqActorId)
     : []
 
-  const newProposalsCount = hydrated && !useApi
-    ? getNewProposalsCountForBuyer(actorId, getRfqActorId)
+  const newProposalsCount = hydrated
+    ? useApi
+      ? getBuyerNewProposalsCount(apiActiveRfqs, proposalsByRfq, actorId)
+      : getNewProposalsCountForBuyer(actorId, getRfqActorId)
     : 0
 
   const localActiveContracts = hydrated ? getActiveContractsForBuyer(actorId) : []
-  const apiActiveContracts = (apiContracts as ContractWithRelations[]).filter(
-    (c) => c.status === "active" || c.status === "pending_payment" || c.status === "delivered",
+  const apiActiveContracts = getActiveBuyerContracts(
+    apiContracts as ContractWithRelations[],
   )
   const activeContracts = useApi ? apiActiveContracts : localActiveContracts
 
@@ -118,11 +161,21 @@ export default function CustomerDashboard() {
       ? getDisputesForBuyer(actorId)
       : []
 
-  const messages = hydrated && !useApi
-    ? getIncomingMessagesForBuyer(actorId, getSupplierName)
+  const messages = hydrated
+    ? useApi
+      ? getBuyerIncomingMessages(
+          apiContracts as ContractWithRelations[],
+          actorId,
+          getSupplierName,
+        )
+      : getIncomingMessagesForBuyer(actorId, getSupplierNameLocal)
     : []
 
-  const unreadCount = hydrated && !useApi ? getUnreadMessageCountForBuyer(actorId) : 0
+  const unreadCount = hydrated
+    ? useApi
+      ? getBuyerUnreadMessageCount(apiContracts as ContractWithRelations[], actorId)
+      : getUnreadMessageCountForBuyer(actorId)
+    : 0
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
@@ -137,21 +190,23 @@ export default function CustomerDashboard() {
             Здравствуйте{hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Обзор RFQ, предложений и контрактов
+            Ваши заявки, предложения и договоры
           </p>
         </div>
         <Link
           href="/customer/rfqs/new"
           className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
-          <Plus size={17} /> Создать RFQ
+          <Plus size={17} /> Создать заявку
         </Link>
       </div>
+
+      <HowItWorks variant="buyer" />
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           Icon={FileText}
-          label="Активные RFQ"
+          label="Активные заявки"
           value={hydrated ? String(activeRfqs.length) : "—"}
           accent="bg-blue-100 text-blue-600"
         />

@@ -4,9 +4,12 @@ import { useRouter } from "next/navigation"
 import { CompanyWizard } from "@/components/company/company-wizard"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
-import { useSubscriptionStore } from "@/lib/store/subscription-store"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { getCompanyLimit } from "@/lib/subscription"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useCreateBuyerCompanyMutation,
+  useBuyerCompaniesQuery,
+} from "@/hooks/api/use-buyer-companies-query"
 import type { CompanyWizardInput } from "@/types"
 
 export default function CustomerCompanyNewPage() {
@@ -14,17 +17,22 @@ export default function CustomerCompanyNewPage() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const createCompany = useCompaniesStore((s) => s.createCompany)
-  const canUserCreateCompany = useCompaniesStore((s) => s.canUserCreateCompany)
-  const getOwnedCompaniesCount = useCompaniesStore((s) => s.getOwnedCompaniesCount)
-  const plan = useSubscriptionStore((s) => s.plan)
+  const useApi = isApiEnabled()
+  const { data: apiCompanies } = useBuyerCompaniesQuery(hydrated && useApi)
+  const createMutation = useCreateBuyerCompanyMutation()
 
   if (!hydrated || !user) return null
 
-  const ownedCount = getOwnedCompaniesCount(user.userId)
-  const limit = getCompanyLimit(plan)
-  const canCreate = canUserCreateCompany(user.userId, plan)
+  const ownedCount = useApi
+    ? (apiCompanies ?? []).filter((c) => c.owner_id === user.userId).length
+    : useCompaniesStore.getState().getOwnedCompaniesCount(user.userId)
 
-  const handleSubmit = (data: CompanyWizardInput) => {
+  const handleSubmit = async (data: CompanyWizardInput) => {
+    if (useApi) {
+      await createMutation.mutateAsync(data)
+      router.push("/customer/company")
+      return
+    }
     createCompany(data, { userId: user.userId, actorType: "buyer" })
     router.push("/customer/company")
   }
@@ -33,11 +41,11 @@ export default function CustomerCompanyNewPage() {
     <CompanyWizard
       actorType="buyer"
       basePath="/customer/company"
-      limitBlocked={!canCreate}
+      limitBlocked={false}
       limitMessage={
-        limit !== null
-          ? `Вы создали ${ownedCount} из ${limit} доступных компаний на текущем тарифе.`
-          : "Достигнут лимит компаний."
+        ownedCount > 0
+          ? `У вас ${ownedCount} компаний заказчика.`
+          : undefined
       }
       onSubmit={handleSubmit}
     />

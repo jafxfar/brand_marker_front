@@ -6,6 +6,9 @@ import { Award } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { PerformerCard } from "@/components/marketplace/performer-card"
 import { filterPerformers } from "@/lib/mock/marketplace-performers"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicSuppliersQuery } from "@/hooks/api/use-public-query"
+import { mergeByKey, mapCompanyToPerformer } from "@/lib/marketplace-hybrid"
 
 export const PerformersPageContent = () => {
   const searchParams = useSearchParams()
@@ -13,11 +16,28 @@ export const PerformersPageContent = () => {
   const verified = searchParams.get("verified") === "true"
   const featured = searchParams.get("featured") === "true"
   const scope = searchParams.get("scope")
-
-  const performers = useMemo(
-    () => filterPerformers({ q: query, verified, featured, scope: scope ?? undefined }),
-    [query, verified, featured, scope],
+  const useApi = isApiEnabled()
+  const { data: apiSuppliers } = usePublicSuppliersQuery(
+    query || undefined,
+    undefined,
+    useApi,
   )
+
+  const performers = useMemo(() => {
+    const mockFiltered = filterPerformers({ q: query, verified, featured, scope: scope ?? undefined })
+    if (!useApi || !apiSuppliers?.length) return mockFiltered
+    const apiPerformers = apiSuppliers.map(mapCompanyToPerformer)
+    const merged = mergeByKey(mockFiltered, apiPerformers, "id")
+    const q = query.trim().toLowerCase()
+    return merged.filter((p) => {
+      if (verified && !p.verified) return false
+      if (featured && !p.featured) return false
+      if (scope === "worldwide" && !p.worldwide) return false
+      if (!q) return true
+      const haystack = [p.name, p.category, p.city, ...p.specialties].join(" ").toLowerCase()
+      return haystack.includes(q)
+    })
+  }, [query, verified, featured, scope, useApi, apiSuppliers])
 
   const pageTitle = scope === "worldwide"
     ? "Исполнители по всему миру"

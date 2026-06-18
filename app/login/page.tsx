@@ -10,6 +10,8 @@ import { Briefcase, ShoppingBag, Store, ArrowRight, ShieldCheck } from "lucide-r
 import { useAuthStore } from "@/lib/store/auth-store"
 import type { SessionRole } from "@/lib/store/auth-store"
 import { isApiEnabled } from "@/lib/api/config"
+import { getApiErrorMessage } from "@/lib/api/client"
+import { registerUrl } from "@/lib/marketplace-routes"
 
 const schema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -70,7 +72,7 @@ function LoginContent() {
       }
       router.push(redirect || "/supplier")
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : "Ошибка входа")
+      setApiError(getApiErrorMessage(err, "Ошибка входа"))
     }
   }
 
@@ -97,7 +99,7 @@ function LoginContent() {
           </h1>
           <p className="text-white/70 text-sm leading-relaxed max-w-sm mb-8">
             Размещайте заказы, получайте отклики проверенных поставщиков и платите
-            безопасно через эскроу — деньги переводятся только после приёмки работы.
+            безопасно — деньги переводятся поставщику только после приёмки работы.
           </p>
           <div className="flex items-center gap-2.5 text-sm text-white/80">
             <ShieldCheck size={18} className="text-primary" />
@@ -207,7 +209,13 @@ function LoginContent() {
               : "Это демо-вход: данные не проверяются и хранятся локально в браузере."}
           </p>
           <p className="text-sm text-center mt-4">
-            <Link href="/" className="text-primary font-semibold hover:underline">
+            Нет аккаунта?{" "}
+            <Link href={registerUrl()} className="text-primary font-semibold hover:underline">
+              Зарегистрироваться
+            </Link>
+          </p>
+          <p className="text-sm text-center mt-2">
+            <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">
               ← Вернуться на главную
             </Link>
           </p>

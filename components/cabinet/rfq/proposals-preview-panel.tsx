@@ -50,7 +50,7 @@ export const ProposalsPreviewPanel = ({
           <Inbox size={18} className="text-primary" />
         </div>
         <p className="text-sm text-muted-foreground">
-          Пока нет предложений. Опубликуйте RFQ и дождитесь откликов.
+          Пока нет предложений. Опубликуйте заявку и дождитесь откликов.
         </p>
       </div>
     ) : (

@@ -78,7 +78,7 @@ export const ProposalReviewCard = ({
               onClick={onShortlist}
               className="h-10 px-4 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors"
             >
-              В шортлист
+              В избранное
             </button>
           )}
           <button

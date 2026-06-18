@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { Proposal } from "@/types"
+import type { Proposal, ProposalAcceptInput } from "@/types"
 import { ProposalActionCard } from "@/components/cabinet/rfq/proposal-action-card"
 import { AcceptProposalDialog } from "@/components/cabinet/rfq/accept-proposal-dialog"
 
@@ -11,7 +11,7 @@ type BuyerProposalsPanelProps = {
   getSupplierName: (supplierId: number) => string
   onShortlist: (proposalId: number) => void
   onReject: (proposalId: number) => void
-  onAccept: (proposalId: number) => void
+  onAccept: (proposalId: number, terms: ProposalAcceptInput) => void
 }
 
 export const BuyerProposalsPanel = ({
@@ -35,7 +35,7 @@ export const BuyerProposalsPanel = ({
 
       {proposals.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Пока нет предложений. Опубликуйте RFQ и дождитесь откликов поставщиков.
+          Пока нет предложений. Опубликуйте заявку и дождитесь откликов поставщиков.
         </p>
       ) : (
         <div className="space-y-3">
@@ -60,7 +60,7 @@ export const BuyerProposalsPanel = ({
           supplierName={getSupplierName(acceptTarget.supplier_actor_id)}
           price={acceptTarget.price}
           currency={acceptTarget.currency}
-          onConfirm={() => onAccept(acceptTarget.id)}
+          onConfirm={(terms) => onAccept(acceptTarget.id, terms)}
         />
       )}
     </section>

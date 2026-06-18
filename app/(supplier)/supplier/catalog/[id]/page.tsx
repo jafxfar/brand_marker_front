@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation"
 import { CatalogItemForm } from "@/components/supplier/catalog/catalog-item-form"
 import { useItemsStore } from "@/lib/store/items-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { isApiEnabled } from "@/lib/api/config"
+import {
+  useArchiveCatalogItemMutation,
+  useSupplierCatalogItemQuery,
+  useUpdateCatalogItemMutation,
+} from "@/hooks/api/use-supplier-catalog-query"
 import type { CatalogItemInput } from "@/types"
 
 type PageProps = {
@@ -20,10 +26,16 @@ export default function EditCatalogItemPage({ params }: PageProps) {
   const getItem = useItemsStore((s) => s.getItem)
   const updateItem = useItemsStore((s) => s.updateItem)
   const archiveItem = useItemsStore((s) => s.archiveItem)
+  const useApi = isApiEnabled()
 
-  const item = hydrated ? getItem(itemId) : undefined
+  const { data: apiItem, isLoading } = useSupplierCatalogItemQuery(itemId, hydrated && useApi)
+  const updateMutation = useUpdateCatalogItemMutation()
+  const archiveMutation = useArchiveCatalogItemMutation()
 
-  if (!hydrated) {
+  const localItem = hydrated ? getItem(itemId) : undefined
+  const item = useApi ? apiItem : localItem
+
+  if (!hydrated || (useApi && isLoading)) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
@@ -43,12 +55,23 @@ export default function EditCatalogItemPage({ params }: PageProps) {
     )
   }
 
-  const handleSubmit = (input: CatalogItemInput, _status: "draft" | "active") => {
-    updateItem(itemId, input)
+  const handleSubmit = async (input: CatalogItemInput, status: "draft" | "active") => {
+    const payload = { ...input, status }
+    if (useApi) {
+      await updateMutation.mutateAsync({ id: itemId, data: payload })
+      router.push("/supplier/catalog")
+      return
+    }
+    updateItem(itemId, payload)
     router.push("/supplier/catalog")
   }
 
-  const handleArchive = () => {
+  const handleArchive = async () => {
+    if (useApi) {
+      await archiveMutation.mutateAsync(itemId)
+      router.push("/supplier/catalog")
+      return
+    }
     archiveItem(itemId)
     router.push("/supplier/catalog")
   }

@@ -1,4 +1,4 @@
-import type { ProposalWithRelations } from "@/types"
+import type { ProposalAcceptInput, ProposalWithRelations } from "@/types"
 import { apiFetch } from "./client"
 
 const RFQ_PREFIX = "/buyer/rfqs"
@@ -14,9 +14,9 @@ export const proposalsApi = {
   reject: (id: number) =>
     apiFetch<ProposalWithRelations>(`${PROPOSAL_PREFIX}/${id}/reject`, { method: "POST" }),
 
-  accept: (id: number) =>
+  accept: (id: number, body: ProposalAcceptInput) =>
     apiFetch<{ proposal: ProposalWithRelations; contract_id: number }>(
       `${PROPOSAL_PREFIX}/${id}/accept`,
-      { method: "POST" },
+      { method: "POST", body: JSON.stringify(body) },
     ),
 }

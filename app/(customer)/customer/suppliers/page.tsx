@@ -7,26 +7,36 @@ import { catalogCategories } from "@/lib/mock/catalog-categories"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useItemsStore } from "@/lib/store/items-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicSuppliersQuery } from "@/hooks/api/use-public-query"
 import {
   formatSupplierCatalogSummary,
   getActiveCatalogItemsCount,
   getSupplierCategories,
 } from "@/lib/supplier-directory"
 import { SupplierDirectoryCard } from "@/components/cabinet/suppliers/supplier-directory-card"
+import type { CompanyWithRelations } from "@/types"
 
 export default function SuppliersPage() {
   const hydrated = useHydrated()
+  const useApi = isApiEnabled()
   const [query, setQuery] = useState("")
   const [categorySlug, setCategorySlug] = useState("")
 
   const getSupplierCompaniesByCategory = useCompaniesStore((s) => s.getSupplierCompaniesByCategory)
   const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
 
+  const { data: apiSuppliers, isLoading } = usePublicSuppliersQuery(
+    query.trim() || undefined,
+    categorySlug || undefined,
+    hydrated && useApi,
+  )
+
   const getCategoriesForSupplier = (companyId: number) =>
     getSupplierCategories(getItemsBySupplier(companyId))
 
-  const companies = useMemo(() => {
-    if (!hydrated) return []
+  const localCompanies = useMemo(() => {
+    if (!hydrated || useApi) return []
     const byCategory = getSupplierCompaniesByCategory(categorySlug, (id) =>
       getCategoriesForSupplier(id),
     )
@@ -45,11 +55,16 @@ export default function SuppliersPage() {
     })
   }, [
     hydrated,
+    useApi,
     query,
     categorySlug,
     getSupplierCompaniesByCategory,
     getItemsBySupplier,
   ])
+
+  const companies: CompanyWithRelations[] = useApi
+    ? (apiSuppliers ?? [])
+    : localCompanies
 
   return (
     <div className="max-w-[1100px] mx-auto space-y-6">
@@ -60,7 +75,7 @@ export default function SuppliersPage() {
         <div>
           <h1 className="text-2xl font-black text-foreground">Каталог поставщиков</h1>
           <p className="text-sm text-muted-foreground">
-            Поиск компаний и приглашение на RFQ
+            Поиск компаний и приглашение к заявке
           </p>
         </div>
       </div>
@@ -110,7 +125,7 @@ export default function SuppliersPage() {
         ))}
       </div>
 
-      {!hydrated ? (
+      {!hydrated || (useApi && isLoading) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-40 bg-secondary rounded-2xl animate-pulse" />
@@ -123,9 +138,18 @@ export default function SuppliersPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {companies.map((company) => {
-            const items = getItemsBySupplier(company.id)
-            const categories = getSupplierCategories(items)
-            const activeCount = getActiveCatalogItemsCount(items)
+            const items = useApi ? [] : getItemsBySupplier(company.id)
+            const categories = useApi
+              ? (company.profile?.industries.map((name, i) => ({
+                  id: i,
+                  parent_id: null,
+                  name,
+                  slug: name,
+                })) ?? [])
+              : getSupplierCategories(items)
+            const activeCount = useApi
+              ? (company.stats?.active_contracts ?? 0)
+              : getActiveCatalogItemsCount(items)
             return (
               <SupplierDirectoryCard
                 key={company.id}

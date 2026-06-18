@@ -7,6 +7,7 @@ import {
   Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, Building2, type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { isApiEnabled } from "@/lib/api/config"
 
 interface NavItem {
   href: string
@@ -14,19 +15,49 @@ interface NavItem {
   Icon: LucideIcon
 }
 
-const navItems: NavItem[] = [
-  { href: "/supplier", label: "Дашборд", Icon: LayoutDashboard },
-  { href: "/supplier/contracts", label: "Контракты", Icon: FileCheck },
-  { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
-  { href: "/supplier/rfqs", label: "Маркетплейс RFQ", Icon: Inbox },
-  { href: "/supplier/proposals", label: "Мои предложения", Icon: Send },
-  { href: "/supplier/messages", label: "Сообщения", Icon: MessageSquare },
-  { href: "/supplier/catalog", label: "Каталог", Icon: Boxes },
-  { href: "/supplier/orders", label: "Заказы", Icon: Inbox },
-  { href: "/supplier/customers", label: "Заказчики", Icon: Users },
-  // { href: "/supplier/company", label: "Мои компании", Icon: Building2 },
-  { href: "/supplier/subscription", label: "Подписка", Icon: Crown },
-  { href: "/supplier/profile", label: "Профиль", Icon: User },
+interface NavSection {
+  title: string
+  items: NavItem[]
+}
+
+const navSections: NavSection[] = [
+  {
+    title: "Главное",
+    items: [
+      { href: "/supplier", label: "Дашборд", Icon: LayoutDashboard },
+      { href: "/supplier/rfqs", label: "Заявки заказчиков", Icon: Inbox },
+      { href: "/supplier/proposals", label: "Мои отклики", Icon: Send },
+      { href: "/supplier/contracts", label: "Договоры", Icon: FileCheck },
+      { href: "/supplier/orders", label: "Заказы", Icon: Briefcase },
+    ],
+  },
+  {
+    title: "Каталог",
+    items: [
+      { href: "/supplier/catalog", label: "Каталог", Icon: Boxes },
+    ],
+  },
+  {
+    title: "Финансы",
+    items: [
+      { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
+      { href: "/supplier/subscription", label: "Подписка", Icon: Crown },
+    ],
+  },
+  {
+    title: "Партнёры",
+    items: [
+      { href: "/supplier/messages", label: "Сообщения", Icon: MessageSquare },
+      { href: "/supplier/customers", label: "Заказчики", Icon: Users },
+    ],
+  },
+  {
+    title: "Аккаунт",
+    items: [
+      { href: "/supplier/company", label: "Мои компании", Icon: Building2 },
+      { href: "/supplier/profile", label: "Профиль", Icon: User },
+    ],
+  },
 ]
 
 export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -63,35 +94,44 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
         </Link>
       </div>
 
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const active = isActive(item.href)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                active
-                  ? "bg-secondary text-primary"
-                  : "text-foreground hover:bg-secondary hover:text-primary",
-              )}
-            >
-              <item.Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
-              <span>{item.label}</span>
-            </Link>
-          )
-        })}
+      <nav className="flex-1 px-3 space-y-5 overflow-y-auto pb-4">
+        {navSections.map((section) => (
+          <div key={section.title} className="space-y-1">
+            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+              {section.title}
+            </p>
+            {section.items.map((item) => {
+              const active = isActive(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                    active
+                      ? "bg-secondary text-primary"
+                      : "text-foreground hover:bg-secondary hover:text-primary",
+                  )}
+                >
+                  <item.Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="p-4 border-t border-border flex-shrink-0">
-        <div className="rounded-xl bg-secondary p-3.5">
-          <p className="text-xs font-bold text-foreground">Кабинет поставщика</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-            Демо-режим. Данные хранятся локально в браузере.
-          </p>
-        </div>
+        {!isApiEnabled() && (
+          <div className="rounded-xl bg-secondary p-3.5">
+            <p className="text-xs font-bold text-foreground">Кабинет поставщика</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+              Демо-режим. Данные хранятся локально в браузере.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

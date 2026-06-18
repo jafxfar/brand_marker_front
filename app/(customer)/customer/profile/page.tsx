@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { isApiEnabled } from "@/lib/api/config"
+import { authApi } from "@/lib/api/auth"
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -21,6 +23,8 @@ export default function ProfilePage() {
   const [city, setCity] = useState("")
   const [hasDelivery, setHasDelivery] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const useApi = isApiEnabled()
 
   useEffect(() => {
     if (user) {
@@ -32,16 +36,33 @@ export default function ProfilePage() {
     }
   }, [user])
 
-  const handleSave = (event: React.FormEvent) => {
+  const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
-    updateProfile({
-      name: name.trim() || user?.name || "",
-      phone: phone.trim() || undefined,
-      city: city.trim() || undefined,
-      hasDelivery,
-    })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    const trimmedName = name.trim() || user?.name || ""
+    const parts = trimmedName.split(/\s+/)
+    const firstName = parts[0] ?? ""
+    const lastName = parts.slice(1).join(" ") || firstName
+
+    setSaving(true)
+    try {
+      if (useApi) {
+        await authApi.updateProfile({
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone.trim() || null,
+        })
+      }
+      updateProfile({
+        name: trimmedName,
+        phone: phone.trim() || undefined,
+        city: city.trim() || undefined,
+        hasDelivery,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleLogout = () => {
@@ -138,6 +159,7 @@ export default function ProfilePage() {
           </button>
           <button
             type="submit"
+            disabled={saving}
             className={cn(
               "h-11 px-6 rounded-xl text-white text-sm font-bold transition-colors flex items-center gap-2",
               saved ? "bg-emerald-600" : "bg-primary hover:bg-primary-dark",

@@ -1,12 +1,26 @@
+"use client"
+
 import Link from "next/link"
+import { useMemo } from "react"
 import { ArrowRight } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { CategoryCard } from "@/components/marketplace/category-card"
 import { getAllCategories } from "@/lib/mock/categories"
 import { servicesUrl } from "@/lib/marketplace-routes"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
+import { mergeByKey, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 
 export default function CategoriesPage() {
-  const categories = getAllCategories()
+  const useApi = isApiEnabled()
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const mockCategories = getAllCategories()
+
+  const categories = useMemo(() => {
+    if (!useApi || !apiCategories?.length) return mockCategories
+    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
+    return mergeByKey(mockCategories, apiMapped, "slug")
+  }, [useApi, apiCategories, mockCategories])
 
   return (
     <PageShell>

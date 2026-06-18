@@ -52,7 +52,7 @@ export const ContractDisputeDialog = ({
           </div>
           <DialogTitle>Открыть спор по контракту</DialogTitle>
           <DialogDescription>
-            Средства в эскроу будут заморожены до разрешения спора. Опишите проблему —
+            Деньги по безопасной сделке будут заморожены до разрешения спора. Опишите проблему —
             мы рассмотрим обращение.
           </DialogDescription>
         </DialogHeader>

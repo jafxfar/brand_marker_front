@@ -63,3 +63,14 @@ export type PaymentMilestoneCreate = Omit<PaymentMilestone, "id" | "status"> & {
 export type PaymentMilestoneUpdate = Partial<
   Omit<PaymentMilestone, "id" | "contract_id">
 >
+
+export type PaymentMilestoneInput = {
+  title: string
+  percentage: number
+  trigger: PaymentMilestoneTrigger
+}
+
+export type ProposalAcceptInput = {
+  payment_type: PaymentType
+  milestones?: PaymentMilestoneInput[]
+}

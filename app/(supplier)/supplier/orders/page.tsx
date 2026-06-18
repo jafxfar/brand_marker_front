@@ -3,15 +3,18 @@
 import { useState } from "react"
 import Link from "next/link"
 import {
-  Inbox, ShoppingCart, FileText, Users, Truck, ChevronRight, MapPin,
+  Inbox, ShoppingCart, FileText, Users, Truck, ChevronRight,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useOrdersStore } from "@/lib/store/orders-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { getActorId } from "@/lib/auth-display"
+import { isApiEnabled } from "@/lib/api/config"
+import { useSupplierOrdersQuery } from "@/hooks/api/use-supplier-orders-query"
 import { formatPrice, formatRelativeTime } from "@/lib/format"
 import { orderStatusMeta } from "@/lib/order-display"
-import type { Order } from "@/types"
+import { apiOrderToLocal, type Order } from "@/types"
 
 type Tab = "available" | "responded" | "deals"
 
@@ -24,20 +27,38 @@ const tabs: { value: Tab; label: string }[] = [
 export default function SupplierOrdersPage() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
-  const orders = useOrdersStore((s) => s.orders)
+  const actorId = getActorId(user)
+  const localOrders = useOrdersStore((s) => s.orders)
   const [tab, setTab] = useState<Tab>("available")
+  const useApi = isApiEnabled()
+
+  const { data: apiOrders, isLoading } = useSupplierOrdersQuery(tab, hydrated && useApi)
 
   const myId = user?.id
-  const respondedTo = (o: Order) => o.offers.some((of) => of.supplierId === myId)
+  const respondedTo = (o: Order) =>
+    o.offers.some((of) => of.supplierId === myId || of.supplierActorId === actorId)
   const isMyDeal = (o: Order) =>
-    !!o.acceptedOfferId && o.offers.some((of) => of.id === o.acceptedOfferId && of.supplierId === myId)
+    !!o.acceptedOfferId &&
+    o.offers.some(
+      (of) =>
+        of.id === o.acceptedOfferId &&
+        (of.supplierId === myId || of.supplierActorId === actorId),
+    )
 
-  const lists: Record<Tab, Order[]> = {
-    available: orders.filter((o) => o.status === "published"),
-    responded: orders.filter(respondedTo),
-    deals: orders.filter(isMyDeal),
+  const apiAsLocal = (apiOrders ?? []).map(apiOrderToLocal)
+  const localLists: Record<Tab, Order[]> = {
+    available: localOrders.filter((o) => o.status === "published"),
+    responded: localOrders.filter(respondedTo),
+    deals: localOrders.filter(isMyDeal),
   }
-  const filtered = lists[tab]
+  const filtered = useApi ? apiAsLocal : localLists[tab]
+  const counts = useApi
+    ? { available: tab === "available" ? filtered.length : 0, responded: 0, deals: 0 }
+    : {
+        available: localLists.available.length,
+        responded: localLists.responded.length,
+        deals: localLists.deals.length,
+      }
 
   const emptyText: Record<Tab, string> = {
     available: "Открытых заказов пока нет. Заказы заказчиков появятся здесь.",
@@ -61,6 +82,7 @@ export default function SupplierOrdersPage() {
         {tabs.map((t) => (
           <button
             key={t.value}
+            type="button"
             onClick={() => setTab(t.value)}
             className={cn(
               "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
@@ -68,16 +90,20 @@ export default function SupplierOrdersPage() {
             )}
           >
             {t.label}
-            {hydrated && lists[t.value].length > 0 && (
+            {hydrated && !useApi && localLists[t.value].length > 0 && (
               <span className={cn("ml-1.5", tab === t.value ? "text-white/80" : "text-muted-foreground/60")}>
-                {lists[t.value].length}
+                {localLists[t.value].length}
               </span>
             )}
           </button>
         ))}
       </div>
 
-      {!hydrated ? null : filtered.length === 0 ? (
+      {!hydrated || (useApi && isLoading) ? (
+        <div className="bg-white border border-border rounded-2xl p-12 animate-pulse">
+          <div className="h-4 bg-secondary rounded w-1/3 mx-auto" />
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="bg-white border border-border rounded-2xl p-12 text-center">
           <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
             <Inbox size={26} className="text-primary" />
@@ -121,10 +147,6 @@ export default function SupplierOrdersPage() {
                   </div>
                   <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground">
                     <span>{o.category}</span>
-                    {o.customerName && <span>{o.customerName}</span>}
-                    {o.customerCity && (
-                      <span className="flex items-center gap-1"><MapPin size={11} /> {o.customerCity}</span>
-                    )}
                     <span className="flex items-center gap-1"><Users size={11} /> {o.offers.length} откликов</span>
                     {o.needsDelivery && (
                       <span className="flex items-center gap-1"><Truck size={11} /> доставка</span>

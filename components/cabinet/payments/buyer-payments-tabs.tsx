@@ -10,7 +10,7 @@ export type BuyerPaymentsTab =
 
 export const BUYER_PAYMENTS_TABS: { value: BuyerPaymentsTab; label: string }[] = [
   { value: "outgoing", label: "Исходящие платежи" },
-  { value: "escrow", label: "Пополнение эскроу" },
+  { value: "escrow", label: "Безопасная оплата" },
   { value: "invoices", label: "Счета" },
   { value: "refunds", label: "Возвраты" },
 ]

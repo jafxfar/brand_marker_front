@@ -1,6 +1,17 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { ContractWithRelations, Currency, Message, WorkSubmissionType } from "@/types"
+import type {
+  ContractWithRelations,
+  Currency,
+  Message,
+  PaymentMilestone,
+  PaymentMilestoneInput,
+  PaymentMilestoneStatus,
+  PaymentMilestoneTrigger,
+  PaymentType,
+  WorkSubmissionType,
+} from "@/types"
+import { buildDefaultMilestones, splitAmounts } from "@/lib/payment-milestones"
 import { mockContracts } from "@/lib/mock/contracts"
 import { mockRfqs } from "@/lib/mock/rfqs"
 import {
@@ -36,7 +47,14 @@ export type CreateContractFromProposalInput = {
   description: string | null
   agreed_amount: number
   currency: Currency
+  payment_type: PaymentType
+  milestones?: PaymentMilestoneInput[]
 }
+
+const milestoneStatusForTrigger = (
+  trigger: PaymentMilestoneTrigger,
+): PaymentMilestoneStatus =>
+  trigger === "contract_signed" ? "awaiting_payment" : "pending"
 
 const BUYER_PENDING_PAYMENT_STATUSES = ["pending", "awaiting_payment"] as const
 
@@ -286,10 +304,25 @@ export const useContractsStore = create<ContractsState>()(
         const contracts = get().contracts
         const contractId = nextContractId(contracts)
         const milestoneBaseId = nextMilestoneId(contracts)
-        const advance = Math.round(input.agreed_amount * 0.3)
-        const delivery = Math.round(input.agreed_amount * 0.5)
-        const finalPay = input.agreed_amount - advance - delivery
         const today = new Date().toISOString().split("T")[0]!
+
+        const sourceMilestones =
+          input.payment_type === "milestone" && input.milestones?.length
+            ? input.milestones
+            : buildDefaultMilestones(input.payment_type)
+        const amounts = splitAmounts(
+          sourceMilestones.map((m) => m.percentage),
+          input.agreed_amount,
+        )
+        const milestones: PaymentMilestone[] = sourceMilestones.map((m, index) => ({
+          id: milestoneBaseId + index,
+          contract_id: contractId,
+          title: m.title,
+          percentage: m.percentage,
+          amount: amounts[index] ?? 0,
+          trigger: m.trigger,
+          status: milestoneStatusForTrigger(m.trigger),
+        }))
 
         const contract: ContractWithRelations = {
           id: contractId,
@@ -303,42 +336,14 @@ export const useContractsStore = create<ContractsState>()(
           currency: input.currency,
           start_date: today,
           due_date: daysFromNowIso(30),
-          payment_type: "milestone",
+          payment_type: input.payment_type,
           created_at: new Date().toISOString(),
           status: "pending_payment",
           payment_plan: {
             id: contractId,
             contract_id: contractId,
-            payment_type: "milestone",
-            milestones: [
-              {
-                id: milestoneBaseId,
-                contract_id: contractId,
-                title: "Аванс 30%",
-                percentage: 30,
-                amount: advance,
-                trigger: "contract_signed",
-                status: "awaiting_payment",
-              },
-              {
-                id: milestoneBaseId + 1,
-                contract_id: contractId,
-                title: "Основной платёж",
-                percentage: 50,
-                amount: delivery,
-                trigger: "delivery_accepted",
-                status: "pending",
-              },
-              {
-                id: milestoneBaseId + 2,
-                contract_id: contractId,
-                title: "Финальный платёж",
-                percentage: 20,
-                amount: finalPay,
-                trigger: "delivery_accepted",
-                status: "pending",
-              },
-            ],
+            payment_type: input.payment_type,
+            milestones,
           },
           conversation: {
             id: contractId,

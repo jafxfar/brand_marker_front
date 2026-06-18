@@ -53,9 +53,9 @@ export default function EditRfqPage({ params }: PageProps) {
   if (!rfq || rfq.actor_id !== String(actorId)) {
     return (
       <div className="max-w-[820px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">RFQ не найден</p>
+        <p className="text-sm font-semibold text-foreground">Заявка не найдена</p>
         <Link href="/customer/rfqs" className="text-sm text-primary hover:underline mt-2 inline-block">
-          К списку RFQ
+          К списку заявок
         </Link>
       </div>
     )
@@ -67,7 +67,7 @@ export default function EditRfqPage({ params }: PageProps) {
         <p className="text-sm font-semibold text-foreground">Редактирование недоступно</p>
         <p className="text-xs text-muted-foreground mt-1">Только черновики можно изменять</p>
         <Link href={`/customer/rfqs/${rfq.id}`} className="text-sm text-primary hover:underline mt-3 inline-block">
-          К RFQ
+          К заявке
         </Link>
       </div>
     )

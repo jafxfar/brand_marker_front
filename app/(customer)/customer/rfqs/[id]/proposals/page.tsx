@@ -27,7 +27,7 @@ import {
 } from "@/components/cabinet/rfq/proposals-review-toolbar"
 import { AcceptProposalDialog } from "@/components/cabinet/rfq/accept-proposal-dialog"
 import { filterProposalsByStatus, sortProposalsForReview } from "@/lib/proposals-review"
-import type { Proposal, ProposalStatus, RfqWithRelations } from "@/types"
+import type { Proposal, ProposalAcceptInput, ProposalStatus, RfqWithRelations } from "@/types"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -87,9 +87,9 @@ export default function ProposalsReviewPage({ params }: PageProps) {
   if (!rfq || rfq.actor_id !== String(actorId)) {
     return (
       <div className="max-w-[900px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">RFQ не найден</p>
+        <p className="text-sm font-semibold text-foreground">Заявка не найдена</p>
         <Link href="/customer/rfqs" className="text-sm text-primary hover:underline mt-2 inline-block">
-          К списку RFQ
+          К списку заявок
         </Link>
       </div>
     )
@@ -99,13 +99,13 @@ export default function ProposalsReviewPage({ params }: PageProps) {
     rfq.status as (typeof MANAGE_PROPOSAL_STATUSES)[number],
   )
 
-  const handleAccept = async (proposalId: number) => {
+  const handleAccept = async (proposalId: number, terms: ProposalAcceptInput) => {
     if (useApi) {
-      const result = await acceptMutation.mutateAsync(proposalId)
+      const result = await acceptMutation.mutateAsync({ id: proposalId, terms })
       router.push(`/customer/contracts/${result.contract_id}`)
       return
     }
-    const contractId = acceptProposalLocal(proposalId, rfq.id, actorId)
+    const contractId = acceptProposalLocal(proposalId, rfq.id, actorId, terms)
     if (contractId) {
       router.push(`/customer/contracts/${contractId}`)
     }
@@ -117,7 +117,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
         href={`/customer/rfqs/${rfq.id}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft size={16} /> Назад к RFQ
+        <ArrowLeft size={16} /> Назад к заявке
       </Link>
 
       <div className="bg-white border border-border rounded-2xl p-6">
@@ -196,7 +196,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
           }
           price={acceptTarget.price}
           currency={acceptTarget.currency}
-          onConfirm={() => void handleAccept(acceptTarget.id)}
+          onConfirm={(terms) => void handleAccept(acceptTarget.id, terms)}
         />
       )}
     </div>
