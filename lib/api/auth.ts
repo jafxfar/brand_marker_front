@@ -53,6 +53,7 @@ export const authApi = {
     password: string
     first_name: string
     last_name: string
+    phone?: string
     role: "buyer" | "supplier" | "both"
   }): Promise<TokenPair> => {
     const data = await apiFetch<TokenPair>("/auth/register", {

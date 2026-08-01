@@ -85,7 +85,7 @@ export default function Header() {
               Условия размещения
             </Link>
             <Link href="tel:88005553535" className="hover:text-primary transition-colors flex items-center gap-1">
-              <Phone size={11} /> 8 800 555-35-35
+              <Phone size={11} /> +992 92 882 9955
             </Link>
           </div>
           <div className="flex items-center gap-5">

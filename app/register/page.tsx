@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Briefcase, ShoppingBag, Store, ArrowRight, ShieldCheck } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
-import type { SessionRole } from "@/lib/store/auth-store"
+import type { MarketplaceSessionRole } from "@/lib/store/auth-store"
 import { isApiEnabled } from "@/lib/api/config"
 import { getApiErrorMessage } from "@/lib/api/client"
 
@@ -28,7 +28,12 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
-const roleCards: { role: SessionRole; title: string; desc: string; Icon: typeof ShoppingBag }[] = [
+const roleCards: {
+  role: MarketplaceSessionRole
+  title: string
+  desc: string
+  Icon: typeof ShoppingBag
+}[] = [
   {
     role: "customer",
     title: "Я заказчик",
@@ -50,7 +55,7 @@ function RegisterContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const registerWithCredentials = useAuthStore((s) => s.registerWithCredentials)
-  const [role, setRole] = useState<SessionRole>("customer")
+  const [role, setRole] = useState<MarketplaceSessionRole>("customer")
   const [apiError, setApiError] = useState<string | null>(null)
   const useApi = isApiEnabled()
 

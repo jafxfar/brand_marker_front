@@ -8,7 +8,9 @@ import { authApi, type ActorSummary } from "@/lib/api/auth"
 import { isApiEnabled } from "@/lib/api/config"
 import { tokenStorage } from "@/lib/api/client"
 
-export type SessionRole = "customer" | "supplier"
+export type SessionRole = "customer" | "supplier" | "admin"
+export type MarketplaceSessionRole = Exclude<SessionRole, "admin">
+export type AdminPlatformRole = "admin" | "superadmin" | "moderator"
 
 export type SessionUser = {
   id: string
@@ -16,6 +18,7 @@ export type SessionUser = {
   email: string
   name: string
   role: SessionRole
+  platformRole: string
   actorId: number
   activeActorId: number | null
   actors: ActorSummary[]
@@ -33,11 +36,15 @@ interface AuthState {
   user: SessionUser | null
   isAuthenticated: boolean
   nextUserId: number
-  login: (params: { email: string; role: SessionRole; name?: string }) => void
+  login: (params: { email: string; role: MarketplaceSessionRole; name?: string }) => void
   loginWithCredentials: (params: {
     email: string
     password: string
-    role: SessionRole
+    role: MarketplaceSessionRole
+  }) => Promise<SessionRole>
+  loginAdminWithCredentials: (params: {
+    email: string
+    password: string
   }) => Promise<void>
   registerWithCredentials: (params: {
     email: string
@@ -45,7 +52,7 @@ interface AuthState {
     first_name: string
     last_name: string
     phone?: string
-    role: SessionRole
+    role: MarketplaceSessionRole
   }) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (patch: Partial<SessionUser>) => void
@@ -64,15 +71,15 @@ const nameFromEmail = (email: string): string => {
 
 const DEMO_CUSTOMER_ACTOR_ID = DEMO_BUYER_ACTOR_IDS[0]
 
-const demoCompanyIdForRole = (role: SessionRole): number =>
+const demoCompanyIdForRole = (role: MarketplaceSessionRole): number =>
   role === "supplier" ? DEMO_SUPPLIER_ACTOR_ID : DEMO_CUSTOMER_ACTOR_ID
 
-const sideForRole = (role: SessionRole): "buyer" | "supplier" =>
+const sideForRole = (role: MarketplaceSessionRole): "buyer" | "supplier" =>
   role === "supplier" ? "supplier" : "buyer"
 
 const pickActorForRole = (
   actors: ActorSummary[],
-  role: SessionRole,
+  role: MarketplaceSessionRole,
   preferredId?: number | null,
 ): ActorSummary | undefined => {
   const side = sideForRole(role)
@@ -91,6 +98,25 @@ const sessionFromMe = (
   me: Awaited<ReturnType<typeof authApi.me>>,
   role: SessionRole,
 ): SessionUser => {
+  if (role === "admin") {
+    return {
+      id: String(me.user.id),
+      userId: me.user.id,
+      email: me.user.email,
+      name: `${me.user.first_name} ${me.user.last_name}`.trim() || me.user.email,
+      role,
+      platformRole: me.user.role,
+      actorId: 0,
+      activeActorId: null,
+      actors: me.actors,
+      capabilities: me.capabilities,
+      companyId: 0,
+      companyIds: [],
+      activeCompanyId: null,
+      phone: me.user.phone ?? undefined,
+    }
+  }
+
   const active = pickActorForRole(me.actors, role, me.active_actor_id)
   const actorId = active?.id ?? 0
   const companyIds = me.companies.map((c) => c.id)
@@ -106,6 +132,7 @@ const sessionFromMe = (
     email: me.user.email,
     name,
     role,
+    platformRole: me.user.role,
     actorId,
     activeActorId: active?.id ?? null,
     actors: me.actors,
@@ -134,6 +161,8 @@ const migrateUser = (user: SessionUser): SessionUser => {
   return {
     ...user,
     userId: user.userId ?? 1,
+    platformRole:
+      user.platformRole ?? (user.role === "customer" ? "buyer" : user.role),
     companyIds,
     activeCompanyId,
     actorId,
@@ -176,6 +205,7 @@ export const useAuthStore = create<AuthState>()(
             email,
             name: name?.trim() || nameFromEmail(email),
             role,
+            platformRole: isSupplier ? "supplier" : "buyer",
             actorId: activeId,
             activeActorId: activeId,
             actors: [],
@@ -196,6 +226,13 @@ export const useAuthStore = create<AuthState>()(
       loginWithCredentials: async ({ email, password, role }) => {
         await authApi.login(email, password)
         const me = await authApi.me()
+        if (["admin", "superadmin", "moderator"].includes(me.user.role)) {
+          set({
+            isAuthenticated: true,
+            user: sessionFromMe(me, "admin"),
+          })
+          return "admin"
+        }
         const active = pickActorForRole(me.actors, role, me.active_actor_id)
         if (!active) {
           const sideLabel = role === "customer" ? "заказчика" : "поставщика"
@@ -206,6 +243,20 @@ export const useAuthStore = create<AuthState>()(
         set({
           isAuthenticated: true,
           user: sessionFromMe(me, role),
+        })
+        return role
+      },
+
+      loginAdminWithCredentials: async ({ email, password }) => {
+        await authApi.login(email, password)
+        const me = await authApi.me()
+        if (!["admin", "superadmin", "moderator"].includes(me.user.role)) {
+          await authApi.logout().catch(() => undefined)
+          throw new Error("У этой учётной записи нет доступа к панели администратора")
+        }
+        set({
+          isAuthenticated: true,
+          user: sessionFromMe(me, "admin"),
         })
       },
 

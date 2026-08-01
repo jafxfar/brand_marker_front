@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Briefcase, ShoppingBag, Store, ArrowRight, ShieldCheck } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
-import type { SessionRole } from "@/lib/store/auth-store"
+import type { MarketplaceSessionRole } from "@/lib/store/auth-store"
 import { isApiEnabled } from "@/lib/api/config"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { registerUrl } from "@/lib/marketplace-routes"
@@ -20,7 +20,12 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-const roleCards: { role: SessionRole; title: string; desc: string; Icon: typeof ShoppingBag }[] = [
+const roleCards: {
+  role: MarketplaceSessionRole
+  title: string
+  desc: string
+  Icon: typeof ShoppingBag
+}[] = [
   {
     role: "customer",
     title: "Я заказчик",
@@ -40,7 +45,7 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const login = useAuthStore((s) => s.login)
   const loginWithCredentials = useAuthStore((s) => s.loginWithCredentials)
-  const [role, setRole] = useState<SessionRole>("customer")
+  const [role, setRole] = useState<MarketplaceSessionRole>("customer")
   const [apiError, setApiError] = useState<string | null>(null)
   const useApi = isApiEnabled()
 
@@ -57,20 +62,25 @@ function LoginContent() {
     setApiError(null)
     try {
       if (useApi) {
-        await loginWithCredentials({
+        const sessionRole = await loginWithCredentials({
           email: values.email,
           password: values.password,
           role,
         })
+        if (sessionRole === "admin") {
+          router.push("/admin")
+          return
+        }
       } else {
         login({ email: values.email, role })
       }
       const redirect = searchParams.get("redirect")
+      const marketplaceRedirect = redirect?.startsWith("/admin") ? null : redirect
       if (role === "customer") {
-        router.push(redirect || "/customer")
+        router.push(marketplaceRedirect || "/customer")
         return
       }
-      router.push(redirect || "/supplier")
+      router.push(marketplaceRedirect || "/supplier")
     } catch (err) {
       setApiError(getApiErrorMessage(err, "Ошибка входа"))
     }

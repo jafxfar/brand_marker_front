@@ -97,7 +97,7 @@ export default function Footer() {
                 <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0">
                   <Phone size={13} />
                 </div>
-                8 800 555-35-35 (бесплатно)
+                +992 92 882 9955 (бесплатно)
               </a>
               <a href="mailto:info@biznesmarket.ru" className="flex items-center gap-3 text-sm text-white/60 hover:text-primary transition-colors">
                 <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0">
