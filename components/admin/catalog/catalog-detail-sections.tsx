@@ -4,6 +4,12 @@ import Image from "next/image"
 import { FileText, ImageIcon, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { AdminCatalogDetail } from "@/lib/api/admin"
+import {
+  adminActorKindLabels,
+  adminHistoryActionLabels,
+  adminLabel,
+  adminReportStatusLabels,
+} from "@/lib/admin-display"
 import { catalogReportReasonLabels, formatItemPricing, itemStatusMeta } from "@/lib/item-display"
 import type { ItemPricing, ItemStatus } from "@/types"
 
@@ -139,10 +145,11 @@ export const AdminCatalogDetailSections = ({
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Actor
+                Профиль
               </dt>
               <dd className="mt-1 text-sm font-medium">
-                #{item.owner.actor_id} · {item.owner.actor_kind}
+                #{item.owner.actor_id} ·{" "}
+                {adminLabel(adminActorKindLabels, item.owner.actor_kind)}
               </dd>
             </div>
             <div>
@@ -171,7 +178,9 @@ export const AdminCatalogDetailSections = ({
                       report.reason as keyof typeof catalogReportReasonLabels
                     ] || report.reason}
                   </p>
-                  <Badge variant="outline">{report.status}</Badge>
+                  <Badge variant="outline">
+                    {adminLabel(adminReportStatusLabels, report.status)}
+                  </Badge>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {report.details || "Без комментария"}
@@ -197,7 +206,9 @@ export const AdminCatalogDetailSections = ({
               return (
                 <article key={entry.id} className="rounded-xl border border-border p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-bold">{entry.action}</p>
+                    <p className="font-bold">
+                      {adminLabel(adminHistoryActionLabels, entry.action)}
+                    </p>
                     <span className="text-xs text-muted-foreground">
                       {formatDate(entry.created_at)}
                     </span>

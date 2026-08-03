@@ -31,11 +31,11 @@ import type { ItemStatus } from "@/types"
 const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminCatalogView; label: string }> = [
   { value: "all", label: "Все" },
-  { value: "products", label: "Products" },
-  { value: "services", label: "Services" },
-  { value: "draft", label: "Draft" },
-  { value: "reported", label: "Reported" },
-  { value: "hidden", label: "Hidden" },
+  { value: "products", label: "Товары" },
+  { value: "services", label: "Услуги" },
+  { value: "draft", label: "Черновики" },
+  { value: "reported", label: "Жалобы" },
+  { value: "hidden", label: "Скрытые" },
 ]
 
 const isViewFilter = (value: string | null): value is AdminCatalogView =>

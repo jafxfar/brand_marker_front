@@ -4,29 +4,33 @@ import { use, useState } from "react"
 import Link from "next/link"
 import {
   ArrowLeft,
-  FileInput,
+  BookOpen,
+  CheckCircle2,
+  Gavel,
   RefreshCcw,
-  Search,
-  ShieldBan,
-  Trash2,
+  Snowflake,
+  XCircle,
 } from "lucide-react"
-import { ProposalActionDialog } from "@/components/admin/proposals/proposal-action-dialog"
-import { AdminProposalDetailSections } from "@/components/admin/proposals/proposal-detail-sections"
+import { ContractActionDialog } from "@/components/admin/contracts/contract-action-dialog"
+import { AdminContractDetailSections } from "@/components/admin/contracts/contract-detail-sections"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useAdminProposalQuery } from "@/hooks/api/use-admin-proposals-query"
-import type { AdminProposalAction } from "@/lib/api/admin"
-import { proposalStatusMeta } from "@/lib/proposal-display"
+import { useAdminContractQuery } from "@/hooks/api/use-admin-contracts-query"
+import type { AdminContractAction } from "@/lib/api/admin"
+import { contractStatusMeta } from "@/lib/contract-display"
 import { useAuthStore } from "@/lib/store/auth-store"
-import type { ProposalStatus } from "@/types"
+import type { ContractStatus } from "@/types"
 
 const sections = [
-  ["supplier", "Поставщик"],
+  ["overview", "Обзор"],
   ["buyer", "Покупатель"],
-  ["price", "Цена"],
-  ["attachments", "Вложения"],
+  ["supplier", "Поставщик"],
+  ["payment-plan", "План оплаты"],
+  ["milestones", "Этапы"],
+  ["files", "Файлы"],
   ["messages", "Сообщения"],
-  ["contract", "Контракт"],
+  ["escrow", "Escrow"],
+  ["history", "История"],
 ] as const
 
 const DetailSkeleton = () => (
@@ -49,40 +53,40 @@ type PageProps = {
   params: Promise<{ id: string }>
 }
 
-export default function AdminProposalDetailPage({ params }: PageProps) {
+export default function AdminContractDetailPage({ params }: PageProps) {
   const { id } = use(params)
-  const proposalId = Number(id)
-  const proposalQuery = useAdminProposalQuery(proposalId)
+  const contractId = Number(id)
+  const contractQuery = useAdminContractQuery(contractId)
   const currentUser = useAuthStore((state) => state.user)
-  const [selectedAction, setSelectedAction] = useState<AdminProposalAction | null>(null)
+  const [selectedAction, setSelectedAction] = useState<AdminContractAction | null>(null)
 
-  if (!Number.isInteger(proposalId) || proposalId <= 0) {
+  if (!Number.isInteger(contractId) || contractId <= 0) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-border bg-white p-8 text-center">
-        <h1 className="text-xl font-black">Некорректный ID предложения</h1>
+        <h1 className="text-xl font-black">Некорректный ID контракта</h1>
         <Button asChild variant="outline" className="mt-5">
-          <Link href="/admin/proposals">Вернуться к предложениям</Link>
+          <Link href="/admin/contracts">Вернуться к контрактам</Link>
         </Button>
       </div>
     )
   }
 
-  if (proposalQuery.isLoading) return <DetailSkeleton />
+  if (contractQuery.isLoading) return <DetailSkeleton />
 
-  if (proposalQuery.isError || !proposalQuery.data) {
+  if (contractQuery.isError || !contractQuery.data) {
     return (
       <div className="mx-auto flex min-h-[55dvh] max-w-lg items-center justify-center">
         <div className="w-full rounded-2xl border border-border bg-white p-8 text-center">
-          <FileInput className="mx-auto text-muted-foreground" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Предложение не найдено</h1>
+          <BookOpen className="mx-auto text-muted-foreground" aria-hidden="true" />
+          <h1 className="mt-4 text-xl font-black">Контракт не найден</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Запись удалена, недоступна или API временно не отвечает.
           </p>
           <div className="mt-5 flex justify-center gap-2">
             <Button asChild variant="outline">
-              <Link href="/admin/proposals">К списку</Link>
+              <Link href="/admin/contracts">К списку</Link>
             </Button>
-            <Button type="button" onClick={() => proposalQuery.refetch()}>
+            <Button type="button" onClick={() => contractQuery.refetch()}>
               <RefreshCcw aria-hidden="true" />
               Повторить
             </Button>
@@ -92,45 +96,57 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
     )
   }
 
-  const proposal = proposalQuery.data
+  const contract = contractQuery.data
   const isModerator = currentUser?.platformRole === "moderator"
-  const statusMeta = proposalStatusMeta[proposal.status as ProposalStatus] || {
-    label: proposal.status,
+  const statusMeta = contractStatusMeta[contract.status as ContractStatus] || {
+    label: contract.status,
     className: "bg-muted text-muted-foreground",
   }
+  const isClosed = ["completed", "cancelled"].includes(contract.status)
+  const buyerName =
+    contract.buyer?.company_title ||
+    contract.buyer?.name ||
+    contract.buyer?.display_name ||
+    "Без покупателя"
+  const supplierName =
+    contract.supplier?.company_title ||
+    contract.supplier?.name ||
+    contract.supplier?.display_name ||
+    "Без поставщика"
 
   return (
     <div className="mx-auto max-w-350 space-y-5">
       <Link
-        href="/admin/proposals"
+        href="/admin/contracts"
         className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft size={16} aria-hidden="true" />
-        Все предложения
+        Все контракты
       </Link>
 
       <header className="rounded-2xl border border-border bg-white p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Предложение #{proposal.id}
+              Контракт · #{contract.id}
             </p>
             <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
-              {proposal.rfq_title || `RFQ ${proposal.rfq_id.slice(0, 8)}`}
+              {contract.title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {formatMoney(proposal.price, proposal.currency)}
+              {buyerName} → {supplierName}
               {" · "}
-              {proposal.supplier?.company_title || proposal.supplier?.name || "Поставщик"}
+              {formatMoney(contract.agreed_amount, contract.currency)}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="outline" className={statusMeta.className}>
                 {statusMeta.label}
               </Badge>
-              {proposal.open_reports_count > 0 && (
-                <Badge variant="outline">Жалоб: {proposal.open_reports_count}</Badge>
+              {contract.escrow_held > 0 && (
+                <Badge variant="outline">
+                  Escrow: {formatMoney(contract.escrow_held, contract.currency)}
+                </Badge>
               )}
-              {proposal.has_contract && <Badge variant="outline">Есть контракт</Badge>}
             </div>
           </div>
 
@@ -139,32 +155,42 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => setSelectedAction("investigate")}
+              onClick={() => setSelectedAction("freeze")}
             >
-              <Search aria-hidden="true" />
-              Расследовать
+              <Snowflake aria-hidden="true" />
+              Заморозить
             </Button>
-            {!isModerator && proposal.supplier?.company_id && (
+            {!isClosed && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => setSelectedAction("block_supplier")}
+                onClick={() => setSelectedAction("cancel")}
               >
-                <ShieldBan aria-hidden="true" />
-                Заблокировать поставщика
+                <XCircle aria-hidden="true" />
+                Отменить
               </Button>
             )}
-            {!isModerator && !proposal.has_contract && (
+            {!isModerator && contract.status !== "completed" && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                className="text-destructive hover:text-destructive"
-                onClick={() => setSelectedAction("delete")}
+                onClick={() => setSelectedAction("force_complete")}
               >
-                <Trash2 aria-hidden="true" />
-                Удалить
+                <CheckCircle2 aria-hidden="true" />
+                Принудительно завершить
+              </Button>
+            )}
+            {!isClosed && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("open_investigation")}
+              >
+                <Gavel aria-hidden="true" />
+                Открыть расследование
               </Button>
             )}
           </div>
@@ -172,25 +198,25 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
       </header>
 
       <nav
-        className="sticky top-17 z-20 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-white/95 p-2 backdrop-blur"
-        aria-label="Разделы карточки предложения"
+        className="flex gap-2 overflow-x-auto rounded-2xl border border-border bg-white p-2"
+        aria-label="Секции контракта"
       >
         {sections.map(([sectionId, label]) => (
           <a
             key={sectionId}
             href={`#${sectionId}`}
-            className="shrink-0 rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"
+            className="shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             {label}
           </a>
         ))}
       </nav>
 
-      <AdminProposalDetailSections proposal={proposal} />
+      <AdminContractDetailSections contract={contract} />
 
-      <ProposalActionDialog
-        proposalId={proposal.id}
-        proposalTitle={proposal.rfq_title || `Proposal #${proposal.id}`}
+      <ContractActionDialog
+        contractId={contract.id}
+        contractTitle={contract.title}
         action={selectedAction}
         onOpenChange={(open) => {
           if (!open) setSelectedAction(null)

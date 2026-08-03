@@ -535,6 +535,211 @@ export type AdminProposalActionResponse = {
   blocked_company_id: number | null
 }
 
+export type AdminContractView =
+  | "active"
+  | "completed"
+  | "cancelled"
+  | "disputed"
+
+export type AdminContractAction =
+  | "freeze"
+  | "cancel"
+  | "force_complete"
+  | "open_investigation"
+
+export type AdminContract = {
+  id: number
+  title: string
+  status: string
+  agreed_amount: number
+  currency: string
+  payment_type: string
+  rfq_id: string
+  proposal_id: number
+  buyer: AdminParty | null
+  supplier: AdminParty | null
+  escrow_held: number
+  created_at: string
+}
+
+export type AdminContractParams = {
+  page: number
+  pageSize: number
+  view: AdminContractView
+  query: string
+}
+
+export type AdminContractListResponse = {
+  items: AdminContract[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+  view_counts: Record<AdminContractView, number>
+}
+
+export type AdminContractDetail = AdminContract & {
+  description: string | null
+  start_date: string
+  due_date: string
+  payment_type: string
+  buyer: AdminParty | null
+  supplier: AdminParty | null
+  rfq: { id: string; title: string; status: string } | null
+  proposal: { id: number; price: number; status: string } | null
+  payment_plan: { id: number; payment_type: string } | null
+  milestones: Array<{
+    id: number
+    title: string
+    percentage: number
+    amount: number
+    trigger: string
+    status: string
+  }>
+  files: Array<{
+    id: number
+    file_name: string
+    file_url: string
+    file_type: string
+    uploaded_by: number
+    created_at: string
+  }>
+  messages: Array<{
+    id: number
+    sender_id: number
+    text: string
+    created_at: string
+  }>
+  escrow: {
+    held: number
+    released: number
+    disputed: number
+    currency: string
+  }
+  history: Array<{
+    id: number
+    action: string
+    details: Record<string, unknown>
+    created_at: string
+    actor: { id: number; email: string; name: string } | null
+  }>
+}
+
+export type AdminContractActionResponse = {
+  id: number
+  action: AdminContractAction
+  status: string
+}
+
+export type AdminDisputeView =
+  | "open"
+  | "under_review"
+  | "resolved"
+  | "appealed"
+
+export type AdminDisputeAction =
+  | "release_funds"
+  | "refund_buyer"
+  | "partial_refund"
+  | "request_evidence"
+  | "close_case"
+
+export type AdminDispute = {
+  id: number
+  status: string
+  contract_id: number
+  contract_title: string | null
+  contract_amount: number | null
+  currency: string | null
+  opened_by_actor_id: number | null
+  opened_by: AdminParty | null
+  buyer: AdminParty | null
+  supplier: AdminParty | null
+  created_at: string
+  updated_at: string
+}
+
+export type AdminDisputeParams = {
+  page: number
+  pageSize: number
+  view: AdminDisputeView
+  query: string
+}
+
+export type AdminDisputeListResponse = {
+  items: AdminDispute[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+  view_counts: Record<AdminDisputeView, number>
+}
+
+export type AdminDisputeDetail = AdminDispute & {
+  buyer_statement: string | null
+  supplier_statement: string | null
+  resolution: string | null
+  resolution_note: string | null
+  partial_buyer_amount: number | null
+  resolved_at: string | null
+  buyer: AdminParty | null
+  supplier: AdminParty | null
+  contract: {
+    id: number
+    title: string
+    status: string
+    agreed_amount: number
+    currency: string
+    rfq_id: string
+    proposal_id: number
+    description: string | null
+  }
+  evidence: Array<{
+    id: number
+    file_name: string
+    file_url: string
+    file_type: string
+    note: string | null
+    uploaded_by_actor_id: number
+    created_at: string
+  }>
+  files: Array<{
+    id: number
+    file_name: string
+    file_url: string
+    file_type: string
+    uploaded_by: number
+    created_at: string
+  }>
+  messages: Array<{
+    id: number
+    sender_id: number
+    text: string
+    created_at: string
+  }>
+  escrow: {
+    held: number
+    released: number
+    disputed: number
+    currency: string
+  }
+  timeline: Array<{
+    id: number
+    action: string
+    details: Record<string, unknown>
+    created_at: string
+    actor: { id: number; email: string; name: string } | null
+  }>
+}
+
+export type AdminDisputeActionResponse = {
+  id: number
+  action: AdminDisputeAction
+  status: string
+  resolution: string | null
+  contract_status: string
+}
+
 export const adminApi = {
   getDashboard: () => apiFetch<AdminDashboardResponse>("/admin/dashboard"),
   getUsers: ({ page, pageSize, status, query }: AdminUsersParams) => {
@@ -643,5 +848,58 @@ export const adminApi = {
     apiFetch<AdminProposalActionResponse>(`/admin/proposals/${proposalId}/action`, {
       method: "POST",
       body: JSON.stringify({ action, reason: reason?.trim() || null }),
+    }),
+  getContracts: ({ page, pageSize, view, query }: AdminContractParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      view,
+    })
+    if (query.trim()) {
+      searchParams.set("query", query.trim())
+    }
+    return apiFetch<AdminContractListResponse>(
+      `/admin/contracts?${searchParams.toString()}`,
+    )
+  },
+  getContract: (contractId: number) =>
+    apiFetch<AdminContractDetail>(`/admin/contracts/${contractId}`),
+  applyContractAction: (
+    contractId: number,
+    action: AdminContractAction,
+    reason?: string,
+  ) =>
+    apiFetch<AdminContractActionResponse>(`/admin/contracts/${contractId}/action`, {
+      method: "POST",
+      body: JSON.stringify({ action, reason: reason?.trim() || null }),
+    }),
+  getDisputes: ({ page, pageSize, view, query }: AdminDisputeParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      view,
+    })
+    if (query.trim()) {
+      searchParams.set("query", query.trim())
+    }
+    return apiFetch<AdminDisputeListResponse>(
+      `/admin/disputes?${searchParams.toString()}`,
+    )
+  },
+  getDispute: (disputeId: number) =>
+    apiFetch<AdminDisputeDetail>(`/admin/disputes/${disputeId}`),
+  applyDisputeAction: (
+    disputeId: number,
+    action: AdminDisputeAction,
+    reason?: string,
+    partialBuyerAmount?: number,
+  ) =>
+    apiFetch<AdminDisputeActionResponse>(`/admin/disputes/${disputeId}/action`, {
+      method: "POST",
+      body: JSON.stringify({
+        action,
+        reason: reason?.trim() || null,
+        partial_buyer_amount: partialBuyerAmount ?? null,
+      }),
     }),
 }

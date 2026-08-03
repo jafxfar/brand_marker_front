@@ -4,9 +4,9 @@ import { Suspense, useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
+  BookOpen,
   ChevronLeft,
   ChevronRight,
-  ClipboardList,
   RefreshCcw,
   Search,
 } from "lucide-react"
@@ -20,22 +20,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useAdminRfqsQuery } from "@/hooks/api/use-admin-rfqs-query"
-import type { AdminRfqView } from "@/lib/api/admin"
-import { rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
+import { useAdminContractsQuery } from "@/hooks/api/use-admin-contracts-query"
+import type { AdminContractView } from "@/lib/api/admin"
+import { contractStatusMeta } from "@/lib/contract-display"
 import { cn } from "@/lib/utils"
-import type { RfqStatus, RfqType } from "@/types"
+import type { ContractStatus } from "@/types"
 
 const PAGE_SIZE = 20
-const viewFilters: Array<{ value: AdminRfqView; label: string }> = [
-  { value: "published", label: "Опубликованные" },
-  { value: "closed", label: "Закрытые" },
-  { value: "draft", label: "Черновики" },
-  { value: "reported", label: "Жалобы" },
-  { value: "archived", label: "Архив" },
+const viewFilters: Array<{ value: AdminContractView; label: string }> = [
+  { value: "active", label: "Активные" },
+  { value: "completed", label: "Завершённые" },
+  { value: "cancelled", label: "Отменённые" },
+  { value: "disputed", label: "Споры" },
 ]
 
-const isViewFilter = (value: string | null): value is AdminRfqView =>
+const isViewFilter = (value: string | null): value is AdminContractView =>
   viewFilters.some((filter) => filter.value === value)
 
 const formatDate = (value: string) =>
@@ -45,25 +44,32 @@ const formatDate = (value: string) =>
     year: "numeric",
   }).format(new Date(value))
 
-const RfqSkeleton = () => (
-  <div className="mx-auto max-w-350 animate-pulse space-y-6" aria-label="Загрузка заявок">
+const formatMoney = (value: number, currency: string) =>
+  new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: currency || "RUB",
+    maximumFractionDigits: 0,
+  }).format(value)
+
+const ContractsSkeleton = () => (
+  <div className="mx-auto max-w-350 animate-pulse space-y-6" aria-label="Загрузка контрактов">
     <div className="h-16 w-80 max-w-full rounded-xl bg-muted" />
     <div className="h-28 rounded-2xl bg-muted" />
     <div className="h-96 rounded-2xl bg-muted" />
   </div>
 )
 
-const AdminRfqsContent = () => {
+const AdminContractsContent = () => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const view = isViewFilter(searchParams.get("view"))
-    ? (searchParams.get("view") as AdminRfqView)
-    : "published"
+    ? (searchParams.get("view") as AdminContractView)
+    : "active"
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const query = searchParams.get("query") ?? ""
   const [searchInput, setSearchInput] = useState(query)
-  const rfqsQuery = useAdminRfqsQuery({
+  const contractsQuery = useAdminContractsQuery({
     page,
     pageSize: PAGE_SIZE,
     view,
@@ -74,7 +80,7 @@ const AdminRfqsContent = () => {
     (updates: Record<string, string | null>) => {
       const nextParams = new URLSearchParams(searchParams.toString())
       Object.entries(updates).forEach(([key, value]) => {
-        if (!value || (key === "view" && value === "published")) {
+        if (!value || (key === "view" && value === "active")) {
           nextParams.delete(key)
         } else {
           nextParams.set(key, value)
@@ -99,22 +105,22 @@ const AdminRfqsContent = () => {
   }, [query, replaceSearchParams, searchInput])
 
   useEffect(() => {
-    if (!rfqsQuery.data || page <= rfqsQuery.data.pages) return
-    replaceSearchParams({ page: String(rfqsQuery.data.pages) })
-  }, [page, replaceSearchParams, rfqsQuery.data])
+    if (!contractsQuery.data || page <= contractsQuery.data.pages) return
+    replaceSearchParams({ page: String(contractsQuery.data.pages) })
+  }, [page, replaceSearchParams, contractsQuery.data])
 
-  if (rfqsQuery.isLoading) return <RfqSkeleton />
+  if (contractsQuery.isLoading) return <ContractsSkeleton />
 
-  if (rfqsQuery.isError || !rfqsQuery.data) {
+  if (contractsQuery.isError || !contractsQuery.data) {
     return (
       <div className="flex min-h-[55dvh] items-center justify-center">
         <div className="w-full max-w-lg rounded-2xl border border-destructive/20 bg-white p-8 text-center">
-          <ClipboardList className="mx-auto text-destructive" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Не удалось загрузить заявки</h1>
+          <BookOpen className="mx-auto text-destructive" aria-hidden="true" />
+          <h1 className="mt-4 text-xl font-black">Не удалось загрузить контракты</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Проверьте подключение к API и повторите запрос.
           </p>
-          <Button type="button" className="mt-5" onClick={() => rfqsQuery.refetch()}>
+          <Button type="button" className="mt-5" onClick={() => contractsQuery.refetch()}>
             <RefreshCcw aria-hidden="true" />
             Повторить
           </Button>
@@ -123,8 +129,8 @@ const AdminRfqsContent = () => {
     )
   }
 
-  const { items, pages, total, view_counts: viewCounts } = rfqsQuery.data
-  const hasFilters = view !== "published" || Boolean(query)
+  const { items, pages, total, view_counts: viewCounts } = contractsQuery.data
+  const hasFilters = view !== "active" || Boolean(query)
   const getPageHref = (targetPage: number) => {
     const nextParams = new URLSearchParams(searchParams.toString())
     if (targetPage <= 1) nextParams.delete("page")
@@ -138,12 +144,12 @@ const AdminRfqsContent = () => {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
-            <ClipboardList size={21} aria-hidden="true" />
+            <BookOpen size={21} aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Заявки (RFQ)</h1>
+            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Контракты</h1>
             <p className="text-sm text-muted-foreground">
-              Модерация запросов на предложения
+              Управление контрактами, escrow и спорами
             </p>
           </div>
         </div>
@@ -164,9 +170,9 @@ const AdminRfqsContent = () => {
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Название, категория или ID"
+              placeholder="Название, RFQ или ID"
               className="h-11 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              aria-label="Поиск по заявкам"
+              aria-label="Поиск по контрактам"
             />
           </div>
         </div>
@@ -199,111 +205,119 @@ const AdminRfqsContent = () => {
         </div>
       </section>
 
-      {items.length === 0 ? (
-        <section className="rounded-2xl border border-border bg-white px-6 py-16 text-center">
-          <Search className="mx-auto text-muted-foreground/40" aria-hidden="true" />
-          <h2 className="mt-4 font-black">
-            {hasFilters ? "Заявки не найдены" : "Заявок пока нет"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {hasFilters
-              ? "Измените поисковый запрос или выбранный фильтр."
-              : "Новые заявки появятся после публикации покупателями."}
-          </p>
-        </section>
-      ) : (
-        <section className="overflow-hidden rounded-2xl border border-border bg-white">
+      <section className="overflow-hidden rounded-2xl border border-border bg-white">
+        {items.length === 0 ? (
+          <div className="px-6 py-16 text-center">
+            <BookOpen className="mx-auto text-muted-foreground" aria-hidden="true" />
+            <h2 className="mt-4 text-lg font-black">Контракты не найдены</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {hasFilters
+                ? "Измените фильтр или поисковый запрос."
+                : "Активных контрактов пока нет."}
+            </p>
+          </div>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Заявка</TableHead>
-                <TableHead>Покупатель</TableHead>
+                <TableHead>Контракт</TableHead>
+                <TableHead>Стороны</TableHead>
+                <TableHead>Сумма</TableHead>
+                <TableHead>Escrow</TableHead>
                 <TableHead>Статус</TableHead>
-                <TableHead>Предложения</TableHead>
-                <TableHead>Обновлено</TableHead>
+                <TableHead>Дата</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => {
-                const statusMeta = rfqStatusMeta[item.status as RfqStatus] || {
-                  label: item.status,
+              {items.map((contract) => {
+                const statusMeta = contractStatusMeta[contract.status as ContractStatus] || {
+                  label: contract.status,
                   className: "bg-muted text-muted-foreground",
                 }
+                const buyerName =
+                  contract.buyer?.company_title ||
+                  contract.buyer?.name ||
+                  contract.buyer?.display_name ||
+                  "—"
+                const supplierName =
+                  contract.supplier?.company_title ||
+                  contract.supplier?.name ||
+                  contract.supplier?.display_name ||
+                  "—"
                 return (
-                  <TableRow key={item.id}>
+                  <TableRow key={contract.id}>
                     <TableCell>
                       <Link
-                        href={`/admin/rfqs/${item.id}`}
-                        className="block min-w-0 hover:text-primary"
+                        href={`/admin/contracts/${contract.id}`}
+                        className="font-semibold text-foreground hover:text-primary"
                       >
-                        <p className="truncate font-bold">{item.title}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {rfqTypeLabel[item.type as RfqType] || item.type} · {item.id.slice(0, 8)}
-                          {item.open_reports_count > 0
-                            ? ` · жалоб: ${item.open_reports_count}`
-                            : ""}
-                        </p>
+                        {contract.title}
                       </Link>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        #{contract.id} · RFQ {contract.rfq_id.slice(0, 8)}
+                      </p>
                     </TableCell>
-                    <TableCell className="text-sm">
-                      {item.buyer?.company_title || item.buyer?.name || "—"}
+                    <TableCell>
+                      <p className="text-sm">{buyerName}</p>
+                      <p className="text-xs text-muted-foreground">{supplierName}</p>
+                    </TableCell>
+                    <TableCell>
+                      {formatMoney(contract.agreed_amount, contract.currency)}
+                    </TableCell>
+                    <TableCell>
+                      {formatMoney(contract.escrow_held, contract.currency)}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusMeta.className}>
                         {statusMeta.label}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">{item.proposals_count}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(item.updated_at)}
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(contract.created_at)}
                     </TableCell>
                   </TableRow>
                 )
               })}
             </TableBody>
           </Table>
+        )}
 
-          {pages > 1 && (
-            <div className="flex items-center justify-between border-t border-border px-4 py-3">
-              <p className="text-sm text-muted-foreground">
-                Страница {page} из {pages}
-              </p>
-              <div className="flex gap-2">
-                <Button asChild variant="outline" size="sm" disabled={page <= 1}>
-                  <Link
-                    href={getPageHref(page - 1)}
-                    aria-disabled={page <= 1}
-                    tabIndex={page <= 1 ? -1 : 0}
-                    className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
-                  >
-                    <ChevronLeft aria-hidden="true" />
-                    Назад
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="sm" disabled={page >= pages}>
-                  <Link
-                    href={getPageHref(page + 1)}
-                    aria-disabled={page >= pages}
-                    tabIndex={page >= pages ? -1 : 0}
-                    className={page >= pages ? "pointer-events-none opacity-50" : undefined}
-                  >
-                    Далее
-                    <ChevronRight aria-hidden="true" />
-                  </Link>
-                </Button>
-              </div>
+        {pages > 1 && (
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              Страница {page} из {pages}
+            </p>
+            <div className="flex gap-2">
+              <Button asChild variant="outline" size="sm" disabled={page <= 1}>
+                <Link
+                  href={getPageHref(page - 1)}
+                  aria-label="Предыдущая страница"
+                  tabIndex={page <= 1 ? -1 : 0}
+                >
+                  <ChevronLeft aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" disabled={page >= pages}>
+                <Link
+                  href={getPageHref(page + 1)}
+                  aria-label="Следующая страница"
+                  tabIndex={page >= pages ? -1 : 0}
+                >
+                  <ChevronRight aria-hidden="true" />
+                </Link>
+              </Button>
             </div>
-          )}
-        </section>
-      )}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
 
-export default function AdminRfqsPage() {
+export default function AdminContractsPage() {
   return (
-    <Suspense fallback={<RfqSkeleton />}>
-      <AdminRfqsContent />
+    <Suspense fallback={<ContractsSkeleton />}>
+      <AdminContractsContent />
     </Suspense>
   )
 }

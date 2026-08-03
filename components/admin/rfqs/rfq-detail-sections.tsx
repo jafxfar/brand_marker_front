@@ -4,6 +4,13 @@ import Link from "next/link"
 import { FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { AdminRfqDetail } from "@/lib/api/admin"
+import {
+  adminActorKindLabels,
+  adminLabel,
+  adminReportReasonLabels,
+  adminReportStatusLabels,
+  adminRfqVisibilityLabels,
+} from "@/lib/admin-display"
 import { budgetTypeMeta, rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import type { BudgetType, ProposalStatus, RfqStatus, RfqType } from "@/types"
@@ -45,7 +52,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
     <div className="space-y-5">
       <section id="requirements" className={sectionClassName}>
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black">Requirements</h2>
+          <h2 className="text-lg font-black">Требования</h2>
           <Badge variant="outline" className={statusMeta.className}>
             {statusMeta.label}
           </Badge>
@@ -90,7 +97,9 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
             <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Видимость
             </dt>
-            <dd className="mt-1 text-sm font-medium">{requirements.visibility}</dd>
+            <dd className="mt-1 text-sm font-medium">
+              {adminLabel(adminRfqVisibilityLabels, requirements.visibility)}
+            </dd>
           </div>
           {requirements.project_duration && (
             <div>
@@ -128,7 +137,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="buyer" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Buyer</h2>
+        <h2 className="mb-5 text-lg font-black">Покупатель</h2>
         {rfq.buyer ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -145,10 +154,11 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Actor
+                Профиль
               </dt>
               <dd className="mt-1 text-sm font-medium">
-                #{rfq.buyer.actor_id} · {rfq.buyer.actor_kind}
+                #{rfq.buyer.actor_id} ·{" "}
+                {adminLabel(adminActorKindLabels, rfq.buyer.actor_kind)}
               </dd>
             </div>
             {rfq.buyer.company_id && (
@@ -173,7 +183,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="proposals" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Proposals</h2>
+        <h2 className="mb-5 text-lg font-black">Предложения</h2>
         {rfq.proposals.length ? (
           <div className="space-y-3">
             {rfq.proposals.map((proposal) => {
@@ -199,7 +209,12 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
                     <Badge variant="outline" className={meta.className}>
                       {meta.label}
                     </Badge>
-                    <ButtonLink href={`/admin/proposals/${proposal.id}`} />
+                    <Link
+                      href={`/admin/proposals/${proposal.id}`}
+                      className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:bg-secondary"
+                    >
+                      Открыть
+                    </Link>
                   </div>
                 </div>
               )
@@ -211,7 +226,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="messages" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Messages</h2>
+        <h2 className="mb-5 text-lg font-black">Сообщения</h2>
         {rfq.messages.length ? (
           <div className="space-y-3">
             {rfq.messages.map((message) => (
@@ -230,14 +245,18 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="reports" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Reports</h2>
+        <h2 className="mb-5 text-lg font-black">Жалобы</h2>
         {rfq.reports.length ? (
           <div className="space-y-3">
             {rfq.reports.map((report) => (
               <div key={report.id} className="rounded-xl border border-border p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">{report.reason}</Badge>
-                  <Badge variant="outline">{report.status}</Badge>
+                  <Badge variant="outline">
+                    {adminLabel(adminReportReasonLabels, report.reason)}
+                  </Badge>
+                  <Badge variant="outline">
+                    {adminLabel(adminReportStatusLabels, report.status)}
+                  </Badge>
                   <span className="text-xs text-muted-foreground">
                     {report.reporter.name} · {formatDate(report.created_at)}
                   </span>
@@ -255,12 +274,3 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
     </div>
   )
 }
-
-const ButtonLink = ({ href }: { href: string }) => (
-  <Link
-    href={href}
-    className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:bg-secondary"
-  >
-    Открыть
-  </Link>
-)

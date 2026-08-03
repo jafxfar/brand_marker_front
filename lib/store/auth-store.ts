@@ -248,6 +248,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginAdminWithCredentials: async ({ email, password }) => {
+        if (!isApiEnabled()) {
+          throw new Error("Для входа администратора необходимо подключение к API")
+        }
         await authApi.login(email, password)
         const me = await authApi.me()
         if (!["admin", "superadmin", "moderator"].includes(me.user.role)) {

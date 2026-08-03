@@ -43,6 +43,8 @@ const AVAILABLE_ADMIN_HREFS = new Set([
   "/admin/catalog",
   "/admin/rfqs",
   "/admin/proposals",
+  "/admin/contracts",
+  "/admin/disputes",
 ])
 
 const adminNavSections: AdminNavSection[] = [
@@ -73,10 +75,10 @@ const adminNavSections: AdminNavSection[] = [
     items: [
       { label: "Заявки (RFQ)", href: "/admin/rfqs", Icon: ClipboardList, available: true },
       { label: "Предложения", href: "/admin/proposals", Icon: FileInput, available: true },
-      { label: "Контракты", href: "/admin/contracts", Icon: BookOpen },
+      { label: "Контракты", href: "/admin/contracts", Icon: BookOpen, available: true },
       { label: "Финансы", href: "/admin/finance", Icon: CircleDollarSign },
       { label: "Escrow", href: "/admin/escrow", Icon: WalletCards },
-      { label: "Споры", href: "/admin/disputes", Icon: Gavel },
+      { label: "Споры", href: "/admin/disputes", Icon: Gavel, available: true },
     ],
   },
   {

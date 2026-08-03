@@ -24,12 +24,12 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import type { ItemStatus } from "@/types"
 
 const sections = [
-  ["images", "Images"],
-  ["description", "Description"],
-  ["attributes", "Attributes"],
-  ["owner", "Owner"],
-  ["reports", "Reports"],
-  ["history", "History"],
+  ["images", "Изображения"],
+  ["description", "Описание"],
+  ["attributes", "Атрибуты"],
+  ["owner", "Владелец"],
+  ["reports", "Жалобы"],
+  ["history", "История"],
 ] as const
 
 const DetailSkeleton = () => (
@@ -148,7 +148,7 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
             {item.status !== "active" && (
               <Button type="button" size="sm" onClick={() => setSelectedAction("approve")}>
                 <CheckCircle2 aria-hidden="true" />
-                Approve
+                Одобрить
               </Button>
             )}
             {item.status !== "hidden" && (
@@ -159,7 +159,7 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("hide")}
               >
                 <EyeOff aria-hidden="true" />
-                Hide
+                Скрыть
               </Button>
             )}
             <Button
@@ -169,7 +169,7 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
               onClick={() => setSelectedAction("request_changes")}
             >
               <FilePenLine aria-hidden="true" />
-              Request Changes
+              Запросить правки
             </Button>
             {!isModerator && (
               <Button
@@ -180,7 +180,7 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("delete")}
               >
                 <Trash2 aria-hidden="true" />
-                Delete
+                Удалить
               </Button>
             )}
           </div>

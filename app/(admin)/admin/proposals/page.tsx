@@ -28,11 +28,11 @@ import type { ProposalStatus } from "@/types"
 
 const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminProposalView; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "accepted", label: "Accepted" },
-  { value: "rejected", label: "Rejected" },
-  { value: "reported", label: "Reported" },
+  { value: "all", label: "Все" },
+  { value: "pending", label: "Ожидают" },
+  { value: "accepted", label: "Принятые" },
+  { value: "rejected", label: "Отклонённые" },
+  { value: "reported", label: "Жалобы" },
 ]
 
 const isViewFilter = (value: string | null): value is AdminProposalView =>

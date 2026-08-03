@@ -42,9 +42,9 @@ const metricDefinitions: MetricDefinition[] = [
   { key: "total_companies", label: "Компании", Icon: Building2, href: "/admin/companies" },
   { key: "catalog_items", label: "Позиции каталога", Icon: Boxes, href: "/admin/catalog" },
   { key: "active_rfqs", label: "Активные заявки", Icon: FileText, href: "/admin/rfqs" },
-  { key: "active_contracts", label: "Активные контракты", Icon: FileCheck2 },
+  { key: "active_contracts", label: "Активные контракты", Icon: FileCheck2, href: "/admin/contracts" },
   { key: "escrow_balance", label: "Баланс escrow", Icon: WalletCards, currency: true },
-  { key: "open_disputes", label: "Открытые споры", Icon: Gavel },
+  { key: "open_disputes", label: "Открытые споры", Icon: Gavel, href: "/admin/disputes" },
   { key: "monthly_revenue", label: "Выручка за месяц", Icon: TrendingUp, currency: true },
 ]
 
@@ -69,10 +69,11 @@ type QuickAction = {
 
 const quickActions: QuickAction[] = [
   { label: "Проверить компанию", href: "/admin/companies?status=pending" },
-  { label: "Разрешить спор" },
+  { label: "Разрешить спор", href: "/admin/disputes" },
   { label: "Проверить жалобу", href: "/admin/catalog?view=reported" },
   { label: "Заявки RFQ", href: "/admin/rfqs" },
   { label: "Предложения", href: "/admin/proposals" },
+  { label: "Контракты", href: "/admin/contracts" },
 ]
 
 const formatNumber = (value: number) =>

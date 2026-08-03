@@ -22,11 +22,11 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import type { RfqStatus, RfqType } from "@/types"
 
 const sections = [
-  ["requirements", "Requirements"],
-  ["buyer", "Buyer"],
-  ["proposals", "Proposals"],
-  ["messages", "Messages"],
-  ["reports", "Reports"],
+  ["requirements", "Требования"],
+  ["buyer", "Покупатель"],
+  ["proposals", "Предложения"],
+  ["messages", "Сообщения"],
+  ["reports", "Жалобы"],
 ] as const
 
 const DetailSkeleton = () => (
@@ -134,7 +134,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("hide")}
               >
                 <EyeOff aria-hidden="true" />
-                Hide
+                Скрыть
               </Button>
             )}
             {canClose && (
@@ -145,7 +145,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("close")}
               >
                 <XCircle aria-hidden="true" />
-                Close
+                Закрыть
               </Button>
             )}
             <Button
@@ -155,7 +155,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
               onClick={() => setSelectedAction("warn_buyer")}
             >
               <AlertTriangle aria-hidden="true" />
-              Warn Buyer
+              Предупредить покупателя
             </Button>
             {!isModerator && (
               <Button
@@ -166,7 +166,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("delete")}
               >
                 <Trash2 aria-hidden="true" />
-                Delete
+                Удалить
               </Button>
             )}
           </div>
