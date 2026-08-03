@@ -2,9 +2,27 @@ export const CATALOG_ITEM_TYPES = ["product", "service"] as const
 
 export type CatalogItemType = (typeof CATALOG_ITEM_TYPES)[number]
 
-export const ITEM_STATUSES = ["draft", "active", "archived"] as const
+export const ITEM_STATUSES = [
+  "draft",
+  "pending_review",
+  "changes_requested",
+  "active",
+  "hidden",
+  "archived",
+  "deleted",
+] as const
 
 export type ItemStatus = (typeof ITEM_STATUSES)[number]
+
+export const CATALOG_REPORT_REASONS = [
+  "misleading",
+  "prohibited",
+  "spam",
+  "copyright",
+  "other",
+] as const
+
+export type CatalogReportReason = (typeof CATALOG_REPORT_REASONS)[number]
 
 export const ITEM_ATTRIBUTE_VALUE_TYPES = [
   "text",

@@ -114,7 +114,7 @@ export const useItemsStore = create<ItemsState>()(
       publishItem: (id) =>
         set((state) => ({
           items: state.items.map((item) =>
-            item.id === id ? { ...item, status: "active" as const } : item,
+            item.id === id ? { ...item, status: "pending_review" as const } : item,
           ),
         })),
     }),

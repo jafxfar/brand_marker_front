@@ -21,6 +21,7 @@ export const RFQ_STATUSES = [
   "cancelled",
   "expired",
   "disputed",
+  "archived",
 ] as const
 
 export type RfqStatus = (typeof RFQ_STATUSES)[number]

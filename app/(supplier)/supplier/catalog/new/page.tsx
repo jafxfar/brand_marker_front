@@ -17,15 +17,13 @@ export default function NewCatalogItemPage() {
   const useApi = isApiEnabled()
   const createMutation = useCreateCatalogItemMutation()
 
-  const handleSubmit = async (input: CatalogItemInput, status: "draft" | "active") => {
+  const handleSubmit = async (
+    input: CatalogItemInput,
+    status: "draft" | "pending_review",
+  ) => {
     const payload = { ...input, status }
     if (useApi) {
-      const item = await createMutation.mutateAsync(payload)
-      if (status === "active") {
-        await import("@/lib/api/supplier/catalog").then((m) =>
-          m.supplierCatalogApi.publish(item.id),
-        )
-      }
+      await createMutation.mutateAsync(payload)
       router.push("/supplier/catalog")
       return
     }

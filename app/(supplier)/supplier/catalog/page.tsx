@@ -18,7 +18,10 @@ type Tab = "all" | ItemStatus
 const tabs: { value: Tab; label: string }[] = [
   { value: "all", label: "Все" },
   { value: "draft", label: "Черновики" },
+  { value: "pending_review", label: "На модерации" },
+  { value: "changes_requested", label: "Нужны правки" },
   { value: "active", label: "Активные" },
+  { value: "hidden", label: "Скрытые" },
   { value: "archived", label: "Архив" },
 ]
 
@@ -31,18 +34,17 @@ export default function SupplierCatalogPage() {
   const [tab, setTab] = useState<Tab>("all")
   const useApi = isApiEnabled()
 
-  const apiStatus = tab === "all" ? undefined : tab
+  const apiStatus: ItemStatus | undefined = tab === "all" ? undefined : tab
   const { data: apiItems, isLoading } = useSupplierCatalogQuery(
     apiStatus,
     hydrated && useApi,
   )
 
-  const localItems =
-    hydrated && tab === "all"
+  const localItems = !hydrated
+    ? []
+    : tab === "all"
       ? getItemsBySupplier(actorId)
-      : hydrated
-        ? getItemsByStatus(actorId, tab)
-        : []
+      : getItemsByStatus(actorId, tab)
 
   const items = useApi ? (apiItems ?? []) : localItems
 

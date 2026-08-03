@@ -55,7 +55,10 @@ export default function EditCatalogItemPage({ params }: PageProps) {
     )
   }
 
-  const handleSubmit = async (input: CatalogItemInput, status: "draft" | "active") => {
+  const handleSubmit = async (
+    input: CatalogItemInput,
+    status: "draft" | "pending_review",
+  ) => {
     const payload = { ...input, status }
     if (useApi) {
       await updateMutation.mutateAsync({ id: itemId, data: payload })

@@ -1,8 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { BadgeCheck, MapPin, Star } from "lucide-react"
+import { BadgeCheck, Flag, MapPin, Star } from "lucide-react"
+import { ReportItemDialog } from "@/components/catalog/report-item-dialog"
 import { PageShell } from "@/components/marketplace/page-shell"
+import { Button } from "@/components/ui/button"
 import { getService } from "@/lib/mock/marketplace-services"
 import { getCategory } from "@/lib/mock/categories"
 import { getIcon } from "@/lib/icon-map"
@@ -15,6 +18,7 @@ import {
   performerUrl,
   servicesUrl,
 } from "@/lib/marketplace-routes"
+import { tokenStorage } from "@/lib/api/client"
 import type { MarketplaceService } from "@/types/marketplace"
 
 type ServiceDetailContentProps = {
@@ -24,10 +28,12 @@ type ServiceDetailContentProps = {
 export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) => {
   const useApi = isApiEnabled()
   const mockService = getService(serviceId)
+  const [reportOpen, setReportOpen] = useState(false)
   const { data: apiItem, isLoading } = usePublicCatalogItemQuery(
     serviceId,
     useApi && !mockService,
   )
+  const isAuthenticated = Boolean(tokenStorage.getAccess())
 
   const service: MarketplaceService | null = mockService
     ?? (apiItem ? mapCatalogItemToService(apiItem) : null)
@@ -130,7 +136,27 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
 
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="text-2xl font-black text-primary">{service.price}</div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
+                  {useApi && !mockService && (
+                    isAuthenticated ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setReportOpen(true)}
+                        aria-label="Пожаловаться на позицию"
+                      >
+                        <Flag aria-hidden="true" />
+                        Пожаловаться
+                      </Button>
+                    ) : (
+                      <Button asChild variant="outline">
+                        <Link href={loginRedirect(`/services/${service.id}`)}>
+                          <Flag aria-hidden="true" />
+                          Пожаловаться
+                        </Link>
+                      </Button>
+                    )
+                  )}
                   <Link
                     href={performerUrl(service.providerId)}
                     className="px-5 py-2.5 rounded-xl border border-border text-sm font-semibold hover:border-primary/30 transition-colors"
@@ -149,6 +175,14 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
           </div>
         </div>
       </section>
+      {useApi && !mockService && (
+        <ReportItemDialog
+          itemId={serviceId}
+          itemTitle={service.title}
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+        />
+      )}
     </PageShell>
   )
 }

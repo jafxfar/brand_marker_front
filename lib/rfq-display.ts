@@ -23,6 +23,7 @@ export const rfqStatusMeta: Record<
   cancelled: { label: "Отменён", className: "bg-muted text-muted-foreground" },
   expired: { label: "Истёк", className: "bg-red-100 text-red-700" },
   disputed: { label: "Спор", className: "bg-red-100 text-red-700" },
+  archived: { label: "Архив", className: "bg-muted text-muted-foreground" },
 }
 
 export const budgetTypeMeta: Record<BudgetType, string> = {

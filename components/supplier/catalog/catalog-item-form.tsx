@@ -15,7 +15,7 @@ import {
 
 type CatalogItemFormProps = {
   initial?: CatalogItemWithRelations
-  onSubmit: (input: CatalogItemInput, status: "draft" | "active") => void
+  onSubmit: (input: CatalogItemInput, status: "draft" | "pending_review") => void
 }
 
 const defaultPricing: PricingFieldValues = {
@@ -101,7 +101,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
     return Object.keys(e).length === 0
   }
 
-  const buildInput = (status: "draft" | "active"): CatalogItemInput => ({
+  const buildInput = (status: "draft" | "pending_review"): CatalogItemInput => ({
     type,
     category_id: Number(categoryId),
     title: title.trim(),
@@ -136,7 +136,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
     },
   })
 
-  const handleSubmit = (status: "draft" | "active") => {
+  const handleSubmit = (status: "draft" | "pending_review") => {
     if (!validate()) return
     onSubmit(buildInput(status), status)
   }
@@ -267,6 +267,12 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
         <PricingFields values={pricing} onChange={setPricing} errors={errors} />
       </section>
 
+      {initial?.status === "changes_requested" && (
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+          Модератор запросил правки. Исправьте карточку и снова отправьте на модерацию.
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row gap-3 pb-8">
         <button
           type="button"
@@ -277,10 +283,10 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
         </button>
         <button
           type="button"
-          onClick={() => handleSubmit("active")}
+          onClick={() => handleSubmit("pending_review")}
           className="h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
         >
-          Опубликовать
+          Отправить на модерацию
         </button>
       </div>
     </div>

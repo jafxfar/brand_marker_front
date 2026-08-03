@@ -9,15 +9,39 @@ export const itemStatusMeta: Record<
     label: "Черновик",
     className: "bg-muted text-muted-foreground",
   },
+  pending_review: {
+    label: "На модерации",
+    className: "bg-sky-100 text-sky-700",
+  },
+  changes_requested: {
+    label: "Нужны правки",
+    className: "bg-orange-100 text-orange-700",
+  },
   active: {
     label: "Активна",
     className: "bg-emerald-100 text-emerald-700",
+  },
+  hidden: {
+    label: "Скрыта",
+    className: "bg-slate-200 text-slate-700",
   },
   archived: {
     label: "В архиве",
     className: "bg-amber-100 text-amber-700",
   },
+  deleted: {
+    label: "Удалена",
+    className: "bg-red-100 text-red-700",
+  },
 }
+
+export const catalogReportReasonLabels = {
+  misleading: "Вводящая информация",
+  prohibited: "Запрещённый контент",
+  spam: "Спам",
+  copyright: "Нарушение прав",
+  other: "Другое",
+} as const
 
 export const pricingTypeMeta: Record<PricingType, string> = {
   fixed: "Фиксированная",

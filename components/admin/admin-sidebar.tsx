@@ -9,11 +9,12 @@ import {
   Briefcase,
   Building2,
   CircleDollarSign,
+  ClipboardList,
   FileCheck2,
+  FileInput,
   FolderTree,
   Gavel,
   LayoutDashboard,
-  PackageCheck,
   Settings,
   ShieldCheck,
   Users,
@@ -34,6 +35,16 @@ type AdminNavSection = {
   items: AdminNavItem[]
 }
 
+/** Routes with implemented admin UI — these stay clickable in the sidebar. */
+const AVAILABLE_ADMIN_HREFS = new Set([
+  "/admin",
+  "/admin/users",
+  "/admin/companies",
+  "/admin/catalog",
+  "/admin/rfqs",
+  "/admin/proposals",
+])
+
 const adminNavSections: AdminNavSection[] = [
   {
     title: "Обзор",
@@ -51,16 +62,17 @@ const adminNavSections: AdminNavSection[] = [
     items: [
       { label: "Пользователи", href: "/admin/users", Icon: Users, available: true },
       { label: "Модерация", href: "/admin/moderation", Icon: ShieldCheck },
-      { label: "Компании", href: "/admin/companies", Icon: Building2 },
+      { label: "Компании", href: "/admin/companies", Icon: Building2, available: true },
       { label: "Верификация", href: "/admin/verification", Icon: FileCheck2 },
-      { label: "Каталог", href: "/admin/catalog", Icon: Boxes },
+      { label: "Каталог", href: "/admin/catalog", Icon: Boxes, available: true },
       { label: "Категории", href: "/admin/categories", Icon: FolderTree },
     ],
   },
   {
     title: "Операции",
     items: [
-      { label: "Заказы", href: "/admin/orders", Icon: PackageCheck },
+      { label: "Заявки (RFQ)", href: "/admin/rfqs", Icon: ClipboardList, available: true },
+      { label: "Предложения", href: "/admin/proposals", Icon: FileInput, available: true },
       { label: "Контракты", href: "/admin/contracts", Icon: BookOpen },
       { label: "Финансы", href: "/admin/finance", Icon: CircleDollarSign },
       { label: "Escrow", href: "/admin/escrow", Icon: WalletCards },
@@ -75,6 +87,9 @@ const adminNavSections: AdminNavSection[] = [
     ],
   },
 ]
+
+const isNavItemAvailable = (item: AdminNavItem) =>
+  item.available === true || AVAILABLE_ADMIN_HREFS.has(item.href)
 
 type AdminSidebarProps = {
   onNavigate?: () => void
@@ -111,19 +126,20 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
               {section.title}
             </p>
             {section.items.map((item) => {
+              const available = isNavItemAvailable(item)
               const isActive =
-                item.available &&
+                available &&
                 (item.href === "/admin"
                   ? pathname === item.href
                   : pathname.startsWith(item.href))
               const itemClasses = cn(
                 "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
                 isActive && "bg-secondary text-primary",
-                !isActive && item.available && "text-foreground transition-colors hover:bg-secondary",
-                !item.available && "cursor-not-allowed text-muted-foreground/55",
+                !isActive && available && "text-foreground transition-colors hover:bg-secondary",
+                !available && "cursor-not-allowed text-muted-foreground/55",
               )
 
-              if (!item.available) {
+              if (!available) {
                 return (
                   <button
                     key={item.href}

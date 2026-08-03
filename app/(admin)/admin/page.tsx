@@ -1,12 +1,15 @@
 "use client"
 
+import Link from "next/link"
 import {
   Activity,
   AlertTriangle,
   Boxes,
   Building2,
   CircleDollarSign,
+  ClipboardList,
   FileCheck2,
+  FileInput,
   FileText,
   Gavel,
   RefreshCcw,
@@ -31,13 +34,14 @@ type MetricDefinition = {
   label: string
   Icon: LucideIcon
   currency?: boolean
+  href?: string
 }
 
 const metricDefinitions: MetricDefinition[] = [
-  { key: "total_users", label: "Пользователи", Icon: Users },
-  { key: "total_companies", label: "Компании", Icon: Building2 },
-  { key: "catalog_items", label: "Позиции каталога", Icon: Boxes },
-  { key: "active_rfqs", label: "Активные заявки", Icon: FileText },
+  { key: "total_users", label: "Пользователи", Icon: Users, href: "/admin/users" },
+  { key: "total_companies", label: "Компании", Icon: Building2, href: "/admin/companies" },
+  { key: "catalog_items", label: "Позиции каталога", Icon: Boxes, href: "/admin/catalog" },
+  { key: "active_rfqs", label: "Активные заявки", Icon: FileText, href: "/admin/rfqs" },
   { key: "active_contracts", label: "Активные контракты", Icon: FileCheck2 },
   { key: "escrow_balance", label: "Баланс escrow", Icon: WalletCards, currency: true },
   { key: "open_disputes", label: "Открытые споры", Icon: Gavel },
@@ -57,6 +61,19 @@ const activityLabels: Record<AdminActivityType, string> = {
   payment: "Платёж",
   dispute: "Спор",
 }
+
+type QuickAction = {
+  label: string
+  href?: string
+}
+
+const quickActions: QuickAction[] = [
+  { label: "Проверить компанию", href: "/admin/companies?status=pending" },
+  { label: "Разрешить спор" },
+  { label: "Проверить жалобу", href: "/admin/catalog?view=reported" },
+  { label: "Заявки RFQ", href: "/admin/rfqs" },
+  { label: "Предложения", href: "/admin/proposals" },
+]
 
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value)
@@ -98,20 +115,40 @@ const MetricCard = ({
 }: {
   definition: MetricDefinition
   value: number
-}) => (
-  <article className="group rounded-2xl border border-border bg-white p-5 transition-colors hover:border-primary/35">
-    <div className="flex items-start justify-between gap-4">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
-        <definition.Icon size={19} aria-hidden="true" />
+}) => {
+  const content = (
+    <>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+          <definition.Icon size={19} aria-hidden="true" />
+        </div>
+        <Activity size={16} className="text-muted-foreground/45" aria-hidden="true" />
       </div>
-      <Activity size={16} className="text-muted-foreground/45" aria-hidden="true" />
-    </div>
-    <p className="mt-5 text-2xl font-black tracking-tight text-foreground">
-      {formatMetric(value, definition.currency)}
-    </p>
-    <p className="mt-1 text-sm text-muted-foreground">{definition.label}</p>
-  </article>
-)
+      <p className="mt-5 text-2xl font-black tracking-tight text-foreground">
+        {formatMetric(value, definition.currency)}
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{definition.label}</p>
+    </>
+  )
+
+  if (definition.href) {
+    return (
+      <Link
+        href={definition.href}
+        className="group block rounded-2xl border border-border bg-white p-5 transition-colors hover:border-primary/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        aria-label={`Перейти к разделу: ${definition.label}`}
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <article className="rounded-2xl border border-border bg-white p-5">
+      {content}
+    </article>
+  )
+}
 
 const ActivityRow = ({ item }: { item: AdminActivityItem }) => {
   const Icon = activityIcons[item.type]
@@ -266,7 +303,11 @@ export default function AdminDashboardPage() {
               <ShieldCheck size={19} className="text-primary" aria-hidden="true" />
             </div>
             <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
+              <Link
+                href="/admin/companies?status=pending"
+                className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                aria-label="Открыть компании на верификации"
+              >
                 <FileCheck2 size={18} className="text-primary" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground">Верификация компаний</p>
@@ -274,7 +315,7 @@ export default function AdminDashboardPage() {
                     {formatNumber(data.metrics.pending_verifications)}
                   </p>
                 </div>
-              </div>
+              </Link>
               <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
                 <Gavel size={18} className="text-primary" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
@@ -284,6 +325,28 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
               </div>
+              <Link
+                href="/admin/rfqs?view=reported"
+                className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                aria-label="Открыть заявки с жалобами"
+              >
+                <ClipboardList size={18} className="text-primary" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">Заявки RFQ</p>
+                  <p className="text-sm font-bold text-foreground">Перейти к модерации</p>
+                </div>
+              </Link>
+              <Link
+                href="/admin/proposals?view=reported"
+                className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                aria-label="Открыть предложения с жалобами"
+              >
+                <FileInput size={18} className="text-primary" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">Предложения</p>
+                  <p className="text-sm font-bold text-foreground">Перейти к модерации</p>
+                </div>
+              </Link>
             </div>
           </section>
 
@@ -295,15 +358,28 @@ export default function AdminDashboardPage() {
               Быстрые действия
             </h2>
             <div className="mt-4 space-y-3">
-              {["Проверить компанию", "Разрешить спор", "Проверить жалобу"].map((label) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between rounded-xl border border-dashed border-border px-3.5 py-3 text-sm text-muted-foreground"
-                >
-                  <span>{label}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Скоро</span>
-                </div>
-              ))}
+              {quickActions.map((action) =>
+                action.href ? (
+                  <Link
+                    key={action.label}
+                    href={action.href}
+                    className="flex items-center justify-between rounded-xl border border-border px-3.5 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary/35 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    <span>{action.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Открыть
+                    </span>
+                  </Link>
+                ) : (
+                  <div
+                    key={action.label}
+                    className="flex items-center justify-between rounded-xl border border-dashed border-border px-3.5 py-3 text-sm text-muted-foreground"
+                  >
+                    <span>{action.label}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Скоро</span>
+                  </div>
+                ),
+              )}
             </div>
           </section>
         </aside>
