@@ -100,7 +100,7 @@ export const listings: Listing[] = [
     id: "lst-10",
     supplierId: "sup-5",
     kind: "service",
-    title: "Грузоперевозки по России и СНГ",
+    title: "Грузоперевозки по Таджикистану и СНГ",
     description: "FTL/LTL перевозки с трекингом. Стоимость от маршрута.",
     categoryId: "logistics",
     price: 38000,

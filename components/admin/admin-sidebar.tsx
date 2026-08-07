@@ -40,11 +40,13 @@ const AVAILABLE_ADMIN_HREFS = new Set([
   "/admin",
   "/admin/users",
   "/admin/companies",
+  "/admin/moderation",
   "/admin/catalog",
   "/admin/rfqs",
   "/admin/proposals",
   "/admin/contracts",
   "/admin/disputes",
+  "/admin/finance",
 ])
 
 const adminNavSections: AdminNavSection[] = [
@@ -63,7 +65,7 @@ const adminNavSections: AdminNavSection[] = [
     title: "Платформа",
     items: [
       { label: "Пользователи", href: "/admin/users", Icon: Users, available: true },
-      { label: "Модерация", href: "/admin/moderation", Icon: ShieldCheck },
+      { label: "Модерация", href: "/admin/moderation", Icon: ShieldCheck, available: true },
       { label: "Компании", href: "/admin/companies", Icon: Building2, available: true },
       { label: "Верификация", href: "/admin/verification", Icon: FileCheck2 },
       { label: "Каталог", href: "/admin/catalog", Icon: Boxes, available: true },
@@ -76,7 +78,7 @@ const adminNavSections: AdminNavSection[] = [
       { label: "Заявки (RFQ)", href: "/admin/rfqs", Icon: ClipboardList, available: true },
       { label: "Предложения", href: "/admin/proposals", Icon: FileInput, available: true },
       { label: "Контракты", href: "/admin/contracts", Icon: BookOpen, available: true },
-      { label: "Финансы", href: "/admin/finance", Icon: CircleDollarSign },
+      { label: "Финансы", href: "/admin/finance", Icon: CircleDollarSign, available: true },
       { label: "Escrow", href: "/admin/escrow", Icon: WalletCards },
       { label: "Споры", href: "/admin/disputes", Icon: Gavel, available: true },
     ],

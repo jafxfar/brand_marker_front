@@ -902,4 +902,261 @@ export const adminApi = {
         partial_buyer_amount: partialBuyerAmount ?? null,
       }),
     }),
+  getFinance: ({ page, pageSize, view, query }: AdminFinanceParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      view,
+    })
+    if (query.trim()) {
+      searchParams.set("query", query.trim())
+    }
+    return apiFetch<AdminFinanceListResponse>(
+      `/admin/finance?${searchParams.toString()}`,
+    )
+  },
+  getFinancePayment: (paymentId: number) =>
+    apiFetch<AdminFinanceDetail>(`/admin/finance/${paymentId}`),
+  applyFinanceAction: (
+    paymentId: number,
+    action: AdminFinanceAction,
+    reason?: string,
+  ) =>
+    apiFetch<AdminFinanceActionResponse>(`/admin/finance/${paymentId}/action`, {
+      method: "POST",
+      body: JSON.stringify({ action, reason: reason?.trim() || null }),
+    }),
+  exportFinanceCsv: async ({
+    view,
+    query,
+    paymentId,
+  }: {
+    view: AdminFinanceView
+    query?: string
+    paymentId?: number
+  }) => {
+    const { API_URL } = await import("./config")
+    const { tokenStorage } = await import("./client")
+    const searchParams = new URLSearchParams({ view })
+    if (query?.trim()) searchParams.set("query", query.trim())
+    if (paymentId) searchParams.set("payment_id", String(paymentId))
+    const headers = new Headers()
+    const token = tokenStorage.getAccess()
+    if (token) headers.set("Authorization", `Bearer ${token}`)
+    const res = await fetch(
+      `${API_URL}/admin/finance/export?${searchParams.toString()}`,
+      { headers },
+    )
+    if (!res.ok) {
+      throw { status: res.status, message: res.statusText }
+    }
+    return {
+      blob: await res.blob(),
+      filename:
+        paymentId != null ? `finance-${paymentId}.csv` : `finance-${view}.csv`,
+    }
+  },
+  getReports: ({ page, pageSize, view, query }: AdminReportParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      view,
+    })
+    if (query.trim()) {
+      searchParams.set("query", query.trim())
+    }
+    return apiFetch<AdminReportListResponse>(
+      `/admin/reports?${searchParams.toString()}`,
+    )
+  },
+  getReport: (targetType: AdminReportTargetType, reportId: number) =>
+    apiFetch<AdminReportDetail>(`/admin/reports/${targetType}/${reportId}`),
+  applyReportAction: (
+    targetType: AdminReportTargetType,
+    reportId: number,
+    action: AdminReportAction,
+    reason?: string,
+  ) =>
+    apiFetch<AdminReportActionResponse>(
+      `/admin/reports/${targetType}/${reportId}/action`,
+      {
+        method: "POST",
+        body: JSON.stringify({ action, reason: reason?.trim() || null }),
+      },
+    ),
+}
+
+export type AdminFinanceView =
+  | "platform_revenue"
+  | "subscriptions"
+  | "commission"
+  | "refunds"
+  | "payouts"
+
+export type AdminFinanceAction = "refund" | "retry" | "mark_paid"
+
+export type AdminFinancePayment = {
+  id: number
+  type: string
+  status: string
+  gateway: string
+  amount: number
+  commission: number
+  currency: string
+  title: string
+  invoice_id: number | null
+  withdrawal_id: number | null
+  contract_id: number | null
+  actor: AdminParty | null
+  created_at: string
+  updated_at: string
+}
+
+export type AdminFinanceParams = {
+  page: number
+  pageSize: number
+  view: AdminFinanceView
+  query: string
+}
+
+export type AdminFinanceListResponse = {
+  items: AdminFinancePayment[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+  view_counts: Record<AdminFinanceView, number>
+}
+
+export type AdminFinanceDetail = AdminFinancePayment & {
+  description: string | null
+  external_id: string | null
+  paid_at: string | null
+  failed_at: string | null
+  refunded_at: string | null
+  metadata: Record<string, unknown>
+  actor: AdminParty | null
+  invoice: {
+    id: number
+    number: string
+    title: string
+    status: string
+    amount: number
+    currency: string
+  } | null
+  withdrawal: {
+    id: number
+    amount: number
+    status: string
+    currency: string
+  } | null
+  contract: {
+    id: number
+    title: string
+    status: string
+  } | null
+  subscription_user_id: number | null
+  history: Array<{
+    id: number
+    action: string
+    details: Record<string, unknown>
+    created_at: string
+    actor: { id: number; email: string; name: string } | null
+  }>
+}
+
+export type AdminFinanceActionResponse = {
+  id: number
+  action: AdminFinanceAction
+  status: string
+  type: string
+}
+
+export type AdminReportView =
+  | "all"
+  | "spam"
+  | "fraud"
+  | "counterfeit"
+  | "abuse"
+  | "other"
+
+export type AdminReportTargetType = "catalog" | "rfq" | "proposal"
+
+export type AdminReportAction = "dismiss" | "warn" | "suspend" | "delete"
+
+export type AdminReportReporter = {
+  id: number
+  email: string
+  name: string
+}
+
+export type AdminReportedObject = {
+  type: string
+  id: string
+  title: string
+  href: string
+  status?: string | null
+  owner?: AdminParty | null
+}
+
+export type AdminReport = {
+  id: number
+  target_type: AdminReportTargetType
+  reason: string
+  status: string
+  details_preview: string | null
+  created_at: string
+  reporter: AdminReportReporter
+  reported_object: AdminReportedObject
+}
+
+export type AdminReportParams = {
+  page: number
+  pageSize: number
+  view: AdminReportView
+  query: string
+}
+
+export type AdminReportListResponse = {
+  items: AdminReport[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+  view_counts: Record<AdminReportView, number>
+}
+
+export type AdminReportDetail = {
+  id: number
+  target_type: AdminReportTargetType
+  reason: string
+  status: string
+  details: string | null
+  created_at: string
+  resolved_at: string | null
+  reporter: AdminReportReporter
+  reported_object: AdminReportedObject
+  owner: AdminParty | null
+  evidence: {
+    details: string | null
+    files: Array<{
+      file_name: string
+      file_url: string
+      file_type: string
+    }>
+  }
+  history: Array<{
+    id: number
+    action: string
+    details: Record<string, unknown>
+    created_at: string
+    actor: { id: number; email: string; name: string } | null
+  }>
+}
+
+export type AdminReportActionResponse = {
+  id: number
+  target_type: AdminReportTargetType
+  action: AdminReportAction
+  status: string
 }

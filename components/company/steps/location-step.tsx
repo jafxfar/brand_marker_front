@@ -16,7 +16,7 @@ export const LocationStep = ({ data, errors, onChange }: LocationStepProps) => (
         type="text"
         value={data.country}
         onChange={(e) => onChange({ country: e.target.value })}
-        placeholder="Россия"
+        placeholder="Таджикистан"
         className={wizardInputClass}
       />
     </WizardField>
@@ -26,7 +26,7 @@ export const LocationStep = ({ data, errors, onChange }: LocationStepProps) => (
         type="text"
         value={data.city}
         onChange={(e) => onChange({ city: e.target.value })}
-        placeholder="Москва"
+        placeholder="Душанбе"
         className={wizardInputClass}
       />
     </WizardField>

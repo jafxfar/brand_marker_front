@@ -90,7 +90,7 @@ export const mapCompanyToPerformer = (
     specialties: company.profile?.industries ?? [],
     verified: company.verification_status === "verified",
     featured: (company.rating ?? 0) >= 4.5,
-    worldwide: Boolean(company.country && company.country !== "Россия"),
+    worldwide: Boolean(company.country && company.country !== "Таджикистан"),
     icon: "Building2",
     description: company.description ?? "",
   }

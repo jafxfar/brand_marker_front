@@ -63,7 +63,7 @@ export const marketplacePerformers: MarketplacePerformer[] = [
     name: "ФинансПро",
     category: "Финансы и аудит",
     categoryId: "finance",
-    city: "Казань",
+    city: "Бохтар",
     rating: 4.9,
     reviews: 245,
     clients: "410+",

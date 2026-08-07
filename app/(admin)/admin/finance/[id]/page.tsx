@@ -1,0 +1,241 @@
+"use client"
+
+import { use, useState } from "react"
+import Link from "next/link"
+import {
+  ArrowLeft,
+  CheckCircle2,
+  CircleDollarSign,
+  Download,
+  RefreshCcw,
+  RotateCcw,
+  Undo2,
+} from "lucide-react"
+import { toast } from "sonner"
+import { FinanceActionDialog } from "@/components/admin/finance/finance-action-dialog"
+import { AdminFinanceDetailSections } from "@/components/admin/finance/finance-detail-sections"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useAdminFinancePaymentQuery } from "@/hooks/api/use-admin-finance-query"
+import { adminApi } from "@/lib/api/admin"
+import type { AdminFinanceAction } from "@/lib/api/admin"
+import { getApiErrorMessage } from "@/lib/api/client"
+import {
+  adminFinanceStatusMeta,
+  adminFinanceTypeLabels,
+  adminLabel,
+} from "@/lib/admin-display"
+
+const sections = [
+  ["transaction", "Транзакция"],
+  ["gateway", "Шлюз"],
+  ["status", "Статус"],
+  ["commission", "Комиссия"],
+  ["invoice", "Счёт"],
+  ["history", "История"],
+] as const
+
+const DetailSkeleton = () => (
+  <div className="mx-auto max-w-350 animate-pulse space-y-5">
+    <div className="h-5 w-36 rounded bg-muted" />
+    <div className="h-56 rounded-2xl bg-muted" />
+    <div className="h-14 rounded-2xl bg-muted" />
+    <div className="h-80 rounded-2xl bg-muted" />
+  </div>
+)
+
+const formatMoney = (value: number, currency: string) =>
+  new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: currency || "RUB",
+    maximumFractionDigits: 0,
+  }).format(value)
+
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+type PageProps = {
+  params: Promise<{ id: string }>
+}
+
+export default function AdminFinanceDetailPage({ params }: PageProps) {
+  const { id } = use(params)
+  const paymentId = Number(id)
+  const paymentQuery = useAdminFinancePaymentQuery(paymentId)
+  const [selectedAction, setSelectedAction] = useState<AdminFinanceAction | null>(null)
+  const [exporting, setExporting] = useState(false)
+
+  if (!Number.isInteger(paymentId) || paymentId <= 0) {
+    return (
+      <div className="mx-auto max-w-lg rounded-2xl border border-border bg-white p-8 text-center">
+        <h1 className="text-xl font-black">Некорректный ID платежа</h1>
+        <Button asChild variant="outline" className="mt-5">
+          <Link href="/admin/finance">Вернуться к финансам</Link>
+        </Button>
+      </div>
+    )
+  }
+
+  if (paymentQuery.isLoading) return <DetailSkeleton />
+
+  if (paymentQuery.isError || !paymentQuery.data) {
+    return (
+      <div className="mx-auto flex min-h-[55dvh] max-w-lg items-center justify-center">
+        <div className="w-full rounded-2xl border border-border bg-white p-8 text-center">
+          <CircleDollarSign className="mx-auto text-muted-foreground" aria-hidden="true" />
+          <h1 className="mt-4 text-xl font-black">Платёж не найден</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Запись удалена, недоступна или API временно не отвечает.
+          </p>
+          <div className="mt-5 flex justify-center gap-2">
+            <Button asChild variant="outline">
+              <Link href="/admin/finance">К списку</Link>
+            </Button>
+            <Button type="button" onClick={() => paymentQuery.refetch()}>
+              <RefreshCcw aria-hidden="true" />
+              Повторить
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const payment = paymentQuery.data
+  const statusMeta = adminFinanceStatusMeta[payment.status] || {
+    label: payment.status,
+    className: "bg-muted text-muted-foreground",
+  }
+  const canMarkPaid = ["pending", "processing"].includes(payment.status)
+  const canRetry = payment.status === "failed"
+  const canRefund = payment.status === "paid" && payment.type !== "refund"
+
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const result = await adminApi.exportFinanceCsv({
+        view: "platform_revenue",
+        paymentId: payment.id,
+      })
+      downloadBlob(result.blob, result.filename)
+      toast.success("Запись экспортирована")
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Не удалось экспортировать"))
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-350 space-y-5">
+      <Link
+        href="/admin/finance"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft size={16} aria-hidden="true" />
+        Все платежи
+      </Link>
+
+      <header className="rounded-2xl border border-border bg-white p-5 sm:p-6">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {adminLabel(adminFinanceTypeLabels, payment.type)} · #{payment.id}
+            </p>
+            <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
+              {payment.title}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {formatMoney(payment.amount, payment.currency)}
+              {" · комиссия "}
+              {formatMoney(payment.commission, payment.currency)}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Badge variant="outline" className={statusMeta.className}>
+                {statusMeta.label}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              <Download aria-hidden="true" />
+              Экспорт
+            </Button>
+            {canMarkPaid && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("mark_paid")}
+              >
+                <CheckCircle2 aria-hidden="true" />
+                Отметить оплаченным
+              </Button>
+            )}
+            {canRetry && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("retry")}
+              >
+                <RotateCcw aria-hidden="true" />
+                Повторить
+              </Button>
+            )}
+            {canRefund && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("refund")}
+              >
+                <Undo2 aria-hidden="true" />
+                Возврат
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <nav
+        className="flex gap-2 overflow-x-auto rounded-2xl border border-border bg-white p-2"
+        aria-label="Секции платежа"
+      >
+        {sections.map(([sectionId, label]) => (
+          <a
+            key={sectionId}
+            href={`#${sectionId}`}
+            className="shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
+      <AdminFinanceDetailSections payment={payment} />
+
+      <FinanceActionDialog
+        paymentId={payment.id}
+        paymentTitle={payment.title}
+        action={selectedAction}
+        onOpenChange={(open) => {
+          if (!open) setSelectedAction(null)
+        }}
+      />
+    </div>
+  )
+}

@@ -144,7 +144,7 @@ const AdminLoginContent = () => {
                 id="admin-email"
                 type="email"
                 autoComplete="username"
-                placeholder="admin@company.ru"
+                placeholder="admin@company.tj"
                 className="h-11 w-full rounded-xl border border-input bg-white px-4 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
                 aria-invalid={Boolean(errors.email)}
                 aria-describedby={errors.email ? "admin-email-error" : undefined}

@@ -217,7 +217,7 @@ function RegisterContent() {
                 id="email"
                 type="email"
                 autoComplete="email"
-                placeholder="you@company.ru"
+                placeholder="you@company.tj"
                 className={inputClass}
                 {...register("email")}
               />

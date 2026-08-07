@@ -15,7 +15,7 @@ export const marketplaceRequests: MarketplaceRequest[] = [
     id: 2,
     title: "SEO оптимизация сайта B2B компании",
     budget: "30 000  TJS/мес",
-    city: "Казань",
+    city: "Бохтар",
     time: "12 мин назад",
     offers: 7,
     icon: "TrendingUp",

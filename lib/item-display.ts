@@ -36,10 +36,10 @@ export const itemStatusMeta: Record<
 }
 
 export const catalogReportReasonLabels = {
-  misleading: "Вводящая информация",
-  prohibited: "Запрещённый контент",
   spam: "Спам",
-  copyright: "Нарушение прав",
+  fraud: "Мошенничество",
+  counterfeit: "Подделка",
+  abuse: "Оскорбления / злоупотребление",
   other: "Другое",
 } as const
 

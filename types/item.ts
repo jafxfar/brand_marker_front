@@ -15,10 +15,10 @@ export const ITEM_STATUSES = [
 export type ItemStatus = (typeof ITEM_STATUSES)[number]
 
 export const CATALOG_REPORT_REASONS = [
-  "misleading",
-  "prohibited",
   "spam",
-  "copyright",
+  "fraud",
+  "counterfeit",
+  "abuse",
   "other",
 ] as const
 

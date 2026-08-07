@@ -41,12 +41,12 @@ const footerLinkGroups: Record<string, { label: string; href: string }[]> = {
 }
 
 const cities = [
-  "Душанбе", "Худжанд", "Казань", "Бохтар",
-  "Куляб", "Краснодар", "Нижний Новгород", "Ростов-на-Дону",
-  "Уфа", "Самара", "Красноярск", "Воронеж",
+  "Душанбе", "Худжанд", "Бохтар", "Куляб",
+  "Истаравшан", "Пенджикент", "Турсунзаде", "Вахдат",
+  "Гиссар", "Хорог", "Канибадам", "Исфара",
 ]
 
-const payments = ["Visa", "МИР", "MC", "СБП", "ЮMoney"]
+const payments = ["Visa", "MC", "Humo", "Корти Милли"]
 
 export default function Footer() {
   const categoryLinks = getAllCategories().slice(0, 6)
@@ -90,20 +90,20 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-[260px]">
-              Крупнейшая российская B2B платформа для поиска и заказа профессиональных бизнес-услуг
+              Крупнейшая таджикская B2B платформа для поиска и заказа профессиональных бизнес-услуг
             </p>
             <div className="space-y-3">
-              <a href="tel:88005553535" className="flex items-center gap-3 text-sm text-white/60 hover:text-primary transition-colors">
+              <a href="tel:+992928829955" className="flex items-center gap-3 text-sm text-white/60 hover:text-primary transition-colors">
                 <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0">
                   <Phone size={13} />
                 </div>
-                +992 92 882 9955 (бесплатно)
+                +992 92 882 9955
               </a>
-              <a href="mailto:info@biznesmarket.ru" className="flex items-center gap-3 text-sm text-white/60 hover:text-primary transition-colors">
+              <a href="mailto:info@brandmarket.tj" className="flex items-center gap-3 text-sm text-white/60 hover:text-primary transition-colors">
                 <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0">
                   <Mail size={13} />
                 </div>
-                info@biznesmarket.ru
+                info@brandmarket.tj
               </a>
               <div className="flex items-start gap-3 text-sm text-white/60">
                 <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -184,7 +184,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-8 border-t border-white/8">
-          <p className="text-xs font-semibold text-white/30 uppercase tracking-wide mb-3">Услуги в городах России:</p>
+          <p className="text-xs font-semibold text-white/30 uppercase tracking-wide mb-3">Услуги в городах Таджикистана:</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             {cities.map((city) => (
               <Link key={city} href={servicesUrl({ q: city })} className="text-sm text-white/40 hover:text-primary transition-colors">
@@ -196,7 +196,7 @@ export default function Footer() {
 
         <div className="mt-8 pt-6 border-t border-white/8 flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="text-xs text-white/30">
-            © 2024 БрендМаркет. Все права защищены. ООО «БрендМаркет», ИНН 7701234567
+            © 2024 БрендМаркет. Все права защищены. ООО «БрендМаркет», ИНН 010012345
           </div>
           <div className="flex items-center gap-5 flex-wrap justify-center">
             <Link href={helpUrl()} className="text-xs text-white/35 hover:text-primary transition-colors">Пользовательское соглашение</Link>

@@ -174,7 +174,7 @@ function LoginContent() {
                 id="email"
                 type="email"
                 autoComplete="email"
-                placeholder="you@company.ru"
+                placeholder="you@company.tj"
                 className="w-full h-11 px-4 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 {...register("email")}
               />

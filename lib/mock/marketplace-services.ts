@@ -47,7 +47,7 @@ export const marketplaceServices: MarketplaceService[] = [
     description: "Ведение учёта, подготовка отчётности, налоговое сопровождение для ИП и ООО.",
     provider: "ФинансПро",
     providerId: 4,
-    city: "Казань",
+    city: "Бохтар",
     rating: 4.9,
     reviews: 245,
     price: "от 15 000  TJS/мес",
@@ -83,7 +83,7 @@ export const marketplaceServices: MarketplaceService[] = [
   },
   {
     id: 5,
-    title: "Грузоперевозки по России и СНГ",
+    title: "Грузоперевозки по Таджикистану и СНГ",
     description: "FTL и LTL перевозки, рефрижераторные рейсы, страхование груза и трекинг.",
     provider: "ГрузЛогист",
     providerId: 5,

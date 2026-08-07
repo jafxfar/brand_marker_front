@@ -102,7 +102,7 @@ export default function SupplierProfilePage() {
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="city" className="block text-sm font-medium text-foreground mb-1.5">Город</label>
-              <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Москва" className={inputClass} />
+              <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Душанбе" className={inputClass} />
             </div>
           </div>
         </div>

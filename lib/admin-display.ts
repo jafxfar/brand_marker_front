@@ -15,11 +15,17 @@ export const adminActorKindLabels: Record<string, string> = {
 }
 
 export const adminReportReasonLabels: Record<string, string> = {
-  misleading: "Вводящая информация",
-  prohibited: "Запрещённый контент",
-  spam: "Спам",
-  copyright: "Нарушение прав",
-  other: "Другое",
+  spam: "Spam",
+  fraud: "Fraud",
+  counterfeit: "Counterfeit",
+  abuse: "Abuse",
+  other: "Other",
+}
+
+export const adminReportTargetLabels: Record<string, string> = {
+  catalog: "Каталог",
+  rfq: "RFQ",
+  proposal: "Предложение",
 }
 
 export const adminHistoryActionLabels: Record<string, string> = {
@@ -44,6 +50,13 @@ export const adminHistoryActionLabels: Record<string, string> = {
   "admin.dispute.request_evidence": "Запрос доказательств",
   "admin.dispute.close_case": "Закрытие спора",
   "dispute.open": "Открытие спора",
+  "admin.finance.mark_paid": "Отметка оплаты",
+  "admin.finance.retry": "Повтор платежа",
+  "admin.finance.refund": "Возврат платежа",
+  "admin.report.dismiss": "Отклонение жалобы",
+  "admin.report.warn": "Предупреждение по жалобе",
+  "admin.report.suspend": "Приостановка по жалобе",
+  "admin.report.delete": "Удаление по жалобе",
   "admin.company.approve": "Одобрение компании",
   "admin.company.reject": "Отклонение компании",
   "admin.company.request_documents": "Запрос документов",
@@ -73,6 +86,36 @@ export const adminDisputeResolutionLabels: Record<string, string> = {
   refund_buyer: "Возврат покупателю",
   partial_refund: "Частичный возврат",
   close_case: "Закрытие дела",
+}
+
+export const adminFinanceTypeLabels: Record<string, string> = {
+  platform_revenue: "Выручка",
+  subscription: "Подписка",
+  commission: "Комиссия",
+  refund: "Возврат",
+  payout: "Выплата",
+}
+
+export const adminFinanceStatusMeta: Record<
+  string,
+  { label: string; className: string }
+> = {
+  pending: { label: "Ожидает", className: "bg-amber-100 text-amber-700" },
+  processing: { label: "В обработке", className: "bg-blue-100 text-blue-700" },
+  paid: { label: "Оплачен", className: "bg-emerald-100 text-emerald-700" },
+  failed: { label: "Ошибка", className: "bg-red-100 text-red-700" },
+  refunded: { label: "Возвращён", className: "bg-blue-100 text-blue-700" },
+  cancelled: {
+    label: "Отменён",
+    className: "bg-muted text-muted-foreground",
+  },
+}
+
+export const adminFinanceGatewayLabels: Record<string, string> = {
+  manual: "Вручную",
+  mock: "Mock",
+  stripe: "Stripe",
+  yookassa: "ЮKassa",
 }
 
 export const adminLabel = (

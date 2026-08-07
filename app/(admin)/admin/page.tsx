@@ -70,7 +70,7 @@ type QuickAction = {
 const quickActions: QuickAction[] = [
   { label: "Проверить компанию", href: "/admin/companies?status=pending" },
   { label: "Разрешить спор", href: "/admin/disputes" },
-  { label: "Проверить жалобу", href: "/admin/catalog?view=reported" },
+  { label: "Проверить жалобу", href: "/admin/moderation" },
   { label: "Заявки RFQ", href: "/admin/rfqs" },
   { label: "Предложения", href: "/admin/proposals" },
   { label: "Контракты", href: "/admin/contracts" },

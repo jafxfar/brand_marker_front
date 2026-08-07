@@ -32,7 +32,7 @@ export const ReportItemDialog = ({
   open,
   onOpenChange,
 }: ReportItemDialogProps) => {
-  const [reason, setReason] = useState<CatalogReportReason>("misleading")
+  const [reason, setReason] = useState<CatalogReportReason>("spam")
   const [details, setDetails] = useState("")
   const [pending, setPending] = useState(false)
 
