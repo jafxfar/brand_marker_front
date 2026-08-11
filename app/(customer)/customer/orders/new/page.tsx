@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -9,7 +9,9 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
 import { useOrdersStore } from "@/lib/store/orders-store"
 import { useCreateBuyerOrderMutation } from "@/hooks/api/use-buyer-orders-query"
-import { catalogCategories } from "@/lib/mock/catalog-categories"
+import { catalogCategories as mockCatalogCategories } from "@/lib/mock/catalog-categories"
+import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
+import { mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import type { OrderKind } from "@/types"
 
 export default function BuyerOrderNewPage() {
@@ -18,6 +20,16 @@ export default function BuyerOrderNewPage() {
   const useApi = isApiEnabled()
   const createOrderLocal = useOrdersStore((s) => s.createOrder)
   const createOrderMutation = useCreateBuyerOrderMutation()
+
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const catalogCategories = useMemo(() => {
+    if (!useApi || !apiCategories?.length) return mockCatalogCategories
+    return mapCategoryTreeToMarketplace(apiCategories).map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      name: c.label,
+    }))
+  }, [useApi, apiCategories])
 
   const [kind, setKind] = useState<OrderKind>("service")
   const [title, setTitle] = useState("")

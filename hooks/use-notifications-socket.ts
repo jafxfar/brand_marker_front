@@ -10,11 +10,12 @@ import {
   notificationKeys,
   prependNotificationToCache,
 } from "@/hooks/api/use-notifications-query"
+import { contractKeys, supplierContractKeys } from "@/hooks/api/use-contracts-query"
 import type { ApiNotification } from "@/types/notification"
 
 type WsPayload = {
   event: string
-  data?: ApiNotification
+  data?: ApiNotification | { contract_id: number; message: unknown }
 }
 
 export const useNotificationsSocket = (
@@ -51,7 +52,14 @@ export const useNotificationsSocket = (
             return
           }
           if (payload.event === "notification.created" && payload.data) {
-            prependNotificationToCache(queryClient, role, payload.data)
+            prependNotificationToCache(queryClient, role, payload.data as ApiNotification)
+          }
+          if (payload.event === "contract.message" && payload.data) {
+            const contractId = (payload.data as { contract_id: number }).contract_id
+            if (contractId) {
+              queryClient.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+              queryClient.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+            }
           }
         } catch {
           // ignore malformed messages

@@ -14,6 +14,7 @@ import type {
 import { buildDefaultMilestones, splitAmounts } from "@/lib/payment-milestones"
 import { mockContracts } from "@/lib/mock/contracts"
 import { mockRfqs } from "@/lib/mock/rfqs"
+import { API_MODE } from "@/lib/api/config"
 import {
   PENDING_MILESTONE_STATUSES,
   filterContractsByTab,
@@ -205,7 +206,7 @@ const nextSubmissionId = (contracts: ContractWithRelations[]): number => {
 export const useContractsStore = create<ContractsState>()(
   persist(
     (set, get) => ({
-      contracts: mockContracts,
+      contracts: API_MODE ? [] : mockContracts,
       lastReadAt: {},
       paymentHistoryAt: {},
 
@@ -665,6 +666,12 @@ export const useContractsStore = create<ContractsState>()(
           }),
         })),
     }),
-    { name: "bm-contracts" },
+    {
+      name: "bm-contracts",
+      merge: (persisted, current) => {
+        if (API_MODE) return current
+        return { ...current, ...(persisted as Partial<ContractsState>) }
+      },
+    },
   ),
 )

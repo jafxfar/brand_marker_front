@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { BuyerInvoice, BuyerRefund } from "@/types"
 import { mockBuyerInvoices, mockBuyerRefunds } from "@/lib/mock/buyer-finance"
+import { API_MODE } from "@/lib/api/config"
 import {
   buildPaymentHistoryFromContract,
   type EscrowFundingRow,
@@ -23,8 +24,8 @@ const ESCROW_QUEUE_STATUSES = ["awaiting_payment", "pending"] as const
 export const useBuyerPaymentsStore = create<BuyerPaymentsState>()(
   persist(
     () => ({
-      invoices: mockBuyerInvoices,
-      refunds: mockBuyerRefunds,
+      invoices: API_MODE ? [] : mockBuyerInvoices,
+      refunds: API_MODE ? [] : mockBuyerRefunds,
 
       getOutgoingPayments: (buyerId) => {
         const contracts = useContractsStore
@@ -111,6 +112,12 @@ export const useBuyerPaymentsStore = create<BuyerPaymentsState>()(
         )
       },
     }),
-    { name: "bm-buyer-payments" },
+    {
+      name: "bm-buyer-payments",
+      merge: (persisted, current) => {
+        if (API_MODE) return current
+        return { ...current, ...(persisted as Partial<BuyerPaymentsState>) }
+      },
+    },
   ),
 )

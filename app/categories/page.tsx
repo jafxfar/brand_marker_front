@@ -17,9 +17,9 @@ export default function CategoriesPage() {
   const mockCategories = getAllCategories()
 
   const categories = useMemo(() => {
-    if (!useApi || !apiCategories?.length) return mockCategories
-    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
-    return mergeByKey(mockCategories, apiMapped, "slug")
+    if (!useApi) return mockCategories
+    if (!apiCategories?.length) return []
+    return mapCategoryTreeToMarketplace(apiCategories)
   }, [useApi, apiCategories, mockCategories])
 
   return (

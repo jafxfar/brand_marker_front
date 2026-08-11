@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { Offer, Order, OrderKind, PaymentScheme } from "@/types"
 import { generateOffers } from "@/lib/mock/offers"
+import { API_MODE } from "@/lib/api/config"
 import { useAuthStore } from "@/lib/store/auth-store"
 
 interface CreateOrderInput {
@@ -167,6 +168,12 @@ export const useOrdersStore = create<OrdersState>()(
 
       getOrder: (orderId) => get().orders.find((o) => o.id === orderId),
     }),
-    { name: "bm-orders" },
+    {
+      name: "bm-orders",
+      merge: (persisted, current) => {
+        if (API_MODE) return current
+        return { ...current, ...(persisted as Partial<OrdersState>) }
+      },
+    },
   ),
 )

@@ -7,6 +7,7 @@ import type {
 } from "@/types"
 import { mockCatalogItems } from "@/lib/mock/items"
 import { getCatalogCategory } from "@/lib/mock/catalog-categories"
+import { API_MODE } from "@/lib/api/config"
 
 interface ItemsState {
   items: CatalogItemWithRelations[]
@@ -67,7 +68,7 @@ const buildItem = (
 export const useItemsStore = create<ItemsState>()(
   persist(
     (set, get) => ({
-      items: mockCatalogItems,
+      items: API_MODE ? [] : mockCatalogItems,
 
       getItemsBySupplier: (actorId) =>
         get()
@@ -118,6 +119,12 @@ export const useItemsStore = create<ItemsState>()(
           ),
         })),
     }),
-    { name: "bm-catalog-items" },
+    {
+      name: "bm-catalog-items",
+      merge: (persisted, current) => {
+        if (API_MODE) return current
+        return { ...current, ...(persisted as Partial<ItemsState>) }
+      },
+    },
   ),
 )

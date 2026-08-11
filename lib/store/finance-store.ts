@@ -11,6 +11,7 @@ import {
   mockWithdrawalDestinations,
   mockWithdrawals,
 } from "@/lib/mock/finance"
+import { API_MODE } from "@/lib/api/config"
 import { getSupplierBalances } from "@/lib/finance-display"
 import { useContractsStore } from "@/lib/store/contracts-store"
 
@@ -45,9 +46,9 @@ const nextWithdrawalId = (withdrawals: Withdrawal[]): number => {
 export const useFinanceStore = create<FinanceState>()(
   persist(
     (set, get) => ({
-      destinations: mockWithdrawalDestinations,
-      withdrawals: mockWithdrawals,
-      invoices: mockInvoices,
+      destinations: API_MODE ? [] : mockWithdrawalDestinations,
+      withdrawals: API_MODE ? [] : mockWithdrawals,
+      invoices: API_MODE ? [] : mockInvoices,
 
       getDestinations: (actorId) =>
         get().destinations.filter((d) => d.actor_id === actorId),
@@ -110,6 +111,12 @@ export const useFinanceStore = create<FinanceState>()(
         return { ok: true }
       },
     }),
-    { name: "bm-finance" },
+    {
+      name: "bm-finance",
+      merge: (persisted, current) => {
+        if (API_MODE) return current
+        return { ...current, ...(persisted as Partial<FinanceState>) }
+      },
+    },
   ),
 )

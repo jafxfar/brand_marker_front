@@ -10,6 +10,7 @@ import type {
 } from "@/types"
 import type { CompanyRole } from "@/types/user"
 import { mockCompanies, DEMO_BUYER_ACTOR_IDS } from "@/lib/mock/companies"
+import { API_MODE } from "@/lib/api/config"
 import {
   isSupplierCompany,
   matchesSupplierSearch,
@@ -224,7 +225,7 @@ const wizardToUpdatePatch = (input: CompanyWizardInput): UpdateCompanyPatch => (
 export const useCompaniesStore = create<CompaniesState>()(
   persist(
     (set, get) => ({
-      companies: mockCompanies.map(migrateCompany),
+      companies: API_MODE ? [] : mockCompanies.map(migrateCompany),
       contractReviewIds: {},
 
       getCompany: (id) => get().companies.find((c) => c.id === id),
@@ -521,6 +522,7 @@ export const useCompaniesStore = create<CompaniesState>()(
     {
       name: "bm-companies",
       merge: (persisted, current) => {
+        if (API_MODE) return current
         const merged = { ...current, ...(persisted as Partial<CompaniesState>) }
         if (merged.companies) {
           merged.companies = merged.companies.map(migrateCompany)

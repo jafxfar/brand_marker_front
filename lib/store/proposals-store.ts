@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { Proposal, ProposalAcceptInput, ProposalCreate, ProposalStatus } from "@/types"
 import { mockProposals } from "@/lib/mock/proposals"
+import { API_MODE } from "@/lib/api/config"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
@@ -43,7 +44,7 @@ const nextProposalId = (proposals: Proposal[]): number =>
 export const useProposalsStore = create<ProposalsState>()(
   persist(
     (set, get) => ({
-      proposals: mockProposals,
+      proposals: API_MODE ? [] : mockProposals,
 
       hasProposal: (rfqId, actorId) =>
         get().proposals.some(
@@ -162,6 +163,12 @@ export const useProposalsStore = create<ProposalsState>()(
         return contractId
       },
     }),
-    { name: "bm-proposals" },
+    {
+      name: "bm-proposals",
+      merge: (persisted, current) => {
+        if (API_MODE) return current
+        return { ...current, ...(persisted as Partial<ProposalsState>) }
+      },
+    },
   ),
 )

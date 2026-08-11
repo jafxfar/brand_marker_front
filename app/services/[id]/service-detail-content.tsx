@@ -27,18 +27,19 @@ type ServiceDetailContentProps = {
 
 export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) => {
   const useApi = isApiEnabled()
-  const mockService = getService(serviceId)
+  const mockService = useApi ? null : getService(serviceId)
   const [reportOpen, setReportOpen] = useState(false)
   const { data: apiItem, isLoading } = usePublicCatalogItemQuery(
     serviceId,
-    useApi && !mockService,
+    useApi,
   )
   const isAuthenticated = Boolean(tokenStorage.getAccess())
 
-  const service: MarketplaceService | null = mockService
-    ?? (apiItem ? mapCatalogItemToService(apiItem) : null)
+  const service: MarketplaceService | null = useApi
+    ? (apiItem ? mapCatalogItemToService(apiItem) : null)
+    : mockService
 
-  if (useApi && isLoading && !mockService) {
+  if (useApi && isLoading) {
     return (
       <PageShell>
         <div className="max-w-[900px] mx-auto px-6 py-16 animate-pulse">
@@ -137,7 +138,7 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="text-2xl font-black text-primary">{service.price}</div>
                 <div className="flex flex-wrap gap-3">
-                  {useApi && !mockService && (
+                  {useApi && (
                     isAuthenticated ? (
                       <Button
                         type="button"
@@ -175,7 +176,7 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
           </div>
         </div>
       </section>
-      {useApi && !mockService && (
+      {useApi && (
         <ReportItemDialog
           itemId={serviceId}
           itemTitle={service.title}

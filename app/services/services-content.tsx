@@ -9,8 +9,8 @@ import { ServiceCard } from "@/components/marketplace/service-card"
 import { searchServices } from "@/lib/mock/marketplace-services"
 import { getAllCategories } from "@/lib/mock/categories"
 import { isApiEnabled } from "@/lib/api/config"
-import { usePublicCatalogQuery } from "@/hooks/api/use-public-query"
-import { mergeByKey, mapCatalogItemToService } from "@/lib/marketplace-hybrid"
+import { usePublicCatalogQuery, usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
+import { mapCatalogItemToService, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import { servicesUrl } from "@/lib/marketplace-routes"
 
 export const ServicesPageContent = () => {
@@ -23,13 +23,16 @@ export const ServicesPageContent = () => {
     category || undefined,
     useApi,
   )
-  const categories = getAllCategories()
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const categories = useMemo(() => {
+    if (!useApi || !apiCategories?.length) return getAllCategories()
+    return mapCategoryTreeToMarketplace(apiCategories)
+  }, [useApi, apiCategories])
 
   const services = useMemo(() => {
-    const mockServices = searchServices(query, category || undefined)
-    if (!useApi || !apiCatalog?.length) return mockServices
-    const apiServices = apiCatalog.map((item) => mapCatalogItemToService(item))
-    return mergeByKey(mockServices, apiServices, "id")
+    if (!useApi) return searchServices(query, category || undefined)
+    if (!apiCatalog?.length) return []
+    return apiCatalog.map((item) => mapCatalogItemToService(item))
   }, [query, category, useApi, apiCatalog])
 
   return (

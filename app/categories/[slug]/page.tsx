@@ -1,30 +1,68 @@
+"use client"
+
+import { use, useMemo } from "react"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { ArrowRight, BadgeCheck, MapPin, Star } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { getCategoryBySlug } from "@/lib/mock/categories"
 import { getServicesByCategory } from "@/lib/mock/marketplace-services"
 import { getIcon } from "@/lib/icon-map"
+import { isApiEnabled } from "@/lib/api/config"
+import { usePublicCatalogQuery, usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
+import { mapCatalogItemToService, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import {
   categoriesUrl,
   categoryUrl,
   serviceUrl,
   servicesUrl,
 } from "@/lib/marketplace-routes"
+import type { MarketplaceCategory, MarketplaceService } from "@/types/marketplace"
 
 type CategoryPageProps = {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ sub?: string }>
 }
 
-export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
-  const { slug } = await params
-  const { sub } = await searchParams
-  const category = getCategoryBySlug(slug)
+export default function CategoryPage({ params }: CategoryPageProps) {
+  const { slug } = use(params)
+  const searchParams = useSearchParams()
+  const sub = searchParams.get("sub") ?? undefined
+  const useApi = isApiEnabled()
 
-  if (!category) notFound()
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const { data: apiCatalog } = usePublicCatalogQuery(undefined, slug, useApi)
 
-  const services = getServicesByCategory(category.id)
+  const mockCategory = getCategoryBySlug(slug)
+
+  const category: MarketplaceCategory | null = useMemo(() => {
+    if (useApi && apiCategories?.length) {
+      const mapped = mapCategoryTreeToMarketplace(apiCategories)
+      return mapped.find((c) => c.slug === slug) ?? null
+    }
+    return mockCategory ?? null
+  }, [useApi, apiCategories, mockCategory, slug])
+
+  const services: MarketplaceService[] = useMemo(() => {
+    if (useApi) {
+      if (!apiCatalog?.length) return []
+      return apiCatalog.map((item) => mapCatalogItemToService(item))
+    }
+    return mockCategory ? getServicesByCategory(mockCategory.id) : []
+  }, [useApi, apiCatalog, mockCategory])
+
+  if (!category) {
+    return (
+      <PageShell>
+        <div className="max-w-[900px] mx-auto px-6 py-16 text-center">
+          <p className="text-lg font-bold text-foreground">Категория не найдена</p>
+          <Link href={categoriesUrl()} className="text-primary font-semibold hover:underline mt-2 inline-block">
+            К категориям
+          </Link>
+        </div>
+      </PageShell>
+    )
+  }
+
   const Icon = getIcon(category.icon)
   const activeSub = sub
     ? category.subcategories.find((item) => item.slug === sub)

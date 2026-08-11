@@ -14,7 +14,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { formatPrice } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import { useCreateBuyerOrderMutation } from "@/hooks/api/use-buyer-orders-query"
-import { getSupplier } from "@/lib/mock/suppliers"
+import { getSupplier as getMockSupplier } from "@/lib/mock/suppliers"
 import PaymentDialog from "@/components/cabinet/payment-dialog"
 import { TermHint } from "@/components/ui/term-hint"
 import type { PaymentScheme } from "@/types"
@@ -107,7 +107,7 @@ export default function CartPage() {
           {!hydrated
             ? null
             : items.map((item) => {
-                const supplier = getSupplier(String(item.supplierId))
+                const supplier = useApi ? null : getMockSupplier(String(item.supplierId))
                 return (
                   <div
                     key={item.listingId}

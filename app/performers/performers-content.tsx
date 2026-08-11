@@ -24,12 +24,11 @@ export const PerformersPageContent = () => {
   )
 
   const performers = useMemo(() => {
-    const mockFiltered = filterPerformers({ q: query, verified, featured, scope: scope ?? undefined })
-    if (!useApi || !apiSuppliers?.length) return mockFiltered
+    if (!useApi) return filterPerformers({ q: query, verified, featured, scope: scope ?? undefined })
+    if (!apiSuppliers?.length) return []
     const apiPerformers = apiSuppliers.map(mapCompanyToPerformer)
-    const merged = mergeByKey(mockFiltered, apiPerformers, "id")
     const q = query.trim().toLowerCase()
-    return merged.filter((p) => {
+    return apiPerformers.filter((p) => {
       if (verified && !p.verified) return false
       if (featured && !p.featured) return false
       if (scope === "worldwide" && !p.worldwide) return false

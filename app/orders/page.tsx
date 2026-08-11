@@ -17,9 +17,9 @@ export default function OrdersPage() {
   const mockOrders = getRecentRequests()
 
   const orders = useMemo(() => {
-    if (!useApi || !apiRfqs?.length) return mockOrders
-    const apiOrders = apiRfqs.map(mapRfqToRequest)
-    return mergeByKey(mockOrders, apiOrders, "id")
+    if (!useApi) return mockOrders
+    if (!apiRfqs?.length) return []
+    return apiRfqs.map(mapRfqToRequest)
   }, [useApi, apiRfqs, mockOrders])
 
   return (

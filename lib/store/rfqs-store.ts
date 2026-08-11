@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { RfqAttachment, RfqCreate, RfqStatus, RfqUpdate, RfqWithRelations } from "@/types"
 import { mockRfqsWithRelations } from "@/lib/mock/rfqs"
+import { API_MODE } from "@/lib/api/config"
 import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
 import {
   ACTIVE_RFQ_STATUSES,
@@ -38,7 +39,7 @@ interface RfqsState {
 export const useRfqsStore = create<RfqsState>()(
   persist(
     (set, get) => ({
-      rfqs: mockRfqsWithRelations,
+      rfqs: API_MODE ? [] : mockRfqsWithRelations,
 
       getRfq: (id) => get().rfqs.find((r) => r.id === id),
 
@@ -209,6 +210,12 @@ export const useRfqsStore = create<RfqsState>()(
           ),
 
     }),
-    { name: "bm-rfqs" },
+    {
+      name: "bm-rfqs",
+      merge: (persisted, current) => {
+        if (API_MODE) return current
+        return { ...current, ...(persisted as Partial<RfqsState>) }
+      },
+    },
   ),
 )

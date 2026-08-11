@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react"
 import { Search, Store } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { catalogCategories } from "@/lib/mock/catalog-categories"
+import { catalogCategories as mockCatalogCategories } from "@/lib/mock/catalog-categories"
+import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
+import { mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useItemsStore } from "@/lib/store/items-store"
 import { useHydrated } from "@/hooks/use-hydrated"
@@ -25,6 +27,16 @@ export default function SuppliersPage() {
 
   const getSupplierCompaniesByCategory = useCompaniesStore((s) => s.getSupplierCompaniesByCategory)
   const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
+
+  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
+  const categoryTabs = useMemo(() => {
+    if (!useApi || !apiCategories?.length) return mockCatalogCategories
+    return mapCategoryTreeToMarketplace(apiCategories).map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      name: c.label,
+    }))
+  }, [useApi, apiCategories])
 
   const { data: apiSuppliers, isLoading } = usePublicSuppliersQuery(
     query.trim() || undefined,
@@ -108,7 +120,7 @@ export default function SuppliersPage() {
         >
           Все
         </button>
-        {catalogCategories.map((c) => (
+        {categoryTabs.map((c) => (
           <button
             key={c.id}
             type="button"

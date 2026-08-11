@@ -18,20 +18,21 @@ type PerformerDetailContentProps = {
 
 export const PerformerDetailContent = ({ performerId }: PerformerDetailContentProps) => {
   const useApi = isApiEnabled()
-  const mockPerformer = getPerformer(performerId)
+  const mockPerformer = useApi ? null : getPerformer(performerId)
   const { data: apiCompany, isLoading } = usePublicCompanyQuery(
     performerId,
-    useApi && !mockPerformer,
+    useApi,
   )
   const { data: apiCatalog = [] } = usePublicCompanyCatalogQuery(
     performerId,
     useApi && Boolean(apiCompany),
   )
 
-  const performer: MarketplacePerformer | null = mockPerformer
-    ?? (apiCompany ? mapCompanyToPerformer(apiCompany) : null)
+  const performer: MarketplacePerformer | null = useApi
+    ? (apiCompany ? mapCompanyToPerformer(apiCompany) : null)
+    : mockPerformer
 
-  if (useApi && isLoading && !mockPerformer) {
+  if (useApi && isLoading) {
     return (
       <PageShell>
         <div className="max-w-[900px] mx-auto px-6 py-16 animate-pulse">
@@ -55,13 +56,13 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
   }
 
   const Icon = getIcon(performer.icon)
-  const mockServices = getServicesByCategory(performer.categoryId).filter(
-    (s) => s.providerId === performer.id,
-  )
-  const apiServices = apiCatalog.map((item) =>
-    mapCatalogItemToService(item, apiCompany ?? undefined),
-  )
-  const services = apiServices.length > 0 ? apiServices : mockServices
+  const services = useApi
+    ? apiCatalog.map((item) =>
+        mapCatalogItemToService(item, apiCompany ?? undefined),
+      )
+    : getServicesByCategory(performer.categoryId).filter(
+        (s) => s.providerId === performer.id,
+      )
 
   return (
     <PageShell>
