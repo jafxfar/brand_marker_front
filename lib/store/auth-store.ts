@@ -35,6 +35,7 @@ export type SessionUser = {
 interface AuthState {
   user: SessionUser | null
   isAuthenticated: boolean
+  isReady: boolean
   nextUserId: number
   login: (params: { email: string; role: MarketplaceSessionRole; name?: string }) => void
   loginWithCredentials: (params: {
@@ -54,6 +55,7 @@ interface AuthState {
     phone?: string
     role: MarketplaceSessionRole
   }) => Promise<void>
+  restoreSession: (role: MarketplaceSessionRole) => Promise<boolean>
   logout: () => Promise<void>
   updateProfile: (patch: Partial<SessionUser>) => void
   switchActor: (actorId: number) => Promise<void>
@@ -181,6 +183,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
+      isReady: false,
       nextUserId: 100,
 
       login: ({ email, role, name }) => {
@@ -225,15 +228,24 @@ export const useAuthStore = create<AuthState>()(
 
       loginWithCredentials: async ({ email, password, role }) => {
         await authApi.login(email, password)
-        const me = await authApi.me()
+        let me = await authApi.me()
         if (["admin", "superadmin", "moderator"].includes(me.user.role)) {
           set({
             isAuthenticated: true,
+            isReady: true,
             user: sessionFromMe(me, "admin"),
           })
           return "admin"
         }
-        const active = pickActorForRole(me.actors, role, me.active_actor_id)
+        let active = pickActorForRole(me.actors, role, me.active_actor_id)
+        if (!active) {
+          try {
+            me = await authApi.activateRole(sideForRole(role))
+            active = pickActorForRole(me.actors, role, me.active_actor_id)
+          } catch {
+            // fall through to explicit error below
+          }
+        }
         if (!active) {
           const sideLabel = role === "customer" ? "заказчика" : "поставщика"
           throw new Error(
@@ -242,6 +254,7 @@ export const useAuthStore = create<AuthState>()(
         }
         set({
           isAuthenticated: true,
+          isReady: true,
           user: sessionFromMe(me, role),
         })
         return role
@@ -259,6 +272,7 @@ export const useAuthStore = create<AuthState>()(
         }
         set({
           isAuthenticated: true,
+          isReady: true,
           user: sessionFromMe(me, "admin"),
         })
       },
@@ -299,15 +313,43 @@ export const useAuthStore = create<AuthState>()(
         }
         set({
           isAuthenticated: true,
+          isReady: true,
           user: sessionFromMe(me, role),
         })
+      },
+
+      restoreSession: async (role) => {
+        if (!isApiEnabled()) return false
+        if (!tokenStorage.getAccess() && !tokenStorage.getRefresh()) return false
+        try {
+          let me = await authApi.me()
+          let active = pickActorForRole(me.actors, role, me.active_actor_id)
+          if (!active) {
+            try {
+              me = await authApi.activateRole(sideForRole(role))
+              active = pickActorForRole(me.actors, role, me.active_actor_id)
+            } catch {
+              return false
+            }
+          }
+          if (!active) return false
+          set({
+            isAuthenticated: true,
+            isReady: true,
+            user: sessionFromMe(me, role),
+          })
+          return true
+        } catch {
+          set({ user: null, isAuthenticated: false, isReady: true })
+          return false
+        }
       },
 
       logout: async () => {
         if (isApiEnabled()) {
           await authApi.logout()
         }
-        set({ user: null, isAuthenticated: false })
+        set({ user: null, isAuthenticated: false, isReady: true })
       },
 
       updateProfile: (patch) =>
@@ -396,13 +438,48 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "bm-auth",
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        nextUserId: state.nextUserId,
+      }),
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          useAuthStore.setState({ user: null, isAuthenticated: false, isReady: true })
+          return
+        }
+        if (state?.user) {
+          state.user = migrateUser(state.user)
+        }
+        useAuthStore.setState({ isReady: true })
+      },
       merge: (persisted, current) => {
+        // Login can finish before rehydration. Never wipe a live session
+        // with a stale localStorage snapshot (e.g. previous customer role).
+        if (current.isAuthenticated && current.user) {
+          return {
+            ...current,
+            isReady: true,
+          }
+        }
         const merged = { ...current, ...(persisted as Partial<AuthState>) }
         if (merged.user) {
           merged.user = migrateUser(merged.user)
         }
-        return merged
+        return {
+          ...merged,
+          isReady: true,
+        }
       },
     },
   ),
 )
+
+if (typeof window !== "undefined") {
+  useAuthStore.persist.onFinishHydration(() => {
+    useAuthStore.setState({ isReady: true })
+  })
+  if (useAuthStore.persist.hasHydrated()) {
+    useAuthStore.setState({ isReady: true })
+  }
+}

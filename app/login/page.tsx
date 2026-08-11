@@ -77,10 +77,10 @@ function LoginContent() {
       const redirect = searchParams.get("redirect")
       const marketplaceRedirect = redirect?.startsWith("/admin") ? null : redirect
       if (role === "customer") {
-        router.push(marketplaceRedirect || "/customer")
+        router.replace(marketplaceRedirect || "/customer")
         return
       }
-      router.push(marketplaceRedirect || "/supplier")
+      router.replace(marketplaceRedirect || "/supplier")
     } catch (err) {
       setApiError(getApiErrorMessage(err, "Ошибка входа"))
     }

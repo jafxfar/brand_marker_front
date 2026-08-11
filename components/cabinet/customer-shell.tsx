@@ -1,32 +1,14 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter, usePathname } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import CustomerSidebar from "@/components/cabinet/sidebar"
 import CustomerTopbar from "@/components/cabinet/topbar"
-import { useAuthStore } from "@/lib/store/auth-store"
-import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
-import { useHydrated } from "@/hooks/use-hydrated"
+import { useCabinetGate } from "@/hooks/use-cabinet-gate"
 
 export default function CustomerShell({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const hydrated = useHydrated()
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const user = useAuthStore((s) => s.user)
+  const gate = useCabinetGate("customer")
 
-  const allowed = isAuthenticated && user?.role === "customer"
-
-  useNotificationsSocket("buyer", hydrated && allowed)
-
-  useEffect(() => {
-    if (hydrated && !allowed) {
-      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
-    }
-  }, [hydrated, allowed, router, pathname])
-
-  if (!hydrated || !allowed) {
+  if (gate !== "allowed") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="animate-spin text-primary" size={32} />
