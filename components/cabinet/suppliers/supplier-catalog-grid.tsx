@@ -9,7 +9,7 @@ type SupplierCatalogGridProps = {
 export const SupplierCatalogGrid = ({ items }: SupplierCatalogGridProps) => {
   if (items.length === 0) {
     return (
-      <div className="bg-white border border-border rounded-2xl p-8 text-center text-sm text-muted-foreground">
+      <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">
         У поставщика пока нет опубликованных позиций в каталоге
       </div>
     )
@@ -18,7 +18,7 @@ export const SupplierCatalogGrid = ({ items }: SupplierCatalogGridProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {items.map((item) => (
-        <div key={item.id} className="bg-white border border-border rounded-2xl p-5">
+        <div key={item.id} className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-start gap-3">
             <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
               {item.type === "product" ? (
@@ -43,7 +43,7 @@ export const SupplierCatalogGrid = ({ items }: SupplierCatalogGridProps) => {
             </p>
           )}
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-            <div className="text-base font-black text-primary">
+            <div className="text-sm font-semibold text-primary">
               {formatItemPricing(item.pricing)}
             </div>
           </div>

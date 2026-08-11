@@ -75,7 +75,7 @@ export default function Header() {
 
   return (
     <header className="w-full sticky top-0 z-50 shadow-sm">
-      <div style={{ backgroundColor: "oklch(0.22 0.055 255)" }} className="text-white text-xs">
+      <div className="bg-foreground text-white text-xs">
         <div className="max-w-[1440px] mx-auto px-6 flex items-center justify-between h-9">
           <div className="flex items-center gap-5">
             <Link href={performersUrl({ verified: true })} className="hover:text-primary transition-colors">
@@ -108,7 +108,7 @@ export default function Header() {
             </div>
             <div className="flex items-baseline gap-0.5">
               <span className="text-xl font-black text-primary tracking-tight">Бренд</span>
-              <span className="text-xl font-black tracking-tight" style={{ color: "oklch(0.22 0.055 255)" }}>Маркет</span>
+              <span className="text-xl font-black tracking-tight text-foreground">Маркет</span>
             </div>
           </Link>
 
@@ -129,7 +129,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => handleSearch()}
-                className="bg-primary hover:bg-primary-dark text-primary-foreground px-5 h-11 transition-colors flex items-center gap-2 font-semibold text-sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 h-11 transition-colors flex items-center gap-2 font-semibold text-sm"
               >
                 <Search size={16} />
                 <span className="hidden md:block">Найти</span>

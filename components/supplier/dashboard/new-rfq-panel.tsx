@@ -12,9 +12,9 @@ type NewRfqPanelProps = {
 }
 
 export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
-  <div className="bg-white border border-border rounded-2xl">
+  <div className="bg-card border border-border rounded-xl">
     <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-base font-bold text-foreground">Новые заявки</h2>
+      <h2 className="text-sm font-semibold text-foreground">Новые заявки</h2>
       <Link
         href="/supplier/rfqs"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
@@ -25,7 +25,7 @@ export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
 
     {!hydrated || rfqs.length === 0 ? (
       <div className="p-10 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
+        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
           <Inbox size={22} className="text-primary" />
         </div>
         <p className="text-sm font-semibold text-foreground">Новых заявок нет</p>
@@ -34,7 +34,7 @@ export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
         </p>
         <Link
           href="/supplier/rfqs"
-          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-dark transition-colors"
+          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
         >
           Смотреть заявки
         </Link>
@@ -49,7 +49,7 @@ export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
               href={`/supplier/rfqs/${rfq.id}`}
               className="flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors"
             >
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {rfq.type === "product" ? (
                   <ShoppingCart size={17} className="text-primary" />
                 ) : (

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useMemo } from "react"
 import Link from "next/link"
@@ -55,11 +55,11 @@ export function CategoryGrid() {
       <div className="max-w-[1440px] mx-auto px-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Категории услуг</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">Найдите нужную услугу в вашей отрасли</p>
+            <h2 className="text-xl font-bold text-foreground">????????? ?????</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">??????? ?????? ?????? ? ????? ???????</p>
           </div>
           <Link href={categoriesUrl()} className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
-            Все категории <ArrowRight size={14} />
+            ??? ????????? <ArrowRight size={14} />
           </Link>
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -91,12 +91,12 @@ export function FeaturedServices() {
               <TrendingUp size={18} className="text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">Рекомендуемые услуги</h2>
-              <p className="text-sm text-muted-foreground">Лучшие предложения от проверенных исполнителей</p>
+              <h2 className="text-xl font-bold text-foreground">????????????? ??????</h2>
+              <p className="text-sm text-muted-foreground">?????? ??????????? ?? ??????????? ????????????</p>
             </div>
           </div>
           <Link href={servicesUrl()} className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
-            Смотреть все <ArrowRight size={14} />
+            ???????? ??? <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -129,12 +129,12 @@ export function ProviderShowcase() {
               <Award size={18} className="text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">Топ исполнители</h2>
-              <p className="text-sm text-muted-foreground">Проверенные компании с высоким рейтингом</p>
+              <h2 className="text-xl font-bold text-foreground">??? ???????????</h2>
+              <p className="text-sm text-muted-foreground">??????????? ???????? ? ??????? ?????????</p>
             </div>
           </div>
           <Link href={performersUrl({ featured: true })} className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
-            Все исполнители <ArrowRight size={14} />
+            ??? ??????????? <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -150,10 +150,10 @@ export function ProviderShowcase() {
 
 export function TrustBanners() {
   const trustFeatures = [
-    { Icon: BadgeCheck, title: "Верификация компаний", desc: "Проверяем документы, реквизиты и репутацию каждого исполнителя", href: verificationUrl() },
-    { Icon: CircleDollarSign, title: "Безопасная оплата", desc: "Деньги переводятся исполнителю только после принятия работы", href: guaranteeUrl() },
-    { Icon: Zap, title: "Быстрый отклик", desc: "Получите первые предложения уже через 2 часа после публикации", href: ordersUrl() },
-    { Icon: Star, title: "Система рейтингов", desc: "Реальные отзывы от клиентов без цензуры и накрутки", href: performersUrl({ featured: true }) },
+    { Icon: BadgeCheck, title: "??????????? ????????", desc: "????????? ?????????, ????????? ? ????????? ??????? ???????????", href: verificationUrl() },
+    { Icon: CircleDollarSign, title: "?????????? ??????", desc: "?????? ??????????? ??????????? ?????? ????? ???????? ??????", href: guaranteeUrl() },
+    { Icon: Zap, title: "??????? ??????", desc: "???????? ?????? ??????????? ??? ????? 2 ???? ????? ??????????", href: ordersUrl() },
+    { Icon: Star, title: "??????? ?????????", desc: "???????? ?????? ?? ???????? ??? ??????? ? ????????", href: performersUrl({ featured: true }) },
   ]
 
   return (
@@ -180,7 +180,7 @@ export function TrustBanners() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             className="rounded-2xl p-7 flex flex-col justify-between relative overflow-hidden min-h-[180px]"
-            style={{ background: "linear-gradient(135deg, oklch(0.22 0.055 255) 0%, oklch(0.3 0.09 255) 100%)" }}
+            style={{ background: "linear-gradient(135deg, oklch(0.20 0.06 155) 0%, oklch(0.32 0.09 150) 100%)" }}
           >
             <div className="absolute right-0 top-0 bottom-0 w-48 flex items-center justify-center opacity-[0.07]">
               <Building2 size={160} className="text-white" />
@@ -188,43 +188,43 @@ export function TrustBanners() {
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-3">
                 <BadgeCheck size={15} className="text-primary" />
-                <span className="text-primary text-xs font-bold uppercase tracking-widest">Для заказчиков</span>
+                <span className="text-primary text-xs font-bold uppercase tracking-widest">??? ??????????</span>
               </div>
               <h3 className="text-white text-xl font-black leading-tight mb-1.5">
-                Найдите исполнителя<br />за 24 часа
+                ??????? ???????????<br />?? 24 ????
               </h3>
               <p className="text-white/65 text-xs leading-relaxed mb-5 max-w-xs">
-                Опубликуйте задание бесплатно и получите предложения от проверенных компаний
+                ??????????? ??????? ????????? ? ???????? ??????????? ?? ??????????? ????????
               </p>
               <Link
                 href={newRfqRedirect()}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg hover:-translate-y-px"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg hover:-translate-y-px"
               >
-                Разместить заказ <ChevronRight size={15} />
+                ?????????? ????? <ChevronRight size={15} />
               </Link>
             </div>
           </div>
 
-          <div className="bg-[oklch(0.97_0.04_60)] border border-primary/20 rounded-2xl p-7 flex flex-col justify-between relative overflow-hidden min-h-[180px]">
+          <div className="bg-primary/5 border border-primary/15 rounded-2xl p-7 flex flex-col justify-between relative overflow-hidden min-h-[180px]">
             <div className="absolute right-0 top-0 bottom-0 w-48 flex items-center justify-center opacity-[0.07]">
               <Briefcase size={160} className="text-foreground" />
             </div>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-3">
                 <Star size={15} className="text-primary fill-primary" />
-                <span className="text-primary text-xs font-bold uppercase tracking-widest">Для исполнителей</span>
+                <span className="text-primary text-xs font-bold uppercase tracking-widest">??? ????????????</span>
               </div>
               <h3 className="text-foreground text-xl font-black leading-tight mb-1.5">
-                Получайте новых<br />клиентов каждый день
+                ????????? ?????<br />???????? ?????? ????
               </h3>
               <p className="text-muted-foreground text-xs leading-relaxed mb-5 max-w-xs">
-                Регистрируйтесь и откликайтесь на заказы в вашей категории прямо сейчас
+                ??????????????? ? ???????????? ?? ?????? ? ????? ????????? ????? ??????
               </p>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 bg-[oklch(0.22_0.055_255)] hover:bg-[oklch(0.18_0.055_255)] text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg hover:-translate-y-px"
+                className="inline-flex items-center gap-2 bg-foreground hover:bg-foreground/90 text-background text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg hover:-translate-y-px"
               >
-                Стать исполнителем <ChevronRight size={15} />
+                ????? ???????????? <ChevronRight size={15} />
               </Link>
             </div>
           </div>
@@ -253,12 +253,12 @@ export function RecentRequests() {
               <FileText size={18} className="text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">Свежие заказы</h2>
-              <p className="text-sm text-muted-foreground">Актуальные запросы от бизнеса прямо сейчас</p>
+              <h2 className="text-xl font-bold text-foreground">?????? ??????</h2>
+              <p className="text-sm text-muted-foreground">?????????? ??????? ?? ??????? ????? ??????</p>
             </div>
           </div>
           <Link href={ordersUrl()} className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
-            Все заказы <ArrowRight size={14} />
+            ??? ?????? <ArrowRight size={14} />
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -294,15 +294,15 @@ export function RecentRequests() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                    <div className="flex items-center gap-1 text-xs font-semibold text-primary">
                       <Users size={11} />
-                      {req.offers} предложений
+                      {req.offers} ???????????
                     </div>
                     <Link
                       href={supplierRfqRedirect()}
                       className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5 justify-end hover:text-primary transition-colors"
                     >
-                      Откликнуться <ChevronRight size={9} />
+                      ???????????? <ChevronRight size={9} />
                     </Link>
                   </div>
                 </div>

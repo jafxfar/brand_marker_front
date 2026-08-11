@@ -51,7 +51,7 @@ export const AcceptProposalDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg rounded-2xl max-h-[88vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg rounded-xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Принять предложение?</DialogTitle>
           <DialogDescription>
@@ -81,7 +81,7 @@ export const AcceptProposalDialog = ({
             type="button"
             onClick={handleConfirm}
             disabled={!isValid}
-            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Принять и создать контракт
           </button>

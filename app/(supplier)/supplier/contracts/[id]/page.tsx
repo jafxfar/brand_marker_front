@@ -2,7 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowLeft, FileCheck } from "lucide-react"
+import { AlertTriangle, ArrowLeft, FileCheck, MessageSquare, Paperclip, Upload } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -25,6 +25,7 @@ import { ContractFilesPanel } from "@/components/supplier/contracts/contract-fil
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
 import { ContractSubmissionPanel } from "@/components/supplier/contracts/contract-submission-panel"
 import { ContractDisputeDialog } from "@/components/supplier/contracts/contract-dispute-dialog"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import type { ContractWithRelations } from "@/types"
 
 type PageProps = {
@@ -63,16 +64,16 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[1000px] mx-auto animate-pulse space-y-4">
+      <div className="max-w-[960px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-40 bg-secondary rounded-2xl" />
+        <div className="h-40 bg-secondary rounded-xl" />
       </div>
     )
   }
 
   if (!contract || contract.supplier_actor_id !== actorId) {
     return (
-      <div className="max-w-[1000px] mx-auto text-center py-16">
+      <div className="max-w-[960px] mx-auto text-center py-16">
         <p className="text-sm font-semibold text-foreground">Контракт не найден</p>
         <Link href="/supplier/contracts" className="text-sm text-primary hover:underline mt-2 inline-block">
           Вернуться к списку
@@ -83,13 +84,16 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
 
   const meta = contractStatusMeta[contract.status]
   const buyer = getCompany(contract.buyer_actor_id)
+  const buyerName = buyer?.title ?? "Заказчик"
   const canDispute = !DISPUTE_DISABLED_STATUSES.includes(
     contract.status as (typeof DISPUTE_DISABLED_STATUSES)[number],
   )
+  const messageCount = contract.conversation?.messages?.length ?? 0
+  const fileCount = contract.files?.length ?? 0
 
   const getSenderName = (senderId: number) => {
     if (senderId === actorId) return "Вы"
-    if (senderId === contract.buyer_actor_id) return buyer?.title ?? "Заказчик"
+    if (senderId === contract.buyer_actor_id) return buyerName
     return getCompany(senderId)?.title ?? "Участник"
   }
 
@@ -114,7 +118,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-6">
+    <div className="max-w-[960px] mx-auto space-y-5">
       <Link
         href="/supplier/contracts"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -122,85 +126,117 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
         <ArrowLeft size={16} /> Назад к контрактам
       </Link>
 
-      <div className="grid lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-border rounded-2xl p-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                <FileCheck size={20} className="text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-black text-foreground">{contract.title}</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {buyer?.title ?? "Заказчик"}
-                </p>
-                <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-2 ${meta.className}`}>
-                  {meta.label}
-                </span>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-lg font-black text-primary">
-                  {formatCurrency(contract.agreed_amount, contract.currency)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  с {formatIsoDate(contract.start_date)}
-                </p>
-                <DeadlineCountdown
-                  dueDate={contract.due_date}
-                  status={contract.status}
-                  variant="prominent"
-                  showAbsoluteDate
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
-
-            {contract.description && (
-              <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
-                {contract.description}
-              </p>
-            )}
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <FileCheck size={18} className="text-primary" />
           </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold text-foreground leading-tight">{contract.title}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{buyerName}</p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-lg font-bold text-primary">
+              {formatCurrency(contract.agreed_amount, contract.currency)}
+            </p>
+            <DeadlineCountdown
+              dueDate={contract.due_date}
+              status={contract.status}
+              variant="prominent"
+              showAbsoluteDate
+              className="mt-0.5"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mt-3">
+          <span className={`inline-block text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${meta.className}`}>
+            {meta.label}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            с {formatIsoDate(contract.start_date)}
+          </span>
+          {canDispute && (
+            <button
+              type="button"
+              onClick={() => setDisputeOpen(true)}
+              className="ml-auto inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors"
+              aria-label="Открыть спор"
+            >
+              <AlertTriangle size={12} />
+              Спор
+            </button>
+          )}
+          {contract.status === "disputed" && (
+            <span className="ml-auto text-xs text-destructive font-semibold">Спор открыт</span>
+          )}
+        </div>
+        <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
+      </div>
 
-          <ContractMilestonesPanel contract={contract} />
-          <ContractFilesPanel files={contract.files} />
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="overview" className="gap-1.5">
+            <FileCheck size={14} /> Обзор
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="gap-1.5">
+            <MessageSquare size={14} /> Сообщения
+            {messageCount > 0 && (
+              <span className="ml-1 text-[10px] bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded-full">
+                {messageCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="files" className="gap-1.5">
+            <Paperclip size={14} /> Файлы
+            {fileCount > 0 && (
+              <span className="ml-1 text-[10px] bg-muted text-muted-foreground font-semibold px-1.5 py-0.5 rounded-full">
+                {fileCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="submission" className="gap-1.5">
+            <Upload size={14} /> Сдача работы
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <div className="grid lg:grid-cols-3 gap-5 items-start">
+            <div className="lg:col-span-2 space-y-5">
+              {contract.description && (
+                <div className="bg-card border border-border rounded-xl p-5">
+                  <h2 className="text-sm font-semibold text-foreground mb-2">Описание</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{contract.description}</p>
+                </div>
+              )}
+              <ContractMilestonesPanel contract={contract} />
+            </div>
+            <div className="space-y-5 lg:sticky lg:top-24">
+              <ContractBuyerCard buyer={buyer} />
+              <ContractEscrowCard contract={contract} />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="messages">
           <ContractMessagesPanel
             contract={contract}
             currentSenderId={actorId}
             getSenderName={getSenderName}
             onSendMessage={handleSendMessage}
           />
+        </TabsContent>
+
+        <TabsContent value="files">
+          <ContractFilesPanel files={contract.files} />
+        </TabsContent>
+
+        <TabsContent value="submission">
           <ContractSubmissionPanel
             contract={contract}
             onSubmit={handleSubmitWork}
           />
-        </div>
-
-        <div className="space-y-6 lg:sticky lg:top-24">
-          <ContractBuyerCard buyer={buyer} />
-          <ContractEscrowCard contract={contract} />
-
-          <section className="bg-white border border-border rounded-2xl p-6">
-            <h2 className="text-base font-bold text-foreground mb-4">Действия</h2>
-            <button
-              type="button"
-              onClick={() => setDisputeOpen(true)}
-              disabled={!canDispute}
-              className="w-full h-10 px-4 rounded-xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              <AlertTriangle size={16} />
-              {contract.status === "disputed" ? "Спор открыт" : "Открыть спор"}
-            </button>
-            {!canDispute && contract.status !== "disputed" && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Действие недоступно для завершённых и отменённых контрактов
-              </p>
-            )}
-          </section>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
 
       <ContractDisputeDialog
         open={disputeOpen}

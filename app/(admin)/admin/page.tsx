@@ -97,15 +97,15 @@ const DashboardSkeleton = () => (
     </div>
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: 8 }, (_, index) => (
-        <div key={index} className="h-32 rounded-2xl border border-border bg-white p-5">
+        <div key={index} className="h-32 rounded-xl border border-border bg-card p-5">
           <div className="h-10 w-10 rounded-xl bg-muted" />
           <div className="mt-4 h-6 w-24 rounded bg-muted" />
         </div>
       ))}
     </div>
     <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-      <div className="h-96 rounded-2xl border border-border bg-white" />
-      <div className="h-96 rounded-2xl border border-border bg-white" />
+      <div className="h-96 rounded-xl border border-border bg-card" />
+      <div className="h-96 rounded-xl border border-border bg-card" />
     </div>
   </div>
 )
@@ -125,7 +125,7 @@ const MetricCard = ({
         </div>
         <Activity size={16} className="text-muted-foreground/45" aria-hidden="true" />
       </div>
-      <p className="mt-5 text-2xl font-black tracking-tight text-foreground">
+      <p className="mt-5 text-2xl font-bold tracking-tight text-foreground">
         {formatMetric(value, definition.currency)}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{definition.label}</p>
@@ -136,7 +136,7 @@ const MetricCard = ({
     return (
       <Link
         href={definition.href}
-        className="group block rounded-2xl border border-border bg-white p-5 transition-colors hover:border-primary/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="group block rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         aria-label={`Перейти к разделу: ${definition.label}`}
       >
         {content}
@@ -145,7 +145,7 @@ const MetricCard = ({
   }
 
   return (
-    <article className="rounded-2xl border border-border bg-white p-5">
+    <article className="rounded-xl border border-border bg-card p-5">
       {content}
     </article>
   )
@@ -196,18 +196,18 @@ export default function AdminDashboardPage() {
   if (isError || !data) {
     return (
       <div className="mx-auto flex min-h-[60dvh] max-w-xl items-center justify-center">
-        <div className="w-full rounded-2xl border border-destructive/20 bg-white p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-destructive">
+        <div className="w-full rounded-xl border border-destructive/20 bg-card p-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
             <AlertTriangle size={22} aria-hidden="true" />
           </div>
-          <h1 className="mt-4 text-xl font-black text-foreground">Не удалось загрузить данные</h1>
+          <h1 className="mt-4 text-xl font-bold text-foreground">Не удалось загрузить данные</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Проверьте подключение к API и повторите запрос.
           </p>
           <button
             type="button"
             onClick={() => refetch()}
-            className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <RefreshCcw size={16} aria-hidden="true" />
             Повторить
@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
     <div className="mx-auto max-w-[1400px] space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Дашборд
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -232,7 +232,7 @@ export default function AdminDashboardPage() {
           type="button"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/35 hover:bg-secondary disabled:cursor-wait disabled:opacity-60 sm:self-auto"
+          className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/35 hover:bg-secondary disabled:cursor-wait disabled:opacity-60 sm:self-auto"
           aria-label="Обновить данные дашборда"
         >
           <RefreshCcw
@@ -261,12 +261,12 @@ export default function AdminDashboardPage() {
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
         <section
-          className="overflow-hidden rounded-2xl border border-border bg-white"
+          className="overflow-hidden rounded-xl border border-border bg-card"
           aria-labelledby="activity-title"
         >
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <div>
-              <h2 id="activity-title" className="font-black text-foreground">
+              <h2 id="activity-title" className="font-bold text-foreground">
                 Последняя активность
               </h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -294,11 +294,11 @@ export default function AdminDashboardPage() {
 
         <aside className="space-y-6">
           <section
-            className="rounded-2xl border border-border bg-white p-5"
+            className="rounded-xl border border-border bg-card p-5"
             aria-labelledby="attention-title"
           >
             <div className="flex items-center justify-between">
-              <h2 id="attention-title" className="font-black text-foreground">
+              <h2 id="attention-title" className="font-bold text-foreground">
                 Требует внимания
               </h2>
               <ShieldCheck size={19} className="text-primary" aria-hidden="true" />
@@ -312,7 +312,7 @@ export default function AdminDashboardPage() {
                 <FileCheck2 size={18} className="text-primary" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground">Верификация компаний</p>
-                  <p className="text-lg font-black text-foreground">
+                  <p className="text-lg font-bold text-foreground">
                     {formatNumber(data.metrics.pending_verifications)}
                   </p>
                 </div>
@@ -321,7 +321,7 @@ export default function AdminDashboardPage() {
                 <Gavel size={18} className="text-primary" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground">Открытые споры</p>
-                  <p className="text-lg font-black text-foreground">
+                  <p className="text-lg font-bold text-foreground">
                     {formatNumber(data.metrics.open_disputes)}
                   </p>
                 </div>
@@ -352,10 +352,10 @@ export default function AdminDashboardPage() {
           </section>
 
           <section
-            className="rounded-2xl border border-border bg-white p-5"
+            className="rounded-xl border border-border bg-card p-5"
             aria-labelledby="actions-title"
           >
-            <h2 id="actions-title" className="font-black text-foreground">
+            <h2 id="actions-title" className="font-bold text-foreground">
               Быстрые действия
             </h2>
             <div className="mt-4 space-y-3">

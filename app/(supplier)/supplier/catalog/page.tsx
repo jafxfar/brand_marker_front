@@ -56,20 +56,20 @@ export default function SupplierCatalogPage() {
             <Boxes size={20} className="text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground">Каталог</h1>
+            <h1 className="text-2xl font-bold text-foreground">Каталог</h1>
             <p className="text-sm text-muted-foreground">Мои товары и услуги</p>
           </div>
         </div>
         <Link
           href="/supplier/catalog/new"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
         >
           <Plus size={17} />
           Добавить позицию
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1 mb-5 bg-white border border-border rounded-xl p-1 w-fit max-w-full">
+      <div className="flex flex-wrap items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit max-w-full">
         {tabs.map((t) => (
           <button
             key={t.value}
@@ -88,11 +88,11 @@ export default function SupplierCatalogPage() {
       </div>
 
       {!hydrated || (useApi && isLoading) ? (
-        <div className="bg-white border border-border rounded-2xl p-12 animate-pulse">
+        <div className="bg-card border border-border rounded-xl p-12 animate-pulse">
           <div className="h-4 bg-secondary rounded w-1/3 mx-auto" />
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
           <Boxes size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">Каталог пуст</p>
           <p className="text-xs text-muted-foreground mt-1 mb-4">

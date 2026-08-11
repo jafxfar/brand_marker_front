@@ -41,7 +41,7 @@ export default function BuyerOrderDetailPage({ params }: PageProps) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-48 bg-secondary rounded-2xl" />
+        <div className="h-48 bg-secondary rounded-xl" />
       </div>
     )
   }
@@ -89,14 +89,14 @@ export default function BuyerOrderDetailPage({ params }: PageProps) {
         <ArrowLeft size={16} /> К заказам
       </Link>
 
-      <div className="bg-white border border-border rounded-2xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
             <KindIcon size={22} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-black text-foreground">{order.title}</h1>
+              <h1 className="text-xl font-bold text-foreground">{order.title}</h1>
               <span className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", meta.className)}>
                 {meta.label}
               </span>
@@ -135,7 +135,7 @@ export default function BuyerOrderDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      <section className="bg-white border border-border rounded-2xl p-6">
+      <section className="bg-card border border-border rounded-xl p-6">
         <h2 className="text-base font-bold text-foreground mb-4">
           Отклики поставщиков ({order.offers.length})
         </h2>
@@ -151,7 +151,7 @@ export default function BuyerOrderDetailPage({ params }: PageProps) {
                   key={offer.id}
                   className={cn(
                     "border rounded-xl p-4",
-                    isAccepted ? "border-emerald-300 bg-emerald-50/50" : "border-border",
+                    isAccepted ? "border-primary/20 bg-primary/10/50" : "border-border",
                   )}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -169,9 +169,9 @@ export default function BuyerOrderDetailPage({ params }: PageProps) {
                       )}
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-black text-primary">{formatPrice(offer.price)}</p>
+                      <p className="text-sm font-bold text-primary">{formatPrice(offer.price)}</p>
                       {isAccepted ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-emerald-600 mt-1">
+                        <span className="inline-flex items-center gap-1 text-xs text-primary mt-1">
                           <CheckCircle2 size={14} /> Принят
                         </span>
                       ) : (

@@ -24,9 +24,9 @@ export const ProposalsPreviewPanel = ({
   onReject,
   onAccept,
 }: ProposalsPreviewPanelProps) => (
-  <section className="bg-white border border-border rounded-2xl p-6">
+  <section className="bg-card border border-border rounded-xl p-6">
     <div className="flex items-center justify-between gap-3 mb-4">
-      <h2 className="text-base font-bold text-foreground">
+      <h2 className="text-sm font-semibold text-foreground">
         Предложения
         {proposals.length > 0 && (
           <span className="ml-2 text-sm font-normal text-muted-foreground">
@@ -46,7 +46,7 @@ export const ProposalsPreviewPanel = ({
 
     {proposals.length === 0 ? (
       <div className="py-8 text-center">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3">
           <Inbox size={18} className="text-primary" />
         </div>
         <p className="text-sm text-muted-foreground">

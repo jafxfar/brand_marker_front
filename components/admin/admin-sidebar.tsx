@@ -103,7 +103,7 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-card">
       <Link
         href="/admin"
         onClick={onNavigate}
@@ -114,7 +114,7 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
           <Briefcase size={16} className="text-primary-foreground" />
         </div>
         <div className="flex items-baseline gap-1">
-          <span className="text-lg font-black tracking-tight text-foreground">
+          <span className="text-lg font-bold tracking-tight text-foreground">
             БрендМаркет
           </span>
           <span className="text-[10px] font-bold uppercase tracking-wider text-primary">

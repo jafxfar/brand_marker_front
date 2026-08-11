@@ -69,16 +69,16 @@ export const adminDisputeStatusMeta: Record<
   string,
   { label: string; className: string }
 > = {
-  open: { label: "Открыт", className: "bg-amber-100 text-amber-700" },
+  open: { label: "Открыт", className: "bg-warning/10 text-warning" },
   under_review: {
     label: "На рассмотрении",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-info/10 text-info",
   },
   resolved: {
     label: "Решён",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
-  appealed: { label: "Апелляция", className: "bg-red-100 text-red-700" },
+  appealed: { label: "Апелляция", className: "bg-destructive/10 text-destructive" },
 }
 
 export const adminDisputeResolutionLabels: Record<string, string> = {
@@ -100,11 +100,11 @@ export const adminFinanceStatusMeta: Record<
   string,
   { label: string; className: string }
 > = {
-  pending: { label: "Ожидает", className: "bg-amber-100 text-amber-700" },
-  processing: { label: "В обработке", className: "bg-blue-100 text-blue-700" },
-  paid: { label: "Оплачен", className: "bg-emerald-100 text-emerald-700" },
-  failed: { label: "Ошибка", className: "bg-red-100 text-red-700" },
-  refunded: { label: "Возвращён", className: "bg-blue-100 text-blue-700" },
+  pending: { label: "Ожидает", className: "bg-warning/10 text-warning" },
+  processing: { label: "В обработке", className: "bg-info/10 text-info" },
+  paid: { label: "Оплачен", className: "bg-primary/10 text-primary" },
+  failed: { label: "Ошибка", className: "bg-destructive/10 text-destructive" },
+  refunded: { label: "Возвращён", className: "bg-info/10 text-info" },
   cancelled: {
     label: "Отменён",
     className: "bg-muted text-muted-foreground",

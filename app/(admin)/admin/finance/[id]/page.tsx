@@ -38,9 +38,9 @@ const sections = [
 const DetailSkeleton = () => (
   <div className="mx-auto max-w-350 animate-pulse space-y-5">
     <div className="h-5 w-36 rounded bg-muted" />
-    <div className="h-56 rounded-2xl bg-muted" />
-    <div className="h-14 rounded-2xl bg-muted" />
-    <div className="h-80 rounded-2xl bg-muted" />
+    <div className="h-56 rounded-xl bg-muted" />
+    <div className="h-14 rounded-xl bg-muted" />
+    <div className="h-80 rounded-xl bg-muted" />
   </div>
 )
 
@@ -73,8 +73,8 @@ export default function AdminFinanceDetailPage({ params }: PageProps) {
 
   if (!Number.isInteger(paymentId) || paymentId <= 0) {
     return (
-      <div className="mx-auto max-w-lg rounded-2xl border border-border bg-white p-8 text-center">
-        <h1 className="text-xl font-black">Некорректный ID платежа</h1>
+      <div className="mx-auto max-w-lg rounded-xl border border-border bg-card p-8 text-center">
+        <h1 className="text-xl font-bold">Некорректный ID платежа</h1>
         <Button asChild variant="outline" className="mt-5">
           <Link href="/admin/finance">Вернуться к финансам</Link>
         </Button>
@@ -87,9 +87,9 @@ export default function AdminFinanceDetailPage({ params }: PageProps) {
   if (paymentQuery.isError || !paymentQuery.data) {
     return (
       <div className="mx-auto flex min-h-[55dvh] max-w-lg items-center justify-center">
-        <div className="w-full rounded-2xl border border-border bg-white p-8 text-center">
+        <div className="w-full rounded-xl border border-border bg-card p-8 text-center">
           <CircleDollarSign className="mx-auto text-muted-foreground" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Платёж не найден</h1>
+          <h1 className="mt-4 text-xl font-bold">Платёж не найден</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Запись удалена, недоступна или API временно не отвечает.
           </p>
@@ -142,13 +142,13 @@ export default function AdminFinanceDetailPage({ params }: PageProps) {
         Все платежи
       </Link>
 
-      <header className="rounded-2xl border border-border bg-white p-5 sm:p-6">
+      <header className="rounded-xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {adminLabel(adminFinanceTypeLabels, payment.type)} · #{payment.id}
             </p>
-            <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
+            <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
               {payment.title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -212,7 +212,7 @@ export default function AdminFinanceDetailPage({ params }: PageProps) {
       </header>
 
       <nav
-        className="flex gap-2 overflow-x-auto rounded-2xl border border-border bg-white p-2"
+        className="flex gap-2 overflow-x-auto rounded-xl border border-border bg-card p-2"
         aria-label="Секции платежа"
       >
         {sections.map(([sectionId, label]) => (

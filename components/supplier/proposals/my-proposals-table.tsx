@@ -22,7 +22,7 @@ export const MyProposalsTable = ({
   withdrawingId,
 }: MyProposalsTableProps) => (
   <>
-    <div className="hidden md:block bg-white border border-border rounded-2xl overflow-hidden">
+    <div className="hidden md:block bg-card border border-border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-secondary/40">
@@ -91,7 +91,7 @@ export const MyProposalsTable = ({
         return (
           <div
             key={proposal.id}
-            className="bg-white border border-border rounded-2xl p-4"
+            className="bg-card border border-border rounded-xl p-4"
           >
             <Link
               href={`/supplier/rfqs/${proposal.rfq_id}`}

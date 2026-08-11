@@ -17,16 +17,16 @@ export const RatingSummaryCard = ({
   completedContracts,
   hydrated,
 }: RatingSummaryCardProps) => (
-  <div className="bg-white border border-border rounded-2xl p-5">
+  <div className="bg-card border border-border rounded-xl p-5">
     <div className="flex items-center gap-2 mb-3">
-      <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-xl bg-warning/10 text-warning flex items-center justify-center">
         <Star size={18} />
       </div>
-      <h2 className="text-base font-bold text-foreground">Рейтинг</h2>
+      <h2 className="text-sm font-semibold text-foreground">Рейтинг</h2>
     </div>
 
     <div className="flex items-end gap-2">
-      <span className="text-3xl font-black text-foreground leading-none">
+      <span className="text-3xl font-bold text-foreground leading-none">
         {hydrated ? formatRating(rating) : "—"}
       </span>
       <div className="flex gap-0.5 mb-1">

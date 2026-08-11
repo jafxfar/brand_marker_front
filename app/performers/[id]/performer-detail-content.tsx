@@ -146,7 +146,7 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
             <div className="mt-8 flex gap-3">
               <Link
                 href={loginRedirect(`/customer/rfqs/new?performer=${performer.id}`)}
-                className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
+                className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
               >
                 Пригласить на заказ
               </Link>

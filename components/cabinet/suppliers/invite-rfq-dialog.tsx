@@ -37,7 +37,7 @@ export const InviteRfqDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md rounded-xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Пригласить к заявке</DialogTitle>
           <DialogDescription>
@@ -48,7 +48,7 @@ export const InviteRfqDialog = ({
         <button
           type="button"
           onClick={handleNewRfq}
-          className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
+          className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
         >
           Создать новую заявку
         </button>

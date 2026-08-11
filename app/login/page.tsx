@@ -91,7 +91,7 @@ function LoginContent() {
       {/* Left brand panel */}
       <aside
         className="lg:w-[42%] relative overflow-hidden p-10 lg:p-14 flex flex-col justify-between text-white"
-        style={{ background: "linear-gradient(135deg, oklch(0.22 0.055 255) 0%, oklch(0.3 0.09 255) 100%)" }}
+        style={{ background: "linear-gradient(135deg, oklch(0.20 0.06 155) 0%, oklch(0.32 0.09 150) 100%)" }}
       >
         <Link href="/" className="flex items-center gap-2.5 relative z-10 w-fit">
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
@@ -203,7 +203,7 @@ function LoginContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
               Войти как {role === "customer" ? "заказчик" : "поставщик"}
               <ArrowRight size={16} />

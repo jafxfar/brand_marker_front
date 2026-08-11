@@ -166,7 +166,7 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
                   </Link>
                   <Link
                     href={loginRedirect(`/customer/rfqs/new?service=${service.id}`)}
-                    className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
+                    className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
                   >
                     Отправить запрос
                   </Link>

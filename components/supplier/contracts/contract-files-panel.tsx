@@ -7,8 +7,8 @@ type ContractFilesPanelProps = {
 }
 
 export const ContractFilesPanel = ({ files }: ContractFilesPanelProps) => (
-  <section className="bg-white border border-border rounded-2xl p-6">
-    <h2 className="text-base font-bold text-foreground mb-4">Файлы</h2>
+  <section className="bg-card border border-border rounded-xl p-6">
+    <h2 className="text-sm font-semibold text-foreground mb-4">Файлы</h2>
 
     {files.length === 0 ? (
       <p className="text-sm text-muted-foreground">Файлы не прикреплены</p>

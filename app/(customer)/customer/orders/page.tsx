@@ -28,19 +28,19 @@ export default function BuyerOrdersPage() {
             <ShoppingBag size={20} className="text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground">Мои заказы</h1>
+            <h1 className="text-2xl font-bold text-foreground">Мои заказы</h1>
             <p className="text-sm text-muted-foreground">Маркетплейс-заказы и отклики поставщиков</p>
           </div>
         </div>
         <Link
           href="/customer/orders/new"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
         >
           <Plus size={17} /> Создать заказ
         </Link>
       </div>
 
-      <div className="bg-white border border-border rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         {useApi && isLoading ? (
           <p className="p-8 text-sm text-muted-foreground text-center">Загрузка…</p>
         ) : orders.length === 0 ? (

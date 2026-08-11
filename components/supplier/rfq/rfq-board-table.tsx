@@ -25,7 +25,7 @@ export const RfqBoardTable = ({
   onSubmitProposal,
 }: RfqBoardTableProps) => (
   <>
-    <div className="hidden md:block bg-white border border-border rounded-2xl overflow-hidden">
+    <div className="hidden md:block bg-card border border-border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-secondary/40">
@@ -73,7 +73,7 @@ export const RfqBoardTable = ({
                 </td>
                 <td className="px-4 py-3 text-right">
                   {responded ? (
-                    <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                    <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
                       Отклик отправлен
                     </span>
                   ) : (
@@ -83,7 +83,7 @@ export const RfqBoardTable = ({
                         e.stopPropagation()
                         onSubmitProposal(rfq.id)
                       }}
-                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-xs font-bold transition-colors"
+                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors"
                     >
                       <Send size={13} /> Отправить предложение
                     </button>
@@ -102,7 +102,7 @@ export const RfqBoardTable = ({
         const buyerName = getBuyerName(rfq)
         const buyerRating = getBuyerRating(rfq)
         return (
-          <div key={rfq.id} className="bg-white border border-border rounded-2xl p-4 space-y-3">
+          <div key={rfq.id} className="bg-card border border-border rounded-xl p-4 space-y-3">
             <Link href={`/supplier/rfqs/${rfq.id}`} className="block">
               <p className="text-sm font-bold text-foreground">{rfq.title}</p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -132,7 +132,7 @@ export const RfqBoardTable = ({
               </div>
             </div>
             {responded ? (
-              <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+              <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
                 Отклик отправлен
               </span>
             ) : (

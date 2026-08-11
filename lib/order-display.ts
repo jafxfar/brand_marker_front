@@ -2,10 +2,10 @@ import type { EscrowStatus, OrderStatus, PaymentScheme } from "@/types"
 
 export const orderStatusMeta: Record<OrderStatus, { label: string; className: string }> = {
   draft: { label: "Черновик", className: "bg-muted text-muted-foreground" },
-  published: { label: "Опубликован", className: "bg-blue-100 text-blue-700" },
-  in_progress: { label: "В работе", className: "bg-amber-100 text-amber-700" },
-  completed: { label: "Завершён", className: "bg-emerald-100 text-emerald-700" },
-  disputed: { label: "Спор", className: "bg-red-100 text-red-700" },
+  published: { label: "Опубликован", className: "bg-info/10 text-info" },
+  in_progress: { label: "В работе", className: "bg-warning/10 text-warning" },
+  completed: { label: "Завершён", className: "bg-primary/10 text-primary" },
+  disputed: { label: "Спор", className: "bg-destructive/10 text-destructive" },
   cancelled: { label: "Отменён", className: "bg-muted text-muted-foreground" },
 }
 
@@ -17,10 +17,10 @@ export const paymentSchemeMeta: Record<PaymentScheme, { label: string; desc: str
 
 export const escrowMeta: Record<EscrowStatus, { label: string; className: string }> = {
   none: { label: "Без оплаты", className: "bg-muted text-muted-foreground" },
-  held: { label: "Под защитой", className: "bg-amber-100 text-amber-700" },
-  released: { label: "Выплачено", className: "bg-emerald-100 text-emerald-700" },
-  disputed: { label: "Заморожено (спор)", className: "bg-red-100 text-red-700" },
-  refunded: { label: "Возвращено", className: "bg-blue-100 text-blue-700" },
+  held: { label: "Под защитой", className: "bg-warning/10 text-warning" },
+  released: { label: "Выплачено", className: "bg-primary/10 text-primary" },
+  disputed: { label: "Заморожено (спор)", className: "bg-destructive/10 text-destructive" },
+  refunded: { label: "Возвращено", className: "bg-info/10 text-info" },
 }
 
 /** postpay is not allowed for products. */

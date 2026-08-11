@@ -39,7 +39,7 @@ export default function EditCatalogItemPage({ params }: PageProps) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-48 bg-secondary rounded-2xl" />
+        <div className="h-48 bg-secondary rounded-xl" />
       </div>
     )
   }

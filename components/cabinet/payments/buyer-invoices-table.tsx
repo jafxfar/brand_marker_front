@@ -78,7 +78,7 @@ export const BuyerInvoicesTable = ({
         {invoices.map((invoice) => {
           const meta = invoiceStatusMeta[invoice.status]
           return (
-            <div key={invoice.id} className="bg-white border border-border rounded-2xl p-4">
+            <div key={invoice.id} className="bg-card border border-border rounded-xl p-4">
               <p className="text-sm font-bold text-foreground">{invoice.number}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{invoice.title}</p>
               {invoice.contract_id && (

@@ -48,8 +48,8 @@ const formatDate = (value: string) =>
 const RfqSkeleton = () => (
   <div className="mx-auto max-w-350 animate-pulse space-y-6" aria-label="Загрузка заявок">
     <div className="h-16 w-80 max-w-full rounded-xl bg-muted" />
-    <div className="h-28 rounded-2xl bg-muted" />
-    <div className="h-96 rounded-2xl bg-muted" />
+    <div className="h-28 rounded-xl bg-muted" />
+    <div className="h-96 rounded-xl bg-muted" />
   </div>
 )
 
@@ -108,9 +108,9 @@ const AdminRfqsContent = () => {
   if (rfqsQuery.isError || !rfqsQuery.data) {
     return (
       <div className="flex min-h-[55dvh] items-center justify-center">
-        <div className="w-full max-w-lg rounded-2xl border border-destructive/20 bg-white p-8 text-center">
+        <div className="w-full max-w-lg rounded-xl border border-destructive/20 bg-card p-8 text-center">
           <ClipboardList className="mx-auto text-destructive" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Не удалось загрузить заявки</h1>
+          <h1 className="mt-4 text-xl font-bold">Не удалось загрузить заявки</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Проверьте подключение к API и повторите запрос.
           </p>
@@ -141,7 +141,7 @@ const AdminRfqsContent = () => {
             <ClipboardList size={21} aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Заявки (RFQ)</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Заявки (RFQ)</h1>
             <p className="text-sm text-muted-foreground">
               Модерация запросов на предложения
             </p>
@@ -152,7 +152,7 @@ const AdminRfqsContent = () => {
         </p>
       </header>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-white">
+      <section className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="border-b border-border p-4">
           <div className="relative">
             <Search
@@ -189,7 +189,7 @@ const AdminRfqsContent = () => {
               <span
                 className={cn(
                   "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                  view === filter.value ? "bg-white/20" : "bg-muted",
+                  view === filter.value ? "bg-card/20" : "bg-muted",
                 )}
               >
                 {viewCounts[filter.value]}
@@ -200,9 +200,9 @@ const AdminRfqsContent = () => {
       </section>
 
       {items.length === 0 ? (
-        <section className="rounded-2xl border border-border bg-white px-6 py-16 text-center">
+        <section className="rounded-xl border border-border bg-card px-6 py-16 text-center">
           <Search className="mx-auto text-muted-foreground/40" aria-hidden="true" />
-          <h2 className="mt-4 font-black">
+          <h2 className="mt-4 font-bold">
             {hasFilters ? "Заявки не найдены" : "Заявок пока нет"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -212,7 +212,7 @@ const AdminRfqsContent = () => {
           </p>
         </section>
       ) : (
-        <section className="overflow-hidden rounded-2xl border border-border bg-white">
+        <section className="overflow-hidden rounded-xl border border-border bg-card">
           <Table>
             <TableHeader>
               <TableRow>

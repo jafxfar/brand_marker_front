@@ -27,7 +27,7 @@ export const ProposalReviewCard = ({
   const isFinal = ["accepted", "rejected", "withdrawn"].includes(proposal.status)
 
   return (
-    <article className="bg-white border border-border rounded-2xl p-5 sm:p-6">
+    <article className="bg-card border border-border rounded-xl p-5 sm:p-6">
       <SupplierProposalInfo
         supplier={supplier}
         supplierId={proposal.supplier_actor_id}
@@ -91,7 +91,7 @@ export const ProposalReviewCard = ({
           <button
             type="button"
             onClick={onAccept}
-            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
+            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
           >
             Принять
           </button>

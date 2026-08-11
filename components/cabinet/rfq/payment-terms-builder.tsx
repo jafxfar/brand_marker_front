@@ -127,7 +127,7 @@ export const PaymentTermsBuilder = ({ price, currency, onChange }: PaymentTermsB
             <span
               className={cn(
                 "text-xs font-bold",
-                Math.abs(percentageTotal - 100) <= 0.5 ? "text-emerald-600" : "text-destructive",
+                Math.abs(percentageTotal - 100) <= 0.5 ? "text-primary" : "text-destructive",
               )}
             >
               Итого: {percentageTotal}%
@@ -137,7 +137,7 @@ export const PaymentTermsBuilder = ({ price, currency, onChange }: PaymentTermsB
           {milestones.map((milestone, index) => (
             <div
               key={index}
-              className="rounded-xl border border-border p-3 space-y-2.5 bg-white"
+              className="rounded-xl border border-border p-3 space-y-2.5 bg-card"
             >
               <div className="flex items-center gap-2">
                 <input
@@ -179,7 +179,7 @@ export const PaymentTermsBuilder = ({ price, currency, onChange }: PaymentTermsB
                     updateMilestone(index, { trigger: e.target.value as PaymentMilestoneTrigger })
                   }
                   aria-label={`Условие оплаты этапа ${index + 1}`}
-                  className="flex-1 h-9 px-2 rounded-lg border border-border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="flex-1 h-9 px-2 rounded-lg border border-border text-sm bg-card focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   {TRIGGERS.map((trigger) => (
                     <option key={trigger} value={trigger}>

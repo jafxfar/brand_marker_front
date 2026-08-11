@@ -82,7 +82,7 @@ export default function BuyerOrderNewPage() {
   }
 
   const inputClass =
-    "w-full h-11 px-4 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+    "w-full h-11 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
 
   return (
     <div className="max-w-[720px] mx-auto space-y-6">
@@ -94,13 +94,13 @@ export default function BuyerOrderNewPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-black text-foreground">Новый заказ</h1>
+        <h1 className="text-2xl font-bold text-foreground">Новый заказ</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Опубликуйте заказ — поставщики смогут откликнуться
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white border border-border rounded-2xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 space-y-5">
         <div className="flex gap-2">
           {(["service", "product"] as const).map((value) => (
             <button
@@ -111,7 +111,7 @@ export default function BuyerOrderNewPage() {
                 "flex-1 h-10 rounded-xl text-sm font-semibold border transition-colors",
                 kind === value
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-white text-muted-foreground border-border",
+                  : "bg-card text-muted-foreground border-border",
               )}
             >
               {value === "service" ? "Услуга" : "Товар"}
@@ -188,7 +188,7 @@ export default function BuyerOrderNewPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-60"
+          className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {submitting ? "Публикация…" : "Опубликовать заказ"}
         </button>

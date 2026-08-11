@@ -1,8 +1,8 @@
 import type { Supplier, User } from "@/types"
 
 const palette = [
-  "bg-blue-600", "bg-primary", "bg-violet-600", "bg-emerald-600",
-  "bg-amber-600", "bg-teal-600", "bg-pink-500", "bg-indigo-600",
+  "bg-primary", "bg-primary/80", "bg-foreground", "bg-foreground/80",
+  "bg-muted-foreground", "bg-primary/70", "bg-foreground/70", "bg-muted-foreground/80",
 ]
 
 const initialsFrom = (name: string): string => {

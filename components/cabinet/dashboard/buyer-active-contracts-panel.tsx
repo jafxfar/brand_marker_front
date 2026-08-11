@@ -18,9 +18,9 @@ export const BuyerActiveContractsPanel = ({
   hydrated,
   getSupplierName,
 }: BuyerActiveContractsPanelProps) => (
-  <div className="bg-white border border-border rounded-2xl">
+  <div className="bg-card border border-border rounded-xl">
     <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-base font-bold text-foreground">Активные контракты</h2>
+      <h2 className="text-sm font-semibold text-foreground">Активные контракты</h2>
       <Link
         href="/customer/contracts"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
@@ -31,7 +31,7 @@ export const BuyerActiveContractsPanel = ({
 
     {!hydrated || contracts.length === 0 ? (
       <div className="p-10 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
+        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
           <FileCheck size={22} className="text-primary" />
         </div>
         <p className="text-sm font-semibold text-foreground">Активных контрактов нет</p>
@@ -49,7 +49,7 @@ export const BuyerActiveContractsPanel = ({
               href={`/customer/contracts/${contract.id}`}
               className="flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors"
             >
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <FileCheck size={17} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">

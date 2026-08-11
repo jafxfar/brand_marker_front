@@ -14,7 +14,7 @@ import {
 import { contractStatusMeta, escrowSummaryMeta } from "@/lib/contract-display"
 import type { ContractStatus } from "@/types"
 
-const sectionClassName = "scroll-mt-24 rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -50,7 +50,7 @@ const PartySection = ({
   party: AdminParty | null
 }) => (
   <section id={id} className={sectionClassName}>
-    <h2 className="mb-5 text-lg font-black">{title}</h2>
+    <h2 className="mb-5 text-lg font-bold">{title}</h2>
     {party ? (
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -114,7 +114,7 @@ export const AdminDisputeDetailSections = ({
     <div className="space-y-5">
       <section id="overview" className={sectionClassName}>
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black">Обзор</h2>
+          <h2 className="text-lg font-bold">Обзор</h2>
           <Badge variant="outline" className={statusMeta.className}>
             {statusMeta.label}
           </Badge>
@@ -169,7 +169,7 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="buyer-statement" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Заявление покупателя</h2>
+        <h2 className="mb-5 text-lg font-bold">Заявление покупателя</h2>
         {dispute.buyer_statement ? (
           <p className="text-sm leading-6 text-muted-foreground whitespace-pre-wrap">
             {dispute.buyer_statement}
@@ -180,7 +180,7 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="supplier-statement" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Заявление поставщика</h2>
+        <h2 className="mb-5 text-lg font-bold">Заявление поставщика</h2>
         {dispute.supplier_statement ? (
           <p className="text-sm leading-6 text-muted-foreground whitespace-pre-wrap">
             {dispute.supplier_statement}
@@ -194,7 +194,7 @@ export const AdminDisputeDetailSections = ({
       <PartySection id="supplier" title="Поставщик" party={dispute.supplier} />
 
       <section id="evidence" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Доказательства</h2>
+        <h2 className="mb-5 text-lg font-bold">Доказательства</h2>
         {dispute.evidence.length ? (
           <div className="space-y-2">
             {dispute.evidence.map((item) => (
@@ -221,7 +221,7 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="files" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Файлы</h2>
+        <h2 className="mb-5 text-lg font-bold">Файлы</h2>
         {dispute.files.length ? (
           <div className="space-y-2">
             {dispute.files.map((file) => (
@@ -246,7 +246,7 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="chat" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Чат</h2>
+        <h2 className="mb-5 text-lg font-bold">Чат</h2>
         {dispute.messages.length ? (
           <div className="space-y-3">
             {dispute.messages.map((message) => (
@@ -269,7 +269,7 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="escrow" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Escrow</h2>
+        <h2 className="mb-5 text-lg font-bold">Escrow</h2>
         <dl className="grid gap-4 sm:grid-cols-3">
           {(
             [
@@ -282,7 +282,7 @@ export const AdminDisputeDetailSections = ({
               <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {escrowSummaryMeta[key].label}
               </dt>
-              <dd className="mt-2 text-lg font-black">
+              <dd className="mt-2 text-lg font-bold">
                 {formatMoney(value, dispute.escrow.currency)}
               </dd>
             </div>
@@ -291,7 +291,7 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="timeline" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Хронология</h2>
+        <h2 className="mb-5 text-lg font-bold">Хронология</h2>
         {dispute.timeline.length ? (
           <div className="space-y-3">
             {dispute.timeline.map((entry) => (

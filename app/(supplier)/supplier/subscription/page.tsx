@@ -62,17 +62,17 @@ export default function SubscriptionPage() {
           <Crown size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Подписка для продвижения</h1>
+          <h1 className="text-2xl font-bold text-foreground">Подписка для продвижения</h1>
           <p className="text-sm text-muted-foreground">Поднимайте отклики и профиль в топ</p>
         </div>
       </div>
 
       <div
-        className="rounded-2xl p-5 mb-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-        style={{ background: "linear-gradient(135deg, oklch(0.22 0.055 255) 0%, oklch(0.3 0.09 255) 100%)" }}
+        className="rounded-xl p-5 mb-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        style={{ background: "linear-gradient(135deg, oklch(0.20 0.06 155) 0%, oklch(0.32 0.09 150) 100%)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center">
+          <div className="w-11 h-11 rounded-xl bg-card/15 flex items-center justify-center">
             <Crown size={20} className="text-primary" />
           </div>
           <div>
@@ -90,7 +90,7 @@ export default function SubscriptionPage() {
           <button
             type="button"
             onClick={handleCancel}
-            className="h-10 px-4 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-semibold transition-colors self-start sm:self-auto"
+            className="h-10 px-4 rounded-xl bg-card/15 hover:bg-card/25 text-white text-sm font-semibold transition-colors self-start sm:self-auto"
           >
             Отменить подписку
           </button>
@@ -104,7 +104,7 @@ export default function SubscriptionPage() {
             <div
               key={p.id}
               className={cn(
-                "bg-white border rounded-2xl p-6 flex flex-col relative",
+                "bg-card border rounded-xl p-6 flex flex-col relative",
                 p.highlighted ? "border-primary shadow-lg" : "border-border",
               )}
             >
@@ -113,10 +113,10 @@ export default function SubscriptionPage() {
                   Популярный
                 </span>
               )}
-              <h2 className="text-lg font-black text-foreground">{p.name}</h2>
+              <h2 className="text-lg font-bold text-foreground">{p.name}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{p.tagline}</p>
               <div className="mt-4 mb-5">
-                <span className="text-3xl font-black text-foreground">{formatPrice(p.price)}</span>
+                <span className="text-3xl font-bold text-foreground">{formatPrice(p.price)}</span>
                 <span className="text-sm text-muted-foreground">/мес</span>
               </div>
               <ul className="space-y-2.5 flex-1">
@@ -136,7 +136,7 @@ export default function SubscriptionPage() {
                   current
                     ? "bg-secondary text-primary cursor-default"
                     : p.highlighted
-                      ? "bg-primary hover:bg-primary-dark text-primary-foreground"
+                      ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                       : "border border-primary text-primary hover:bg-secondary",
                 )}
               >

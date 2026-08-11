@@ -48,7 +48,7 @@ export default function SupplierCustomersPage() {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse">
         <div className="h-10 bg-secondary rounded w-1/3 mb-6" />
-        <div className="h-32 bg-secondary rounded-2xl" />
+        <div className="h-32 bg-secondary rounded-xl" />
       </div>
     )
   }
@@ -70,13 +70,13 @@ export default function SupplierCustomersPage() {
           <Users size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Заказчики</h1>
+          <h1 className="text-2xl font-bold text-foreground">Заказчики</h1>
           <p className="text-sm text-muted-foreground">Клиенты по завершённым и активным сделкам</p>
         </div>
       </div>
 
       {customers.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
           <Users size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">Заказчиков пока нет</p>
           <p className="text-xs text-muted-foreground mt-1">
@@ -88,7 +88,7 @@ export default function SupplierCustomersPage() {
           {customers.map((customer) => (
             <div
               key={customer.id}
-              className="bg-white border border-border rounded-2xl p-4 flex items-center gap-4"
+              className="bg-card border border-border rounded-xl p-4 flex items-center gap-4"
             >
               <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
                 <Users size={18} className="text-primary" />

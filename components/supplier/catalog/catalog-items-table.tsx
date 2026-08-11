@@ -12,7 +12,7 @@ type CatalogItemsTableProps = {
 
 export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
   <>
-    <div className="hidden lg:block bg-white border border-border rounded-2xl overflow-hidden">
+    <div className="hidden lg:block bg-card border border-border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-secondary/40">
@@ -87,10 +87,10 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
           <Link
             key={item.id}
             href={`/supplier/catalog/${item.id}`}
-            className="block bg-white border border-border rounded-2xl p-4 hover:border-primary/30 transition-colors"
+            className="block bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 {item.type === "product" ? (
                   <Package size={17} className="text-primary" />
                 ) : (

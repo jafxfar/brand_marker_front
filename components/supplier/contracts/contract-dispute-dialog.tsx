@@ -45,10 +45,10 @@ export const ContractDisputeDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md">
+      <DialogContent className="rounded-xl sm:max-w-md">
         <DialogHeader>
-          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center mb-1">
-            <AlertTriangle size={18} className="text-red-600" />
+          <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center mb-1">
+            <AlertTriangle size={18} className="text-destructive" />
           </div>
           <DialogTitle>Открыть спор по контракту</DialogTitle>
           <DialogDescription>
@@ -76,7 +76,7 @@ export const ContractDisputeDialog = ({
           rows={4}
           placeholder="Опишите, что пошло не так"
           aria-label="Причина спора"
-          className="w-full px-4 py-3 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
         {error && <p className="text-xs text-destructive -mt-2">{error}</p>}
 

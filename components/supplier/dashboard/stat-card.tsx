@@ -9,14 +9,14 @@ type StatCardProps = {
 }
 
 export const StatCard = ({ Icon, label, value, accent, subValue }: StatCardProps) => (
-  <div className="bg-white border border-border rounded-2xl p-5">
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${accent}`}>
-      <Icon size={18} />
+  <div className="bg-card border border-border rounded-xl p-4">
+    <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 ${accent}`}>
+      <Icon size={16} />
     </div>
-    <div className="text-2xl font-black text-foreground leading-none">{value}</div>
+    <div className="text-xl font-bold text-foreground leading-none">{value}</div>
     {subValue && (
       <div className="text-[11px] text-muted-foreground mt-1">{subValue}</div>
     )}
-    <div className="text-xs text-muted-foreground mt-1.5">{label}</div>
+    <div className="text-xs text-muted-foreground mt-1">{label}</div>
   </div>
 )

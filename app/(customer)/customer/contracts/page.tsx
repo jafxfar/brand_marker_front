@@ -40,12 +40,12 @@ export default function BuyerContractsPage() {
           <FileCheck size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Контракты</h1>
+          <h1 className="text-2xl font-bold text-foreground">Контракты</h1>
           <p className="text-sm text-muted-foreground">Управление сделками как заказчик</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1 mb-5 bg-white border border-border rounded-xl p-1 w-fit">
+      <div className="flex flex-wrap items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
         {BUYER_CONTRACT_LIST_TABS.map((t) => (
           <button
             key={t.value}
@@ -64,7 +64,7 @@ export default function BuyerContractsPage() {
       </div>
 
       {!hydrated || contracts.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
           <FileCheck size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">Контрактов нет</p>
           <p className="text-xs text-muted-foreground mt-1">{buyerContractEmptyMessages[tab]}</p>

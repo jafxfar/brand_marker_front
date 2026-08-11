@@ -17,7 +17,7 @@ export default function OfferCard({ offer, accepted, locked, onAccept }: OfferCa
   return (
     <div
       className={cn(
-        "rounded-2xl border p-4 transition-all bg-white",
+        "rounded-xl border p-4 transition-all bg-card",
         accepted ? "border-primary ring-2 ring-primary/15" : offer.promoted ? "border-primary/40" : "border-border",
       )}
     >
@@ -48,7 +48,7 @@ export default function OfferCard({ offer, accepted, locked, onAccept }: OfferCa
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <div className="text-base font-black text-primary">{formatPrice(offer.price)}</div>
+          <div className="text-sm font-semibold text-primary">{formatPrice(offer.price)}</div>
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export default function OfferCard({ offer, accepted, locked, onAccept }: OfferCa
               "w-full h-9 rounded-xl text-sm font-bold transition-colors",
               locked
                 ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-primary hover:bg-primary-dark text-primary-foreground",
+                : "bg-primary hover:bg-primary/90 text-primary-foreground",
             )}
           >
             {locked ? "Недоступно" : "Выбрать исполнителя"}

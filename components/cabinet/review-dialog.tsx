@@ -31,7 +31,7 @@ export default function ReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md">
+      <DialogContent className="rounded-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Оставить отзыв</DialogTitle>
           <DialogDescription>
@@ -68,7 +68,7 @@ export default function ReviewDialog({
           onChange={(e) => setText(e.target.value)}
           rows={4}
           placeholder="Что понравилось, что можно улучшить"
-          className="w-full px-4 py-3 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
 
         <DialogFooter>
@@ -82,7 +82,7 @@ export default function ReviewDialog({
           <button
             type="button"
             onClick={handleConfirm}
-            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
           >
             Отправить отзыв
           </button>

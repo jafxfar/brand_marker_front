@@ -2,7 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowLeft, FileCheck } from "lucide-react"
+import { AlertTriangle, ArrowLeft, FileCheck, MessageSquare, Paperclip, Clock } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -34,6 +34,7 @@ import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-
 import { ContractDisputeDialog } from "@/components/supplier/contracts/contract-dispute-dialog"
 import type { PaymentHistoryEvent } from "@/lib/buyer-payments-display"
 import { mapApiPaymentHistoryEvent } from "@/lib/buyer-payments-display"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import type { ContractWithRelations } from "@/types"
 
 type PageProps = {
@@ -85,7 +86,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     return (
       <div className="max-w-[1000px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-40 bg-secondary rounded-2xl" />
+        <div className="h-40 bg-secondary rounded-xl" />
       </div>
     )
   }
@@ -170,8 +171,11 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     approveMilestoneLocal(contractId, milestoneId, actorId)
   }
 
+  const messageCount = contract.conversation?.messages?.length ?? 0
+  const fileCount = contract.files?.length ?? 0
+
   return (
-    <div className="max-w-[1000px] mx-auto space-y-6">
+    <div className="max-w-[960px] mx-auto space-y-5">
       <Link
         href="/customer/contracts"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -179,95 +183,130 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         <ArrowLeft size={16} /> Назад к контрактам
       </Link>
 
-      <div className="grid lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-border rounded-2xl p-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-                <FileCheck size={20} className="text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-black text-foreground">{contract.title}</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {supplier?.title ?? "Поставщик"}
-                </p>
-                <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-2 ${meta.className}`}>
-                  {meta.label}
-                </span>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-lg font-black text-primary">
-                  {formatCurrency(contract.agreed_amount, contract.currency)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  с {formatIsoDate(contract.start_date)}
-                </p>
-                <DeadlineCountdown
-                  dueDate={contract.due_date}
-                  status={contract.status}
-                  variant="prominent"
-                  showAbsoluteDate
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
-
-            {contract.description && (
-              <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
-                {contract.description}
-              </p>
-            )}
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <FileCheck size={18} className="text-primary" />
           </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold text-foreground leading-tight">{contract.title}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{supplierName}</p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-lg font-bold text-primary">
+              {formatCurrency(contract.agreed_amount, contract.currency)}
+            </p>
+            <DeadlineCountdown
+              dueDate={contract.due_date}
+              status={contract.status}
+              variant="prominent"
+              showAbsoluteDate
+              className="mt-0.5"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mt-3">
+          <span className={`inline-block text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${meta.className}`}>
+            {meta.label}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            с {formatIsoDate(contract.start_date)}
+          </span>
+          {canDispute && (
+            <button
+              type="button"
+              onClick={() => setDisputeOpen(true)}
+              className="ml-auto inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors"
+              aria-label="Открыть спор"
+            >
+              <AlertTriangle size={12} />
+              Спор
+            </button>
+          )}
+          {contract.status === "disputed" && (
+            <span className="ml-auto text-xs text-destructive font-semibold">Спор открыт</span>
+          )}
+        </div>
+        <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
+      </div>
 
-          <BuyerContractMilestonesPanel
-            contract={contract}
-            onFund={handleFund}
-            onApprove={handleApprove}
-          />
-          <ContractPaymentHistoryPanel events={paymentHistory} />
-          <ContractFilesPanel files={contract.files} />
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="overview" className="gap-1.5">
+            <FileCheck size={14} /> Обзор
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="gap-1.5">
+            <MessageSquare size={14} /> Сообщения
+            {messageCount > 0 && (
+              <span className="ml-1 text-[10px] bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded-full">
+                {messageCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="files" className="gap-1.5">
+            <Paperclip size={14} /> Файлы
+            {fileCount > 0 && (
+              <span className="ml-1 text-[10px] bg-muted text-muted-foreground font-semibold px-1.5 py-0.5 rounded-full">
+                {fileCount}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-1.5">
+            <Clock size={14} /> История
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <div className="grid lg:grid-cols-3 gap-5 items-start">
+            <div className="lg:col-span-2 space-y-5">
+              {contract.description && (
+                <div className="bg-card border border-border rounded-xl p-5">
+                  <h2 className="text-sm font-semibold text-foreground mb-2">Описание</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{contract.description}</p>
+                </div>
+              )}
+              <BuyerContractMilestonesPanel
+                contract={contract}
+                onFund={handleFund}
+                onApprove={handleApprove}
+              />
+            </div>
+            <div className="space-y-5 lg:sticky lg:top-24">
+              <ContractSupplierCard supplier={supplier} supplierTitle={supplierName} />
+              <ContractEscrowCard contract={contract} />
+              <ContractReviewSection
+                supplierName={supplierName}
+                canReview={contract.status === "completed"}
+                hasReview={hasReview}
+                onSubmit={handleSubmitReview}
+              />
+              <Link
+                href={`/customer/rfqs/${contract.rfq_id}`}
+                className="block text-center text-sm font-semibold text-primary hover:underline"
+              >
+                Перейти к заявке
+              </Link>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="messages">
           <ContractMessagesPanel
             contract={contract}
             currentSenderId={actorId}
             getSenderName={getSenderName}
             onSendMessage={handleSendMessage}
           />
-        </div>
+        </TabsContent>
 
-        <div className="space-y-6 lg:sticky lg:top-24">
-          <ContractSupplierCard supplier={supplier} supplierTitle={supplierName} />
-          <ContractEscrowCard contract={contract} />
+        <TabsContent value="files">
+          <ContractFilesPanel files={contract.files} />
+        </TabsContent>
 
-          <section className="bg-white border border-border rounded-2xl p-6">
-            <h2 className="text-base font-bold text-foreground mb-4">Действия</h2>
-            <button
-              type="button"
-              onClick={() => setDisputeOpen(true)}
-              disabled={!canDispute}
-              className="w-full h-10 px-4 rounded-xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              <AlertTriangle size={16} />
-              {contract.status === "disputed" ? "Спор открыт" : "Открыть спор"}
-            </button>
-          </section>
-
-          <ContractReviewSection
-            supplierName={supplierName}
-            canReview={contract.status === "completed"}
-            hasReview={hasReview}
-            onSubmit={handleSubmitReview}
-          />
-
-          <Link
-            href={`/customer/rfqs/${contract.rfq_id}`}
-            className="block text-center text-sm font-semibold text-primary hover:underline"
-          >
-            Перейти к заявке
-          </Link>
-        </div>
-      </div>
+        <TabsContent value="history">
+          <ContractPaymentHistoryPanel events={paymentHistory} />
+        </TabsContent>
+      </Tabs>
 
       <ContractDisputeDialog
         open={disputeOpen}

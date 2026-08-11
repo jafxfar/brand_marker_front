@@ -81,15 +81,15 @@ const statusMetadata: Record<
 > = {
   active: {
     label: "Активен",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    className: "border-primary/20 bg-primary/10 text-primary",
   },
   blocked: {
     label: "Заблокирован",
-    className: "border-red-200 bg-red-50 text-red-700",
+    className: "border-destructive/20 bg-destructive/10 text-destructive",
   },
   pending: {
     label: "Ожидает активации",
-    className: "border-amber-200 bg-amber-50 text-amber-700",
+    className: "border-warning/20 bg-warning/10 text-warning",
   },
 }
 
@@ -144,8 +144,8 @@ const UsersSkeleton = () => (
       <div className="h-8 w-56 rounded-lg bg-muted" />
       <div className="h-4 w-80 max-w-full rounded bg-muted" />
     </div>
-    <div className="h-12 rounded-2xl bg-muted" />
-    <div className="h-80 rounded-2xl border border-border bg-white" />
+    <div className="h-12 rounded-xl bg-muted" />
+    <div className="h-80 rounded-xl border border-border bg-card" />
   </div>
 )
 
@@ -300,9 +300,9 @@ const AdminUsersContent = () => {
   if (usersQuery.isError || !usersQuery.data) {
     return (
       <div className="flex min-h-[55dvh] items-center justify-center">
-        <div className="w-full max-w-lg rounded-2xl border border-destructive/20 bg-white p-8 text-center">
+        <div className="w-full max-w-lg rounded-xl border border-destructive/20 bg-card p-8 text-center">
           <Ban size={26} className="mx-auto text-destructive" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black text-foreground">
+          <h1 className="mt-4 text-xl font-bold text-foreground">
             Не удалось загрузить пользователей
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -333,7 +333,7 @@ const AdminUsersContent = () => {
               <Users size={21} aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 Пользователи
               </h1>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -344,14 +344,14 @@ const AdminUsersContent = () => {
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Найдено</span>
-          <span className="rounded-lg bg-secondary px-2.5 py-1 font-black text-foreground">
+          <span className="rounded-lg bg-secondary px-2.5 py-1 font-bold text-foreground">
             {total}
           </span>
         </div>
       </div>
 
       <section
-        className="overflow-hidden rounded-2xl border border-border bg-white"
+        className="overflow-hidden rounded-xl border border-border bg-card"
         aria-label="Фильтры пользователей"
       >
         <div className="border-b border-border p-4">
@@ -391,7 +391,7 @@ const AdminUsersContent = () => {
               <span
                 className={cn(
                   "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                  status === filter.value ? "bg-white/20" : "bg-muted",
+                  status === filter.value ? "bg-card/20" : "bg-muted",
                 )}
               >
                 {statusCounts[filter.value]}
@@ -402,9 +402,9 @@ const AdminUsersContent = () => {
       </section>
 
       {items.length === 0 ? (
-        <section className="rounded-2xl border border-border bg-white px-6 py-16 text-center">
+        <section className="rounded-xl border border-border bg-card px-6 py-16 text-center">
           <Search size={28} className="mx-auto text-muted-foreground/40" aria-hidden="true" />
-          <h2 className="mt-4 font-black text-foreground">
+          <h2 className="mt-4 font-bold text-foreground">
             {hasFilters ? "Пользователи не найдены" : "Пользователей пока нет"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -429,7 +429,7 @@ const AdminUsersContent = () => {
       ) : (
         <section
           className={cn(
-            "overflow-hidden rounded-2xl border border-border bg-white",
+            "overflow-hidden rounded-xl border border-border bg-card",
             usersQuery.isFetching && "opacity-70",
           )}
           aria-busy={usersQuery.isFetching}
@@ -451,7 +451,7 @@ const AdminUsersContent = () => {
                   <TableRow key={user.id}>
                     <TableCell className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-xs font-black text-primary">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-primary">
                           {getInitials(user)}
                         </div>
                         <div className="min-w-0">
@@ -496,7 +496,7 @@ const AdminUsersContent = () => {
             {items.map((user) => (
               <li key={user.id} className="space-y-4 p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-xs font-black text-primary">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-primary">
                     {getInitials(user)}
                   </div>
                   <div className="min-w-0 flex-1">

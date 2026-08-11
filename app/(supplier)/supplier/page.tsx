@@ -129,7 +129,7 @@ export default function SupplierDashboard() {
     <div className="max-w-[1200px] mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-foreground">
+          <h1 className="text-2xl font-bold text-foreground">
             Здравствуйте{hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -138,7 +138,7 @@ export default function SupplierDashboard() {
         </div>
         <Link
           href="/supplier/rfqs"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
         >
           Откликнуться на заявку <ArrowRight size={17} />
         </Link>
@@ -151,26 +151,26 @@ export default function SupplierDashboard() {
           Icon={FileCheck}
           label="Активные контракты"
           value={!hydrated || isLoading ? "—" : String(activeContracts.length)}
-          accent="bg-emerald-100 text-emerald-600"
+          accent="bg-primary/10 text-primary"
         />
         <StatCard
           Icon={Inbox}
           label="Новые заявки"
           value={!hydrated || isLoading ? "—" : String(newRfqs.length)}
-          accent="bg-blue-100 text-blue-600"
+          accent="bg-info/10 text-info"
         />
         <StatCard
           Icon={MessageSquare}
           label="Входящие сообщения"
           value={!hydrated || isLoading ? "—" : String(unreadCount)}
           subValue={unreadCount > 0 ? "непрочитанных" : undefined}
-          accent="bg-amber-100 text-amber-600"
+          accent="bg-warning/10 text-warning"
         />
         <StatCard
           Icon={TrendingUp}
           label="Выручка"
           value={!hydrated || isLoading ? "—" : formatPrice(revenue)}
-          accent="bg-violet-100 text-violet-600"
+          accent="bg-muted text-muted-foreground"
         />
         <StatCard
           Icon={Wallet}
@@ -183,7 +183,7 @@ export default function SupplierDashboard() {
           label="Рейтинг"
           value={!hydrated || isLoading ? "—" : formatRating(rating)}
           subValue={hydrated ? `${reviewCount} отзывов` : undefined}
-          accent="bg-amber-100 text-amber-600"
+          accent="bg-warning/10 text-warning"
         />
       </div>
 

@@ -46,7 +46,7 @@ export default function EditRfqPage({ params }: PageProps) {
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[820px] mx-auto animate-pulse h-96 bg-secondary rounded-2xl" />
+      <div className="max-w-[820px] mx-auto animate-pulse h-96 bg-secondary rounded-xl" />
     )
   }
 

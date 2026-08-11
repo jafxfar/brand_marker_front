@@ -85,7 +85,7 @@ export default function SuppliersPage() {
           <Store size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Каталог поставщиков</h1>
+          <h1 className="text-2xl font-bold text-foreground">Каталог поставщиков</h1>
           <p className="text-sm text-muted-foreground">
             Поиск компаний и приглашение к заявке
           </p>
@@ -102,7 +102,7 @@ export default function SuppliersPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Поиск по названию, описанию, категории..."
-          className="w-full h-11 pl-11 pr-4 rounded-xl border border-border bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="w-full h-11 pl-11 pr-4 rounded-xl border border-border bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           aria-label="Поиск поставщиков"
         />
       </div>
@@ -115,7 +115,7 @@ export default function SuppliersPage() {
             "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors",
             categorySlug === ""
               ? "bg-primary text-primary-foreground"
-              : "bg-white border border-border text-muted-foreground hover:text-foreground",
+              : "bg-card border border-border text-muted-foreground hover:text-foreground",
           )}
         >
           Все
@@ -129,7 +129,7 @@ export default function SuppliersPage() {
               "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors",
               categorySlug === c.slug
                 ? "bg-primary text-primary-foreground"
-                : "bg-white border border-border text-muted-foreground hover:text-foreground",
+                : "bg-card border border-border text-muted-foreground hover:text-foreground",
             )}
           >
             {c.name}
@@ -140,11 +140,11 @@ export default function SuppliersPage() {
       {!hydrated || (useApi && isLoading) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 bg-secondary rounded-2xl animate-pulse" />
+            <div key={i} className="h-40 bg-secondary rounded-xl animate-pulse" />
           ))}
         </div>
       ) : companies.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center text-sm text-muted-foreground">
+        <div className="bg-card border border-border rounded-xl p-12 text-center text-sm text-muted-foreground">
           Поставщики не найдены. Попробуйте изменить фильтры.
         </div>
       ) : (

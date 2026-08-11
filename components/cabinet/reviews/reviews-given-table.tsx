@@ -84,7 +84,7 @@ export const ReviewsGivenTable = ({
 
       <div className="md:hidden space-y-3">
         {reviews.map((review) => (
-          <div key={review.id} className="bg-white border border-border rounded-2xl p-4">
+          <div key={review.id} className="bg-card border border-border rounded-xl p-4">
             <Link
               href={`/customer/suppliers/${review.target_actor_id}`}
               className="text-sm font-bold text-foreground hover:text-primary"

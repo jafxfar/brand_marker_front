@@ -24,23 +24,23 @@ export const proposalStatusMeta: Record<
 > = {
   submitted: {
     label: "Отправлено",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-info/10 text-info",
   },
   viewed: {
     label: "Просмотрено",
-    className: "bg-violet-100 text-violet-700",
+    className: "bg-muted text-muted-foreground",
   },
   shortlisted: {
     label: "В избранном",
-    className: "bg-amber-100 text-amber-700",
+    className: "bg-warning/10 text-warning",
   },
   accepted: {
     label: "Принято",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   rejected: {
     label: "Отклонено",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
   withdrawn: {
     label: "Отозвано",

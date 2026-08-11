@@ -100,12 +100,12 @@ export default function SupplierRfqsPage() {
           <Inbox size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Заявки заказчиков</h1>
+          <h1 className="text-2xl font-bold text-foreground">Заявки заказчиков</h1>
           <p className="text-sm text-muted-foreground">Открытые заявки, на которые можно откликнуться</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 mb-5 bg-white border border-border rounded-xl p-1 w-fit">
+      <div className="flex items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
         {(["all", "product", "service"] as const).map((value) => (
           <button
             key={value}
@@ -124,7 +124,7 @@ export default function SupplierRfqsPage() {
       </div>
 
       {isEmpty ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
           <Inbox size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">
             {isLoading ? "Загрузка заявок..." : "Открытых заявок нет"}

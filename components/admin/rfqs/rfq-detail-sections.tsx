@@ -15,7 +15,7 @@ import { budgetTypeMeta, rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import type { BudgetType, ProposalStatus, RfqStatus, RfqType } from "@/types"
 
-const sectionClassName = "scroll-mt-24 rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -52,7 +52,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
     <div className="space-y-5">
       <section id="requirements" className={sectionClassName}>
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black">Требования</h2>
+          <h2 className="text-lg font-bold">Требования</h2>
           <Badge variant="outline" className={statusMeta.className}>
             {statusMeta.label}
           </Badge>
@@ -137,7 +137,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="buyer" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Покупатель</h2>
+        <h2 className="mb-5 text-lg font-bold">Покупатель</h2>
         {rfq.buyer ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -183,7 +183,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="proposals" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Предложения</h2>
+        <h2 className="mb-5 text-lg font-bold">Предложения</h2>
         {rfq.proposals.length ? (
           <div className="space-y-3">
             {rfq.proposals.map((proposal) => {
@@ -226,7 +226,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="messages" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Сообщения</h2>
+        <h2 className="mb-5 text-lg font-bold">Сообщения</h2>
         {rfq.messages.length ? (
           <div className="space-y-3">
             {rfq.messages.map((message) => (
@@ -245,7 +245,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
       </section>
 
       <section id="reports" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Жалобы</h2>
+        <h2 className="mb-5 text-lg font-bold">Жалобы</h2>
         {rfq.reports.length ? (
           <div className="space-y-3">
             {rfq.reports.map((report) => (

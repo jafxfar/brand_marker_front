@@ -88,7 +88,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-48 bg-secondary rounded-2xl" />
+        <div className="h-48 bg-secondary rounded-xl" />
       </div>
     )
   }
@@ -162,7 +162,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
         <ArrowLeft size={16} /> Назад к моим заявкам
       </Link>
 
-      <div className="bg-white border border-border rounded-2xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
             {rfq.type === "product" ? (
@@ -172,7 +172,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-black text-foreground">{rfq.title}</h1>
+            <h1 className="text-xl font-bold text-foreground">{rfq.title}</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {getRfqCategoryLabel(rfq.category_id)}
             </p>
@@ -222,7 +222,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
 
         <div className="space-y-4">
           {rfq.status === "draft" && (
-            <section className="bg-white border border-border rounded-2xl p-6 space-y-3">
+            <section className="bg-card border border-border rounded-xl p-6 space-y-3">
               <h2 className="text-base font-bold text-foreground">Действия</h2>
               <Link
                 href={`/customer/rfqs/${rfq.id}/edit`}
@@ -234,7 +234,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
                 type="button"
                 onClick={handlePublish}
                 disabled={publishMutation.isPending}
-                className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
+                className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 Опубликовать
               </button>
@@ -244,7 +244,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
           {contract && (
             <Link
               href={`/customer/contracts/${contract.id}`}
-              className="block bg-white border border-border rounded-2xl p-6 hover:border-primary/30 transition-colors"
+              className="block bg-card border border-border rounded-xl p-6 hover:border-primary/30 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">

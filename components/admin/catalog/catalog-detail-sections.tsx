@@ -13,7 +13,7 @@ import {
 import { catalogReportReasonLabels, formatItemPricing, itemStatusMeta } from "@/lib/item-display"
 import type { ItemPricing, ItemStatus } from "@/types"
 
-const sectionClassName = "scroll-mt-24 rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -39,7 +39,7 @@ export const AdminCatalogDetailSections = ({
   return (
     <div className="space-y-5">
       <section id="images" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Изображения</h2>
+        <h2 className="mb-5 text-lg font-bold">Изображения</h2>
         {images.length ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {images.map((media) => (
@@ -86,7 +86,7 @@ export const AdminCatalogDetailSections = ({
       </section>
 
       <section id="description" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Описание</h2>
+        <h2 className="mb-5 text-lg font-bold">Описание</h2>
         <p className="text-sm leading-6 text-muted-foreground">
           {item.description || "Описание не заполнено."}
         </p>
@@ -107,7 +107,7 @@ export const AdminCatalogDetailSections = ({
       </section>
 
       <section id="attributes" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Атрибуты</h2>
+        <h2 className="mb-5 text-lg font-bold">Атрибуты</h2>
         {item.attributes.length ? (
           <div className="divide-y divide-border">
             {item.attributes.map((attribute) => (
@@ -126,7 +126,7 @@ export const AdminCatalogDetailSections = ({
       </section>
 
       <section id="owner" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Владелец</h2>
+        <h2 className="mb-5 text-lg font-bold">Владелец</h2>
         {item.owner ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -167,7 +167,7 @@ export const AdminCatalogDetailSections = ({
       </section>
 
       <section id="reports" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Жалобы ({item.reports.length})</h2>
+        <h2 className="mb-5 text-lg font-bold">Жалобы ({item.reports.length})</h2>
         {item.reports.length ? (
           <div className="space-y-3">
             {item.reports.map((report) => (
@@ -197,7 +197,7 @@ export const AdminCatalogDetailSections = ({
       </section>
 
       <section id="history" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">История ({item.history.length})</h2>
+        <h2 className="mb-5 text-lg font-bold">История ({item.history.length})</h2>
         {item.history.length ? (
           <div className="space-y-3">
             {item.history.map((entry) => {

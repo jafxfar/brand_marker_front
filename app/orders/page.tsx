@@ -38,7 +38,7 @@ export default function OrdersPage() {
             </div>
             <Link
               href={newRfqRedirect()}
-              className="text-sm font-bold bg-primary text-primary-foreground px-5 py-2.5 rounded-xl hover:bg-primary-dark transition-colors"
+              className="text-sm font-bold bg-primary text-primary-foreground px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors"
             >
               Разместить заказ
             </Link>
@@ -73,7 +73,7 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600 justify-end">
+                      <div className="flex items-center gap-1 text-xs font-semibold text-primary justify-end">
                         <Users size={11} />
                         {order.offers} предложений
                       </div>

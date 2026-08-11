@@ -38,7 +38,7 @@ export const MediaFields = ({ media, onChange }: MediaFieldsProps) => {
   }
 
   const inputClass =
-    "w-full h-10 px-3 rounded-xl border border-input bg-white text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+    "w-full h-10 px-3 rounded-xl border border-input bg-card text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
 
   return (
     <div className="space-y-3">

@@ -59,7 +59,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
 
   const inputClass = (field: string) =>
     cn(
-      "w-full h-11 px-4 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
+      "w-full h-11 px-4 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
       errors[field] ? "border-destructive" : "border-input focus:border-primary",
     )
 
@@ -72,7 +72,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
         <ArrowLeft size={16} /> К списку позиций
       </Link>
 
-      <h1 className="text-2xl font-black text-foreground mb-1">
+      <h1 className="text-2xl font-bold text-foreground mb-1">
         {initial ? "Редактирование позиции" : "Новая позиция"}
       </h1>
       <p className="text-sm text-muted-foreground mb-6">
@@ -92,8 +92,8 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
                 type="button"
                 onClick={() => setKind(value)}
                 className={cn(
-                  "text-left rounded-2xl border-2 p-4 transition-all",
-                  active ? "border-primary bg-secondary shadow-sm" : "border-border bg-white hover:border-primary/40",
+                  "text-left rounded-xl border-2 p-4 transition-all",
+                  active ? "border-primary bg-secondary shadow-sm" : "border-border bg-card hover:border-primary/40",
                 )}
               >
                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-2.5", active ? "bg-primary text-primary-foreground" : "bg-secondary text-primary")}>
@@ -106,7 +106,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
           })}
         </div>
 
-        <div className="bg-white border border-border rounded-2xl p-5 sm:p-6 space-y-5">
+        <div className="bg-card border border-border rounded-xl p-5 sm:p-6 space-y-5">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1.5">Название</label>
             <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === "product" ? "Напр. Офисное кресло ErgoPro" : "Напр. Разработка сайта под ключ"} className={inputClass("title")} />
@@ -126,7 +126,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1.5">Описание</label>
-            <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Опишите товар или услугу" className={cn("w-full px-4 py-3 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20 resize-none", errors.description ? "border-destructive" : "border-input focus:border-primary")} />
+            <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="Опишите товар или услугу" className={cn("w-full px-4 py-3 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20 resize-none", errors.description ? "border-destructive" : "border-input focus:border-primary")} />
             {errors.description && <p className="text-xs text-destructive mt-1">{errors.description}</p>}
           </div>
 
@@ -167,7 +167,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
           <button type="button" onClick={() => router.push("/supplier/listings")} className="h-11 px-5 rounded-xl border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors flex items-center">
             Отмена
           </button>
-          <button type="submit" className="h-11 px-6 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2">
+          <button type="submit" className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2">
             <Check size={16} /> {submitLabel}
           </button>
         </div>

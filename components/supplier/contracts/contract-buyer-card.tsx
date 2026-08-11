@@ -15,16 +15,16 @@ const verificationLabel = {
 export const ContractBuyerCard = ({ buyer }: ContractBuyerCardProps) => {
   if (!buyer) {
     return (
-      <section className="bg-white border border-border rounded-2xl p-6">
-        <h2 className="text-base font-bold text-foreground mb-3">Заказчик</h2>
+      <section className="bg-card border border-border rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-foreground mb-3">Заказчик</h2>
         <p className="text-sm text-muted-foreground">Данные недоступны</p>
       </section>
     )
   }
 
   return (
-    <section className="bg-white border border-border rounded-2xl p-6">
-      <h2 className="text-base font-bold text-foreground mb-4">Заказчик</h2>
+    <section className="bg-card border border-border rounded-xl p-6">
+      <h2 className="text-sm font-semibold text-foreground mb-4">Заказчик</h2>
 
       <div className="flex items-start gap-3 mb-4">
         <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">

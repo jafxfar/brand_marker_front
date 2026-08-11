@@ -20,17 +20,17 @@ export const BuyerContractMilestonesPanel = ({
 
   if (milestones.length === 0) {
     return (
-      <section className="bg-white border border-border rounded-2xl p-6">
-        <h2 className="text-base font-bold text-foreground mb-3">Этапы оплаты</h2>
+      <section className="bg-card border border-border rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-foreground mb-3">Этапы оплаты</h2>
         <p className="text-sm text-muted-foreground">План платежей не настроен</p>
       </section>
     )
   }
 
   return (
-    <section className="bg-white border border-border rounded-2xl p-6">
+    <section className="bg-card border border-border rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-bold text-foreground">Этапы оплаты</h2>
+        <h2 className="text-sm font-semibold text-foreground">Этапы оплаты</h2>
         <span className="text-xs font-semibold text-muted-foreground">
           Выплачено {progress}%
         </span>
@@ -85,7 +85,7 @@ export const BuyerContractMilestonesPanel = ({
                       <button
                         type="button"
                         onClick={() => onFund(milestone.id)}
-                        className="h-8 px-3 rounded-lg bg-primary hover:bg-primary-dark text-primary-foreground text-xs font-bold transition-colors"
+                        className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors"
                       >
                         Оплатить безопасно
                       </button>

@@ -74,7 +74,7 @@ export default function SupplierMessagesPage() {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse">
         <div className="h-10 bg-secondary rounded w-1/3 mb-6" />
-        <div className="h-64 bg-secondary rounded-2xl" />
+        <div className="h-64 bg-secondary rounded-xl" />
       </div>
     )
   }
@@ -87,7 +87,7 @@ export default function SupplierMessagesPage() {
             <MessageSquare size={20} className="text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground">Сообщения</h1>
+            <h1 className="text-2xl font-bold text-foreground">Сообщения</h1>
             <p className="text-sm text-muted-foreground">
               Переписка по контрактам с заказчиками
             </p>
@@ -95,7 +95,7 @@ export default function SupplierMessagesPage() {
         </div>
 
         {conversations.length === 0 ? (
-          <div className="bg-white border border-border rounded-2xl p-12 text-center">
+          <div className="bg-card border border-border rounded-xl p-12 text-center">
             <MessageSquare size={32} className="text-primary mx-auto mb-3" />
             <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -108,7 +108,7 @@ export default function SupplierMessagesPage() {
               <Link
                 key={contract.id}
                 href={`/supplier/contracts/${contract.id}`}
-                className="flex items-center gap-4 bg-white border border-border rounded-2xl p-4 hover:border-primary/30 transition-colors"
+                className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
                   <MessageSquare size={18} className="text-primary" />
@@ -137,19 +137,19 @@ export default function SupplierMessagesPage() {
           <MessageSquare size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Сообщения</h1>
+          <h1 className="text-2xl font-bold text-foreground">Сообщения</h1>
           <p className="text-sm text-muted-foreground">Переписка по контрактам</p>
         </div>
       </div>
 
       {conversations.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
           <MessageSquare size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4 h-[calc(100vh-220px)] min-h-[400px]">
-          <div className="bg-white border border-border rounded-2xl overflow-hidden flex flex-col">
+          <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
             <div className="overflow-y-auto flex-1 divide-y divide-border">
               {conversations.map(({ contract, lastMessage, senderName }) => (
                 <button
@@ -170,7 +170,7 @@ export default function SupplierMessagesPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-border rounded-2xl p-4 flex flex-col">
+          <div className="bg-card border border-border rounded-xl p-4 flex flex-col">
             {selected ? (
               <>
                 <p className="text-sm font-bold text-foreground mb-4">{selected.contract.title}</p>

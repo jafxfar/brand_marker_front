@@ -72,9 +72,9 @@ export const getEscrowSummary = (
 }
 
 export const escrowSummaryMeta = {
-  held: { label: "Под защитой", className: "bg-blue-100 text-blue-700" },
-  released: { label: "Выплачено", className: "bg-emerald-100 text-emerald-700" },
-  disputed: { label: "Заморожено", className: "bg-red-100 text-red-700" },
+  held: { label: "Под защитой", className: "bg-info/10 text-info" },
+  released: { label: "Выплачено", className: "bg-primary/10 text-primary" },
+  disputed: { label: "Заморожено", className: "bg-destructive/10 text-destructive" },
 } as const
 
 export const contractStatusMeta: Record<
@@ -83,15 +83,15 @@ export const contractStatusMeta: Record<
 > = {
   pending_payment: {
     label: "Ожидает оплаты",
-    className: "bg-amber-100 text-amber-700",
+    className: "bg-warning/10 text-warning",
   },
   active: {
     label: "Активен",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   delivered: {
     label: "Доставлен",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-info/10 text-info",
   },
   completed: {
     label: "Завершён",
@@ -103,7 +103,7 @@ export const contractStatusMeta: Record<
   },
   disputed: {
     label: "Спор",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
 }
 
@@ -117,39 +117,39 @@ export const milestoneStatusMeta: Record<
   },
   awaiting_payment: {
     label: "Ожидает оплаты",
-    className: "bg-amber-100 text-amber-700",
+    className: "bg-warning/10 text-warning",
   },
   funded: {
     label: "Оплачено",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-info/10 text-info",
   },
   in_progress: {
     label: "В работе",
-    className: "bg-violet-100 text-violet-700",
+    className: "bg-muted text-muted-foreground",
   },
   submitted: {
     label: "На проверке",
-    className: "bg-amber-100 text-amber-700",
+    className: "bg-warning/10 text-warning",
   },
   approved: {
     label: "Одобрен",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   released: {
     label: "Выплачен",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   refunded: {
     label: "Возвращён",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-info/10 text-info",
   },
   disputed: {
     label: "Спор",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
   overdue: {
     label: "Просрочен",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
   cancelled: {
     label: "Отменён",
@@ -163,15 +163,15 @@ export const workSubmissionStatusMeta: Record<
 > = {
   pending: {
     label: "На проверке",
-    className: "bg-amber-100 text-amber-700",
+    className: "bg-warning/10 text-warning",
   },
   accepted: {
     label: "Принято",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   rejected: {
     label: "Отклонено",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
 }
 

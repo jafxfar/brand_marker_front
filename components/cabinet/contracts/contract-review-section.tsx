@@ -22,10 +22,10 @@ export const ContractReviewSection = ({
   if (!canReview && !hasReview) return null
 
   return (
-    <section className="bg-white border border-border rounded-2xl p-6">
+    <section className="bg-card border border-border rounded-xl p-6">
       <div className="flex items-center gap-2 mb-3">
         <Star size={16} className="text-amber-500" />
-        <h2 className="text-base font-bold text-foreground">Отзыв</h2>
+        <h2 className="text-sm font-semibold text-foreground">Отзыв</h2>
       </div>
 
       {hasReview ? (
@@ -40,7 +40,7 @@ export const ContractReviewSection = ({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="w-full h-10 px-4 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+            className="w-full h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
           >
             Оставить отзыв
           </button>

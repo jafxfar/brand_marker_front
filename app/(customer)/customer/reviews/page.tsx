@@ -54,12 +54,12 @@ export default function BuyerReviewsPage() {
           <Star size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Мои отзывы</h1>
+          <h1 className="text-2xl font-bold text-foreground">Мои отзывы</h1>
           <p className="text-sm text-muted-foreground">Отзывы, которые вы оставили поставщикам</p>
         </div>
       </div>
 
-      <section className="bg-white border border-border rounded-2xl p-6">
+      <section className="bg-card border border-border rounded-xl p-6">
         {useApi && isLoading ? (
           <p className="text-sm text-muted-foreground text-center py-6">Загрузка…</p>
         ) : (

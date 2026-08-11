@@ -67,7 +67,7 @@ export const ProposalActionCard = ({
           <button
             type="button"
             onClick={onAccept}
-            className="h-9 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary-dark transition-colors"
+            className="h-9 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
           >
             Принять
           </button>

@@ -14,21 +14,21 @@ export const BalanceCards = ({ balances, hydrated }: BalanceCardsProps) => (
       Icon={Wallet}
       label="Доступный баланс"
       value={hydrated ? formatCurrency(balances.available, balances.currency) : "—"}
-      accent="bg-emerald-100 text-emerald-600"
+      accent="bg-primary/10 text-primary"
       subValue="Готово к выводу"
     />
     <StatCard
       Icon={TrendingUp}
       label="В ожидании"
       value={hydrated ? formatCurrency(balances.pending, balances.currency) : "—"}
-      accent="bg-amber-100 text-amber-600"
+      accent="bg-warning/10 text-warning"
       subValue="Ожидают выплаты по этапам"
     />
     <StatCard
       Icon={Lock}
       label="Под защитой"
       value={hydrated ? formatCurrency(balances.escrowLocked, balances.currency) : "—"}
-      accent="bg-blue-100 text-blue-600"
+      accent="bg-info/10 text-info"
       subValue="Заморожено по договорам до приёмки"
     />
   </div>

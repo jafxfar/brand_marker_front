@@ -71,7 +71,7 @@ export default function ProfilePage() {
   }
 
   const inputClass =
-    "w-full h-11 px-4 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+    "w-full h-11 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
 
   if (!hydrated) return null
 
@@ -82,13 +82,13 @@ export default function ProfilePage() {
           <User size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Профиль заказчика</h1>
+          <h1 className="text-2xl font-bold text-foreground">Профиль заказчика</h1>
           <p className="text-sm text-muted-foreground">Контактные данные и настройки доставки</p>
         </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        <div className="bg-white border border-border rounded-2xl p-5 sm:p-6 space-y-5">
+        <div className="bg-card border border-border rounded-xl p-5 sm:p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Имя / контактное лицо</label>
@@ -129,7 +129,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Delivery */}
-        <div className="bg-white border border-border rounded-2xl p-5 sm:p-6">
+        <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
           <h2 className="text-sm font-bold text-foreground mb-1">Доставка</h2>
           <p className="text-xs text-muted-foreground mb-4">
             Укажите, если вы можете организовать доставку своими силами
@@ -162,7 +162,7 @@ export default function ProfilePage() {
             disabled={saving}
             className={cn(
               "h-11 px-6 rounded-xl text-white text-sm font-bold transition-colors flex items-center gap-2",
-              saved ? "bg-emerald-600" : "bg-primary hover:bg-primary-dark",
+              saved ? "bg-primary" : "bg-primary hover:bg-primary/90",
             )}
           >
             {saved ? (

@@ -25,8 +25,8 @@ export const BuyerProposalsPanel = ({
   const [acceptTarget, setAcceptTarget] = useState<Proposal | null>(null)
 
   return (
-    <section className="bg-white border border-border rounded-2xl p-6">
-      <h2 className="text-base font-bold text-foreground mb-4">
+    <section className="bg-card border border-border rounded-xl p-6">
+      <h2 className="text-sm font-semibold text-foreground mb-4">
         Предложения поставщиков
         {proposals.length > 0 && (
           <span className="ml-2 text-sm font-normal text-muted-foreground">({proposals.length})</span>

@@ -11,9 +11,9 @@ type IncomingProposalsPanelProps = {
 }
 
 export const IncomingProposalsPanel = ({ items, hydrated }: IncomingProposalsPanelProps) => (
-  <div className="bg-white border border-border rounded-2xl">
+  <div className="bg-card border border-border rounded-xl">
     <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-base font-bold text-foreground">Входящие предложения</h2>
+      <h2 className="text-sm font-semibold text-foreground">Входящие предложения</h2>
       <Link
         href="/customer/rfqs"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
@@ -24,7 +24,7 @@ export const IncomingProposalsPanel = ({ items, hydrated }: IncomingProposalsPan
 
     {!hydrated || items.length === 0 ? (
       <div className="p-8 text-center">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3">
           <Inbox size={18} className="text-primary" />
         </div>
         <p className="text-sm font-semibold text-foreground">Новых предложений нет</p>
@@ -37,7 +37,7 @@ export const IncomingProposalsPanel = ({ items, hydrated }: IncomingProposalsPan
             href={`/customer/rfqs/${item.rfqId}`}
             className="flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors"
           >
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
               <Inbox size={17} className="text-primary" />
             </div>
             <div className="flex-1 min-w-0">

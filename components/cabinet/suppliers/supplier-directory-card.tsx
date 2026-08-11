@@ -24,7 +24,7 @@ export const SupplierDirectoryCard = ({
 }: SupplierDirectoryCardProps) => (
   <Link
     href={`/customer/suppliers/${company.id}`}
-    className="bg-white border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg transition-all group block"
+    className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-lg transition-all group block"
   >
     <div className="flex items-start gap-3">
       <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">

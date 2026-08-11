@@ -29,10 +29,10 @@ export const BuyerPaymentsSummaryCards = ({
       {cards.map((card) => (
         <div
           key={card.label}
-          className="bg-white border border-border rounded-2xl p-4"
+          className="bg-card border border-border rounded-xl p-4"
         >
           <p className="text-xs font-semibold text-muted-foreground">{card.label}</p>
-          <p className="text-xl font-black text-primary mt-1">
+          <p className="text-xl font-bold text-primary mt-1">
             {hydrated ? formatCurrency(card.value, currency) : "—"}
           </p>
         </div>

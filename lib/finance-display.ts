@@ -20,19 +20,19 @@ export const withdrawalStatusMeta: Record<
 > = {
   pending: {
     label: "Ожидает",
-    className: "bg-amber-100 text-amber-700",
+    className: "bg-warning/10 text-warning",
   },
   processing: {
     label: "В обработке",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-info/10 text-info",
   },
   completed: {
     label: "Выполнен",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   failed: {
     label: "Ошибка",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
   cancelled: {
     label: "Отменён",
@@ -50,15 +50,15 @@ export const invoiceStatusMeta: Record<
   },
   issued: {
     label: "Выставлен",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-info/10 text-info",
   },
   paid: {
     label: "Оплачен",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   overdue: {
     label: "Просрочен",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
   cancelled: {
     label: "Отменён",

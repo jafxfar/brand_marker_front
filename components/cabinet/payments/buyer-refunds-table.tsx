@@ -59,7 +59,7 @@ export const BuyerRefundsTable = ({
 
       <div className="md:hidden space-y-3">
         {refunds.map((refund) => (
-          <div key={refund.id} className="bg-white border border-border rounded-2xl p-4">
+          <div key={refund.id} className="bg-card border border-border rounded-xl p-4">
             <Link
               href={`/customer/contracts/${refund.contract_id}`}
               className="text-sm font-bold text-foreground hover:text-primary"

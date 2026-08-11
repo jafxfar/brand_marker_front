@@ -68,7 +68,7 @@ export const EscrowFundingTable = ({
                     <button
                       type="button"
                       onClick={() => onFund(row.contractId, row.milestoneId)}
-                      className="h-8 px-3 rounded-lg bg-primary hover:bg-primary-dark text-primary-foreground text-xs font-bold transition-colors"
+                      className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors"
                     >
                       Оплатить
                     </button>
@@ -86,7 +86,7 @@ export const EscrowFundingTable = ({
           return (
             <div
               key={`${row.contractId}-${row.milestoneId}`}
-              className="bg-white border border-border rounded-2xl p-4"
+              className="bg-card border border-border rounded-xl p-4"
             >
               <Link
                 href={`/customer/contracts/${row.contractId}`}
@@ -108,7 +108,7 @@ export const EscrowFundingTable = ({
               <button
                 type="button"
                 onClick={() => onFund(row.contractId, row.milestoneId)}
-                className="w-full h-9 mt-3 rounded-lg bg-primary hover:bg-primary-dark text-primary-foreground text-xs font-bold transition-colors"
+                className="w-full h-9 mt-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors"
               >
                 Оплатить безопасно
               </button>

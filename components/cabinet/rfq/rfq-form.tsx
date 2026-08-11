@@ -210,7 +210,7 @@ export const RfqForm = ({
 
   const inputClass = (field: string) =>
     cn(
-      "w-full h-11 px-4 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
+      "w-full h-11 px-4 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
       errors[field] ? "border-destructive" : "border-input focus:border-primary",
     )
 
@@ -246,7 +246,7 @@ export const RfqForm = ({
         <ArrowLeft size={16} /> Назад
       </Link>
 
-      <h1 className="text-2xl font-black text-foreground mb-1">
+      <h1 className="text-2xl font-bold text-foreground mb-1">
         {initial ? "Редактирование заявки" : "Создание заявки"}
       </h1>
       <p className="text-sm text-muted-foreground mb-6">
@@ -276,8 +276,8 @@ export const RfqForm = ({
                 onClick={() => setField("type", value)}
                 disabled={!!initial}
                 className={cn(
-                  "text-left rounded-2xl border-2 p-4 transition-all",
-                  active ? "border-primary bg-secondary shadow-sm" : "border-border bg-white hover:border-primary/40",
+                  "text-left rounded-xl border-2 p-4 transition-all",
+                  active ? "border-primary bg-secondary shadow-sm" : "border-border bg-card hover:border-primary/40",
                   initial && "opacity-70 cursor-not-allowed",
                 )}
               >
@@ -296,7 +296,7 @@ export const RfqForm = ({
           })}
         </div>
 
-        <div className="bg-white border border-border rounded-2xl p-5 sm:p-6 space-y-5">
+        <div className="bg-card border border-border rounded-xl p-5 sm:p-6 space-y-5">
           <div>
             <label htmlFor="rfq-title" className="block text-sm font-medium text-foreground mb-1.5">
               Заголовок
@@ -339,7 +339,7 @@ export const RfqForm = ({
               onChange={(e) => setField("description", e.target.value)}
               rows={4}
               className={cn(
-                "w-full px-4 py-3 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20 resize-none",
+                "w-full px-4 py-3 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20 resize-none",
                 errors.description ? "border-destructive" : "border-input focus:border-primary",
               )}
               placeholder="Подробные требования и контекст"
@@ -594,7 +594,7 @@ export const RfqForm = ({
           <button
             type="button"
             onClick={handlePublish}
-            className="h-11 px-6 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+            className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
           >
             Опубликовать
           </button>

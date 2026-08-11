@@ -22,7 +22,7 @@ import type {
   PaymentType,
 } from "@/types"
 
-const sectionClassName = "scroll-mt-24 rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -58,7 +58,7 @@ const PartySection = ({
   party: AdminParty | null
 }) => (
   <section id={id} className={sectionClassName}>
-    <h2 className="mb-5 text-lg font-black">{title}</h2>
+    <h2 className="mb-5 text-lg font-bold">{title}</h2>
     {party ? (
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -119,7 +119,7 @@ export const AdminContractDetailSections = ({
     <div className="space-y-5">
       <section id="overview" className={sectionClassName}>
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black">Обзор</h2>
+          <h2 className="text-lg font-bold">Обзор</h2>
           <Badge variant="outline" className={statusMeta.className}>
             {statusMeta.label}
           </Badge>
@@ -196,7 +196,7 @@ export const AdminContractDetailSections = ({
       <PartySection id="supplier" title="Поставщик" party={contract.supplier} />
 
       <section id="payment-plan" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">План оплаты</h2>
+        <h2 className="mb-5 text-lg font-bold">План оплаты</h2>
         {contract.payment_plan ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -227,7 +227,7 @@ export const AdminContractDetailSections = ({
       </section>
 
       <section id="milestones" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Этапы</h2>
+        <h2 className="mb-5 text-lg font-bold">Этапы</h2>
         {contract.milestones.length ? (
           <div className="space-y-3">
             {contract.milestones.map((milestone) => {
@@ -265,7 +265,7 @@ export const AdminContractDetailSections = ({
       </section>
 
       <section id="files" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Файлы</h2>
+        <h2 className="mb-5 text-lg font-bold">Файлы</h2>
         {contract.files.length ? (
           <div className="space-y-2">
             {contract.files.map((file) => (
@@ -290,7 +290,7 @@ export const AdminContractDetailSections = ({
       </section>
 
       <section id="messages" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Сообщения</h2>
+        <h2 className="mb-5 text-lg font-bold">Сообщения</h2>
         {contract.messages.length ? (
           <div className="space-y-3">
             {contract.messages.map((message) => (
@@ -313,7 +313,7 @@ export const AdminContractDetailSections = ({
       </section>
 
       <section id="escrow" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Escrow</h2>
+        <h2 className="mb-5 text-lg font-bold">Escrow</h2>
         <dl className="grid gap-4 sm:grid-cols-3">
           {(
             [
@@ -326,7 +326,7 @@ export const AdminContractDetailSections = ({
               <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {escrowSummaryMeta[key].label}
               </dt>
-              <dd className="mt-2 text-lg font-black">
+              <dd className="mt-2 text-lg font-bold">
                 {formatMoney(value, contract.escrow.currency)}
               </dd>
             </div>
@@ -335,7 +335,7 @@ export const AdminContractDetailSections = ({
       </section>
 
       <section id="history" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">История</h2>
+        <h2 className="mb-5 text-lg font-bold">История</h2>
         {contract.history.length ? (
           <div className="space-y-3">
             {contract.history.map((entry) => (

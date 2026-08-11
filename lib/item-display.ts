@@ -11,15 +11,15 @@ export const itemStatusMeta: Record<
   },
   pending_review: {
     label: "На модерации",
-    className: "bg-sky-100 text-sky-700",
+    className: "bg-info/10 text-info",
   },
   changes_requested: {
     label: "Нужны правки",
-    className: "bg-orange-100 text-orange-700",
+    className: "bg-warning/10 text-warning",
   },
   active: {
     label: "Активна",
-    className: "bg-emerald-100 text-emerald-700",
+    className: "bg-primary/10 text-primary",
   },
   hidden: {
     label: "Скрыта",
@@ -27,11 +27,11 @@ export const itemStatusMeta: Record<
   },
   archived: {
     label: "В архиве",
-    className: "bg-amber-100 text-amber-700",
+    className: "bg-warning/10 text-warning",
   },
   deleted: {
     label: "Удалена",
-    className: "bg-red-100 text-red-700",
+    className: "bg-destructive/10 text-destructive",
   },
 }
 

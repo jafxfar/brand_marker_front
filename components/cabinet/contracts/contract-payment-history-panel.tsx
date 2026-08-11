@@ -9,16 +9,16 @@ type ContractPaymentHistoryPanelProps = {
 }
 
 const typeClassName: Record<PaymentHistoryEvent["type"], string> = {
-  funding: "bg-blue-100 text-blue-700",
-  release: "bg-emerald-100 text-emerald-700",
-  refund: "bg-amber-100 text-amber-700",
+  funding: "bg-info/10 text-info",
+  release: "bg-primary/10 text-primary",
+  refund: "bg-warning/10 text-warning",
 }
 
 export const ContractPaymentHistoryPanel = ({
   events,
 }: ContractPaymentHistoryPanelProps) => (
-  <section className="bg-white border border-border rounded-2xl p-6">
-    <h2 className="text-base font-bold text-foreground mb-4">История платежей</h2>
+  <section className="bg-card border border-border rounded-xl p-6">
+    <h2 className="text-sm font-semibold text-foreground mb-4">История платежей</h2>
 
     {events.length === 0 ? (
       <p className="text-sm text-muted-foreground">Платежей по контракту пока нет</p>

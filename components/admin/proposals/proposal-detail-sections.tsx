@@ -12,7 +12,7 @@ import {
 import { contractStatusMeta } from "@/lib/contract-display"
 import type { ContractStatus } from "@/types"
 
-const sectionClassName = "scroll-mt-24 rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -51,7 +51,7 @@ export const AdminProposalDetailSections = ({
   return (
     <div className="space-y-5">
       <section id="supplier" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Поставщик</h2>
+        <h2 className="mb-5 text-lg font-bold">Поставщик</h2>
         {proposal.supplier ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -88,7 +88,7 @@ export const AdminProposalDetailSections = ({
       </section>
 
       <section id="buyer" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Покупатель</h2>
+        <h2 className="mb-5 text-lg font-bold">Покупатель</h2>
         {proposal.buyer ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -125,7 +125,7 @@ export const AdminProposalDetailSections = ({
       </section>
 
       <section id="price" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Цена</h2>
+        <h2 className="mb-5 text-lg font-bold">Цена</h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -153,7 +153,7 @@ export const AdminProposalDetailSections = ({
       </section>
 
       <section id="attachments" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Вложения</h2>
+        <h2 className="mb-5 text-lg font-bold">Вложения</h2>
         {proposal.attachment ? (
           <a
             href={proposal.attachment.file_url}
@@ -170,7 +170,7 @@ export const AdminProposalDetailSections = ({
       </section>
 
       <section id="messages" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Сообщения</h2>
+        <h2 className="mb-5 text-lg font-bold">Сообщения</h2>
         {proposal.messages.length ? (
           <div className="space-y-3">
             {proposal.messages.map((message) => (
@@ -189,7 +189,7 @@ export const AdminProposalDetailSections = ({
       </section>
 
       <section id="contract" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Контракт</h2>
+        <h2 className="mb-5 text-lg font-bold">Контракт</h2>
         {proposal.contract ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -231,7 +231,7 @@ export const AdminProposalDetailSections = ({
       </section>
 
       <section id="reports" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Жалобы</h2>
+        <h2 className="mb-5 text-lg font-bold">Жалобы</h2>
         {proposal.reports.length ? (
           <div className="space-y-3">
             {proposal.reports.map((report) => (

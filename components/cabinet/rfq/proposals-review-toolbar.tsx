@@ -50,7 +50,7 @@ export const ProposalsReviewToolbar = ({
               "h-8 px-3 rounded-lg text-xs font-semibold transition-colors",
               statusFilter === f.value
                 ? "bg-primary text-primary-foreground"
-                : "bg-white border border-border text-muted-foreground hover:text-foreground",
+                : "bg-card border border-border text-muted-foreground hover:text-foreground",
             )}
           >
             {f.label}
@@ -60,7 +60,7 @@ export const ProposalsReviewToolbar = ({
       <select
         value={sortMode}
         onChange={(e) => onSortChange(e.target.value as ProposalSortMode)}
-        className="h-8 px-3 rounded-lg border border-border bg-white text-xs font-semibold outline-none focus:border-primary"
+        className="h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold outline-none focus:border-primary"
         aria-label="Сортировка предложений"
       >
         {sortOptions.map((o) => (

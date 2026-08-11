@@ -35,8 +35,8 @@ export const ContractMessagesPanel = ({
   }
 
   return (
-    <section className="bg-white border border-border rounded-2xl p-6">
-      <h2 className="text-base font-bold text-foreground mb-4">Сообщения</h2>
+    <section className="bg-card border border-border rounded-xl p-6">
+      <h2 className="text-sm font-semibold text-foreground mb-4">Сообщения</h2>
 
       {messages.length === 0 ? (
         <p className="text-sm text-muted-foreground mb-4">Сообщений пока нет</p>
@@ -67,7 +67,7 @@ export const ContractMessagesPanel = ({
           rows={2}
           placeholder="Написать сообщение..."
           aria-label="Текст сообщения"
-          className="flex-1 px-4 py-3 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+          className="flex-1 px-4 py-3 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
         <button
           type="button"

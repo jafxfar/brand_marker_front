@@ -23,12 +23,12 @@ export const PendingPaymentsPanel = ({
   milestones,
   hydrated,
 }: PendingPaymentsPanelProps) => (
-  <div className="bg-white border border-border rounded-2xl p-5">
+  <div className="bg-card border border-border rounded-xl p-5">
     <div className="flex items-center gap-2 mb-4">
-      <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center">
         <Wallet size={18} />
       </div>
-      <h2 className="text-base font-bold text-foreground">Ожидают выплаты</h2>
+      <h2 className="text-sm font-semibold text-foreground">Ожидают выплаты</h2>
     </div>
 
     {!hydrated || milestones.length === 0 ? (

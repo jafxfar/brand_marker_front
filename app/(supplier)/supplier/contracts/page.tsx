@@ -49,12 +49,12 @@ export default function SupplierContractsPage() {
           <FileCheck size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Контракты</h1>
+          <h1 className="text-2xl font-bold text-foreground">Контракты</h1>
           <p className="text-sm text-muted-foreground">Управление сделками как поставщик</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1 mb-5 bg-white border border-border rounded-xl p-1 w-fit">
+      <div className="flex flex-wrap items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
         {CONTRACT_LIST_TABS.map((t) => (
           <button
             key={t.value}
@@ -73,7 +73,7 @@ export default function SupplierContractsPage() {
       </div>
 
       {isEmpty ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
           <FileCheck size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">
             {isLoading ? "Загрузка контрактов..." : "Контрактов нет"}

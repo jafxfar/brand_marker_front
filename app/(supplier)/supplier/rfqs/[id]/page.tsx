@@ -65,7 +65,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-48 bg-secondary rounded-2xl" />
+        <div className="h-48 bg-secondary rounded-xl" />
       </div>
     )
   }
@@ -121,7 +121,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
         <ArrowLeft size={16} /> Назад к маркетплейсу
       </Link>
 
-      <div className="bg-white border border-border rounded-2xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
             {rfq.type === "product" ? (
@@ -131,7 +131,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-black text-foreground">{rfq.title}</h1>
+            <h1 className="text-xl font-bold text-foreground">{rfq.title}</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {getRfqCategoryLabel(rfq.category_id)} · {buyerName}
             </p>

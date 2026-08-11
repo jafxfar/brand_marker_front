@@ -122,7 +122,7 @@ export default function BuyerPaymentsPage() {
           <Wallet size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Платежи</h1>
+          <h1 className="text-2xl font-bold text-foreground">Платежи</h1>
           <p className="text-sm text-muted-foreground">Платежи, безопасные сделки и документы</p>
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function BuyerPaymentsPage() {
 
       <BuyerPaymentsTabs tab={tab} onTabChange={setTab} />
 
-      <section className="bg-white border border-border rounded-2xl p-6">
+      <section className="bg-card border border-border rounded-xl p-6">
         {tab === "outgoing" && (
           <OutgoingPaymentsTable
             payments={effectiveOutgoing}

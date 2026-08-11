@@ -28,7 +28,7 @@ const formatMoney = (value: number, currency = "RUB") =>
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" }).format(new Date(value))
 
-const sectionClassName = "scroll-mt-24 rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const Section = ({
   id,
@@ -43,7 +43,7 @@ const Section = ({
 }) => (
   <section id={id} className={sectionClassName}>
     <div className="mb-5">
-      <h2 className="text-lg font-black">{title}</h2>
+      <h2 className="text-lg font-bold">{title}</h2>
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
     </div>
     {children}
@@ -195,7 +195,7 @@ export const AdminCompanyDetailSections = ({
               key={key}
               className="flex items-center gap-3 rounded-xl border border-border p-3"
             >
-              <span className={complete ? "text-emerald-600" : "text-amber-600"}>
+              <span className={complete ? "text-primary" : "text-warning"}>
                 {complete ? <Check size={18} aria-hidden="true" /> : <X size={18} aria-hidden="true" />}
               </span>
               <span className="text-sm font-medium">
@@ -315,7 +315,7 @@ export const AdminCompanyDetailSections = ({
                 {company.reviews.slice(0, limit).map((review) => (
                   <article key={review.id} className="rounded-xl border border-border p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="flex items-center gap-1 font-black">
+                      <span className="flex items-center gap-1 font-bold">
                         <Star size={16} className="fill-amber-400 text-amber-400" aria-hidden="true" />
                         {review.rating}/5
                       </span>

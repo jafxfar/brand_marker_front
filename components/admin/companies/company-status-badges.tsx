@@ -11,19 +11,19 @@ const verificationMetadata: Record<
 > = {
   verified: {
     label: "Верифицирована",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    className: "border-primary/20 bg-primary/10 text-primary",
   },
   pending: {
     label: "Ожидает проверки",
-    className: "border-amber-200 bg-amber-50 text-amber-700",
+    className: "border-warning/20 bg-warning/10 text-warning",
   },
   needs_documents: {
     label: "Нужны документы",
-    className: "border-orange-200 bg-orange-50 text-orange-700",
+    className: "border-warning/20 bg-warning/10 text-warning",
   },
   rejected: {
     label: "Отклонена",
-    className: "border-red-200 bg-red-50 text-red-700",
+    className: "border-destructive/20 bg-destructive/10 text-destructive",
   },
 }
 
@@ -33,11 +33,11 @@ const operationalMetadata: Record<
 > = {
   active: {
     label: "Активна",
-    className: "border-sky-200 bg-sky-50 text-sky-700",
+    className: "border-info/20 bg-info/10 text-info",
   },
   blocked: {
     label: "Заблокирована",
-    className: "border-red-200 bg-red-50 text-red-700",
+    className: "border-destructive/20 bg-destructive/10 text-destructive",
   },
   deactivated: {
     label: "Деактивирована",

@@ -29,8 +29,8 @@ const slides = [
     ctaHref: performersUrl(),
     ctaSecondary: "Разместить заказ",
     ctaSecondaryHref: newRfqRedirect(),
-    bg: "oklch(0.22 0.055 255)",
-    bgTo: "oklch(0.3 0.08 255)",
+    bg: "oklch(0.18 0.04 160)",
+    bgTo: "oklch(0.30 0.08 155)",
   },
   {
     id: 2,
@@ -42,8 +42,8 @@ const slides = [
     ctaHref: categoryUrl("it"),
     ctaSecondary: "Стать партнёром",
     ctaSecondaryHref: "/login",
-    bg: "oklch(0.19 0.05 225)",
-    bgTo: "oklch(0.27 0.07 240)",
+    bg: "oklch(0.20 0.04 155)",
+    bgTo: "oklch(0.32 0.07 150)",
   },
   {
     id: 3,
@@ -55,8 +55,8 @@ const slides = [
     ctaHref: categoryUrl("logistics"),
     ctaSecondary: "Рассчитать стоимость",
     ctaSecondaryHref: newRfqRedirect(),
-    bg: "oklch(0.38 0.14 128)",
-    bgTo: "oklch(0.55 0.20 128)",
+    bg: "oklch(0.25 0.06 155)",
+    bgTo: "oklch(0.38 0.10 150)",
   },
 ]
 
@@ -141,7 +141,7 @@ export default function HeroBanner() {
               <div className="flex items-center gap-3 flex-wrap">
                 <Link
                   href={slide.ctaHref}
-                  className="bg-primary hover:bg-primary-dark text-primary-foreground font-bold px-6 py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg hover:-translate-y-px"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg hover:-translate-y-px"
                 >
                   {slide.cta}
                 </Link>
@@ -187,8 +187,8 @@ export default function HeroBanner() {
           <div className="hidden xl:flex flex-col gap-3 w-[210px] flex-shrink-0">
             <PromoCard
               href={guaranteeUrl()}
-              bg="bg-[oklch(0.97_0.04_60)]"
-              border="border-primary/20"
+              bg="bg-primary/5"
+              border="border-primary/15"
               accentClass="text-primary"
               title="Гарантия сделки"
               subtitle="Оплата после выполнения работы"
@@ -198,24 +198,24 @@ export default function HeroBanner() {
             />
             <PromoCard
               href={verificationUrl()}
-              bg="bg-[oklch(0.96_0.008_255)]"
-              border="border-[oklch(0.22_0.055_255)]/15"
-              accentClass="text-[oklch(0.22_0.055_255)]"
+              bg="bg-secondary"
+              border="border-border"
+              accentClass="text-foreground"
               title="Верифицированные"
               subtitle="Проверенные юрлица и ИП"
               Icon={CheckCircle2}
-              iconClass="text-[oklch(0.22_0.055_255)]"
+              iconClass="text-foreground"
               cta="Смотреть"
             />
             <PromoCard
               href={newRfqRedirect()}
-              bg="bg-[oklch(0.96_0.06_155)]"
-              border="border-green-200"
-              accentClass="text-green-700"
+              bg="bg-primary/5"
+              border="border-primary/15"
+              accentClass="text-primary"
               title="Разместите заказ"
               subtitle="10+ предложений за 24 часа"
               Icon={FileText}
-              iconClass="text-green-600"
+              iconClass="text-primary"
               cta="Разместить"
             />
           </div>

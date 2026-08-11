@@ -22,12 +22,12 @@ export const ContractEscrowCard = ({ contract }: ContractEscrowCardProps) => {
   ].filter((row) => row.amount > 0)
 
   return (
-    <section className="bg-white border border-border rounded-2xl p-6">
+    <section className="bg-card border border-border rounded-xl p-6">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
           <Shield size={16} className="text-primary" />
         </div>
-        <h2 className="text-base font-bold text-foreground">Безопасная оплата</h2>
+        <h2 className="text-sm font-semibold text-foreground">Безопасная оплата</h2>
       </div>
 
       <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mb-4 ${statusMeta.className}`}>

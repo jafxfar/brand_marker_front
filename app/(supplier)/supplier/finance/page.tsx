@@ -137,14 +137,14 @@ export default function SupplierFinancePage() {
           <Wallet size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Финансы</h1>
+          <h1 className="text-2xl font-bold text-foreground">Финансы</h1>
           <p className="text-sm text-muted-foreground">Баланс, выводы и документы</p>
         </div>
       </div>
 
       <BalanceCards balances={balances} hydrated={hydrated} />
 
-      <section className="bg-white border border-border rounded-2xl p-6">
+      <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <ArrowDownToLine size={16} className="text-primary" />
@@ -171,7 +171,7 @@ export default function SupplierFinancePage() {
       </section>
 
       {useApi && paymentHistory && paymentHistory.length > 0 && (
-        <section className="bg-white border border-border rounded-2xl p-6">
+        <section className="bg-card border border-border rounded-xl p-6">
           <h2 className="text-base font-bold text-foreground mb-4">История безопасных выплат</h2>
           <div className="space-y-2 text-sm">
             {paymentHistory.map((p) => (
@@ -189,7 +189,7 @@ export default function SupplierFinancePage() {
         </section>
       )}
 
-      <section className="bg-white border border-border rounded-2xl p-6">
+      <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <FileText size={16} className="text-primary" />
@@ -199,7 +199,7 @@ export default function SupplierFinancePage() {
         <InvoicesTable invoices={invoiceList} getContractTitle={getContractTitle} />
       </section>
 
-      <section className="bg-white border border-border rounded-2xl p-6">
+      <section className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <Star size={16} className="text-primary" />

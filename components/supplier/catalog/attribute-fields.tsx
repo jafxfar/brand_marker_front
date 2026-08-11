@@ -44,7 +44,7 @@ export const AttributeFields = ({
 
   const inputClass = (field: string) =>
     cn(
-      "w-full h-10 px-3 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
+      "w-full h-10 px-3 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
       errors?.[field] ? "border-destructive" : "border-input focus:border-primary",
     )
 

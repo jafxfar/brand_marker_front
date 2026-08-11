@@ -9,7 +9,7 @@ import {
   adminReportTargetLabels,
 } from "@/lib/admin-display"
 
-const sectionClassName = "rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -37,7 +37,7 @@ export const AdminReportDetailSections = ({
   return (
     <div className="space-y-5">
       <section id="reporter" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Reporter</h2>
+        <h2 className="mb-5 text-lg font-bold">Reporter</h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <div>
             <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -69,7 +69,7 @@ export const AdminReportDetailSections = ({
       </section>
 
       <section id="reported-object" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Reported Object</h2>
+        <h2 className="mb-5 text-lg font-bold">Reported Object</h2>
         <dl className="grid gap-4 sm:grid-cols-2">
           <div>
             <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -126,7 +126,7 @@ export const AdminReportDetailSections = ({
       </section>
 
       <section id="evidence" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Evidence</h2>
+        <h2 className="mb-5 text-lg font-bold">Evidence</h2>
         <p className="text-sm leading-relaxed text-foreground">
           {report.evidence.details || "Комментарий к жалобе не указан."}
         </p>
@@ -156,7 +156,7 @@ export const AdminReportDetailSections = ({
       </section>
 
       <section id="history" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">History</h2>
+        <h2 className="mb-5 text-lg font-bold">History</h2>
         {report.history.length ? (
           <ol className="space-y-3">
             {report.history.map((entry) => (

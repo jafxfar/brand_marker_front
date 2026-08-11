@@ -32,9 +32,9 @@ const sections = [
 const DetailSkeleton = () => (
   <div className="mx-auto max-w-350 animate-pulse space-y-5">
     <div className="h-5 w-36 rounded bg-muted" />
-    <div className="h-56 rounded-2xl bg-muted" />
-    <div className="h-14 rounded-2xl bg-muted" />
-    <div className="h-80 rounded-2xl bg-muted" />
+    <div className="h-56 rounded-xl bg-muted" />
+    <div className="h-14 rounded-xl bg-muted" />
+    <div className="h-80 rounded-xl bg-muted" />
   </div>
 )
 
@@ -50,8 +50,8 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
 
   if (!id) {
     return (
-      <div className="mx-auto max-w-lg rounded-2xl border border-border bg-white p-8 text-center">
-        <h1 className="text-xl font-black">Некорректный ID заявки</h1>
+      <div className="mx-auto max-w-lg rounded-xl border border-border bg-card p-8 text-center">
+        <h1 className="text-xl font-bold">Некорректный ID заявки</h1>
         <Button asChild variant="outline" className="mt-5">
           <Link href="/admin/rfqs">Вернуться к заявкам</Link>
         </Button>
@@ -64,9 +64,9 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
   if (rfqQuery.isError || !rfqQuery.data) {
     return (
       <div className="mx-auto flex min-h-[55dvh] max-w-lg items-center justify-center">
-        <div className="w-full rounded-2xl border border-border bg-white p-8 text-center">
+        <div className="w-full rounded-xl border border-border bg-card p-8 text-center">
           <ClipboardList className="mx-auto text-muted-foreground" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Заявка не найдена</h1>
+          <h1 className="mt-4 text-xl font-bold">Заявка не найдена</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Запись удалена, недоступна или API временно не отвечает.
           </p>
@@ -102,13 +102,13 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
         Все заявки
       </Link>
 
-      <header className="rounded-2xl border border-border bg-white p-5 sm:p-6">
+      <header className="rounded-xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {rfqTypeLabel[rfq.type as RfqType] || rfq.type} · {rfq.id.slice(0, 8)}
             </p>
-            <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
+            <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
               {rfq.title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -174,7 +174,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
       </header>
 
       <nav
-        className="sticky top-17 z-20 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-white/95 p-2 backdrop-blur"
+        className="sticky top-17 z-20 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card/95 p-2 backdrop-blur"
         aria-label="Разделы карточки заявки"
       >
         {sections.map(([sectionId, label]) => (

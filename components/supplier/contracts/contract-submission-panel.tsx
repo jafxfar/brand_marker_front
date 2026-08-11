@@ -58,12 +58,12 @@ export const ContractSubmissionPanel = ({
         : "Выполнение работ"
 
   return (
-    <section className="bg-white border border-border rounded-2xl p-6">
+    <section className="bg-card border border-border rounded-xl p-6">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
           <Package size={16} className="text-primary" />
         </div>
-        <h2 className="text-base font-bold text-foreground">{submissionLabel}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{submissionLabel}</h2>
       </div>
 
       {canSubmit && (
@@ -74,7 +74,7 @@ export const ContractSubmissionPanel = ({
             rows={3}
             placeholder="Опишите выполненную работу или детали доставки..."
             aria-label="Комментарий к отправке"
-            className="w-full px-4 py-3 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+            className="w-full px-4 py-3 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
           />
 
           <div className="flex gap-2">
@@ -85,7 +85,7 @@ export const ContractSubmissionPanel = ({
               onKeyDown={(e) => e.key === "Enter" && handleAddFile()}
               placeholder="Имя файла (демо)"
               aria-label="Имя файла"
-              className="flex-1 h-10 px-4 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              className="flex-1 h-10 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             <button
               type="button"

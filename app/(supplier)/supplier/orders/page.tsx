@@ -73,12 +73,12 @@ export default function SupplierOrdersPage() {
           <Inbox size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Заказы</h1>
+          <h1 className="text-2xl font-bold text-foreground">Заказы</h1>
           <p className="text-sm text-muted-foreground">Откликайтесь на заказы и ведите сделки</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 mb-5 bg-white border border-border rounded-xl p-1 w-fit">
+      <div className="flex items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
         {tabs.map((t) => (
           <button
             key={t.value}
@@ -100,12 +100,12 @@ export default function SupplierOrdersPage() {
       </div>
 
       {!hydrated || (useApi && isLoading) ? (
-        <div className="bg-white border border-border rounded-2xl p-12 animate-pulse">
+        <div className="bg-card border border-border rounded-xl p-12 animate-pulse">
           <div className="h-4 bg-secondary rounded w-1/3 mx-auto" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-4">
             <Inbox size={26} className="text-primary" />
           </div>
           <p className="text-base font-bold text-foreground">Пусто</p>
@@ -120,7 +120,7 @@ export default function SupplierOrdersPage() {
               <Link
                 key={o.id}
                 href={`/supplier/orders/${o.id}`}
-                className="flex items-center gap-4 bg-white border border-border rounded-2xl p-4 hover:border-primary/30 hover:shadow-md transition-all group"
+                className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 hover:border-primary/30 hover:shadow-md transition-all group"
               >
                 <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
                   {o.kind === "product" ? (
@@ -136,7 +136,7 @@ export default function SupplierOrdersPage() {
                       {o.title}
                     </h3>
                     {tab === "available" && responded ? (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary flex-shrink-0">
                         Вы откликнулись
                       </span>
                     ) : (
@@ -156,7 +156,7 @@ export default function SupplierOrdersPage() {
                 </div>
 
                 <div className="text-right flex-shrink-0 hidden sm:block">
-                  <div className="text-sm font-black text-primary">{formatPrice(o.budget)}</div>
+                  <div className="text-sm font-bold text-primary">{formatPrice(o.budget)}</div>
                   <div className="text-[10px] text-muted-foreground mt-0.5">{o.kind === "product" ? "Товар" : "Услуга"}</div>
                 </div>
                 <ChevronRight size={18} className="text-muted-foreground flex-shrink-0" />

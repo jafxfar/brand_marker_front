@@ -38,7 +38,7 @@ export default function PaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md">
+      <DialogContent className="rounded-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-1.5">
             Безопасная оплата заказа
@@ -109,7 +109,7 @@ export default function PaymentDialog({
           <button
             type="button"
             onClick={handleConfirm}
-            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
           >
             Оплатить {formatPrice(upfront)}
           </button>

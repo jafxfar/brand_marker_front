@@ -99,7 +99,7 @@ export const WithdrawalForm = ({
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0"
             aria-label="Сумма вывода"
-            className="flex-1 h-11 px-4 rounded-xl border border-input bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+            className="flex-1 h-11 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
           <button
             type="button"
@@ -115,7 +115,7 @@ export const WithdrawalForm = ({
       </div>
 
       {error && <p className="text-xs text-destructive">{error}</p>}
-      {success && <p className="text-xs text-emerald-600 font-medium">{success}</p>}
+      {success && <p className="text-xs text-primary font-medium">{success}</p>}
 
       <button
         type="button"

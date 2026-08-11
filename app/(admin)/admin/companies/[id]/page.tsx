@@ -41,9 +41,9 @@ const sections = [
 const DetailSkeleton = () => (
   <div className="mx-auto max-w-350 animate-pulse space-y-5">
     <div className="h-5 w-36 rounded bg-muted" />
-    <div className="h-56 rounded-2xl bg-muted" />
-    <div className="h-14 rounded-2xl bg-muted" />
-    <div className="h-80 rounded-2xl bg-muted" />
+    <div className="h-56 rounded-xl bg-muted" />
+    <div className="h-14 rounded-xl bg-muted" />
+    <div className="h-80 rounded-xl bg-muted" />
   </div>
 )
 
@@ -60,8 +60,8 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
 
   if (!Number.isInteger(companyId) || companyId <= 0) {
     return (
-      <div className="mx-auto max-w-lg rounded-2xl border border-border bg-white p-8 text-center">
-        <h1 className="text-xl font-black">Некорректный ID компании</h1>
+      <div className="mx-auto max-w-lg rounded-xl border border-border bg-card p-8 text-center">
+        <h1 className="text-xl font-bold">Некорректный ID компании</h1>
         <Button asChild variant="outline" className="mt-5">
           <Link href="/admin/companies">Вернуться к списку</Link>
         </Button>
@@ -74,9 +74,9 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
   if (companyQuery.isError || !companyQuery.data) {
     return (
       <div className="mx-auto flex min-h-[55dvh] max-w-lg items-center justify-center">
-        <div className="w-full rounded-2xl border border-border bg-white p-8 text-center">
+        <div className="w-full rounded-xl border border-border bg-card p-8 text-center">
           <Building2 className="mx-auto text-muted-foreground" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Компания не найдена</h1>
+          <h1 className="mt-4 text-xl font-bold">Компания не найдена</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Запись удалена, недоступна или API временно не отвечает.
           </p>
@@ -131,10 +131,10 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
         Все компании
       </Link>
 
-      <header className="rounded-2xl border border-border bg-white p-5 sm:p-6">
+      <header className="rounded-xl border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex min-w-0 items-start gap-4">
-            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-secondary text-xl font-black text-primary">
+            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-xl font-bold text-primary">
               {company.logo ? (
                 <Image
                   src={company.logo}
@@ -152,7 +152,7 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Компания #{company.id}
               </p>
-              <h1 className="mt-1 truncate text-2xl font-black tracking-tight sm:text-3xl">
+              <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
                 {company.title}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -239,14 +239,14 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
                 <Icon size={15} aria-hidden="true" />
                 {label}
               </div>
-              <p className="mt-2 text-2xl font-black">{value}</p>
+              <p className="mt-2 text-2xl font-bold">{value}</p>
             </div>
           ))}
         </div>
       </header>
 
       <nav
-        className="sticky top-17 z-20 flex gap-1 overflow-x-auto rounded-2xl border border-border bg-white/95 p-2 backdrop-blur"
+        className="sticky top-17 z-20 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card/95 p-2 backdrop-blur"
         aria-label="Разделы карточки компании"
       >
         {sections.map(([sectionId, label]) => (

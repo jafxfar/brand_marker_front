@@ -77,9 +77,9 @@ export default function CartPage() {
   if (hydrated && items.length === 0) {
     return (
       <div className="max-w-[900px] mx-auto">
-        <h1 className="text-2xl font-black text-foreground mb-6">Корзина</h1>
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
+        <h1 className="text-2xl font-bold text-foreground mb-6">Корзина</h1>
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-4">
             <ShoppingCart size={26} className="text-primary" />
           </div>
           <p className="text-base font-bold text-foreground">Корзина пуста</p>
@@ -88,7 +88,7 @@ export default function CartPage() {
           </p>
           <Link
             href="/customer/suppliers"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-dark transition-colors"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
             Перейти в каталог
           </Link>
@@ -99,7 +99,7 @@ export default function CartPage() {
 
   return (
     <div className="max-w-[1000px] mx-auto">
-      <h1 className="text-2xl font-black text-foreground mb-6">Корзина</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-6">Корзина</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Items */}
@@ -111,7 +111,7 @@ export default function CartPage() {
                 return (
                   <div
                     key={item.listingId}
-                    className="bg-white border border-border rounded-2xl p-4 flex items-start gap-4"
+                    className="bg-card border border-border rounded-xl p-4 flex items-start gap-4"
                   >
                     <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
                       {item.kind === "product" ? (
@@ -149,7 +149,7 @@ export default function CartPage() {
                           </button>
                         </div>
 
-                        <div className="text-sm font-black text-primary">
+                        <div className="text-sm font-bold text-primary">
                           {formatPrice(item.price * item.qty)}
                         </div>
                       </div>
@@ -178,7 +178,7 @@ export default function CartPage() {
 
         {/* Summary */}
         <div>
-          <div className="bg-white border border-border rounded-2xl p-5 lg:sticky lg:top-[84px]">
+          <div className="bg-card border border-border rounded-xl p-5 lg:sticky lg:top-[84px]">
             <h2 className="text-sm font-bold text-foreground mb-4">Итого</h2>
 
             <div className="flex items-center justify-between text-sm mb-2">
@@ -189,13 +189,13 @@ export default function CartPage() {
               <span className="text-muted-foreground">Сумма</span>
               <span className="font-semibold text-foreground">{formatPrice(hydrated ? total : 0)}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-600 mb-4">
+            <div className="flex items-center gap-1.5 text-xs text-primary mb-4">
               <Truck size={13} /> Доставка по договорённости с поставщиком
             </div>
 
             <div className="border-t border-border pt-4 mb-4 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">К оплате</span>
-              <span className="text-lg font-black text-primary">{formatPrice(hydrated ? total : 0)}</span>
+              <span className="text-lg font-bold text-primary">{formatPrice(hydrated ? total : 0)}</span>
             </div>
 
             <button
@@ -203,7 +203,7 @@ export default function CartPage() {
               disabled={checkingOut}
               className={cn(
                 "w-full h-11 rounded-xl text-white text-sm font-bold transition-colors flex items-center justify-center gap-2",
-                "bg-primary hover:bg-primary-dark",
+                "bg-primary hover:bg-primary/90",
               )}
             >
               <ShieldCheck size={16} /> {checkingOut ? "Оформление…" : useApi ? "Оформить заказы" : "Оформить безопасно"}

@@ -61,7 +61,7 @@ const CompanyIdentity = ({ company }: { company: AdminCompany }) => {
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-sm font-black text-primary">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-sm font-bold text-primary">
         {company.logo ? (
           <Image
             src={company.logo}
@@ -88,8 +88,8 @@ const CompanyIdentity = ({ company }: { company: AdminCompany }) => {
 const CompaniesSkeleton = () => (
   <div className="mx-auto max-w-350 animate-pulse space-y-6" aria-label="Загрузка компаний">
     <div className="h-16 w-80 max-w-full rounded-xl bg-muted" />
-    <div className="h-28 rounded-2xl bg-muted" />
-    <div className="h-96 rounded-2xl bg-muted" />
+    <div className="h-28 rounded-xl bg-muted" />
+    <div className="h-96 rounded-xl bg-muted" />
   </div>
 )
 
@@ -148,9 +148,9 @@ const AdminCompaniesContent = () => {
   if (companiesQuery.isError || !companiesQuery.data) {
     return (
       <div className="flex min-h-[55dvh] items-center justify-center">
-        <div className="w-full max-w-lg rounded-2xl border border-destructive/20 bg-white p-8 text-center">
+        <div className="w-full max-w-lg rounded-xl border border-destructive/20 bg-card p-8 text-center">
           <Building2 className="mx-auto text-destructive" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Не удалось загрузить компании</h1>
+          <h1 className="mt-4 text-xl font-bold">Не удалось загрузить компании</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Проверьте подключение к API и повторите запрос.
           </p>
@@ -181,7 +181,7 @@ const AdminCompaniesContent = () => {
             <Building2 size={21} aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Компании</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Компании</h1>
             <p className="text-sm text-muted-foreground">
               Верификация, доступ и данные организаций
             </p>
@@ -192,7 +192,7 @@ const AdminCompaniesContent = () => {
         </p>
       </header>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-white">
+      <section className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="border-b border-border p-4">
           <div className="relative">
             <Search
@@ -230,7 +230,7 @@ const AdminCompaniesContent = () => {
               {filter.label}
               <span className={cn(
                 "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                status === filter.value ? "bg-white/20" : "bg-muted",
+                status === filter.value ? "bg-card/20" : "bg-muted",
               )}>
                 {statusCounts[filter.value]}
               </span>
@@ -240,9 +240,9 @@ const AdminCompaniesContent = () => {
       </section>
 
       {items.length === 0 ? (
-        <section className="rounded-2xl border border-border bg-white px-6 py-16 text-center">
+        <section className="rounded-xl border border-border bg-card px-6 py-16 text-center">
           <Search className="mx-auto text-muted-foreground/40" aria-hidden="true" />
-          <h2 className="mt-4 font-black">
+          <h2 className="mt-4 font-bold">
             {hasFilters ? "Компании не найдены" : "Компаний пока нет"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -266,7 +266,7 @@ const AdminCompaniesContent = () => {
         </section>
       ) : (
         <>
-          <div className="relative hidden overflow-hidden rounded-2xl border border-border bg-white lg:block">
+          <div className="relative hidden overflow-hidden rounded-xl border border-border bg-card lg:block">
             {companiesQuery.isFetching && (
               <div className="absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse bg-primary" />
             )}
@@ -319,7 +319,7 @@ const AdminCompaniesContent = () => {
               <Link
                 key={company.id}
                 href={`/admin/companies/${company.id}`}
-                className="rounded-2xl border border-border bg-white p-4 transition-colors hover:border-primary/30"
+                className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30"
               >
                 <CompanyIdentity company={company} />
                 <div className="mt-4 flex flex-wrap gap-2">

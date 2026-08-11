@@ -63,8 +63,8 @@ const formatMoney = (value: number, currency: string) =>
 const FinanceSkeleton = () => (
   <div className="mx-auto max-w-350 animate-pulse space-y-6" aria-label="Загрузка финансов">
     <div className="h-16 w-80 max-w-full rounded-xl bg-muted" />
-    <div className="h-28 rounded-2xl bg-muted" />
-    <div className="h-96 rounded-2xl bg-muted" />
+    <div className="h-28 rounded-xl bg-muted" />
+    <div className="h-96 rounded-xl bg-muted" />
   </div>
 )
 
@@ -146,9 +146,9 @@ const AdminFinanceContent = () => {
   if (financeQuery.isError || !financeQuery.data) {
     return (
       <div className="flex min-h-[55dvh] items-center justify-center">
-        <div className="w-full max-w-lg rounded-2xl border border-destructive/20 bg-white p-8 text-center">
+        <div className="w-full max-w-lg rounded-xl border border-destructive/20 bg-card p-8 text-center">
           <CircleDollarSign className="mx-auto text-destructive" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-black">Не удалось загрузить финансы</h1>
+          <h1 className="mt-4 text-xl font-bold">Не удалось загрузить финансы</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Проверьте подключение к API и повторите запрос.
           </p>
@@ -179,7 +179,7 @@ const AdminFinanceContent = () => {
             <CircleDollarSign size={21} aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Финансы</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Финансы</h1>
             <p className="text-sm text-muted-foreground">
               Выручка, подписки, комиссии, возвраты и выплаты
             </p>
@@ -202,7 +202,7 @@ const AdminFinanceContent = () => {
         </div>
       </header>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-white">
+      <section className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="border-b border-border p-4">
           <div className="relative">
             <Search
@@ -239,7 +239,7 @@ const AdminFinanceContent = () => {
               <span
                 className={cn(
                   "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                  view === filter.value ? "bg-white/20" : "bg-muted",
+                  view === filter.value ? "bg-card/20" : "bg-muted",
                 )}
               >
                 {viewCounts[filter.value]}
@@ -249,11 +249,11 @@ const AdminFinanceContent = () => {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-white">
+      <section className="overflow-hidden rounded-xl border border-border bg-card">
         {items.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <CircleDollarSign className="mx-auto text-muted-foreground" aria-hidden="true" />
-            <h2 className="mt-4 text-lg font-black">Платежи не найдены</h2>
+            <h2 className="mt-4 text-lg font-bold">Платежи не найдены</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {hasFilters
                 ? "Измените фильтр или поисковый запрос."

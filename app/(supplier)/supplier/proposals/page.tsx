@@ -78,14 +78,14 @@ export default function SupplierProposalsPage() {
           <Send size={20} className="text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-foreground">Мои предложения</h1>
+          <h1 className="text-2xl font-bold text-foreground">Мои предложения</h1>
           <p className="text-sm text-muted-foreground">
             Отслеживайте статус ваших откликов на заявки
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1 mb-5 bg-white border border-border rounded-xl p-1 w-fit max-w-full">
+      <div className="flex flex-wrap items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit max-w-full">
         {tabs.map((t) => (
           <button
             key={t.value}
@@ -104,17 +104,17 @@ export default function SupplierProposalsPage() {
       </div>
 
       {!hydrated || (useApi && isLoading) ? (
-        <div className="bg-white border border-border rounded-2xl p-12 animate-pulse">
+        <div className="bg-card border border-border rounded-xl p-12 animate-pulse">
           <div className="h-4 bg-secondary rounded w-1/3 mx-auto" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
           <Send size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">Предложений нет</p>
           <p className="text-xs text-muted-foreground mt-1 mb-4">{emptyText[tab]}</p>
           <Link
             href="/supplier/rfqs"
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
           >
             Перейти к заявкам заказчиков <ArrowRight size={15} />
           </Link>

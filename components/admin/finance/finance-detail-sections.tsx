@@ -12,7 +12,7 @@ import {
   adminLabel,
 } from "@/lib/admin-display"
 
-const sectionClassName = "scroll-mt-24 rounded-2xl border border-border bg-white p-5 sm:p-6"
+const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -52,7 +52,7 @@ export const AdminFinanceDetailSections = ({
     <div className="space-y-5">
       <section id="transaction" className={sectionClassName}>
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black">Транзакция</h2>
+          <h2 className="text-lg font-bold">Транзакция</h2>
           <Badge variant="outline" className={statusMeta.className}>
             {statusMeta.label}
           </Badge>
@@ -117,14 +117,14 @@ export const AdminFinanceDetailSections = ({
       </section>
 
       <section id="gateway" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Шлюз</h2>
+        <h2 className="mb-5 text-lg font-bold">Шлюз</h2>
         <p className="text-sm font-medium">
           {adminLabel(adminFinanceGatewayLabels, payment.gateway)}
         </p>
       </section>
 
       <section id="status" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Статус</h2>
+        <h2 className="mb-5 text-lg font-bold">Статус</h2>
         <Badge variant="outline" className={statusMeta.className}>
           {statusMeta.label}
         </Badge>
@@ -141,14 +141,14 @@ export const AdminFinanceDetailSections = ({
       </section>
 
       <section id="commission" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Комиссия</h2>
-        <p className="text-2xl font-black">
+        <h2 className="mb-5 text-lg font-bold">Комиссия</h2>
+        <p className="text-2xl font-bold">
           {formatMoney(payment.commission, payment.currency)}
         </p>
       </section>
 
       <section id="invoice" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Счёт</h2>
+        <h2 className="mb-5 text-lg font-bold">Счёт</h2>
         {payment.invoice ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -184,7 +184,7 @@ export const AdminFinanceDetailSections = ({
       </section>
 
       <section id="actor" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">Сторона</h2>
+        <h2 className="mb-5 text-lg font-bold">Сторона</h2>
         {payment.actor ? (
           <dl className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -215,7 +215,7 @@ export const AdminFinanceDetailSections = ({
       </section>
 
       <section id="history" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-black">История</h2>
+        <h2 className="mb-5 text-lg font-bold">История</h2>
         {payment.history.length ? (
           <div className="space-y-3">
             {payment.history.map((entry) => (

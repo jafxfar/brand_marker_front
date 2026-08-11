@@ -11,9 +11,9 @@ type OutgoingPaymentsTableProps = {
 }
 
 const typeClassName: Record<OutgoingPaymentRow["type"], string> = {
-  funding: "bg-blue-100 text-blue-700",
-  release: "bg-emerald-100 text-emerald-700",
-  refund: "bg-amber-100 text-amber-700",
+  funding: "bg-info/10 text-info",
+  release: "bg-primary/10 text-primary",
+  refund: "bg-warning/10 text-warning",
 }
 
 export const OutgoingPaymentsTable = ({
@@ -79,7 +79,7 @@ export const OutgoingPaymentsTable = ({
           <Link
             key={payment.id}
             href={`/customer/contracts/${payment.contractId}`}
-            className="block bg-white border border-border rounded-2xl p-4 hover:border-primary/30 transition-colors"
+            className="block bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors"
           >
             <div className="flex items-start justify-between gap-3">
               <div>

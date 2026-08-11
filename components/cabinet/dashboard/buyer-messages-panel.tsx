@@ -10,14 +10,14 @@ type BuyerMessagesPanelProps = {
 }
 
 export const BuyerMessagesPanel = ({ messages, hydrated }: BuyerMessagesPanelProps) => (
-  <div className="bg-white border border-border rounded-2xl">
+  <div className="bg-card border border-border rounded-xl">
     <div className="p-5 border-b border-border">
-      <h2 className="text-base font-bold text-foreground">Сообщения</h2>
+      <h2 className="text-sm font-semibold text-foreground">Сообщения</h2>
     </div>
 
     {!hydrated || messages.length === 0 ? (
       <div className="p-8 text-center">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3">
           <MessageSquare size={18} className="text-primary" />
         </div>
         <p className="text-sm font-semibold text-foreground">Сообщений нет</p>

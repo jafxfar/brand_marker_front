@@ -30,7 +30,7 @@ export default function SupplierTopbar() {
   }
 
   return (
-    <header className="h-[68px] bg-white border-b border-border flex items-center gap-4 px-4 sm:px-6 sticky top-0 z-30">
+    <header className="h-[68px] bg-card border-b border-border flex items-center gap-4 px-4 sm:px-6 sticky top-0 z-30">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
           <button

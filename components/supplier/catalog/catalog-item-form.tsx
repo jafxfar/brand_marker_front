@@ -143,7 +143,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
 
   const inputClass = (field: string) =>
     cn(
-      "w-full h-11 px-4 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
+      "w-full h-11 px-4 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
       errors[field] ? "border-destructive" : "border-input focus:border-primary",
     )
 
@@ -157,7 +157,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
       </Link>
 
       <div>
-        <h1 className="text-2xl font-black text-foreground">
+        <h1 className="text-2xl font-bold text-foreground">
           {initial ? "Редактирование позиции" : "Создание позиции"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -165,8 +165,8 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
         </p>
       </div>
 
-      <section className="bg-white border border-border rounded-2xl p-6 space-y-4">
-        <h2 className="text-base font-bold text-foreground">Тип</h2>
+      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Тип</h2>
         <div className="grid grid-cols-2 gap-3 max-w-md">
           {(["product", "service"] as const).map((value) => (
             <button
@@ -193,8 +193,8 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
         </div>
       </section>
 
-      <section className="bg-white border border-border rounded-2xl p-6 space-y-4">
-        <h2 className="text-base font-bold text-foreground">Основное</h2>
+      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Основное</h2>
         <div>
           <label htmlFor="item-title" className="block text-sm font-medium mb-1.5">
             Название
@@ -239,7 +239,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
             className={cn(
-              "w-full px-4 py-3 rounded-xl border bg-white text-sm outline-none resize-none transition-all focus:ring-2 focus:ring-primary/20",
+              "w-full px-4 py-3 rounded-xl border bg-card text-sm outline-none resize-none transition-all focus:ring-2 focus:ring-primary/20",
               errors.description ? "border-destructive" : "border-input focus:border-primary",
             )}
           />
@@ -249,26 +249,26 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
         </div>
       </section>
 
-      <section className="bg-white border border-border rounded-2xl p-6 space-y-4">
-        <h2 className="text-base font-bold text-foreground">Атрибуты</h2>
+      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Атрибуты</h2>
         <AttributeFields attributes={attributes} onChange={setAttributes} errors={errors} />
       </section>
 
-      <section className="bg-white border border-border rounded-2xl p-6 space-y-4">
-        <h2 className="text-base font-bold text-foreground">Медиа</h2>
+      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Медиа</h2>
         <p className="text-xs text-muted-foreground">
           Изображения, документы и видео (демо — без реальной загрузки)
         </p>
         <MediaFields media={media} onChange={setMedia} />
       </section>
 
-      <section className="bg-white border border-border rounded-2xl p-6 space-y-4">
-        <h2 className="text-base font-bold text-foreground">Ценообразование</h2>
+      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Ценообразование</h2>
         <PricingFields values={pricing} onChange={setPricing} errors={errors} />
       </section>
 
       {initial?.status === "changes_requested" && (
-        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+        <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-orange-800">
           Модератор запросил правки. Исправьте карточку и снова отправьте на модерацию.
         </div>
       )}
@@ -284,7 +284,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
         <button
           type="button"
           onClick={() => handleSubmit("pending_review")}
-          className="h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+          className="h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
         >
           Отправить на модерацию
         </button>

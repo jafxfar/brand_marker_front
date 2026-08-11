@@ -10,11 +10,11 @@ import { formatPrice, formatRelativeIso } from "@/lib/format"
 
 const CATEGORY_ICONS: Record<string, { icon: string; color: string; iconBg: string; iconColor: string }> = {
   it: { icon: "Monitor", color: "bg-blue-50 hover:bg-blue-100/80", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-  marketing: { icon: "Megaphone", color: "bg-primary-light hover:bg-secondary", iconBg: "bg-secondary", iconColor: "text-secondary-foreground" },
+  marketing: { icon: "Megaphone", color: "bg-primary/10 hover:bg-secondary", iconBg: "bg-secondary", iconColor: "text-secondary-foreground" },
   legal: { icon: "Scale", color: "bg-violet-50 hover:bg-violet-100/80", iconBg: "bg-violet-100", iconColor: "text-violet-600" },
   design: { icon: "Palette", color: "bg-pink-50 hover:bg-pink-100/80", iconBg: "bg-pink-100", iconColor: "text-pink-600" },
-  logistics: { icon: "Truck", color: "bg-amber-50 hover:bg-amber-100/80", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  finance: { icon: "CircleDollarSign", color: "bg-emerald-50 hover:bg-emerald-100/80", iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+  logistics: { icon: "Truck", color: "bg-warning/10 hover:bg-warning/10/80", iconBg: "bg-warning/10", iconColor: "text-warning" },
+  finance: { icon: "CircleDollarSign", color: "bg-primary/10 hover:bg-primary/10/80", iconBg: "bg-primary/10", iconColor: "text-primary" },
 }
 
 const defaultCategoryStyle = {

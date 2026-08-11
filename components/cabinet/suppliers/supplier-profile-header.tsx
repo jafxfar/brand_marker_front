@@ -24,14 +24,14 @@ export const SupplierProfileHeader = ({
   onContact,
   onInvite,
 }: SupplierProfileHeaderProps) => (
-  <div className="bg-white border border-border rounded-2xl p-5 sm:p-6">
+  <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
     <div className="flex items-start gap-4">
-      <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center flex-shrink-0">
+      <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
         <Building2 size={28} className="text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xl font-black text-foreground">{company.title}</h1>
+          <h1 className="text-xl font-bold text-foreground">{company.title}</h1>
           {company.verification_status === "verified" && (
             <ShieldCheck size={18} className="text-primary" />
           )}
@@ -110,7 +110,7 @@ export const SupplierProfileHeader = ({
       <button
         type="button"
         onClick={onInvite}
-        className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-dark transition-colors"
+        className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
       >
         <UserPlus size={16} /> Пригласить к заявке
       </button>

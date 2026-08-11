@@ -78,7 +78,7 @@ const AdminLoginContent = () => {
 
   return (
     <main className="grid min-h-dvh bg-background lg:grid-cols-[minmax(360px,0.85fr)_minmax(480px,1.15fr)]">
-      <aside className="relative hidden overflow-hidden bg-[oklch(0.22_0.055_255)] p-12 text-white lg:flex lg:flex-col lg:justify-between">
+      <aside className="relative hidden overflow-hidden bg-foreground p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <Link href="/" className="relative z-10 flex w-fit items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
             <Briefcase size={17} className="text-primary-foreground" aria-hidden="true" />
@@ -184,7 +184,7 @@ const AdminLoginContent = () => {
             {apiError && (
               <div
                 role="alert"
-                className="rounded-xl border border-destructive/20 bg-red-50 px-4 py-3 text-xs text-destructive"
+                className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-xs text-destructive"
               >
                 {apiError}
               </div>
@@ -193,7 +193,7 @@ const AdminLoginContent = () => {
             <button
               type="submit"
               disabled={isSubmitting || !apiEnabled}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? "Проверка доступа..." : "Войти в панель"}
               {!isSubmitting && <ArrowRight size={16} aria-hidden="true" />}

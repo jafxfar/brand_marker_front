@@ -41,7 +41,7 @@ export default function SupplierCompanyEditPage({ params }: PageProps) {
     return (
       <div className="max-w-2xl mx-auto animate-pulse">
         <div className="h-8 bg-secondary rounded w-1/3 mb-4" />
-        <div className="h-64 bg-secondary rounded-2xl" />
+        <div className="h-64 bg-secondary rounded-xl" />
       </div>
     )
   }

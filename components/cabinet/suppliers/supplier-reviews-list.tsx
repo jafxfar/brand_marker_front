@@ -9,8 +9,8 @@ type SupplierReviewsListProps = {
 export const SupplierReviewsList = ({ reviews }: SupplierReviewsListProps) => {
   if (reviews.length === 0) {
     return (
-      <div className="bg-white border border-border rounded-2xl p-6">
-        <h2 className="text-base font-bold text-foreground mb-2">Отзывы</h2>
+      <div className="bg-card border border-border rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-foreground mb-2">Отзывы</h2>
         <p className="text-sm text-muted-foreground">Отзывов пока нет</p>
       </div>
     )
@@ -21,8 +21,8 @@ export const SupplierReviewsList = ({ reviews }: SupplierReviewsListProps) => {
   )
 
   return (
-    <div className="bg-white border border-border rounded-2xl p-6">
-      <h2 className="text-base font-bold text-foreground mb-4">
+    <div className="bg-card border border-border rounded-xl p-6">
+      <h2 className="text-sm font-semibold text-foreground mb-4">
         Отзывы ({reviews.length})
       </h2>
       <div className="space-y-4">

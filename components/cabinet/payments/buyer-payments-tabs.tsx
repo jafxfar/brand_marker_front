@@ -21,7 +21,7 @@ type BuyerPaymentsTabsProps = {
 }
 
 export const BuyerPaymentsTabs = ({ tab, onTabChange }: BuyerPaymentsTabsProps) => (
-  <div className="flex flex-wrap items-center gap-1 mb-5 bg-white border border-border rounded-xl p-1 w-fit">
+  <div className="flex flex-wrap items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
     {BUYER_PAYMENTS_TABS.map((t) => (
       <button
         key={t.value}

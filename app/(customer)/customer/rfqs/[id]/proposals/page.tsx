@@ -79,7 +79,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
     return (
       <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-32 bg-secondary rounded-2xl" />
+        <div className="h-32 bg-secondary rounded-xl" />
       </div>
     )
   }
@@ -120,10 +120,10 @@ export default function ProposalsReviewPage({ params }: PageProps) {
         <ArrowLeft size={16} /> Назад к заявке
       </Link>
 
-      <div className="bg-white border border-border rounded-2xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-black text-foreground">Обзор предложений</h1>
+            <h1 className="text-xl font-bold text-foreground">Обзор предложений</h1>
             <p className="text-sm text-muted-foreground mt-1">{rfq.title}</p>
             <div className="mt-2">
               <RfqStatusBadge status={rfq.status} />
@@ -150,7 +150,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
       />
 
       {proposals.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-10 text-center">
+        <div className="bg-card border border-border rounded-xl p-10 text-center">
           <p className="text-sm font-semibold text-foreground">Предложений нет</p>
           <p className="text-xs text-muted-foreground mt-1">
             {statusFilter !== "all"

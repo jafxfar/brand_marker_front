@@ -186,7 +186,7 @@ export default function CustomerDashboard() {
       />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-foreground">
+          <h1 className="text-2xl font-bold text-foreground">
             Здравствуйте{hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -195,7 +195,7 @@ export default function CustomerDashboard() {
         </div>
         <Link
           href="/customer/rfqs/new"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors"
+          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
         >
           <Plus size={17} /> Создать заявку
         </Link>
@@ -208,19 +208,19 @@ export default function CustomerDashboard() {
           Icon={FileText}
           label="Активные заявки"
           value={hydrated ? String(activeRfqs.length) : "—"}
-          accent="bg-blue-100 text-blue-600"
+          accent="bg-info/10 text-info"
         />
         <StatCard
           Icon={Inbox}
           label="Входящие предложения"
           value={hydrated ? String(newProposalsCount) : "—"}
-          accent="bg-emerald-100 text-emerald-600"
+          accent="bg-primary/10 text-primary"
         />
         <StatCard
           Icon={FileCheck}
           label="Активные контракты"
           value={hydrated ? String(activeContracts.length) : "—"}
-          accent="bg-violet-100 text-violet-600"
+          accent="bg-muted text-muted-foreground"
         />
         <StatCard
           Icon={Wallet}
@@ -232,14 +232,14 @@ export default function CustomerDashboard() {
           Icon={AlertTriangle}
           label="Споры"
           value={hydrated ? String(disputes.length) : "—"}
-          accent="bg-red-100 text-red-600"
+          accent="bg-destructive/10 text-destructive"
         />
         <StatCard
           Icon={MessageSquare}
           label="Сообщения"
           value={hydrated ? String(unreadCount) : "—"}
           subValue={hydrated && unreadCount > 0 ? "непрочитанных" : undefined}
-          accent="bg-amber-100 text-amber-600"
+          accent="bg-warning/10 text-warning"
         />
       </div>
 
@@ -260,7 +260,7 @@ export default function CustomerDashboard() {
           <BuyerMessagesPanel messages={messages} hydrated={hydrated} />
           <Link
             href="/customer/suppliers"
-            className="block bg-white border border-border rounded-2xl p-5 hover:border-primary/30 transition-all text-sm font-bold text-foreground hover:text-primary"
+            className="block bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-all text-sm font-bold text-foreground hover:text-primary"
           >
             Каталог поставщиков <ArrowRight size={14} className="inline ml-1" />
           </Link>

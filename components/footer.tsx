@@ -52,7 +52,7 @@ export default function Footer() {
   const categoryLinks = getAllCategories().slice(0, 6)
 
   return (
-    <footer style={{ backgroundColor: "oklch(0.13 0.02 255)" }} className="text-white">
+    <footer className="bg-foreground text-white">
       <div className="bg-primary">
         <div className="max-w-[1440px] mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
@@ -67,8 +67,7 @@ export default function Footer() {
             />
             <button
               type="button"
-              style={{ backgroundColor: "oklch(0.22 0.055 255)" }}
-              className="hover:opacity-90 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity flex items-center gap-2 whitespace-nowrap"
+              className="bg-white/20 hover:bg-white/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 whitespace-nowrap"
             >
               <Send size={14} />
               Подписаться

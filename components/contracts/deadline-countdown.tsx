@@ -23,7 +23,7 @@ type DeadlineCountdownProps = {
 
 const getCountdownColor = (remaining: TimeRemaining) => {
   if (remaining.expired) return "text-destructive"
-  if (isUrgentDeadline(remaining)) return "text-amber-600"
+  if (isUrgentDeadline(remaining)) return "text-warning"
   return "text-foreground"
 }
 
@@ -114,7 +114,7 @@ export const DeadlineBanner = ({ dueDate, status }: DeadlineBannerProps) => {
   const colorClass = remaining.expired
     ? "bg-destructive/10 border-destructive/20 text-destructive"
     : isUrgentDeadline(remaining)
-      ? "bg-amber-50 border-amber-200 text-amber-800"
+      ? "bg-warning/10 border-warning/20 text-amber-800"
       : "bg-secondary border-border text-foreground"
 
   return (

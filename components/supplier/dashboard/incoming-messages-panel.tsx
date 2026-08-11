@@ -13,9 +13,9 @@ export const IncomingMessagesPanel = ({
   messages,
   hydrated,
 }: IncomingMessagesPanelProps) => (
-  <div className="bg-white border border-border rounded-2xl">
+  <div className="bg-card border border-border rounded-xl">
     <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-base font-bold text-foreground">Входящие сообщения</h2>
+      <h2 className="text-sm font-semibold text-foreground">Входящие сообщения</h2>
       <Link
         href="/supplier/messages"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
@@ -26,7 +26,7 @@ export const IncomingMessagesPanel = ({
 
     {!hydrated || messages.length === 0 ? (
       <div className="p-8 text-center">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3">
           <MessageSquare size={18} className="text-primary" />
         </div>
         <p className="text-sm font-semibold text-foreground">Сообщений нет</p>

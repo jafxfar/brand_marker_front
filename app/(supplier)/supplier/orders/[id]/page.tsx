@@ -85,14 +85,14 @@ export default function SupplierOrderDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Header */}
-          <div className="bg-white border border-border rounded-2xl p-5 sm:p-6">
+          <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
                 <KindIcon size={22} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl font-black text-foreground">{order.title}</h1>
+                  <h1 className="text-xl font-bold text-foreground">{order.title}</h1>
                   <span className={cn("text-[11px] font-semibold px-2.5 py-0.5 rounded-full", statusMeta.className)}>
                     {statusMeta.label}
                   </span>
@@ -118,7 +118,7 @@ export default function SupplierOrderDetailPage() {
           </div>
 
           {/* Customer */}
-          <div className="bg-white border border-border rounded-2xl p-5">
+          <div className="bg-card border border-border rounded-xl p-5">
             <h2 className="text-sm font-bold text-foreground mb-3">Заказчик</h2>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
@@ -133,7 +133,7 @@ export default function SupplierOrderDetailPage() {
 
           {/* My offer */}
           {myOffer && (
-            <div className="bg-white border border-border rounded-2xl p-5">
+            <div className="bg-card border border-border rounded-xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <h2 className="text-sm font-bold text-foreground">Ваш отклик</h2>
                 {myOffer.promoted && (
@@ -158,12 +158,12 @@ export default function SupplierOrderDetailPage() {
 
         {/* Sidebar action */}
         <div className="space-y-4">
-          <div className="bg-white border border-border rounded-2xl p-5 lg:sticky lg:top-[84px]">
+          <div className="bg-card border border-border rounded-xl p-5 lg:sticky lg:top-[84px]">
             <h2 className="text-sm font-bold text-foreground mb-3">Статус</h2>
 
             {isAccepted ? (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 text-emerald-700">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-primary/10 text-primary">
                   <CheckCircle2 size={18} />
                   <span className="text-sm font-bold">Ваш отклик принят</span>
                 </div>
@@ -176,10 +176,10 @@ export default function SupplierOrderDetailPage() {
                   </div>
                 )}
                 {order.status === "completed" && (
-                  <p className="text-xs text-emerald-700 font-semibold">Сделка завершена, оплата выплачена.</p>
+                  <p className="text-xs text-primary font-semibold">Сделка завершена, оплата выплачена.</p>
                 )}
                 {order.dispute && (
-                  <div className="flex items-start gap-2 text-xs text-red-700 bg-red-50 rounded-xl p-2.5">
+                  <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 rounded-xl p-2.5">
                     <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                     Заказчик открыл спор: {order.dispute.reason}
                   </div>
@@ -200,7 +200,7 @@ export default function SupplierOrderDetailPage() {
                 </p>
                 <button
                   onClick={() => setRespondOpen(true)}
-                  className="w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors flex items-center justify-center gap-2"
                 >
                   <Send size={16} /> Откликнуться
                 </button>

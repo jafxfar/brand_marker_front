@@ -47,13 +47,13 @@ export default function RespondDialog({
 
   const inputClass = (field: string) =>
     cn(
-      "w-full h-11 px-4 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
+      "w-full h-11 px-4 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
       errors[field] ? "border-destructive" : "border-input focus:border-primary",
     )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md">
+      <DialogContent className="rounded-xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Откликнуться на заказ</DialogTitle>
           <DialogDescription>
@@ -82,7 +82,7 @@ export default function RespondDialog({
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
             placeholder="Расскажите, почему стоит выбрать вас"
-            className={cn("w-full px-4 py-3 rounded-xl border bg-white text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20 resize-none", errors.message ? "border-destructive" : "border-input focus:border-primary")}
+            className={cn("w-full px-4 py-3 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20 resize-none", errors.message ? "border-destructive" : "border-input focus:border-primary")}
           />
           {errors.message && <p className="text-xs text-destructive mt-1">{errors.message}</p>}
         </div>
@@ -105,7 +105,7 @@ export default function RespondDialog({
           <button
             type="button"
             onClick={handleConfirm}
-            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2"
+            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2"
           >
             <Send size={15} /> Отправить отклик
           </button>

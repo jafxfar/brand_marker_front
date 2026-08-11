@@ -67,7 +67,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
     href === "/supplier" ? pathname === href : pathname.startsWith(href)
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-card">
       <Link
         href="/"
         className="flex items-center gap-2.5 h-[68px] px-5 border-b border-border flex-shrink-0"
@@ -76,8 +76,8 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
           <Briefcase size={16} className="text-primary-foreground" />
         </div>
         <div className="flex items-baseline gap-0.5">
-          <span className="text-lg font-black text-primary tracking-tight">Бизнес</span>
-          <span className="text-lg font-black tracking-tight" style={{ color: "oklch(0.22 0.055 255)" }}>
+          <span className="text-lg font-bold text-primary tracking-tight">Бизнес</span>
+          <span className="text-lg font-bold tracking-tight text-foreground">
             Маркет
           </span>
         </div>
@@ -87,7 +87,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
         <Link
           href="/supplier/catalog/new"
           onClick={onNavigate}
-          className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-primary-foreground text-sm font-bold transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors shadow-sm"
         >
           <Plus size={17} />
           Добавить позицию
