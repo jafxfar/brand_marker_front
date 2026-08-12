@@ -195,7 +195,7 @@ export default function Footer() {
 
         <div className="mt-8 pt-6 border-t border-white/8 flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="text-xs text-white/30">
-            © 2024 БрендМаркет. Все права защищены. ООО «БрендМаркет», ИНН 010012345
+            © 2026 БрендМаркет. Все права защищены. ООО «БрендМаркет», ИНН 010012345
           </div>
           <div className="flex items-center gap-5 flex-wrap justify-center">
             <Link href={helpUrl()} className="text-xs text-white/35 hover:text-primary transition-colors">Пользовательское соглашение</Link>

@@ -131,7 +131,7 @@ function RegisterContent() {
           <Briefcase size={320} />
         </div>
         <div className="relative z-10 text-xs text-white/40 hidden lg:block">
-          © 2024 БрендМаркет
+          © 2026 БрендМаркет
         </div>
       </aside>
 
