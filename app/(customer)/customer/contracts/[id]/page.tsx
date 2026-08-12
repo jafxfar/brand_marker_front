@@ -2,7 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowLeft, FileCheck, MessageSquare, Paperclip, Clock } from "lucide-react"
+import { AlertTriangle, ArrowLeft, FileCheck, MessageSquare, Paperclip, Clock, Package } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -10,8 +10,10 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import {
+  useApproveSubmissionMutation,
   useContractQuery,
   useOpenDisputeMutation,
+  useRejectSubmissionMutation,
   useSendMessageMutation,
 } from "@/hooks/api/use-contracts-query"
 import { useCreateReviewMutation, useBuyerReviewsQuery } from "@/hooks/api/use-reviews-query"
@@ -26,6 +28,7 @@ import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
 import { ContractSupplierCard } from "@/components/cabinet/contracts/contract-supplier-card"
 import { BuyerContractMilestonesPanel } from "@/components/cabinet/contracts/buyer-contract-milestones-panel"
+import { BuyerContractSubmissionsPanel } from "@/components/cabinet/contracts/buyer-contract-submissions-panel"
 import { ContractPaymentHistoryPanel } from "@/components/cabinet/contracts/contract-payment-history-panel"
 import { ContractReviewSection } from "@/components/cabinet/contracts/contract-review-section"
 import { ContractEscrowCard } from "@/components/supplier/contracts/contract-escrow-card"
@@ -47,7 +50,9 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const contractId = Number(id)
   const hydrated = useHydrated()
-  const actorId = getActorId(useAuthStore((s) => s.user))
+  const user = useAuthStore((s) => s.user)
+  const actorId = getActorId(user)
+  const userId = user?.userId ?? 0
   const useApi = isApiEnabled()
 
   const getContractLocal = useContractsStore((s) => s.getContract)
@@ -57,6 +62,8 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const openDisputeLocal = useContractsStore((s) => s.openDispute)
   const addMessageLocal = useContractsStore((s) => s.addMessage)
   const markConversationReadLocal = useContractsStore((s) => s.markConversationRead)
+  const approveSubmissionLocal = useContractsStore((s) => s.approveSubmission)
+  const rejectSubmissionLocal = useContractsStore((s) => s.rejectSubmission)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const submitReview = useCompaniesStore((s) => s.submitReview)
   const hasReviewForContract = useCompaniesStore((s) => s.hasReviewForContract)
@@ -70,6 +77,8 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const fundAndConfirmMutation = useFundAndConfirmMilestoneMutation()
   const approveMilestoneMutation = useApproveMilestoneMutation()
   const createReviewMutation = useCreateReviewMutation()
+  const approveSubmissionMutation = useApproveSubmissionMutation()
+  const rejectSubmissionMutation = useRejectSubmissionMutation()
 
   const supplierActorId =
     (useApi ? apiContract?.supplier_actor_id : getContractLocal(contractId)?.supplier_actor_id) ?? 0
@@ -119,20 +128,12 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     ? buyerReviews.some((r) => r.contract_id === contractId)
     : hasReviewForContract(actorId, contractId)
 
-  const getSenderName = (senderId: number) => {
-    if (senderId === actorId) return "Вы"
-    if (senderId === contract.supplier_actor_id) {
-      return supplierName
-    }
-    return getCompany(senderId)?.title ?? "Участник"
-  }
-
   const handleSendMessage = (text: string) => {
     if (useApi) {
       sendMessageMutation.mutate({ contractId, text })
       return
     }
-    addMessageLocal(contractId, actorId, text)
+    addMessageLocal(contractId, userId, text, user?.name)
     markConversationReadLocal(contractId)
   }
 
@@ -171,8 +172,25 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     approveMilestoneLocal(contractId, milestoneId, actorId)
   }
 
+  const handleApproveSubmission = (submissionId: number) => {
+    if (useApi) {
+      approveSubmissionMutation.mutate({ contractId, submissionId })
+      return
+    }
+    approveSubmissionLocal(contractId, submissionId)
+  }
+
+  const handleRejectSubmission = (submissionId: number) => {
+    if (useApi) {
+      rejectSubmissionMutation.mutate({ contractId, submissionId })
+      return
+    }
+    rejectSubmissionLocal(contractId, submissionId)
+  }
+
   const messageCount = contract.conversation?.messages?.length ?? 0
   const fileCount = contract.files?.length ?? 0
+  const submissionCount = contract.submissions?.length ?? 0
 
   return (
     <div className="max-w-[960px] mx-auto space-y-5">
@@ -243,6 +261,14 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="submission" className="gap-1.5">
+            <Package size={14} /> Demo
+            {submissionCount > 0 && (
+              <span className="ml-1 text-[10px] bg-muted text-muted-foreground font-semibold px-1.5 py-0.5 rounded-full">
+                {submissionCount}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="files" className="gap-1.5">
             <Paperclip size={14} /> Файлы
             {fileCount > 0 && (
@@ -293,9 +319,20 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         <TabsContent value="messages">
           <ContractMessagesPanel
             contract={contract}
-            currentSenderId={actorId}
-            getSenderName={getSenderName}
+            currentUserId={userId}
+            counterpartName={supplierName}
             onSendMessage={handleSendMessage}
+          />
+        </TabsContent>
+
+        <TabsContent value="submission">
+          <BuyerContractSubmissionsPanel
+            contract={contract}
+            onApprove={handleApproveSubmission}
+            onReject={handleRejectSubmission}
+            busy={
+              approveSubmissionMutation.isPending || rejectSubmissionMutation.isPending
+            }
           />
         </TabsContent>
 

@@ -1,24 +1,46 @@
 "use client"
 
-import { useState, type KeyboardEvent } from "react"
-import { Send } from "lucide-react"
+import { useEffect, useRef, useState, type KeyboardEvent } from "react"
+import { MessageSquare, Send } from "lucide-react"
+import { formatIsoDate } from "@/lib/format"
 import type { ContractWithRelations } from "@/types"
 
 type ContractMessagesPanelProps = {
   contract: ContractWithRelations
-  currentSenderId: number
-  getSenderName: (senderId: number) => string
+  currentUserId: number
+  counterpartName: string
   onSendMessage: (text: string) => void
+}
+
+const formatMessageTime = (iso?: string) => {
+  if (!iso) return null
+  try {
+    return new Intl.DateTimeFormat("ru-RU", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(iso))
+  } catch {
+    return formatIsoDate(iso.split("T")[0] ?? iso)
+  }
 }
 
 export const ContractMessagesPanel = ({
   contract,
-  currentSenderId,
-  getSenderName,
+  currentUserId,
+  counterpartName,
   onSendMessage,
 }: ContractMessagesPanelProps) => {
   const [text, setText] = useState("")
+  const listRef = useRef<HTMLDivElement>(null)
   const messages = contract.conversation?.messages ?? []
+
+  useEffect(() => {
+    const el = listRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [messages.length])
 
   const handleSubmit = () => {
     const trimmed = text.trim()
@@ -35,49 +57,79 @@ export const ContractMessagesPanel = ({
   }
 
   return (
-    <section className="bg-card border border-border rounded-xl p-6">
-      <h2 className="text-sm font-semibold text-foreground mb-4">Сообщения</h2>
+    <section className="bg-card border border-border rounded-xl overflow-hidden flex flex-col h-[min(70vh,640px)] min-h-[420px]">
+      <header className="flex items-center gap-3 px-5 py-4 border-b border-border bg-secondary/40">
+        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <MessageSquare size={16} className="text-primary" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{counterpartName}</p>
+          <p className="text-xs text-muted-foreground truncate">{contract.title}</p>
+        </div>
+      </header>
 
-      {messages.length === 0 ? (
-        <p className="text-sm text-muted-foreground mb-4">Сообщений пока нет</p>
-      ) : (
-        <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
-          {messages.map((message) => {
-            const isOwn = message.sender_id === currentSenderId
+      <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-background/40">
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center px-6">
+            <MessageSquare size={28} className="text-muted-foreground mb-2" />
+            <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Напишите первое сообщение по контракту
+            </p>
+          </div>
+        ) : (
+          messages.map((message) => {
+            const isOwn = message.sender_id === currentUserId
+            const displayName = isOwn
+              ? "Вы"
+              : (message.sender_name?.trim() || counterpartName || "Участник")
+            const timeLabel = formatMessageTime(message.created_at)
+
             return (
               <div
                 key={message.id}
-                className={`rounded-xl p-3 ${isOwn ? "bg-primary/5 border border-primary/10" : "bg-secondary"}`}
+                className={`flex flex-col max-w-[85%] ${isOwn ? "ml-auto items-end" : "mr-auto items-start"}`}
               >
-                <p className="text-xs font-semibold text-foreground mb-1">
-                  {getSenderName(message.sender_id)}
+                <p className="text-[11px] font-semibold text-muted-foreground mb-1 px-1">
+                  {displayName}
+                  {timeLabel ? ` · ${timeLabel}` : ""}
                 </p>
-                <p className="text-sm text-muted-foreground">{message.text}</p>
+                <div
+                  className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                    isOwn
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-secondary text-foreground rounded-bl-md"
+                  }`}
+                >
+                  {message.text}
+                </div>
               </div>
             )
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
-      <div className="flex gap-2">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={2}
-          placeholder="Написать сообщение..."
-          aria-label="Текст сообщения"
-          className="flex-1 px-4 py-3 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-        />
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!text.trim()}
-          className="h-auto px-4 rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity"
-          aria-label="Отправить сообщение"
-        >
-          <Send size={18} />
-        </button>
+      <div className="border-t border-border p-4 bg-card">
+        <div className="flex gap-2 items-end">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={2}
+            placeholder="Написать сообщение..."
+            aria-label="Текст сообщения"
+            className="flex-1 px-4 py-3 rounded-xl border border-input bg-background text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+          />
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!text.trim()}
+            className="h-11 w-11 flex items-center justify-center rounded-xl bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity flex-shrink-0"
+            aria-label="Отправить сообщение"
+          >
+            <Send size={18} />
+          </button>
+        </div>
       </div>
     </section>
   )

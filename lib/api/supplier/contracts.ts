@@ -17,7 +17,7 @@ export const supplierContractsApi = {
   uploadFile: (id: number, file: File) => {
     const form = new FormData()
     form.append("file", file)
-    return apiFetch<unknown>(`${PREFIX}/${id}/files`, {
+    return apiFetch<ContractWithRelations>(`${PREFIX}/${id}/files`, {
       method: "POST",
       body: form,
     })
@@ -25,7 +25,17 @@ export const supplierContractsApi = {
 
   submitWork: (
     id: number,
-    data: { type?: string; note: string; file_names: string[] },
+    data: {
+      type?: string
+      note: string
+      file_names: string[]
+      assets?: {
+        kind: string
+        name: string
+        url: string
+        file_type?: string | null
+      }[]
+    },
   ) =>
     apiFetch<unknown>(`${PREFIX}/${id}/submissions`, {
       method: "POST",

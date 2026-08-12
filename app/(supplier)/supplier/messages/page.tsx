@@ -3,7 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import { MessageSquare, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -11,20 +10,17 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
-import type { ContractWithRelations } from "@/types"
+import type { ContractWithRelations, Message } from "@/types"
 
 type ConversationItem = {
   contract: ContractWithRelations
-  lastMessage: {
-    id: number
-    sender_id: number
-    text: string
-  }
+  lastMessage: Message
   senderName: string
 }
 
 const buildConversations = (
   contracts: ContractWithRelations[],
+  currentUserId: number,
   getBuyerName: (id: number) => string,
 ): ConversationItem[] =>
   contracts
@@ -32,10 +28,11 @@ const buildConversations = (
     .map((contract) => {
       const messages = contract.conversation!.messages
       const lastMessage = messages[messages.length - 1]!
-      const isBuyer = lastMessage.sender_id === contract.buyer_actor_id
-      const senderName = isBuyer
-        ? getBuyerName(contract.buyer_actor_id)
-        : "Вы"
+      const isOwn = lastMessage.sender_id === currentUserId
+      const senderName = isOwn
+        ? "Вы"
+        : (lastMessage.sender_name?.trim() ||
+            getBuyerName(contract.buyer_actor_id))
       return { contract, lastMessage, senderName }
     })
     .sort((a, b) => b.lastMessage.id - a.lastMessage.id)
@@ -44,6 +41,7 @@ export default function SupplierMessagesPage() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const userId = user?.userId ?? 0
   const useApi = isApiEnabled()
 
   const getContractsForSupplier = useContractsStore((s) => s.getContractsForSupplier)
@@ -62,12 +60,12 @@ export default function SupplierMessagesPage() {
       ? getContractsForSupplier(actorId)
       : []
 
-  const conversations = buildConversations(contracts, getBuyerName)
+  const conversations = buildConversations(contracts, userId, getBuyerName)
   const selected = conversations.find((c) => c.contract.id === selectedId)
 
   const handleSelect = (contractId: number) => {
     setSelectedId(contractId)
-    if (!useApi) markConversationRead(contractId, actorId)
+    if (!useApi) markConversationRead(contractId)
   }
 
   if (useApi && isLoading) {
@@ -79,66 +77,17 @@ export default function SupplierMessagesPage() {
     )
   }
 
-  if (useApi) {
-    return (
-      <div className="max-w-[900px] mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-            <MessageSquare size={20} className="text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Сообщения</h1>
-            <p className="text-sm text-muted-foreground">
-              Переписка по контрактам с заказчиками
-            </p>
-          </div>
-        </div>
-
-        {conversations.length === 0 ? (
-          <div className="bg-card border border-border rounded-xl p-12 text-center">
-            <MessageSquare size={32} className="text-primary mx-auto mb-3" />
-            <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Сообщения появятся в активных контрактах
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {conversations.map(({ contract, lastMessage, senderName }) => (
-              <Link
-                key={contract.id}
-                href={`/supplier/contracts/${contract.id}`}
-                className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-                  <MessageSquare size={18} className="text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">
-                    {contract.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                    {senderName}: {lastMessage.text}
-                  </p>
-                </div>
-                <ChevronRight size={18} className="text-muted-foreground flex-shrink-0" />
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-  }
-
   return (
-    <div className="max-w-[900px] mx-auto">
+    <div className="max-w-[960px] mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
           <MessageSquare size={20} className="text-primary" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Сообщения</h1>
-          <p className="text-sm text-muted-foreground">Переписка по контрактам</p>
+          <p className="text-sm text-muted-foreground">
+            Переписка по контрактам с заказчиками
+          </p>
         </div>
       </div>
 
@@ -146,9 +95,12 @@ export default function SupplierMessagesPage() {
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <MessageSquare size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Сообщения появятся в активных контрактах
+          </p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-4 h-[calc(100vh-220px)] min-h-[400px]">
+        <div className="grid md:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[420px]">
           <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
             <div className="overflow-y-auto flex-1 divide-y divide-border">
               {conversations.map(({ contract, lastMessage, senderName }) => (
@@ -156,12 +108,14 @@ export default function SupplierMessagesPage() {
                   key={contract.id}
                   type="button"
                   onClick={() => handleSelect(contract.id)}
-                  className={cn(
-                    "w-full text-left p-4 hover:bg-secondary/50 transition-colors",
-                    selectedId === contract.id && "bg-secondary",
-                  )}
+                  className={`w-full text-left p-4 hover:bg-secondary/50 transition-colors ${
+                    selectedId === contract.id ? "bg-secondary" : ""
+                  }`}
+                  aria-label={`Открыть переписку по контракту ${contract.title}`}
                 >
-                  <p className="text-sm font-bold text-foreground truncate">{contract.title}</p>
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {contract.title}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1 truncate">
                     {senderName}: {lastMessage.text}
                   </p>
@@ -170,31 +124,53 @@ export default function SupplierMessagesPage() {
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-4 flex flex-col">
+          <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
             {selected ? (
               <>
-                <p className="text-sm font-bold text-foreground mb-4">{selected.contract.title}</p>
-                <div className="flex-1 overflow-y-auto space-y-3">
-                  {selected.contract.conversation?.messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={cn(
-                        "rounded-xl px-3 py-2 text-sm max-w-[85%]",
-                        msg.sender_id === actorId
-                          ? "ml-auto bg-primary text-primary-foreground"
-                          : "bg-secondary text-foreground",
-                      )}
-                    >
-                      {msg.text}
-                    </div>
-                  ))}
+                <div className="px-4 py-3 border-b border-border">
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {selected.contract.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {getBuyerName(selected.contract.buyer_actor_id)}
+                  </p>
                 </div>
-                <Link
-                  href={`/supplier/contracts/${selected.contract.id}`}
-                  className="mt-4 text-xs font-semibold text-primary hover:underline"
-                >
-                  Открыть контракт
-                </Link>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {selected.contract.conversation?.messages.map((msg) => {
+                    const isOwn = msg.sender_id === userId
+                    const name = isOwn
+                      ? "Вы"
+                      : (msg.sender_name?.trim() ||
+                          getBuyerName(selected.contract.buyer_actor_id))
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col max-w-[85%] ${isOwn ? "ml-auto items-end" : "items-start"}`}
+                      >
+                        <p className="text-[11px] font-semibold text-muted-foreground mb-1 px-1">
+                          {name}
+                        </p>
+                        <div
+                          className={`rounded-2xl px-3.5 py-2.5 text-sm whitespace-pre-wrap break-words ${
+                            isOwn
+                              ? "bg-primary text-primary-foreground rounded-br-md"
+                              : "bg-secondary text-foreground rounded-bl-md"
+                          }`}
+                        >
+                          {msg.text}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="px-4 py-3 border-t border-border">
+                  <Link
+                    href={`/supplier/contracts/${selected.contract.id}`}
+                    className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    Открыть контракт <ChevronRight size={14} />
+                  </Link>
+                </div>
               </>
             ) : (
               <p className="text-sm text-muted-foreground m-auto">Выберите диалог</p>

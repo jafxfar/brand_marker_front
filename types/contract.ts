@@ -40,8 +40,10 @@ export type Message = {
   id: number
   conversation_id: number
   sender_id: number
+  sender_name?: string
   text: string
   attachment: MessageAttachment | null
+  created_at?: string
 }
 
 export type Conversation = {
@@ -63,6 +65,15 @@ export type ContractFile = {
   created_at: string
 }
 
+export type SubmissionAssetKind = "image" | "video" | "file" | "link"
+
+export type SubmissionAsset = {
+  kind: SubmissionAssetKind
+  name: string
+  url: string
+  file_type?: string | null
+}
+
 export type WorkSubmission = {
   id: number
   contract_id: number
@@ -71,6 +82,7 @@ export type WorkSubmission = {
   status: WorkSubmissionStatus
   submitted_at: string
   file_names: string[]
+  assets?: SubmissionAsset[]
 }
 
 export type Contract = {

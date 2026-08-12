@@ -9,6 +9,7 @@ import type {
   PaymentMilestoneStatus,
   PaymentMilestoneTrigger,
   PaymentType,
+  SubmissionAsset,
   WorkSubmissionType,
 } from "@/types"
 import { buildDefaultMilestones, splitAmounts } from "@/lib/payment-milestones"
@@ -37,6 +38,7 @@ export type IncomingMessage = {
 type SubmitWorkInput = {
   note: string
   fileNames: string[]
+  assets?: SubmissionAsset[]
 }
 
 export type CreateContractFromProposalInput = {
@@ -120,8 +122,15 @@ interface ContractsState {
   ) => boolean
   getPaymentHistory: (contractId: number) => PaymentHistoryEvent[]
   submitWork: (contractId: number, input: SubmitWorkInput) => void
+  approveSubmission: (contractId: number, submissionId: number) => void
+  rejectSubmission: (contractId: number, submissionId: number) => void
   openDispute: (contractId: number, reason: string, initiatorId: number) => void
-  addMessage: (contractId: number, senderId: number, text: string) => void
+  addMessage: (
+    contractId: number,
+    senderId: number,
+    text: string,
+    senderName?: string,
+  ) => void
 }
 
 const normalizeContract = (
@@ -129,7 +138,20 @@ const normalizeContract = (
 ): ContractWithRelations => ({
   ...contract,
   files: contract.files ?? [],
-  submissions: contract.submissions ?? [],
+  submissions: (contract.submissions ?? []).map((submission) => ({
+    ...submission,
+    assets: submission.assets ?? [],
+    file_names: submission.file_names ?? [],
+  })),
+  conversation: contract.conversation
+    ? {
+        ...contract.conversation,
+        messages: (contract.conversation.messages ?? []).map((message) => ({
+          ...message,
+          sender_name: message.sender_name ?? undefined,
+        })),
+      }
+    : null,
 })
 
 const normalizeContracts = (
@@ -583,6 +605,7 @@ export const useContractsStore = create<ContractsState>()(
               status: "pending" as const,
               submitted_at: new Date().toISOString(),
               file_names: input.fileNames,
+              assets: input.assets ?? [],
             }
             const fundedMilestone = contract.payment_plan?.milestones.find(
               (m) => m.status === "funded",
@@ -595,9 +618,42 @@ export const useContractsStore = create<ContractsState>()(
             return {
               ...contract,
               submissions: [...contract.submissions, submission],
+              status: "delivered" as const,
               payment_plan: contract.payment_plan
                 ? { ...contract.payment_plan, milestones: milestones ?? [] }
                 : null,
+            }
+          }),
+        })),
+
+      approveSubmission: (contractId, submissionId) =>
+        set((state) => ({
+          contracts: state.contracts.map((contract) => {
+            if (contract.id !== contractId) return contract
+            return {
+              ...contract,
+              status: "completed" as const,
+              submissions: contract.submissions.map((submission) =>
+                submission.id === submissionId
+                  ? { ...submission, status: "accepted" as const }
+                  : submission,
+              ),
+            }
+          }),
+        })),
+
+      rejectSubmission: (contractId, submissionId) =>
+        set((state) => ({
+          contracts: state.contracts.map((contract) => {
+            if (contract.id !== contractId) return contract
+            return {
+              ...contract,
+              status: "active" as const,
+              submissions: contract.submissions.map((submission) =>
+                submission.id === submissionId
+                  ? { ...submission, status: "rejected" as const }
+                  : submission,
+              ),
             }
           }),
         })),
@@ -639,16 +695,18 @@ export const useContractsStore = create<ContractsState>()(
           }),
         })),
 
-      addMessage: (contractId, senderId, text) =>
+      addMessage: (contractId, senderId, text, senderName) =>
         set((state) => ({
           contracts: state.contracts.map((contract) => {
             if (contract.id !== contractId) return contract
-            const message = {
+            const message: Message = {
               id: nextMessageId(state.contracts),
               conversation_id: contract.conversation?.id ?? contractId,
               sender_id: senderId,
+              sender_name: senderName?.trim() || undefined,
               text,
               attachment: null,
+              created_at: new Date().toISOString(),
             }
             return {
               ...contract,

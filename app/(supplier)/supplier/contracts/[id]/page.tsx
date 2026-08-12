@@ -40,6 +40,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const userId = user?.userId ?? 0
   const useApi = isApiEnabled()
 
   const getContractLocal = useContractsStore((s) => s.getContract)
@@ -91,26 +92,25 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const messageCount = contract.conversation?.messages?.length ?? 0
   const fileCount = contract.files?.length ?? 0
 
-  const getSenderName = (senderId: number) => {
-    if (senderId === actorId) return "Вы"
-    if (senderId === contract.buyer_actor_id) return buyerName
-    return getCompany(senderId)?.title ?? "Участник"
-  }
-
   const handleSendMessage = (text: string) => {
     if (useApi) {
       sendMessageMutation.mutate({ contractId, text })
       return
     }
-    addMessageLocal(contractId, actorId, text)
+    addMessageLocal(contractId, userId, text, user?.name)
   }
 
-  const handleSubmitWork = (input: { note: string; fileNames: string[] }) => {
+  const handleSubmitWork = (input: {
+    note: string
+    fileNames: string[]
+    assets: { kind: "image" | "video" | "file" | "link"; name: string; url: string; file_type?: string | null }[]
+  }) => {
     if (useApi) {
       submitWorkMutation.mutate({
         contractId,
         note: input.note,
         fileNames: input.fileNames,
+        assets: input.assets,
       })
       return
     }
@@ -195,7 +195,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             )}
           </TabsTrigger>
           <TabsTrigger value="submission" className="gap-1.5">
-            <Upload size={14} /> Сдача работы
+            <Upload size={14} /> Demo
           </TabsTrigger>
         </TabsList>
 
@@ -220,8 +220,8 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
         <TabsContent value="messages">
           <ContractMessagesPanel
             contract={contract}
-            currentSenderId={actorId}
-            getSenderName={getSenderName}
+            currentUserId={userId}
+            counterpartName={buyerName}
             onSendMessage={handleSendMessage}
           />
         </TabsContent>

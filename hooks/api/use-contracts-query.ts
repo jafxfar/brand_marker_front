@@ -79,6 +79,24 @@ export const useApproveSubmissionMutation = () => {
     }) => contractsApi.approveSubmission(contractId, submissionId),
     onSuccess: (_d, { contractId }) => {
       qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+      qc.invalidateQueries({ queryKey: contractKeys.list() })
+    },
+  })
+}
+
+export const useRejectSubmissionMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      contractId,
+      submissionId,
+    }: {
+      contractId: number
+      submissionId: number
+    }) => contractsApi.rejectSubmission(contractId, submissionId),
+    onSuccess: (_d, { contractId }) => {
+      qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+      qc.invalidateQueries({ queryKey: contractKeys.list() })
     },
   })
 }
@@ -114,18 +132,37 @@ export const useSupplierSubmitWorkMutation = () => {
       contractId,
       note,
       fileNames,
+      assets,
     }: {
       contractId: number
       note: string
       fileNames: string[]
+      assets: {
+        kind: string
+        name: string
+        url: string
+        file_type?: string | null
+      }[]
     }) =>
       supplierContractsApi.submitWork(contractId, {
         note,
         file_names: fileNames,
+        assets,
       }),
     onSuccess: (_d, { contractId }) => {
       qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
+    },
+  })
+}
+
+export const useSupplierUploadContractFileMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ contractId, file }: { contractId: number; file: File }) =>
+      supplierContractsApi.uploadFile(contractId, file),
+    onSuccess: (_d, { contractId }) => {
+      qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
     },
   })
 }

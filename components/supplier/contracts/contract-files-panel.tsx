@@ -18,7 +18,10 @@ export const ContractFilesPanel = ({ files }: ContractFilesPanelProps) => (
           <li key={file.id}>
             <button
               type="button"
-              onClick={() => {}}
+              onClick={() => {
+                if (!file.file_url || file.file_url === "#") return
+                window.open(file.file_url, "_blank", "noopener,noreferrer")
+              }}
               className="w-full flex items-center gap-3 rounded-xl border border-border p-3 hover:bg-secondary/50 transition-colors text-left"
               aria-label={`Скачать ${file.file_name}`}
             >
