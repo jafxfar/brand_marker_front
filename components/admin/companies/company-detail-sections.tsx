@@ -18,7 +18,7 @@ import type {
   AdminCompanyDetail,
 } from "@/lib/api/admin"
 
-const formatMoney = (value: number, currency = "RUB") =>
+const formatMoney = (value: number, currency = "TJS") =>
   new Intl.NumberFormat("ru-RU", {
     style: "currency",
     currency,
@@ -110,7 +110,7 @@ const CatalogList = ({ items }: { items: AdminCompanyCatalogItem[] }) => {
               <div className="flex items-center gap-3 sm:text-right">
                 <Badge variant="outline">{item.status}</Badge>
                 <span className="text-sm font-bold">
-                  {item.price ? formatMoney(item.price, item.currency || "RUB") : "Цена не указана"}
+                  {item.price ? formatMoney(item.price, item.currency || "TJS") : "Цена не указана"}
                 </span>
               </div>
             </div>

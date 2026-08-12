@@ -1,4 +1,4 @@
-export const CURRENCIES = ["RUB", "USD", "EUR", "KZT", "CNY"] as const
+export const CURRENCIES = ["TJS", "USD", "EUR", "KZT", "CNY"] as const
 
 export type Currency = (typeof CURRENCIES)[number]
 

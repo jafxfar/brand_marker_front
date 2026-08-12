@@ -12,6 +12,7 @@ import { isApiEnabled } from "@/lib/api/config"
 import {
   useApproveSubmissionMutation,
   useContractQuery,
+  useMarkMessagesReadMutation,
   useOpenDisputeMutation,
   useRejectSubmissionMutation,
   useSendMessageMutation,
@@ -73,6 +74,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const { data: paymentHistoryApi = [] } = usePaymentHistoryQuery(hydrated && useApi)
   const { data: buyerReviews = [] } = useBuyerReviewsQuery(hydrated && useApi)
   const sendMessageMutation = useSendMessageMutation()
+  const markMessagesReadMutation = useMarkMessagesReadMutation("buyer")
   const openDisputeMutation = useOpenDisputeMutation()
   const fundAndConfirmMutation = useFundAndConfirmMilestoneMutation()
   const approveMilestoneMutation = useApproveMilestoneMutation()
@@ -322,6 +324,9 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
             currentUserId={userId}
             counterpartName={supplierName}
             onSendMessage={handleSendMessage}
+            onMarkRead={(id) => {
+              if (useApi) markMessagesReadMutation.mutate(id)
+            }}
           />
         </TabsContent>
 

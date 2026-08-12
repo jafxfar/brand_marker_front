@@ -72,7 +72,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
           onChange={(e) => onChange({ ...values, currency: e.target.value })}
           className={inputClass("currency")}
         >
-          <option value="RUB">RUB</option>
+          <option value="TJS">TJS</option>
           <option value="USD">USD</option>
           <option value="EUR">EUR</option>
         </select>

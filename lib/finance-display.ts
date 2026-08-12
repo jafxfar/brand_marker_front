@@ -109,7 +109,7 @@ export const getSupplierBalances = (
   actorId: number,
   contracts: ContractWithRelations[],
   withdrawals: Withdrawal[],
-  currency: Currency = "RUB",
+  currency: Currency = "TJS",
 ): SupplierBalanceSummary => {
   const actorWithdrawals = withdrawals.filter((w) => w.actor_id === actorId)
   const revenue = getRevenueFromContracts(contracts, actorId)

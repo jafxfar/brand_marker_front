@@ -1,48 +1,73 @@
 "use client"
 
 import Link from "next/link"
-import { Users, FileText, ChevronRight } from "lucide-react"
+import { Users, ChevronRight } from "lucide-react"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
-import { useSupplierCustomersQuery } from "@/hooks/api/use-supplier-orders-query"
-import { useOrdersStore } from "@/lib/store/orders-store"
+import { useAuthStore } from "@/lib/store/auth-store"
+import { useContractsStore } from "@/lib/store/contracts-store"
+import { useCompaniesStore } from "@/lib/store/companies-store"
+import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
+import { getActorId } from "@/lib/auth-display"
 import { formatPrice } from "@/lib/format"
-import type { Order } from "@/types"
+import type { ContractWithRelations } from "@/types"
 
 interface CustomerGroup {
-  id: string
+  id: number
   name: string
-  city?: string
-  orders: Order[]
-  totalBudget: number
+  contractCount: number
+  totalAmount: number
+  latestContractId: number
+}
+
+const groupCustomers = (
+  contracts: ContractWithRelations[],
+  getName: (buyerActorId: number) => string,
+): CustomerGroup[] => {
+  const groups = new Map<number, CustomerGroup>()
+
+  for (const contract of contracts) {
+    const existing = groups.get(contract.buyer_actor_id)
+    if (existing) {
+      existing.contractCount += 1
+      existing.totalAmount += contract.agreed_amount
+      if (contract.id > existing.latestContractId) {
+        existing.latestContractId = contract.id
+      }
+      continue
+    }
+
+    groups.set(contract.buyer_actor_id, {
+      id: contract.buyer_actor_id,
+      name: getName(contract.buyer_actor_id),
+      contractCount: 1,
+      totalAmount: contract.agreed_amount,
+      latestContractId: contract.id,
+    })
+  }
+
+  return Array.from(groups.values()).sort((a, b) => b.totalAmount - a.totalAmount)
 }
 
 export default function SupplierCustomersPage() {
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
-  const orders = useOrdersStore((s) => s.orders)
-  const { data: apiCustomers, isLoading } = useSupplierCustomersQuery(hydrated && useApi)
+  const user = useAuthStore((s) => s.user)
+  const actorId = getActorId(user)
+  const getContractsForSupplier = useContractsStore((s) => s.getContractsForSupplier)
+  const getCompany = useCompaniesStore((s) => s.getCompany)
+  const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi)
 
-  const localGroups = new Map<string, CustomerGroup>()
-  if (!useApi) {
-    for (const o of orders) {
-      const id = o.customerId ?? "unknown"
-      const existing = localGroups.get(id)
-      if (existing) {
-        existing.orders.push(o)
-        existing.totalBudget += o.budget
-      } else {
-        localGroups.set(id, {
-          id,
-          name: o.customerName ?? "Заказчик",
-          city: o.customerCity,
-          orders: [o],
-          totalBudget: o.budget,
-        })
-      }
-    }
-  }
-  const localCustomers = Array.from(localGroups.values())
+  const getBuyerName = (buyerActorId: number): string =>
+    getCompany(buyerActorId)?.title ?? `Заказчик #${buyerActorId}`
+
+  const contracts: ContractWithRelations[] = useApi
+    ? ((apiContracts ?? []) as ContractWithRelations[])
+    : hydrated
+      ? getContractsForSupplier(actorId)
+      : []
+
+  const customers = groupCustomers(contracts, getBuyerName)
 
   if (!hydrated || (useApi && isLoading)) {
     return (
@@ -53,16 +78,6 @@ export default function SupplierCustomersPage() {
     )
   }
 
-  const customers = useApi
-    ? (apiCustomers ?? []).map((c) => ({
-        id: String(c.buyer_actor_id),
-        name: c.buyer_name,
-        orders: [] as Order[],
-        totalBudget: c.total_budget,
-        orderCount: c.order_count,
-      }))
-    : localCustomers.map((c) => ({ ...c, orderCount: c.orders.length }))
-
   return (
     <div className="max-w-[900px] mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -71,7 +86,7 @@ export default function SupplierCustomersPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Заказчики</h1>
-          <p className="text-sm text-muted-foreground">Клиенты по завершённым и активным сделкам</p>
+          <p className="text-sm text-muted-foreground">Клиенты по договорам и сделкам</p>
         </div>
       </div>
 
@@ -80,7 +95,7 @@ export default function SupplierCustomersPage() {
           <Users size={32} className="text-primary mx-auto mb-3" />
           <p className="text-sm font-semibold text-foreground">Заказчиков пока нет</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Заказчики появятся после принятых заказов
+            Заказчики появятся после принятых предложений и договоров
           </p>
         </div>
       ) : (
@@ -96,20 +111,18 @@ export default function SupplierCustomersPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">{customer.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {customer.orderCount} заказов · {formatPrice(customer.totalBudget)}
+                  {customer.contractCount}{" "}
+                  {customer.contractCount === 1 ? "договор" : "договоров"} ·{" "}
+                  {formatPrice(customer.totalAmount)}
                 </p>
               </div>
-              {!useApi && customer.orders[0] && (
-                <Link
-                  href={`/supplier/orders/${customer.orders[0].id}`}
-                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                >
-                  Сделки <ChevronRight size={14} />
-                </Link>
-              )}
-              {useApi && (
-                <FileText size={18} className="text-muted-foreground" />
-              )}
+              <Link
+                href={`/supplier/contracts/${customer.latestContractId}`}
+                className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                aria-label={`Открыть договоры с ${customer.name}`}
+              >
+                Сделки <ChevronRight size={14} />
+              </Link>
             </div>
           ))}
         </div>

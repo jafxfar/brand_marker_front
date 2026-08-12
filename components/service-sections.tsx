@@ -22,7 +22,7 @@ import {
   mergeByKey,
   mapCategoryTreeToMarketplace,
   mapCatalogItemToService,
-  mapCompanyToPerformer,
+  mapPublicSupplierToPerformer,
   mapRfqToRequest,
 } from "@/lib/marketplace-hybrid"
 import { getIcon } from "@/lib/icon-map"
@@ -116,7 +116,7 @@ export function ProviderShowcase() {
   const mockPerformers = getTopPerformers(6)
   const topProviders = useMemo(() => {
     if (!useApi || !apiSuppliers?.length) return mockPerformers
-    const apiPerformers = apiSuppliers.map(mapCompanyToPerformer)
+    const apiPerformers = apiSuppliers.map(mapPublicSupplierToPerformer)
     return mergeByKey(mockPerformers, apiPerformers, "id").slice(0, 6)
   }, [useApi, apiSuppliers, mockPerformers])
 

@@ -7,6 +7,9 @@ export const publicKeys = {
   categories: () => [...publicKeys.all, "categories"] as const,
   suppliers: (q?: string, category?: string) =>
     [...publicKeys.all, "suppliers", q ?? "", category ?? ""] as const,
+  supplier: (id: number) => [...publicKeys.all, "supplier", id] as const,
+  supplierCatalog: (id: number) => [...publicKeys.all, "supplier-catalog", id] as const,
+  supplierReviews: (id: number) => [...publicKeys.all, "supplier-reviews", id] as const,
   company: (id: number) => [...publicKeys.all, "company", id] as const,
   companyCatalog: (id: number) => [...publicKeys.all, "company-catalog", id] as const,
   companyReviews: (id: number) => [...publicKeys.all, "company-reviews", id] as const,
@@ -33,6 +36,27 @@ export const usePublicSuppliersQuery = (
     queryKey: publicKeys.suppliers(q, category),
     queryFn: () => publicApi.suppliers(q, category),
     enabled: enabled && isApiEnabled(),
+  })
+
+export const usePublicSupplierQuery = (id: number, enabled = true) =>
+  useQuery({
+    queryKey: publicKeys.supplier(id),
+    queryFn: () => publicApi.supplier(id),
+    enabled: enabled && isApiEnabled() && id > 0,
+  })
+
+export const usePublicSupplierCatalogQuery = (id: number, enabled = true) =>
+  useQuery({
+    queryKey: publicKeys.supplierCatalog(id),
+    queryFn: () => publicApi.supplierCatalog(id),
+    enabled: enabled && isApiEnabled() && id > 0,
+  })
+
+export const usePublicSupplierReviewsQuery = (id: number, enabled = true) =>
+  useQuery({
+    queryKey: publicKeys.supplierReviews(id),
+    queryFn: () => publicApi.supplierReviews(id),
+    enabled: enabled && isApiEnabled() && id > 0,
   })
 
 export const usePublicCompanyQuery = (id: number, enabled = true) =>

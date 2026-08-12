@@ -10,6 +10,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import {
+  useMarkMessagesReadMutation,
   useSupplierContractQuery,
   useSupplierOpenDisputeMutation,
   useSupplierSendMessageMutation,
@@ -55,6 +56,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
     hydrated && useApi,
   )
   const sendMessageMutation = useSupplierSendMessageMutation()
+  const markMessagesReadMutation = useMarkMessagesReadMutation("supplier")
   const openDisputeMutation = useSupplierOpenDisputeMutation()
   const submitWorkMutation = useSupplierSubmitWorkMutation()
 
@@ -223,6 +225,9 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             currentUserId={userId}
             counterpartName={buyerName}
             onSendMessage={handleSendMessage}
+            onMarkRead={(id) => {
+              if (useApi) markMessagesReadMutation.mutate(id)
+            }}
           />
         </TabsContent>
 

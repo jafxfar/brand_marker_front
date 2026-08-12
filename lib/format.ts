@@ -1,9 +1,9 @@
 import type { Currency } from "@/types"
 
 export const formatPrice = (value: number): string =>
-  formatCurrency(value, "RUB")
+  formatCurrency(value, "TJS")
 
-export const formatCurrency = (value: number, currency: Currency | string = "RUB"): string =>
+export const formatCurrency = (value: number, currency: Currency | string = "TJS"): string =>
   new Intl.NumberFormat("ru-RU", {
     style: "currency",
     currency,

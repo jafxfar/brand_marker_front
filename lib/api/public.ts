@@ -1,6 +1,9 @@
-import type { CatalogItemWithRelations, CompanyWithRelations } from "@/types"
-import type { MarketplaceOrder } from "@/types/order"
-import type { RfqWithRelations } from "@/types"
+import type {
+  CatalogItemWithRelations,
+  CompanyWithRelations,
+  PublicSupplier,
+  RfqWithRelations,
+} from "@/types"
 import { apiFetch } from "./client"
 
 export type CategoryTree = {
@@ -18,10 +21,19 @@ export const publicApi = {
     if (q) params.set("q", q)
     if (category) params.set("category", category)
     const qs = params.toString()
-    return apiFetch<CompanyWithRelations[]>(
+    return apiFetch<PublicSupplier[]>(
       `/public/suppliers${qs ? `?${qs}` : ""}`,
     )
   },
+
+  supplier: (actorId: number) =>
+    apiFetch<PublicSupplier>(`/public/suppliers/${actorId}`),
+
+  supplierCatalog: (actorId: number) =>
+    apiFetch<CatalogItemWithRelations[]>(`/public/suppliers/${actorId}/catalog`),
+
+  supplierReviews: (actorId: number) =>
+    apiFetch<import("@/types").Review[]>(`/public/suppliers/${actorId}/reviews`),
 
   company: (id: number) => apiFetch<CompanyWithRelations>(`/public/companies/${id}`),
 

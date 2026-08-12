@@ -13,11 +13,11 @@ const LANGUAGE_OPTIONS = [
 ]
 
 const REVENUE_OPTIONS = [
-  "до 10M RUB",
-  "10M–50M RUB",
-  "50M–100M RUB",
-  "100M–500M RUB",
-  "500M+ RUB",
+  "до 10M TJS",
+  "10M–50M TJS",
+  "50M–100M TJS",
+  "100M–500M TJS",
+  "500M+ TJS",
 ]
 
 type ProfileStepProps = {

@@ -20,7 +20,7 @@ type CatalogItemFormProps = {
 
 const defaultPricing: PricingFieldValues = {
   pricing_type: "fixed",
-  currency: "RUB",
+  currency: "TJS",
   fixed_price: "",
   hourly_rate: "",
   monthly_rate: "",

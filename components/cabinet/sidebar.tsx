@@ -31,7 +31,6 @@ const navSections: NavSection[] = [
       { href: "/customer", label: "Дашборд", Icon: LayoutDashboard },
       { href: "/customer/rfqs", label: "Мои заявки", Icon: FileText },
       { href: "/customer/contracts", label: "Договоры", Icon: FileCheck },
-      { href: "/customer/orders", label: "Заказы", Icon: Briefcase },
     ],
   },
   {

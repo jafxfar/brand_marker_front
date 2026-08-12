@@ -172,3 +172,20 @@ export const emptyCompanyWizardInput = (): CompanyWizardInput => ({
   team: [],
   actor_types: ["buyer"],
 })
+
+export type PublicSupplier = {
+  actor_id: number
+  kind: "individual" | "company"
+  display_name: string
+  company_id: number | null
+  city: string | null
+  country: string | null
+  description: string | null
+  website: string | null
+  rating: number
+  verification_status: VerificationStatus
+  reviews_count: number
+  industries: string[]
+  active_catalog_count: number
+  trust_level: string
+}

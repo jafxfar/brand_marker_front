@@ -62,7 +62,7 @@ const defaultValues = (
       budget_type: "fixed",
       budget_from: "",
       budget_to: "",
-      currency: "RUB",
+      currency: "TJS",
       deadline: "",
       visibility: invitedSupplierId ? "invited_only" : "public",
       project_duration: "",
@@ -410,7 +410,7 @@ export const RfqForm = ({
                   onChange={(e) => setField("currency", e.target.value as FormState["currency"])}
                   className={cn(inputClass("currency"), "appearance-none")}
                 >
-                  {(["RUB", "USD", "EUR", "KZT", "CNY"] as const).map((c) => (
+                  {(["TJS", "USD", "EUR", "KZT", "CNY"] as const).map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>

@@ -1,7 +1,13 @@
-import type { CatalogItemWithRelations, Category, CompanyWithRelations } from "@/types"
+import type {
+  CatalogItemWithRelations,
+  Category,
+  CompanyWithRelations,
+  PublicSupplier,
+} from "@/types"
 import { DEMO_BUYER_ACTOR_IDS } from "@/lib/mock/companies"
 
 export const isSupplierCompany = (company: CompanyWithRelations): boolean => {
+  if (company.actor_types?.includes("supplier")) return true
   if (company.actor_type) return company.actor_type === "supplier"
   return !DEMO_BUYER_ACTOR_IDS.includes(
     company.id as (typeof DEMO_BUYER_ACTOR_IDS)[number],
@@ -43,6 +49,43 @@ export const formatSupplierCatalogSummary = (
   }
   return parts.join(" · ") || "Поставщик на платформе"
 }
+
+export const formatPublicSupplierSummary = (supplier: PublicSupplier): string => {
+  const parts: string[] = []
+  if (supplier.active_catalog_count > 0) {
+    parts.push(`${supplier.active_catalog_count} поз. в каталоге`)
+  }
+  if (supplier.industries.length > 0) {
+    parts.push(supplier.industries.slice(0, 2).join(", "))
+  }
+  if (parts.length === 0 && supplier.description) {
+    return supplier.description.slice(0, 80)
+  }
+  if (parts.length === 0 && supplier.kind === "individual") {
+    return "Индивидуальный поставщик"
+  }
+  return parts.join(" · ") || "Поставщик на платформе"
+}
+
+export const toPublicSupplierFromCompany = (
+  company: CompanyWithRelations,
+  activeCatalogCount = 0,
+): PublicSupplier => ({
+  actor_id: company.id,
+  kind: "company",
+  display_name: company.title,
+  company_id: company.id,
+  city: company.city,
+  country: company.country,
+  description: company.description,
+  website: company.website,
+  rating: company.rating,
+  verification_status: company.verification_status,
+  reviews_count: company.reviews?.length ?? 0,
+  industries: company.profile?.industries ?? [],
+  active_catalog_count: activeCatalogCount,
+  trust_level: "basic",
+})
 
 export const matchesSupplierSearch = (
   company: CompanyWithRelations,

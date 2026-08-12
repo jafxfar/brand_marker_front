@@ -707,6 +707,7 @@ export const useContractsStore = create<ContractsState>()(
               text,
               attachment: null,
               created_at: new Date().toISOString(),
+              status: "sent",
             }
             return {
               ...contract,

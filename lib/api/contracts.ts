@@ -1,4 +1,4 @@
-import type { ContractWithRelations } from "@/types"
+import type { ContractWithRelations, Message } from "@/types"
 import { apiFetch } from "./client"
 
 const PREFIX = "/buyer/contracts"
@@ -9,10 +9,21 @@ export const contractsApi = {
   get: (id: number) => apiFetch<ContractWithRelations>(`${PREFIX}/${id}`),
 
   sendMessage: (id: number, text: string) =>
-    apiFetch<unknown>(`${PREFIX}/${id}/messages`, {
+    apiFetch<ContractWithRelations>(`${PREFIX}/${id}/messages`, {
       method: "POST",
       body: JSON.stringify({ text }),
     }),
+
+  markMessageDelivered: (contractId: number, messageId: number) =>
+    apiFetch<Message>(`${PREFIX}/${contractId}/messages/${messageId}/delivered`, {
+      method: "POST",
+    }),
+
+  markMessagesRead: (contractId: number) =>
+    apiFetch<{ message_ids: number[]; messages?: Message[] }>(
+      `${PREFIX}/${contractId}/messages/read`,
+      { method: "POST" },
+    ),
 
   uploadFile: (id: number, file: File) => {
     const form = new FormData()
@@ -35,8 +46,8 @@ export const contractsApi = {
       { method: "POST" },
     ),
 
-  openDispute: (contractId: number, reason: string) =>
-    apiFetch<unknown>(`${PREFIX}/${contractId}/dispute`, {
+  openDispute: (id: number, reason: string) =>
+    apiFetch<unknown>(`${PREFIX}/${id}/dispute`, {
       method: "POST",
       body: JSON.stringify({ reason }),
     }),

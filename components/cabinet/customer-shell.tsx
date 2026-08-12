@@ -4,9 +4,11 @@ import { Loader2 } from "lucide-react"
 import CustomerSidebar from "@/components/cabinet/sidebar"
 import CustomerTopbar from "@/components/cabinet/topbar"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
+import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
 
 export default function CustomerShell({ children }: { children: React.ReactNode }) {
   const gate = useCabinetGate("customer")
+  useNotificationsSocket("buyer", gate === "allowed")
 
   if (gate !== "allowed") {
     return (

@@ -82,7 +82,7 @@ const formatNumber = (value: number) =>
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("ru-RU", {
     style: "currency",
-    currency: "RUB",
+    currency: "TJS",
     maximumFractionDigits: 0,
   }).format(value)
 

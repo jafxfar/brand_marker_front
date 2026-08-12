@@ -23,7 +23,7 @@ const formatDate = (value: string) =>
 const formatMoney = (value: number, currency: string) =>
   new Intl.NumberFormat("ru-RU", {
     style: "currency",
-    currency: currency || "RUB",
+    currency: currency || "TJS",
     maximumFractionDigits: 0,
   }).format(value)
 

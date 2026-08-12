@@ -36,6 +36,8 @@ export type MessageAttachment = {
   file_type: string
 }
 
+export type MessageDeliveryStatus = "sent" | "delivered" | "viewed"
+
 export type Message = {
   id: number
   conversation_id: number
@@ -44,6 +46,9 @@ export type Message = {
   text: string
   attachment: MessageAttachment | null
   created_at?: string
+  status?: MessageDeliveryStatus
+  delivered_at?: string | null
+  viewed_at?: string | null
 }
 
 export type Conversation = {

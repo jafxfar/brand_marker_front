@@ -28,7 +28,6 @@ const navSections: NavSection[] = [
       { href: "/supplier/rfqs", label: "Заявки заказчиков", Icon: Inbox },
       { href: "/supplier/proposals", label: "Мои отклики", Icon: Send },
       { href: "/supplier/contracts", label: "Договоры", Icon: FileCheck },
-      { href: "/supplier/orders", label: "Заказы", Icon: Briefcase },
     ],
   },
   {

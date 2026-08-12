@@ -1,15 +1,16 @@
 "use client"
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react"
-import { MessageSquare, Send } from "lucide-react"
+import { Check, CheckCheck, MessageSquare, Send } from "lucide-react"
 import { formatIsoDate } from "@/lib/format"
-import type { ContractWithRelations } from "@/types"
+import type { ContractWithRelations, MessageDeliveryStatus } from "@/types"
 
 type ContractMessagesPanelProps = {
   contract: ContractWithRelations
   currentUserId: number
   counterpartName: string
   onSendMessage: (text: string) => void
+  onMarkRead?: (contractId: number) => void
 }
 
 const formatMessageTime = (iso?: string) => {
@@ -26,21 +27,90 @@ const formatMessageTime = (iso?: string) => {
   }
 }
 
+const statusLabel: Record<MessageDeliveryStatus, string> = {
+  sent: "Отправлено",
+  delivered: "Доставлено",
+  viewed: "Просмотрено",
+}
+
+const MessageStatusTicks = ({
+  status,
+  isOwn,
+}: {
+  status?: MessageDeliveryStatus
+  isOwn: boolean
+}) => {
+  if (!isOwn) return null
+  const value = status ?? "sent"
+  if (value === "viewed") {
+    return (
+      <span
+        className="inline-flex items-center text-sky-200"
+        title={statusLabel.viewed}
+        aria-label={statusLabel.viewed}
+      >
+        <CheckCheck size={14} />
+      </span>
+    )
+  }
+  if (value === "delivered") {
+    return (
+      <span
+        className="inline-flex items-center text-primary-foreground/85"
+        title={statusLabel.delivered}
+        aria-label={statusLabel.delivered}
+      >
+        <CheckCheck size={14} />
+      </span>
+    )
+  }
+  return (
+    <span
+      className="inline-flex items-center text-primary-foreground/70"
+      title={statusLabel.sent}
+      aria-label={statusLabel.sent}
+    >
+      <Check size={14} />
+    </span>
+  )
+}
+
 export const ContractMessagesPanel = ({
   contract,
   currentUserId,
   counterpartName,
   onSendMessage,
+  onMarkRead,
 }: ContractMessagesPanelProps) => {
   const [text, setText] = useState("")
   const listRef = useRef<HTMLDivElement>(null)
   const messages = contract.conversation?.messages ?? []
+  const markedReadRef = useRef<number | null>(null)
 
   useEffect(() => {
     const el = listRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
-  }, [messages.length])
+  }, [messages.length, messages[messages.length - 1]?.status])
+
+  useEffect(() => {
+    if (!onMarkRead) return
+    const unreadIds = messages
+      .filter(
+        (message) =>
+          message.sender_id !== currentUserId && message.status !== "viewed",
+      )
+      .map((message) => message.id)
+      .join(",")
+    if (!unreadIds) return
+    if (markedReadRef.current === `${contract.id}:${unreadIds}`) return
+    markedReadRef.current = `${contract.id}:${unreadIds}`
+    onMarkRead(contract.id)
+  }, [contract.id, currentUserId, messages, onMarkRead])
+
+  useEffect(() => {
+    markedReadRef.current = null
+  }, [contract.id])
 
   const handleSubmit = () => {
     const trimmed = text.trim()
@@ -102,6 +172,11 @@ export const ContractMessagesPanel = ({
                   }`}
                 >
                   {message.text}
+                  {isOwn && (
+                    <span className="mt-1 flex justify-end">
+                      <MessageStatusTicks status={message.status} isOwn={isOwn} />
+                    </span>
+                  )}
                 </div>
               </div>
             )

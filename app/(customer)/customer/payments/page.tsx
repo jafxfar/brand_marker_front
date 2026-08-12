@@ -100,7 +100,7 @@ export default function BuyerPaymentsPage() {
     0,
   )
   const pendingFunding = effectiveEscrowQueue.reduce((sum, r) => sum + r.amount, 0)
-  const currency = effectiveContracts[0]?.currency ?? "RUB"
+  const currency = effectiveContracts[0]?.currency ?? "TJS"
 
   const getContractTitle = (contractId: number | null) => {
     if (!contractId) return "—"

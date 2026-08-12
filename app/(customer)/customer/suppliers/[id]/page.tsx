@@ -12,20 +12,25 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import {
-  usePublicCompanyQuery,
-  usePublicCompanyCatalogQuery,
-  usePublicCompanyReviewsQuery,
+  usePublicSupplierCatalogQuery,
+  usePublicSupplierQuery,
+  usePublicSupplierReviewsQuery,
 } from "@/hooks/api/use-public-query"
 import {
   useInviteSuppliersMutation,
   useRfqsQuery,
 } from "@/hooks/api/use-rfqs-query"
-import { getSupplierCategories, isSupplierCompany } from "@/lib/supplier-directory"
+import {
+  getActiveCatalogItemsCount,
+  getSupplierCategories,
+  isSupplierCompany,
+  toPublicSupplierFromCompany,
+} from "@/lib/supplier-directory"
 import { SupplierProfileHeader } from "@/components/cabinet/suppliers/supplier-profile-header"
 import { SupplierCatalogGrid } from "@/components/cabinet/suppliers/supplier-catalog-grid"
 import { SupplierReviewsList } from "@/components/cabinet/suppliers/supplier-reviews-list"
 import { InviteRfqDialog } from "@/components/cabinet/suppliers/invite-rfq-dialog"
-import type { CompanyWithRelations } from "@/types"
+import type { PublicSupplier } from "@/types"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -33,7 +38,7 @@ type PageProps = {
 
 export default function SupplierProfilePage({ params }: PageProps) {
   const { id } = use(params)
-  const companyId = Number(id)
+  const supplierActorId = Number(id)
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
   const actorId = getActorId(useAuthStore((s) => s.user))
@@ -44,32 +49,40 @@ export default function SupplierProfilePage({ params }: PageProps) {
   const notify = useNotificationsStore((s) => s.add)
   const [inviteOpen, setInviteOpen] = useState(false)
 
-  const { data: apiCompany, isLoading: companyLoading } = usePublicCompanyQuery(
-    companyId,
+  const { data: apiSupplier, isLoading: supplierLoading } = usePublicSupplierQuery(
+    supplierActorId,
     hydrated && useApi,
   )
-  const { data: apiCatalog = [] } = usePublicCompanyCatalogQuery(
-    companyId,
+  const { data: apiCatalog = [] } = usePublicSupplierCatalogQuery(
+    supplierActorId,
     hydrated && useApi,
   )
-  const { data: apiReviews = [] } = usePublicCompanyReviewsQuery(
-    companyId,
+  const { data: apiReviews = [] } = usePublicSupplierReviewsQuery(
+    supplierActorId,
     hydrated && useApi,
   )
   const { data: apiRfqs = [] } = useRfqsQuery("published", hydrated && useApi)
   const inviteMutation = useInviteSuppliersMutation()
 
-  const localCompany = hydrated ? getCompany(companyId) : undefined
-  const company: CompanyWithRelations | undefined = useApi ? apiCompany : localCompany
+  const localCompany = hydrated ? getCompany(supplierActorId) : undefined
+  const localSupplier: PublicSupplier | undefined =
+    localCompany && isSupplierCompany(localCompany)
+      ? toPublicSupplierFromCompany(
+          localCompany,
+          getActiveCatalogItemsCount(getItemsBySupplier(localCompany.id)),
+        )
+      : undefined
+
+  const supplier: PublicSupplier | undefined = useApi ? apiSupplier : localSupplier
 
   const catalogItems = useApi
     ? apiCatalog.filter((i) => i.status === "active")
-    : hydrated
-      ? getItemsBySupplier(companyId).filter((i) => i.status === "active")
+    : hydrated && localCompany
+      ? getItemsBySupplier(localCompany.id).filter((i) => i.status === "active")
       : []
 
   const categories = useApi
-    ? (company?.profile?.industries.map((name, i) => ({
+    ? (supplier?.industries.map((name, i) => ({
         id: i,
         parent_id: null,
         name,
@@ -87,9 +100,9 @@ export default function SupplierProfilePage({ params }: PageProps) {
       ? getInvitableRfqsForBuyer(actorId)
       : []
 
-  const reviews = useApi ? apiReviews : (company?.reviews ?? [])
+  const reviews = useApi ? apiReviews : (localCompany?.reviews ?? [])
 
-  if (!hydrated || (useApi && companyLoading)) {
+  if (!hydrated || (useApi && supplierLoading)) {
     return (
       <div className="max-w-[1000px] mx-auto animate-pulse space-y-4">
         <div className="h-8 bg-secondary rounded-xl w-1/4" />
@@ -98,7 +111,7 @@ export default function SupplierProfilePage({ params }: PageProps) {
     )
   }
 
-  if (!company || (!useApi && !isSupplierCompany(company))) {
+  if (!supplier) {
     return (
       <div className="max-w-[1000px] mx-auto text-center py-16">
         <p className="text-lg font-bold text-foreground">Поставщик не найден</p>
@@ -116,27 +129,27 @@ export default function SupplierProfilePage({ params }: PageProps) {
     notify({
       type: "order",
       title: "Запрос отправлен",
-      body: `Поставщик «${company.title}» получит уведомление о вашем интересе.`,
-      href: `/customer/suppliers/${company.id}`,
+      body: `Поставщик «${supplier.display_name}» получит уведомление о вашем интересе.`,
+      href: `/customer/suppliers/${supplier.actor_id}`,
     })
   }
 
   const handleInviteExisting = (rfqId: string) => {
     if (useApi) {
-      inviteMutation.mutate({ id: rfqId, supplierIds: [companyId] })
+      inviteMutation.mutate({ id: rfqId, supplierIds: [supplier.actor_id] })
       notify({
         type: "order",
         title: "Приглашение отправлено",
-        body: `Поставщик «${company.title}» приглашён к участию в заявке.`,
+        body: `Поставщик «${supplier.display_name}» приглашён к участию в заявке.`,
         href: `/customer/rfqs/${rfqId}`,
       })
       return
     }
-    inviteSupplierToRfq(rfqId, companyId)
+    inviteSupplierToRfq(rfqId, supplier.actor_id)
     notify({
       type: "order",
       title: "Приглашение отправлено",
-      body: `Поставщик «${company.title}» приглашён к участию в заявке.`,
+      body: `Поставщик «${supplier.display_name}» приглашён к участию в заявке.`,
       href: `/customer/rfqs/${rfqId}`,
     })
   }
@@ -151,7 +164,7 @@ export default function SupplierProfilePage({ params }: PageProps) {
       </Link>
 
       <SupplierProfileHeader
-        company={company}
+        supplier={supplier}
         categories={categories}
         onContact={handleContact}
         onInvite={() => setInviteOpen(true)}
@@ -169,8 +182,8 @@ export default function SupplierProfilePage({ params }: PageProps) {
       <InviteRfqDialog
         open={inviteOpen}
         onOpenChange={setInviteOpen}
-        supplierId={companyId}
-        supplierName={company.title}
+        supplierId={supplier.actor_id}
+        supplierName={supplier.display_name}
         invitableRfqs={invitableRfqs}
         onInviteExisting={handleInviteExisting}
       />

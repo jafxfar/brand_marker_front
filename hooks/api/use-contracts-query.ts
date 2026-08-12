@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { contractsApi } from "@/lib/api/contracts"
 import { supplierContractsApi } from "@/lib/api/supplier/contracts"
 import { isApiEnabled } from "@/lib/api/config"
+import { replaceContractInCache, updateContractMessageStatusInCache } from "@/lib/contract-chat-cache"
+import type { ContractWithRelations } from "@/types"
 
 export const contractKeys = {
   all: ["contracts"] as const,
@@ -48,8 +50,8 @@ export const useSendMessageMutation = () => {
   return useMutation({
     mutationFn: ({ contractId, text }: { contractId: number; text: string }) =>
       contractsApi.sendMessage(contractId, text),
-    onSuccess: (_d, { contractId }) => {
-      qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+    onSuccess: (contract) => {
+      replaceContractInCache(qc, contract as ContractWithRelations)
       qc.invalidateQueries({ queryKey: contractKeys.list() })
     },
   })
@@ -60,9 +62,27 @@ export const useSupplierSendMessageMutation = () => {
   return useMutation({
     mutationFn: ({ contractId, text }: { contractId: number; text: string }) =>
       supplierContractsApi.sendMessage(contractId, text),
-    onSuccess: (_d, { contractId }) => {
-      qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+    onSuccess: (contract) => {
+      replaceContractInCache(qc, contract as ContractWithRelations)
       qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
+    },
+  })
+}
+
+export const useMarkMessagesReadMutation = (role: "buyer" | "supplier") => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (contractId: number) =>
+      role === "buyer"
+        ? contractsApi.markMessagesRead(contractId)
+        : supplierContractsApi.markMessagesRead(contractId),
+    onSuccess: (result, contractId) => {
+      if (result.messages?.length) {
+        updateContractMessageStatusInCache(qc, contractId, result.messages)
+      } else {
+        qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+        qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+      }
     },
   })
 }

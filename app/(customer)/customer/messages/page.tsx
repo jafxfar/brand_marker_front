@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { MessageSquare, ChevronRight } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -9,34 +9,16 @@ import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
-import { useContractsQuery } from "@/hooks/api/use-contracts-query"
+import {
+  useContractsQuery,
+  useMarkMessagesReadMutation,
+  useSendMessageMutation,
+} from "@/hooks/api/use-contracts-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
-import type { ContractWithRelations, Message } from "@/types"
-
-type ConversationItem = {
-  contract: ContractWithRelations
-  lastMessage: Message
-  senderName: string
-}
-
-const buildConversations = (
-  contracts: ContractWithRelations[],
-  currentUserId: number,
-  getSupplierName: (id: number) => string,
-): ConversationItem[] =>
-  contracts
-    .filter((c) => (c.conversation?.messages.length ?? 0) > 0)
-    .map((contract) => {
-      const messages = contract.conversation!.messages
-      const lastMessage = messages[messages.length - 1]!
-      const isOwn = lastMessage.sender_id === currentUserId
-      const senderName = isOwn
-        ? "Вы"
-        : (lastMessage.sender_name?.trim() ||
-            getSupplierName(contract.supplier_actor_id))
-      return { contract, lastMessage, senderName }
-    })
-    .sort((a, b) => b.lastMessage.id - a.lastMessage.id)
+import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
+import { ConversationsSidebar } from "@/components/contracts/conversations-sidebar"
+import { buildChatConversations } from "@/lib/chat-conversations"
+import type { ContractWithRelations } from "@/types"
 
 export default function BuyerMessagesPage() {
   const hydrated = useHydrated()
@@ -47,10 +29,13 @@ export default function BuyerMessagesPage() {
 
   const getContractsForBuyer = useContractsStore((s) => s.getContractsForBuyer)
   const markConversationRead = useContractsStore((s) => s.markConversationRead)
+  const addMessageLocal = useContractsStore((s) => s.addMessage)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   const { data: apiContracts, isLoading } = useContractsQuery(hydrated && useApi)
+  const sendMessageMutation = useSendMessageMutation()
+  const markMessagesReadMutation = useMarkMessagesReadMutation("buyer")
 
   const contracts = useApi
     ? ((apiContracts ?? []) as ContractWithRelations[])
@@ -66,7 +51,13 @@ export default function BuyerMessagesPage() {
     return getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
   }
 
-  const conversations = buildConversations(contracts, userId, getSupplierName)
+  const conversations = useMemo(
+    () =>
+      buildChatConversations(contracts, userId, (contract) =>
+        getSupplierName(contract.supplier_actor_id),
+      ),
+    [contracts, userId, useApi, resolveSupplierName],
+  )
   const selected = conversations.find((c) => c.contract.id === selectedId)
 
   const handleSelect = (contractId: number) => {
@@ -107,79 +98,45 @@ export default function BuyerMessagesPage() {
         </div>
       ) : (
         <div className="grid md:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[420px]">
-          <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
-            <div className="overflow-y-auto flex-1 divide-y divide-border">
-              {conversations.map(({ contract, lastMessage, senderName }) => (
-                <button
-                  key={contract.id}
-                  type="button"
-                  onClick={() => handleSelect(contract.id)}
-                  className={`w-full text-left p-4 hover:bg-secondary/50 transition-colors ${
-                    selectedId === contract.id ? "bg-secondary" : ""
-                  }`}
-                  aria-label={`Открыть переписку по контракту ${contract.title}`}
-                >
-                  <p className="text-sm font-bold text-foreground truncate">
-                    {contract.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                    {senderName}: {lastMessage.text}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
+          <ConversationsSidebar
+            conversations={conversations}
+            selectedId={selectedId}
+            onSelect={handleSelect}
+            searchPlaceholder="Поиск по названию, поставщику..."
+          />
 
-          <div className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+          <div className="min-h-0 flex flex-col gap-2">
             {selected ? (
               <>
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-bold text-foreground truncate">
-                    {selected.contract.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {getSupplierName(selected.contract.supplier_actor_id)}
-                  </p>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {selected.contract.conversation?.messages.map((msg) => {
-                    const isOwn = msg.sender_id === userId
-                    const name = isOwn
-                      ? "Вы"
-                      : (msg.sender_name?.trim() ||
-                          getSupplierName(selected.contract.supplier_actor_id))
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex flex-col max-w-[85%] ${isOwn ? "ml-auto items-end" : "items-start"}`}
-                      >
-                        <p className="text-[11px] font-semibold text-muted-foreground mb-1 px-1">
-                          {name}
-                        </p>
-                        <div
-                          className={`rounded-2xl px-3.5 py-2.5 text-sm whitespace-pre-wrap break-words ${
-                            isOwn
-                              ? "bg-primary text-primary-foreground rounded-br-md"
-                              : "bg-secondary text-foreground rounded-bl-md"
-                          }`}
-                        >
-                          {msg.text}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="px-4 py-3 border-t border-border flex items-center justify-between gap-3">
-                  <Link
-                    href={`/customer/contracts/${selected.contract.id}`}
-                    className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    Открыть контракт <ChevronRight size={14} />
-                  </Link>
-                </div>
+                <ContractMessagesPanel
+                  contract={selected.contract}
+                  currentUserId={userId}
+                  counterpartName={selected.counterpartName}
+                  onSendMessage={(text) => {
+                    if (useApi) {
+                      sendMessageMutation.mutate({
+                        contractId: selected.contract.id,
+                        text,
+                      })
+                      return
+                    }
+                    addMessageLocal(selected.contract.id, userId, text, user?.name)
+                  }}
+                  onMarkRead={(id) => {
+                    if (useApi) markMessagesReadMutation.mutate(id)
+                  }}
+                />
+                <Link
+                  href={`/customer/contracts/${selected.contract.id}`}
+                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 px-1"
+                >
+                  Открыть контракт <ChevronRight size={14} />
+                </Link>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground m-auto">Выберите диалог</p>
+              <div className="bg-card border border-border rounded-xl flex-1 flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">Выберите диалог</p>
+              </div>
             )}
           </div>
         </div>

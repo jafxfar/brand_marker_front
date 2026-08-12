@@ -62,7 +62,7 @@ export default function SupplierFinancePage() {
 
   const localBalances = hydrated
     ? getSupplierBalances(actorId, contracts, getWithdrawals(actorId))
-    : { available: 0, pending: 0, escrowLocked: 0, currency: "RUB" as Currency }
+    : { available: 0, pending: 0, escrowLocked: 0, currency: "TJS" as Currency }
 
   const balances = useApi && apiBalance
     ? {

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import {
   ShoppingCart, Minus, Plus, Trash2, Package, Briefcase,
   Truck, ShieldCheck,
@@ -13,14 +12,12 @@ import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { formatPrice } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
-import { useCreateBuyerOrderMutation } from "@/hooks/api/use-buyer-orders-query"
 import { getSupplier as getMockSupplier } from "@/lib/mock/suppliers"
 import PaymentDialog from "@/components/cabinet/payment-dialog"
 import { TermHint } from "@/components/ui/term-hint"
 import type { PaymentScheme } from "@/types"
 
 export default function CartPage() {
-  const router = useRouter()
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
   const items = useCartStore((s) => s.items)
@@ -28,48 +25,20 @@ export default function CartPage() {
   const remove = useCartStore((s) => s.remove)
   const clear = useCartStore((s) => s.clear)
   const notify = useNotificationsStore((s) => s.add)
-  const createOrderMutation = useCreateBuyerOrderMutation()
 
   const [payOpen, setPayOpen] = useState(false)
-  const [checkingOut, setCheckingOut] = useState(false)
 
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
   const count = items.reduce((sum, i) => sum + i.qty, 0)
 
-  const handleCheckout = async (scheme: PaymentScheme) => {
-    if (useApi) {
-      setCheckingOut(true)
-      try {
-        for (const item of items) {
-          await createOrderMutation.mutateAsync({
-            kind: item.kind,
-            title: item.title,
-            description: `Заказ из корзины${item.sku ? ` · ${item.sku}` : ""}`,
-            category_label: item.categoryLabel ?? undefined,
-            budget: item.price * item.qty,
-            qty: item.qty,
-            needs_delivery: item.kind === "product",
-          })
-        }
-        notify({
-          type: "order",
-          title: "Заказы оформлены",
-          body: `${count} позиц. на сумму ${formatPrice(total)} опубликованы на маркетплейсе.`,
-          href: "/customer/orders",
-        })
-        clear()
-        router.push("/customer/orders")
-      } finally {
-        setCheckingOut(false)
-      }
-      return
-    }
-
-    const upfront = scheme === "full" ? total : Math.round(total / 2)
+  const handleCheckout = (scheme: PaymentScheme) => {
+    const upfront =
+      scheme === "prepay" ? total : scheme === "half" ? Math.round(total / 2) : 0
     notify({
       type: "payment",
       title: "Корзина оплачена безопасно",
       body: `${count} позиц. на сумму ${formatPrice(total)}. Заморожено до приёмки: ${formatPrice(upfront)}.`,
+      href: "/customer/payments",
     })
     clear()
   }
@@ -102,7 +71,6 @@ export default function CartPage() {
       <h1 className="text-2xl font-bold text-foreground mb-6">Корзина</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Items */}
         <div className="lg:col-span-2 space-y-3">
           {!hydrated
             ? null
@@ -130,7 +98,6 @@ export default function CartPage() {
                       </p>
 
                       <div className="flex items-center justify-between mt-3">
-                        {/* Qty stepper */}
                         <div className="flex items-center border border-border rounded-lg">
                           <button
                             onClick={() => setQty(item.listingId, item.qty - 1)}
@@ -176,7 +143,6 @@ export default function CartPage() {
           )}
         </div>
 
-        {/* Summary */}
         <div>
           <div className="bg-card border border-border rounded-xl p-5 lg:sticky lg:top-[84px]">
             <h2 className="text-sm font-bold text-foreground mb-4">Итого</h2>
@@ -199,14 +165,13 @@ export default function CartPage() {
             </div>
 
             <button
-              onClick={() => (useApi ? handleCheckout("full") : setPayOpen(true))}
-              disabled={checkingOut}
+              onClick={() => setPayOpen(true)}
               className={cn(
                 "w-full h-11 rounded-xl text-white text-sm font-bold transition-colors flex items-center justify-center gap-2",
                 "bg-primary hover:bg-primary/90",
               )}
             >
-              <ShieldCheck size={16} /> {checkingOut ? "Оформление…" : useApi ? "Оформить заказы" : "Оформить безопасно"}
+              <ShieldCheck size={16} /> Оформить безопасно
             </button>
 
             <p className="text-[11px] text-muted-foreground mt-3 text-center inline-flex items-center justify-center gap-1 w-full flex-wrap">
@@ -216,16 +181,14 @@ export default function CartPage() {
         </div>
       </div>
 
-      {!useApi && (
-        <PaymentDialog
-          open={payOpen}
-          onOpenChange={setPayOpen}
-          kind="product"
-          amount={total}
-          defaultScheme="full"
-          onConfirm={handleCheckout}
-        />
-      )}
+      <PaymentDialog
+        open={payOpen}
+        onOpenChange={setPayOpen}
+        kind="product"
+        amount={total}
+        defaultScheme="prepay"
+        onConfirm={handleCheckout}
+      />
     </div>
   )
 }

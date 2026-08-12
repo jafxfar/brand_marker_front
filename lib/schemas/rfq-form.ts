@@ -8,7 +8,7 @@ const baseSchema = z.object({
   budget_type: z.enum(["fixed", "range", "open"]),
   budget_from: z.string().optional(),
   budget_to: z.string().optional(),
-  currency: z.enum(["RUB", "USD", "EUR", "KZT", "CNY"]),
+  currency: z.enum(["TJS", "USD", "EUR", "KZT", "CNY"]),
   deadline: z.string().min(1, "Укажите дедлайн"),
   visibility: z.enum(["public", "invited_only"]).default("public"),
 })

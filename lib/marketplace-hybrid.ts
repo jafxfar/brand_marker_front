@@ -96,6 +96,37 @@ export const mapCompanyToPerformer = (
   }
 }
 
+export const mapPublicSupplierToPerformer = (
+  supplier: import("@/types").PublicSupplier,
+): MarketplacePerformer => {
+  const initials = supplier.display_name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
+
+  return {
+    id: supplier.actor_id,
+    name: supplier.display_name,
+    category: supplier.description?.slice(0, 40)
+      ?? (supplier.kind === "individual" ? "Физлицо" : "Поставщик"),
+    categoryId: supplier.industries[0] ?? "services",
+    city: supplier.city ?? "—",
+    rating: supplier.rating || 4.5,
+    reviews: supplier.reviews_count,
+    clients: String(supplier.active_catalog_count),
+    years: "—",
+    initials: initials || "BM",
+    color: "bg-primary",
+    specialties: supplier.industries,
+    verified: supplier.verification_status === "verified",
+    featured: (supplier.rating ?? 0) >= 4.5,
+    worldwide: Boolean(supplier.country && supplier.country !== "Таджикистан"),
+    icon: supplier.kind === "individual" ? "User" : "Building2",
+    description: supplier.description ?? "",
+  }
+}
+
 const formatCatalogPrice = (item: CatalogItemWithRelations): string => {
   const pricing = item.pricing
   if (!pricing) return "По запросу"

@@ -12,12 +12,14 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicSuppliersQuery } from "@/hooks/api/use-public-query"
 import {
-  formatSupplierCatalogSummary,
+  formatPublicSupplierSummary,
   getActiveCatalogItemsCount,
   getSupplierCategories,
+  isSupplierCompany,
+  toPublicSupplierFromCompany,
 } from "@/lib/supplier-directory"
 import { SupplierDirectoryCard } from "@/components/cabinet/suppliers/supplier-directory-card"
-import type { CompanyWithRelations } from "@/types"
+import type { PublicSupplier } from "@/types"
 
 export default function SuppliersPage() {
   const hydrated = useHydrated()
@@ -47,18 +49,25 @@ export default function SuppliersPage() {
   const getCategoriesForSupplier = (companyId: number) =>
     getSupplierCategories(getItemsBySupplier(companyId))
 
-  const localCompanies = useMemo(() => {
-    if (!hydrated || useApi) return []
+  const localSuppliers = useMemo(() => {
+    if (!hydrated || useApi) return [] as PublicSupplier[]
     const byCategory = getSupplierCompaniesByCategory(categorySlug, (id) =>
       getCategoriesForSupplier(id),
-    )
-    if (!query.trim()) return byCategory
+    ).filter(isSupplierCompany)
+    const mapped = byCategory.map((company) => {
+      const items = getItemsBySupplier(company.id)
+      return toPublicSupplierFromCompany(
+        company,
+        getActiveCatalogItemsCount(items),
+      )
+    })
+    if (!query.trim()) return mapped
     const q = query.trim().toLowerCase()
-    return byCategory.filter((c) => {
+    return mapped.filter((supplier) => {
       const haystack = [
-        c.title,
-        c.description,
-        ...getCategoriesForSupplier(c.id).map((cat) => cat.name),
+        supplier.display_name,
+        supplier.description,
+        ...supplier.industries,
       ]
         .filter(Boolean)
         .join(" ")
@@ -74,9 +83,9 @@ export default function SuppliersPage() {
     getItemsBySupplier,
   ])
 
-  const companies: CompanyWithRelations[] = useApi
+  const suppliers: PublicSupplier[] = useApi
     ? (apiSuppliers ?? [])
-    : localCompanies
+    : localSuppliers
 
   return (
     <div className="max-w-[1100px] mx-auto space-y-6">
@@ -87,7 +96,7 @@ export default function SuppliersPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Каталог поставщиков</h1>
           <p className="text-sm text-muted-foreground">
-            Поиск компаний и приглашение к заявке
+            Компании и физлица — поиск и приглашение к заявке
           </p>
         </div>
       </div>
@@ -101,7 +110,7 @@ export default function SuppliersPage() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Поиск по названию, описанию, категории..."
+          placeholder="Поиск по названию, ФИО, описанию, категории..."
           className="w-full h-11 pl-11 pr-4 rounded-xl border border-border bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           aria-label="Поиск поставщиков"
         />
@@ -143,35 +152,20 @@ export default function SuppliersPage() {
             <div key={i} className="h-40 bg-secondary rounded-xl animate-pulse" />
           ))}
         </div>
-      ) : companies.length === 0 ? (
+      ) : suppliers.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center text-sm text-muted-foreground">
           Поставщики не найдены. Попробуйте изменить фильтры.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {companies.map((company) => {
-            const items = useApi ? [] : getItemsBySupplier(company.id)
-            const categories = useApi
-              ? (company.profile?.industries.map((name, i) => ({
-                  id: i,
-                  parent_id: null,
-                  name,
-                  slug: name,
-                })) ?? [])
-              : getSupplierCategories(items)
-            const activeCount = useApi
-              ? (company.stats?.active_contracts ?? 0)
-              : getActiveCatalogItemsCount(items)
-            return (
-              <SupplierDirectoryCard
-                key={company.id}
-                company={company}
-                summary={formatSupplierCatalogSummary(company, activeCount, categories)}
-                activeItemsCount={activeCount}
-                categoryNames={categories.map((c) => c.name)}
-              />
-            )
-          })}
+          {suppliers.map((supplier) => (
+            <SupplierDirectoryCard
+              key={supplier.actor_id}
+              supplier={supplier}
+              summary={formatPublicSupplierSummary(supplier)}
+              categoryNames={supplier.industries}
+            />
+          ))}
         </div>
       )}
     </div>

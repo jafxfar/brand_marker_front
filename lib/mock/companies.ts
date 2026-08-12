@@ -26,7 +26,7 @@ export const mockCompanies: CompanyWithRelations[] = [
       company_id: DEMO_SUPPLIER_ACTOR_ID,
       founded_year: 2015,
       employees_count: 45,
-      annual_revenue_range: "100M–500M RUB",
+      annual_revenue_range: "100M–500M TJS",
       languages: ["ru", "en"],
       industries: ["IT", "Телеком"],
     },

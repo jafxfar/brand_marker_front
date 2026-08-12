@@ -8,7 +8,7 @@ import { PerformerCard } from "@/components/marketplace/performer-card"
 import { filterPerformers } from "@/lib/mock/marketplace-performers"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicSuppliersQuery } from "@/hooks/api/use-public-query"
-import { mergeByKey, mapCompanyToPerformer } from "@/lib/marketplace-hybrid"
+import { mergeByKey, mapPublicSupplierToPerformer } from "@/lib/marketplace-hybrid"
 
 export const PerformersPageContent = () => {
   const searchParams = useSearchParams()
@@ -26,7 +26,7 @@ export const PerformersPageContent = () => {
   const performers = useMemo(() => {
     if (!useApi) return filterPerformers({ q: query, verified, featured, scope: scope ?? undefined })
     if (!apiSuppliers?.length) return []
-    const apiPerformers = apiSuppliers.map(mapCompanyToPerformer)
+    const apiPerformers = apiSuppliers.map(mapPublicSupplierToPerformer)
     const q = query.trim().toLowerCase()
     return apiPerformers.filter((p) => {
       if (verified && !p.verified) return false
