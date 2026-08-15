@@ -10,7 +10,7 @@ import { getService } from "@/lib/mock/marketplace-services"
 import { getCategory } from "@/lib/mock/categories"
 import { getIcon } from "@/lib/icon-map"
 import { isApiEnabled } from "@/lib/api/config"
-import { usePublicCatalogItemQuery } from "@/hooks/api/use-public-query"
+import { usePublicCatalogItemQuery, usePublicSupplierQuery } from "@/hooks/api/use-public-query"
 import { mapCatalogItemToService } from "@/lib/marketplace-hybrid"
 import {
   categoryUrl,
@@ -33,13 +33,17 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
     serviceId,
     useApi,
   )
+  const { data: apiSupplier, isLoading: supplierLoading } = usePublicSupplierQuery(
+    apiItem?.actor_id ?? 0,
+    useApi && Boolean(apiItem?.actor_id),
+  )
   const isAuthenticated = Boolean(tokenStorage.getAccess())
 
   const service: MarketplaceService | null = useApi
-    ? (apiItem ? mapCatalogItemToService(apiItem) : null)
+    ? (apiItem ? mapCatalogItemToService(apiItem, null, apiSupplier) : null)
     : mockService
 
-  if (useApi && isLoading) {
+  if (useApi && (isLoading || supplierLoading)) {
     return (
       <PageShell>
         <div className="max-w-[900px] mx-auto px-6 py-16 animate-pulse">

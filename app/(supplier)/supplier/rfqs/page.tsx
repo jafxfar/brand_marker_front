@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Inbox } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
@@ -19,6 +18,13 @@ import {
 } from "@/hooks/api/use-supplier-rfqs-query"
 import { RfqBoardTable } from "@/components/supplier/rfq/rfq-board-table"
 import { ProposalDialog } from "@/components/supplier/proposal-dialog"
+import {
+  PageEmptyState,
+  PageFrame,
+  PageHeader,
+  PageSurface,
+  SegmentedControl,
+} from "@/components/layout"
 import type { Currency } from "@/types"
 import type { RfqType, RfqWithRelations } from "@/types"
 
@@ -94,56 +100,42 @@ export default function SupplierRfqsPage() {
   const isEmpty = !hydrated || isLoading || filtered.length === 0
 
   return (
-    <div className="max-w-[1100px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Inbox size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Заявки заказчиков</h1>
-          <p className="text-sm text-muted-foreground">Открытые заявки, на которые можно откликнуться</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Заявки заказчиков"
+        description="Открытые заявки, на которые можно откликнуться"
+      />
 
-      <div className="flex items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
-        {(["all", "product", "service"] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setTypeFilter(value)}
-            className={cn(
-              "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
-              typeFilter === value
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {value === "all" ? "Все" : value === "product" ? "Товары" : "Услуги"}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        value={typeFilter}
+        options={[
+          { value: "all", label: "Все" },
+          { value: "product", label: "Товары" },
+          { value: "service", label: "Услуги" },
+        ]}
+        onChange={setTypeFilter}
+        ariaLabel="Тип заявки"
+      />
 
       {isEmpty ? (
-        <div className="bg-card border border-border rounded-xl p-12 text-center">
-          <Inbox size={32} className="text-primary mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground">
-            {isLoading ? "Загрузка заявок..." : "Открытых заявок нет"}
-          </p>
-          {!isLoading && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Новые заявки заказчиков появятся здесь
-            </p>
-          )}
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            icon={<Inbox size={32} />}
+            title={isLoading ? "Загрузка заявок..." : "Открытых заявок нет"}
+            description={!isLoading ? "Новые заявки заказчиков появятся здесь" : undefined}
+          />
+        </PageSurface>
       ) : (
-        <RfqBoardTable
-          rfqs={filtered}
-          actorId={actorId}
-          hasProposal={hasProposal}
-          getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
-          getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}
-          onSubmitProposal={handleOpenProposal}
-        />
+        <PageSurface>
+          <RfqBoardTable
+            rfqs={filtered}
+            actorId={actorId}
+            hasProposal={hasProposal}
+            getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
+            getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}
+            onSubmitProposal={handleOpenProposal}
+          />
+        </PageSurface>
       )}
 
       {selectedRfq && (
@@ -159,6 +151,6 @@ export default function SupplierRfqsPage() {
           onSubmit={handleSubmitProposal}
         />
       )}
-    </div>
+    </PageFrame>
   )
 }

@@ -1,9 +1,9 @@
 "use client"
 
 import { use } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CatalogItemForm } from "@/components/supplier/catalog/catalog-item-form"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { useItemsStore } from "@/lib/store/items-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
@@ -37,21 +37,18 @@ export default function EditCatalogItemPage({ params }: PageProps) {
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-48 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="h-8 w-1/3 rounded-xl bg-secondary" />
+        <div className="h-48 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   if (!item) {
     return (
-      <div className="max-w-[900px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">Позиция не найдена</p>
-        <Link href="/supplier/catalog" className="text-sm text-primary hover:underline mt-2 inline-block">
-          Вернуться к каталогу
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader title="Позиция не найдена" backHref="/supplier/catalog" backLabel="Вернуться к каталогу" />
+      </PageFrame>
     )
   }
 
@@ -80,19 +77,19 @@ export default function EditCatalogItemPage({ params }: PageProps) {
   }
 
   return (
-    <div>
-      {item.status !== "archived" && (
-        <div className="max-w-[900px] mx-auto mb-4 flex justify-end">
+    <>
+      {item.status !== "archived" ? (
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={handleArchive}
-            className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors"
+            className="text-xs font-semibold text-muted-foreground transition-colors hover:text-destructive"
           >
             Переместить в архив
           </button>
         </div>
-      )}
+      ) : null}
       <CatalogItemForm initial={item} onSubmit={handleSubmit} />
-    </div>
+    </>
   )
 }

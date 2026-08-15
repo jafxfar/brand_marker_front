@@ -17,6 +17,8 @@ import { ProfileStep } from "@/components/company/steps/profile-step"
 import { CertificatesStep } from "@/components/company/steps/certificates-step"
 import { TeamStep } from "@/components/company/steps/team-step"
 import { ReviewStep } from "@/components/company/steps/review-step"
+import { Button } from "@/components/ui/button"
+import { PageEmptyState, PageFrame, PageHeader } from "@/components/layout"
 
 const STEP_LABELS: Record<WizardStep, string> = {
   basic: "Основное",
@@ -86,57 +88,37 @@ export const CompanyWizard = ({
 
   if (limitBlocked) {
     return (
-      <div className="max-w-[640px] mx-auto">
-        <div className="rounded-2xl border border-border bg-white p-8 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
-            <Building2 size={24} className="text-primary" />
+      <PageFrame>
+        <PageHeader
+          title="Новая компания"
+          description={limitMessage}
+          backHref={basePath}
+          backLabel="К списку компаний"
+        />
+        <PageEmptyState
+          icon={<Building2 size={24} />}
+          title="Лимит компаний исчерпан"
+          description={limitMessage}
+        />
+        {subscriptionHref ? (
+          <div className="flex justify-center">
+            <Button asChild size="lg">
+              <Link href={subscriptionHref}>Оформить подписку</Link>
+            </Button>
           </div>
-          <h2 className="text-lg font-bold mb-2">Лимит компаний исчерпан</h2>
-          <p className="text-sm text-muted-foreground mb-6">{limitMessage}</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href={basePath}
-              className="h-11 px-5 rounded-xl border border-input text-sm font-semibold flex items-center justify-center hover:bg-secondary transition-colors"
-            >
-              К списку компаний
-            </Link>
-            {subscriptionHref && (
-              <Link
-                href={subscriptionHref}
-                className="h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center hover:opacity-90 transition-opacity"
-              >
-                Оформить подписку
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+        ) : null}
+      </PageFrame>
     )
   }
 
   return (
-    <div className="max-w-[720px] mx-auto">
-      <Link
-        href={basePath}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ArrowLeft size={16} />
-        Назад к компаниям
-      </Link>
-
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Building2 size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-black text-foreground">
-            {mode === "edit" ? "Редактирование компании" : "Новая компания"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {actorLabel} · шаг {stepIndex + 1} из {WIZARD_STEPS.length}
-          </p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title={mode === "edit" ? "Редактирование компании" : "Новая компания"}
+        description={`${actorLabel} · шаг ${stepIndex + 1} из ${WIZARD_STEPS.length}`}
+        backHref={basePath}
+        backLabel="Назад к компаниям"
+      />
 
       <div className="flex gap-1 mb-8 overflow-x-auto pb-1">
         {WIZARD_STEPS.map((step, i) => (
@@ -182,30 +164,22 @@ export const CompanyWizard = ({
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="lg"
           onClick={handleBack}
           disabled={stepIndex === 0}
-          className={cn(
-            "h-11 px-5 rounded-xl border border-input text-sm font-semibold flex items-center gap-2 transition-colors",
-            stepIndex === 0
-              ? "opacity-40 cursor-not-allowed"
-              : "hover:bg-secondary",
-          )}
         >
           <ArrowLeft size={16} />
           Назад
-        </button>
+        </Button>
 
-        <button
-          type="button"
-          onClick={handleNext}
-          className="h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
-        >
+        <Button type="button" size="lg" onClick={handleNext}>
           {isLast ? (mode === "edit" ? "Сохранить" : "Создать компанию") : "Далее"}
-          {!isLast && <ArrowRight size={16} />}
-        </button>
+          {!isLast ? <ArrowRight size={16} /> : null}
+        </Button>
       </div>
-    </div>
+    </PageFrame>
   )
 }

@@ -27,6 +27,43 @@ const normalizeIncomingMessage = (
   viewed_at: raw.viewed_at ?? null,
 })
 
+const mergeMessages = (cached: Message[], incoming: Message[]): Message[] => {
+  const byId = new Map<number, Message>()
+  for (const message of cached) {
+    byId.set(message.id, message)
+  }
+  for (const message of incoming) {
+    const existing = byId.get(message.id)
+    byId.set(message.id, existing ? { ...existing, ...message } : message)
+  }
+  return [...byId.values()].sort((a, b) => {
+    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
+    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+    if (aTime !== bTime) return aTime - bTime
+    return a.id - b.id
+  })
+}
+
+const mergeContractMessages = (
+  current: ContractWithRelations | undefined,
+  incoming: ContractWithRelations,
+): ContractWithRelations => {
+  if (!current?.conversation && !incoming.conversation) return incoming
+  const cachedMessages = current?.conversation?.messages ?? []
+  const incomingMessages = incoming.conversation?.messages ?? []
+  return {
+    ...incoming,
+    conversation: {
+      id: incoming.conversation?.id ?? current?.conversation?.id ?? incoming.id,
+      contract_id:
+        incoming.conversation?.contract_id ??
+        current?.conversation?.contract_id ??
+        incoming.id,
+      messages: mergeMessages(cachedMessages, incomingMessages),
+    },
+  }
+}
+
 const patchContractMessages = (
   contract: ContractWithRelations,
   updater: (messages: Message[]) => Message[],
@@ -123,12 +160,17 @@ export const replaceContractInCache = (
   queryClient: QueryClient,
   contract: ContractWithRelations,
 ) => {
-  queryClient.setQueryData(["contracts", "detail", contract.id], contract)
-  queryClient.setQueryData(["supplier-contracts", "detail", contract.id], contract)
+  for (const key of detailKeysFor(contract.id)) {
+    queryClient.setQueryData<ContractWithRelations>(key, (current) =>
+      mergeContractMessages(current, contract),
+    )
+  }
   for (const key of listKeys) {
     queryClient.setQueryData<ContractWithRelations[]>(key, (list) => {
       if (!list) return list
-      return list.map((item) => (item.id === contract.id ? contract : item))
+      return list.map((item) =>
+        item.id === contract.id ? mergeContractMessages(item, contract) : item,
+      )
     })
   }
 }

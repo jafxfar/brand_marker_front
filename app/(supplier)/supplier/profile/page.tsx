@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Store, Truck, Check, LogOut, Building2, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -55,19 +57,14 @@ export default function SupplierProfilePage() {
   if (!hydrated) return null
 
   return (
-    <div className="max-w-[720px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Store size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Профиль поставщика</h1>
-          <p className="text-sm text-muted-foreground">Контактные данные и настройки доставки</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Профиль поставщика"
+        description="Контактные данные и настройки доставки"
+      />
 
       <form onSubmit={handleSave} className="space-y-6">
-        <div className="bg-card border border-border rounded-xl p-5 sm:p-6 space-y-5">
+        <PageSurface className="space-y-5 p-5 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Link
@@ -105,19 +102,19 @@ export default function SupplierProfilePage() {
               <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Душанбе" className={inputClass} />
             </div>
           </div>
-        </div>
+        </PageSurface>
 
-        <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
-          <h2 className="text-sm font-bold text-foreground mb-1">Доставка</h2>
-          <p className="text-xs text-muted-foreground mb-4">
+        <PageSurface className="p-5 sm:p-6">
+          <h2 className="mb-1 text-sm font-bold text-foreground">Доставка</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
             Укажите, если вы организуете доставку товаров покупателям
           </p>
-          <label className="flex items-center gap-3 p-3.5 rounded-xl border border-border cursor-pointer hover:border-primary/40 transition-colors">
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3.5 transition-colors hover:border-primary/40">
             <input
               type="checkbox"
               checked={hasDelivery}
               onChange={(e) => setHasDelivery(e.target.checked)}
-              className="w-4 h-4 accent-primary"
+              className="h-4 w-4 accent-primary"
             />
             <Truck size={18} className="text-primary" />
             <div>
@@ -125,23 +122,19 @@ export default function SupplierProfilePage() {
               <div className="text-[11px] text-muted-foreground">Доставляю товары своими силами или через службу</div>
             </div>
           </label>
-        </div>
+        </PageSurface>
 
         <div className="flex items-center justify-between gap-3">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="lg"
+            className="text-destructive hover:bg-destructive/5"
             onClick={handleLogout}
-            className="h-11 px-5 rounded-xl border border-border text-sm font-semibold text-destructive hover:bg-destructive/5 transition-colors flex items-center gap-2"
           >
             <LogOut size={16} /> Выйти
-          </button>
-          <button
-            type="submit"
-            className={cn(
-              "h-11 px-6 rounded-xl text-white text-sm font-bold transition-colors flex items-center gap-2",
-              saved ? "bg-primary" : "bg-primary hover:bg-primary/90",
-            )}
-          >
+          </Button>
+          <Button type="submit" size="lg">
             {saved ? (
               <>
                 <Check size={16} /> Сохранено
@@ -149,9 +142,9 @@ export default function SupplierProfilePage() {
             ) : (
               "Сохранить изменения"
             )}
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
+    </PageFrame>
   )
 }

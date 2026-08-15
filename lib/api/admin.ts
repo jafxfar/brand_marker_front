@@ -936,12 +936,12 @@ export const adminApi = {
     paymentId?: number
   }) => {
     const { API_URL } = await import("./config")
-    const { tokenStorage } = await import("./client")
+    const { ensureAccessToken } = await import("./client")
     const searchParams = new URLSearchParams({ view })
     if (query?.trim()) searchParams.set("query", query.trim())
     if (paymentId) searchParams.set("payment_id", String(paymentId))
     const headers = new Headers()
-    const token = tokenStorage.getAccess()
+    const token = await ensureAccessToken()
     if (token) headers.set("Authorization", `Bearer ${token}`)
     const res = await fetch(
       `${API_URL}/admin/finance/export?${searchParams.toString()}`,

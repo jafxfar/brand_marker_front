@@ -1,14 +1,17 @@
 "use client"
 
-import type { CompanyWithRelations, Proposal } from "@/types"
+import { useState } from "react"
+import type { Proposal, PublicSupplier } from "@/types"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import { formatCurrency } from "@/lib/format"
 import { SupplierProposalInfo } from "@/components/cabinet/rfq/supplier-proposal-info"
-import { Clock, Banknote } from "lucide-react"
+import { ProposalChatDialog } from "@/components/cabinet/rfq/proposal-chat-dialog"
+import { Banknote, Clock, MessageSquare } from "lucide-react"
 
 type ProposalReviewCardProps = {
   proposal: Proposal
-  supplier: CompanyWithRelations | undefined
+  supplier: PublicSupplier | undefined
+  supplierName: string
   canManage: boolean
   onShortlist: () => void
   onReject: () => void
@@ -18,6 +21,7 @@ type ProposalReviewCardProps = {
 export const ProposalReviewCard = ({
   proposal,
   supplier,
+  supplierName,
   canManage,
   onShortlist,
   onReject,
@@ -25,12 +29,16 @@ export const ProposalReviewCard = ({
 }: ProposalReviewCardProps) => {
   const meta = proposalStatusMeta[proposal.status]
   const isFinal = ["accepted", "rejected", "withdrawn"].includes(proposal.status)
+  const [chatOpen, setChatOpen] = useState(false)
+
+  const handleOpenChat = () => setChatOpen(true)
 
   return (
     <article className="bg-card border border-border rounded-xl p-5 sm:p-6">
       <SupplierProposalInfo
         supplier={supplier}
         supplierId={proposal.supplier_actor_id}
+        supplierName={supplierName}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-border">
@@ -70,33 +78,52 @@ export const ProposalReviewCard = ({
         </div>
       )}
 
-      {canManage && !isFinal && (
-        <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-border">
-          {proposal.status !== "shortlisted" && (
+      <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-border">
+        {canManage && !isFinal && proposal.status !== "shortlisted" && (
+          <button
+            type="button"
+            onClick={onShortlist}
+            className="h-10 px-4 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors"
+          >
+            В избранное
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={handleOpenChat}
+          aria-label="Обсудить проект"
+          className="h-10 px-4 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors inline-flex items-center gap-2"
+        >
+          <MessageSquare size={16} /> Обсудить проект
+        </button>
+        {canManage && !isFinal && (
+          <>
             <button
               type="button"
-              onClick={onShortlist}
-              className="h-10 px-4 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors"
+              onClick={onReject}
+              className="h-10 px-4 rounded-xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 transition-colors"
             >
-              В избранное
+              Отклонить
             </button>
-          )}
-          <button
-            type="button"
-            onClick={onReject}
-            className="h-10 px-4 rounded-xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 transition-colors"
-          >
-            Отклонить
-          </button>
-          <button
-            type="button"
-            onClick={onAccept}
-            className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
-          >
-            Принять
-          </button>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={onAccept}
+              className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+            >
+              Принять
+            </button>
+          </>
+        )}
+      </div>
+
+      <ProposalChatDialog
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        proposalId={proposal.id}
+        proposalStatus={proposal.status}
+        side="buyer"
+        peerName={supplierName}
+      />
     </article>
   )
 }

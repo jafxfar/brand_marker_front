@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@/lib/utils"
+import { SegmentedControl } from "@/components/layout"
 
 export type BuyerPaymentsTab =
   | "outgoing"
@@ -21,21 +21,10 @@ type BuyerPaymentsTabsProps = {
 }
 
 export const BuyerPaymentsTabs = ({ tab, onTabChange }: BuyerPaymentsTabsProps) => (
-  <div className="flex flex-wrap items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
-    {BUYER_PAYMENTS_TABS.map((t) => (
-      <button
-        key={t.value}
-        type="button"
-        onClick={() => onTabChange(t.value)}
-        className={cn(
-          "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
-          tab === t.value
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-      >
-        {t.label}
-      </button>
-    ))}
-  </div>
+  <SegmentedControl
+    value={tab}
+    options={BUYER_PAYMENTS_TABS}
+    onChange={onTabChange}
+    ariaLabel="Разделы платежей"
+  />
 )

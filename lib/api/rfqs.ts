@@ -1,3 +1,4 @@
+import type { BuyerRfqStatusFilter } from "@/lib/buyer-rfq-display"
 import type { RfqCreate, RfqUpdate, RfqWithRelations } from "@/types"
 import { apiFetch } from "./client"
 import { toRfqPayload } from "./rfq-payload"
@@ -5,8 +6,10 @@ import { toRfqPayload } from "./rfq-payload"
 const PREFIX = "/buyer/rfqs"
 
 export const rfqsApi = {
-  list: (tab?: string) =>
-    apiFetch<RfqWithRelations[]>(`${PREFIX}${tab ? `?tab=${encodeURIComponent(tab)}` : ""}`),
+  list: (filter: BuyerRfqStatusFilter = "all") =>
+    apiFetch<RfqWithRelations[]>(
+      `${PREFIX}${filter !== "all" ? `?tab=${encodeURIComponent(filter)}` : ""}`,
+    ),
 
   get: (id: string) => apiFetch<RfqWithRelations>(`${PREFIX}/${id}`),
 

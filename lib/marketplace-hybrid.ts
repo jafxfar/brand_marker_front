@@ -1,5 +1,10 @@
 import type { CategoryTree } from "@/lib/api/public"
-import type { CatalogItemWithRelations, CompanyWithRelations, RfqWithRelations } from "@/types"
+import type {
+  CatalogItemWithRelations,
+  CompanyWithRelations,
+  PublicSupplier,
+  RfqWithRelations,
+} from "@/types"
 import type {
   MarketplaceCategory,
   MarketplacePerformer,
@@ -139,18 +144,24 @@ const formatCatalogPrice = (item: CatalogItemWithRelations): string => {
 export const mapCatalogItemToService = (
   item: CatalogItemWithRelations,
   company?: CompanyWithRelations | null,
+  supplier?: PublicSupplier | null,
 ): MarketplaceService => ({
   id: item.id,
   title: item.title,
   description: item.description ?? "",
-  provider: company?.title ?? "Поставщик",
-  providerId: company?.id ?? item.actor_id,
-  city: company?.city ?? "—",
-  rating: company?.rating ?? company?.stats?.average_rating ?? 4.5,
-  reviews: company?.reviews?.length ?? 0,
+  provider: supplier?.display_name ?? company?.title ?? "Поставщик",
+  providerId: item.actor_id,
+  city: supplier?.city ?? company?.city ?? "—",
+  rating:
+    supplier?.rating
+    ?? company?.rating
+    ?? company?.stats?.average_rating
+    ?? 4.5,
+  reviews: supplier?.reviews_count ?? company?.reviews?.length ?? 0,
   price: formatCatalogPrice(item),
   tags: item.attributes.slice(0, 3).map((a) => a.value),
-  verified: company?.verification_status === "verified",
+  verified:
+    (supplier?.verification_status ?? company?.verification_status) === "verified",
   badge: null,
   icon: item.type === "product" ? "Package" : "Briefcase",
   iconBg: "bg-secondary",

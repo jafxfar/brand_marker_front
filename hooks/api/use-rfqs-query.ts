@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { BuyerRfqListTab } from "@/lib/buyer-rfq-display"
+import type { BuyerRfqStatusFilter } from "@/lib/buyer-rfq-display"
 import { rfqsApi } from "@/lib/api/rfqs"
 import { isApiEnabled } from "@/lib/api/config"
 import type { RfqCreate, RfqUpdate } from "@/types"
@@ -10,10 +10,10 @@ export const rfqKeys = {
   detail: (id: string) => [...rfqKeys.all, "detail", id] as const,
 }
 
-export const useRfqsQuery = (tab: BuyerRfqListTab, enabled = true) =>
+export const useRfqsQuery = (filter: BuyerRfqStatusFilter, enabled = true) =>
   useQuery({
-    queryKey: rfqKeys.list(tab),
-    queryFn: () => rfqsApi.list(tab),
+    queryKey: rfqKeys.list(filter),
+    queryFn: () => rfqsApi.list(filter),
     enabled: enabled && isApiEnabled(),
   })
 

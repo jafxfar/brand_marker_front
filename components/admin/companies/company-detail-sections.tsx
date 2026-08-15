@@ -17,6 +17,7 @@ import type {
   AdminCompanyCatalogItem,
   AdminCompanyDetail,
 } from "@/lib/api/admin"
+import { resolveFileUrl } from "@/lib/file-url"
 
 const formatMoney = (value: number, currency = "TJS") =>
   new Intl.NumberFormat("ru-RU", {
@@ -217,7 +218,7 @@ export const AdminCompanyDetailSections = ({
                 {company.certificates.slice(0, limit).map((certificate) => (
                   <a
                     key={certificate.id}
-                    href={certificate.file_url}
+                    href={resolveFileUrl(certificate.file_url)}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-start gap-3 rounded-xl border border-border p-4 hover:border-primary/30"

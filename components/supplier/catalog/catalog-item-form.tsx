@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
-import { ArrowLeft, ShoppingCart, Briefcase } from "lucide-react"
+import { ShoppingCart, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { catalogCategories } from "@/lib/mock/catalog-categories"
 import type { CatalogItemInput, CatalogItemWithRelations, CatalogItemType } from "@/types"
 import { AttributeFields, type AttributeFieldRow } from "@/components/supplier/catalog/attribute-fields"
@@ -148,24 +148,15 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
     )
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-6">
-      <Link
-        href="/supplier/catalog"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-      >
-        <ArrowLeft size={16} /> К каталогу
-      </Link>
+    <PageFrame>
+      <PageHeader
+        title={initial ? "Редактирование позиции" : "Создание позиции"}
+        description="Заполните данные товара или услуги для каталога"
+        backHref="/supplier/catalog"
+        backLabel="К каталогу"
+      />
 
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          {initial ? "Редактирование позиции" : "Создание позиции"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Заполните данные товара или услуги для каталога
-        </p>
-      </div>
-
-      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+      <PageSurface className="space-y-4 p-6">
         <h2 className="text-sm font-semibold text-foreground">Тип</h2>
         <div className="grid grid-cols-2 gap-3 max-w-md">
           {(["product", "service"] as const).map((value) => (
@@ -191,9 +182,9 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
             </button>
           ))}
         </div>
-      </section>
+      </PageSurface>
 
-      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+      <PageSurface className="space-y-4 p-6">
         <h2 className="text-sm font-semibold text-foreground">Основное</h2>
         <div>
           <label htmlFor="item-title" className="block text-sm font-medium mb-1.5">
@@ -247,25 +238,25 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
             <p className="text-xs text-destructive mt-1">{errors.description}</p>
           )}
         </div>
-      </section>
+      </PageSurface>
 
-      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+      <PageSurface className="space-y-4 p-6">
         <h2 className="text-sm font-semibold text-foreground">Атрибуты</h2>
         <AttributeFields attributes={attributes} onChange={setAttributes} errors={errors} />
-      </section>
+      </PageSurface>
 
-      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+      <PageSurface className="space-y-4 p-6">
         <h2 className="text-sm font-semibold text-foreground">Медиа</h2>
         <p className="text-xs text-muted-foreground">
           Изображения, документы и видео (демо — без реальной загрузки)
         </p>
         <MediaFields media={media} onChange={setMedia} />
-      </section>
+      </PageSurface>
 
-      <section className="bg-card border border-border rounded-xl p-6 space-y-4">
+      <PageSurface className="space-y-4 p-6">
         <h2 className="text-sm font-semibold text-foreground">Ценообразование</h2>
         <PricingFields values={pricing} onChange={setPricing} errors={errors} />
-      </section>
+      </PageSurface>
 
       {initial?.status === "changes_requested" && (
         <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-orange-800">
@@ -289,6 +280,6 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
           Отправить на модерацию
         </button>
       </div>
-    </div>
+    </PageFrame>
   )
 }

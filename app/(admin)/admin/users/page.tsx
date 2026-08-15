@@ -17,7 +17,6 @@ import {
   RefreshCcw,
   Search,
   UserCheck,
-  Users,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -53,6 +52,8 @@ import type {
 } from "@/lib/api/admin"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
+import { Input } from "@/components/ui/input"
 
 const PAGE_SIZE = 20
 
@@ -139,14 +140,14 @@ const UserStatusBadge = ({ status }: { status: AdminUserStatus }) => {
 }
 
 const UsersSkeleton = () => (
-  <div className="space-y-6 animate-pulse" aria-label="Загрузка пользователей">
+  <PageFrame className="animate-pulse" aria-label="Загрузка пользователей">
     <div className="space-y-2">
       <div className="h-8 w-56 rounded-lg bg-muted" />
       <div className="h-4 w-80 max-w-full rounded bg-muted" />
     </div>
     <div className="h-12 rounded-xl bg-muted" />
     <div className="h-80 rounded-xl border border-border bg-card" />
-  </div>
+  </PageFrame>
 )
 
 type UserActionButtonProps = {
@@ -325,35 +326,18 @@ const AdminUsersContent = () => {
   const hasFilters = Boolean(query || status !== "all")
 
   return (
-    <div className="mx-auto max-w-350 space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
-              <Users size={21} aria-hidden="true" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                Пользователи
-              </h1>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Управление доступом и статусами учётных записей
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Найдено</span>
-          <span className="rounded-lg bg-secondary px-2.5 py-1 font-bold text-foreground">
-            {total}
-          </span>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Пользователи"
+        description="Управление доступом и статусами учётных записей"
+        actions={
+          <p className="text-sm text-muted-foreground">
+            Найдено <strong className="ml-1 text-foreground">{total}</strong>
+          </p>
+        }
+      />
 
-      <section
-        className="overflow-hidden rounded-xl border border-border bg-card"
-        aria-label="Фильтры пользователей"
-      >
+      <PageSurface aria-label="Фильтры пользователей">
         <div className="border-b border-border p-4">
           <div className="relative">
             <Search
@@ -361,77 +345,58 @@ const AdminUsersContent = () => {
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
             />
-            <input
+            <Input
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Имя, email, телефон или ID"
-              className="h-11 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-11"
               aria-label="Поиск пользователей"
             />
           </div>
         </div>
-
-        <div className="flex gap-2 overflow-x-auto p-3" role="tablist">
-          {statusFilters.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              role="tab"
-              aria-selected={status === filter.value}
-              onClick={() => handleStatusChange(filter.value)}
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors",
-                status === filter.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-              )}
-            >
-              {filter.label}
-              <span
-                className={cn(
-                  "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                  status === filter.value ? "bg-card/20" : "bg-muted",
-                )}
-              >
-                {statusCounts[filter.value]}
-              </span>
-            </button>
-          ))}
+        <div className="p-3">
+          <SegmentedControl
+            value={status}
+            options={statusFilters.map((filter) => ({
+              ...filter,
+              count: statusCounts[filter.value],
+            }))}
+            onChange={handleStatusChange}
+            ariaLabel="Статус пользователей"
+            className="w-full max-w-full border-0 bg-transparent p-0"
+          />
         </div>
-      </section>
+      </PageSurface>
 
       {items.length === 0 ? (
-        <section className="rounded-xl border border-border bg-card px-6 py-16 text-center">
-          <Search size={28} className="mx-auto text-muted-foreground/40" aria-hidden="true" />
-          <h2 className="mt-4 font-bold text-foreground">
-            {hasFilters ? "Пользователи не найдены" : "Пользователей пока нет"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {hasFilters
-              ? "Измените поисковый запрос или выбранный статус."
-              : "Новые учётные записи появятся здесь после регистрации."}
-          </p>
+        <PageSurface>
+          <PageEmptyState
+            title={hasFilters ? "Пользователи не найдены" : "Пользователей пока нет"}
+            description={
+              hasFilters
+                ? "Измените поисковый запрос или выбранный статус."
+                : "Новые учётные записи появятся здесь после регистрации."
+            }
+          />
           {hasFilters && (
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-5"
-              onClick={() => {
-                setSearchInput("")
-                replaceSearchParams({ query: null, status: null, page: null })
-              }}
-            >
-              Сбросить фильтры
-            </Button>
+            <div className="flex justify-center pb-10">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSearchInput("")
+                  replaceSearchParams({ query: null, status: null, page: null })
+                }}
+              >
+                Сбросить фильтры
+              </Button>
+            </div>
           )}
-        </section>
+        </PageSurface>
       ) : (
-        <section
-          className={cn(
-            "overflow-hidden rounded-xl border border-border bg-card",
-            usersQuery.isFetching && "opacity-70",
-          )}
+        <PageSurface
+          className={cn(usersQuery.isFetching && "opacity-70")}
           aria-busy={usersQuery.isFetching}
         >
           <div className="hidden md:block">
@@ -525,7 +490,7 @@ const AdminUsersContent = () => {
               </li>
             ))}
           </ul>
-        </section>
+        </PageSurface>
       )}
 
       {items.length > 0 && pages > 1 && (
@@ -640,7 +605,7 @@ const AdminUsersContent = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageFrame>
   )
 }
 

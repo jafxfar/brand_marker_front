@@ -52,6 +52,11 @@ export type CreateContractFromProposalInput = {
   currency: Currency
   payment_type: PaymentType
   milestones?: PaymentMilestoneInput[]
+  files?: Array<{
+    file_name: string
+    file_url: string
+    file_type: string
+  }>
 }
 
 const milestoneStatusForTrigger = (
@@ -215,6 +220,16 @@ const nextMessageId = (contracts: ContractWithRelations[]): number => {
   return maxId + 1
 }
 
+const nextFileId = (contracts: ContractWithRelations[]): number => {
+  let maxId = 0
+  for (const contract of contracts) {
+    for (const file of contract.files ?? []) {
+      if (file.id > maxId) maxId = file.id
+    }
+  }
+  return maxId + 1
+}
+
 const nextSubmissionId = (contracts: ContractWithRelations[]): number => {
   let maxId = 0
   for (const contract of contracts) {
@@ -328,6 +343,8 @@ export const useContractsStore = create<ContractsState>()(
         const contractId = nextContractId(contracts)
         const milestoneBaseId = nextMilestoneId(contracts)
         const today = new Date().toISOString().split("T")[0]!
+        const createdAt = new Date().toISOString()
+        const fileBaseId = nextFileId(contracts)
 
         const sourceMilestones =
           input.payment_type === "milestone" && input.milestones?.length
@@ -381,7 +398,15 @@ export const useContractsStore = create<ContractsState>()(
               },
             ],
           },
-          files: [],
+          files: (input.files ?? []).map((file, index) => ({
+            id: fileBaseId + index,
+            contract_id: contractId,
+            file_name: file.file_name,
+            file_url: file.file_url,
+            file_type: file.file_type,
+            uploaded_by: input.buyer_actor_id,
+            created_at: createdAt,
+          })),
           submissions: [],
         }
 

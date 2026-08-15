@@ -18,6 +18,7 @@ import {
 } from "@/lib/contract-display"
 import { formatIsoDate } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
+import { resolveFileUrl } from "@/lib/file-url"
 import { supplierContractsApi } from "@/lib/api/supplier/contracts"
 import {
   normalizeSubmissionAssets,
@@ -313,9 +314,14 @@ export const ContractSubmissionPanel = ({
                   key={`${asset.url}-${index}`}
                   className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2"
                 >
-                  <span className="text-xs font-medium text-foreground truncate flex-1">
+                  <a
+                    href={resolveFileUrl(asset.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-foreground truncate flex-1 hover:text-primary"
+                  >
                     [{asset.kind}] {asset.name}
-                  </span>
+                  </a>
                   <button
                     type="button"
                     onClick={() => handleRemoveAsset(index)}

@@ -12,6 +12,7 @@ import {
   adminLabel,
 } from "@/lib/admin-display"
 import { contractStatusMeta, escrowSummaryMeta } from "@/lib/contract-display"
+import { resolveFileUrl } from "@/lib/file-url"
 import type { ContractStatus } from "@/types"
 
 const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
@@ -200,7 +201,7 @@ export const AdminDisputeDetailSections = ({
             {dispute.evidence.map((item) => (
               <a
                 key={item.id}
-                href={item.file_url}
+                href={resolveFileUrl(item.file_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
@@ -227,7 +228,7 @@ export const AdminDisputeDetailSections = ({
             {dispute.files.map((file) => (
               <a
                 key={file.id}
-                href={file.file_url}
+                href={resolveFileUrl(file.file_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"

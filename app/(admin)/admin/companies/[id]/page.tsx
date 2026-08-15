@@ -4,7 +4,6 @@ import { use, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import {
-  ArrowLeft,
   Ban,
   Building2,
   CheckCircle2,
@@ -24,7 +23,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAdminCompanyQuery } from "@/hooks/api/use-admin-companies-query"
 import type { AdminCompanyAction } from "@/lib/api/admin"
+import { resolveFileUrl } from "@/lib/file-url"
 import { useAuthStore } from "@/lib/store/auth-store"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
 const sections = [
   ["overview", "Обзор"],
@@ -39,12 +40,12 @@ const sections = [
 ] as const
 
 const DetailSkeleton = () => (
-  <div className="mx-auto max-w-350 animate-pulse space-y-5">
+  <PageFrame className="animate-pulse space-y-5">
     <div className="h-5 w-36 rounded bg-muted" />
     <div className="h-56 rounded-xl bg-muted" />
     <div className="h-14 rounded-xl bg-muted" />
     <div className="h-80 rounded-xl bg-muted" />
-  </div>
+  </PageFrame>
 )
 
 type PageProps = {
@@ -122,22 +123,28 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
   ]
 
   return (
-    <div className="mx-auto max-w-350 space-y-5">
-      <Link
-        href="/admin/companies"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft size={16} aria-hidden="true" />
-        Все компании
-      </Link>
-
-      <header className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <PageFrame>
+      <PageHeader
+        title={company.title}
+        description={
+          <>
+            {company.owner.name || company.owner.email}
+            {" · "}
+            {company.actor_types
+              .map((type) => (type === "buyer" ? "Заказчик" : "Поставщик"))
+              .join(", ")}
+          </>
+        }
+        backHref="/admin/companies"
+        backLabel="Все компании"
+      />
+      <PageSurface className="p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex min-w-0 items-start gap-4">
             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-xl font-bold text-primary">
               {company.logo ? (
                 <Image
-                  src={company.logo}
+                  src={resolveFileUrl(company.logo)}
                   alt=""
                   fill
                   unoptimized
@@ -151,15 +158,6 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Компания #{company.id}
-              </p>
-              <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
-                {company.title}
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {company.owner.name || company.owner.email} ·{" "}
-                {company.actor_types
-                  .map((type) => type === "buyer" ? "Заказчик" : "Поставщик")
-                  .join(", ")}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <CompanyVerificationBadge status={company.verification_status} />
@@ -243,7 +241,7 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
             </div>
           ))}
         </div>
-      </header>
+      </PageSurface>
 
       <nav
         className="sticky top-17 z-20 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card/95 p-2 backdrop-blur"
@@ -270,6 +268,6 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
           if (!open) setSelectedAction(null)
         }}
       />
-    </div>
+    </PageFrame>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Wallet } from "lucide-react"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -116,16 +116,11 @@ export default function BuyerPaymentsPage() {
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Wallet size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Платежи</h1>
-          <p className="text-sm text-muted-foreground">Платежи, безопасные сделки и документы</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Платежи"
+        description="Платежи, безопасные сделки и документы"
+      />
 
       <BuyerPaymentsSummaryCards
         totalOutgoing={totalOutgoing}
@@ -137,7 +132,7 @@ export default function BuyerPaymentsPage() {
 
       <BuyerPaymentsTabs tab={tab} onTabChange={setTab} />
 
-      <section className="bg-card border border-border rounded-xl p-6">
+      <PageSurface className="p-6">
         {tab === "outgoing" && (
           <OutgoingPaymentsTable
             payments={effectiveOutgoing}
@@ -163,7 +158,7 @@ export default function BuyerPaymentsPage() {
             getContractTitle={(id) => getContractTitle(id)}
           />
         )}
-      </section>
-    </div>
+      </PageSurface>
+    </PageFrame>
   )
 }

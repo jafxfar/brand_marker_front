@@ -1,5 +1,11 @@
 import { z } from "zod"
 
+const isoDate4Year = (emptyMessage: string) =>
+  z
+    .string()
+    .min(1, emptyMessage)
+    .refine((v) => /^\d{4}-\d{2}-\d{2}$/.test(v), "Год должен содержать 4 цифры")
+
 const baseSchema = z.object({
   type: z.enum(["product", "service"]),
   title: z.string().min(5, "Заголовок не короче 5 символов"),
@@ -9,7 +15,7 @@ const baseSchema = z.object({
   budget_from: z.string().optional(),
   budget_to: z.string().optional(),
   currency: z.enum(["TJS", "USD", "EUR", "KZT", "CNY"]),
-  deadline: z.string().min(1, "Укажите дедлайн"),
+  deadline: isoDate4Year("Укажите дедлайн"),
   visibility: z.enum(["public", "invited_only"]).default("public"),
 })
 
@@ -19,13 +25,13 @@ const productSchema = baseSchema.extend({
   delivery_country: z.string().min(1, "Укажите страну"),
   delivery_city: z.string().min(1, "Укажите город"),
   delivery_address: z.string().optional(),
-  delivery_date: z.string().min(1, "Укажите дату поставки"),
+  delivery_date: isoDate4Year("Укажите дату поставки"),
 })
 
 const serviceSchema = baseSchema.extend({
   type: z.literal("service"),
   project_duration: z.string().min(1, "Укажите длительность"),
-  start_date: z.string().min(1, "Укажите дату начала"),
+  start_date: isoDate4Year("Укажите дату начала"),
   team_size_required: z.string().optional(),
   experience_required: z.string().optional(),
 })

@@ -2,7 +2,8 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowLeft, FileCheck, MessageSquare, Paperclip, Upload } from "lucide-react"
+import { AlertTriangle, FileCheck, MessageSquare, Paperclip, Upload } from "lucide-react"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -67,21 +68,18 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[960px] mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-40 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="h-8 w-1/3 rounded-xl bg-secondary" />
+        <div className="h-40 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   if (!contract || contract.supplier_actor_id !== actorId) {
     return (
-      <div className="max-w-[960px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">Контракт не найден</p>
-        <Link href="/supplier/contracts" className="text-sm text-primary hover:underline mt-2 inline-block">
-          Вернуться к списку
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader title="Контракт не найден" backHref="/supplier/contracts" backLabel="Вернуться к списку" />
+      </PageFrame>
     )
   }
 
@@ -120,38 +118,28 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-[960px] mx-auto space-y-5">
-      <Link
-        href="/supplier/contracts"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft size={16} /> Назад к контрактам
-      </Link>
+    <PageFrame>
+      <PageHeader
+        title={contract.title}
+        description={buyerName}
+        backHref="/supplier/contracts"
+        backLabel="Назад к контрактам"
+        actions={
+          <p className="text-lg font-bold text-primary">
+            {formatCurrency(contract.agreed_amount, contract.currency)}
+          </p>
+        }
+      />
 
-      <div className="bg-card border border-border rounded-xl p-5">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <FileCheck size={18} className="text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-foreground leading-tight">{contract.title}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{buyerName}</p>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className="text-lg font-bold text-primary">
-              {formatCurrency(contract.agreed_amount, contract.currency)}
-            </p>
-            <DeadlineCountdown
-              dueDate={contract.due_date}
-              status={contract.status}
-              variant="prominent"
-              showAbsoluteDate
-              className="mt-0.5"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-3 mt-3">
-          <span className={`inline-block text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${meta.className}`}>
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <DeadlineCountdown
+            dueDate={contract.due_date}
+            status={contract.status}
+            variant="prominent"
+            showAbsoluteDate
+          />
+          <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${meta.className}`}>
             {meta.label}
           </span>
           <span className="text-xs text-muted-foreground">
@@ -254,6 +242,6 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
           openDisputeLocal(contractId, reason, actorId)
         }}
       />
-    </div>
+    </PageFrame>
   )
 }

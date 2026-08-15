@@ -10,6 +10,12 @@ export const MY_PROPOSAL_FILTER_STATUSES = [
 
 export type MyProposalFilterStatus = (typeof MY_PROPOSAL_FILTER_STATUSES)[number]
 
+export const PROPOSAL_CHAT_OPEN_STATUSES: ProposalStatus[] = [
+  "submitted",
+  "viewed",
+  "shortlisted",
+]
+
 export const myProposalTabLabels: Record<MyProposalFilterStatus, string> = {
   submitted: "Отправлено",
   shortlisted: "В избранном",

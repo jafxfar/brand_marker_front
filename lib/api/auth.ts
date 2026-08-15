@@ -73,6 +73,7 @@ export const authApi = {
       await apiFetch("/auth/logout", {
         method: "POST",
         body: JSON.stringify({ refresh_token: refresh }),
+        skipAuth: true,
       }).catch(() => undefined)
     }
     tokenStorage.clear()

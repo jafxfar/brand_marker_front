@@ -11,6 +11,8 @@ import { useBuyerCompaniesQuery } from "@/hooks/api/use-buyer-companies-query"
 import { useSupplierCompaniesQuery } from "@/hooks/api/use-supplier-companies-query"
 import { useSupplierSubscriptionQuery } from "@/hooks/api/use-supplier-subscription-query"
 import { CompanyCard } from "@/components/company/company-card"
+import { Button } from "@/components/ui/button"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { filterCompaniesByActorType } from "@/lib/company-wizard-utils"
 import { getCompanyLimit } from "@/lib/subscription"
 import type { ActorType, CompanyWithRelations } from "@/types"
@@ -75,69 +77,59 @@ export const CompanyListPage = ({
 
   if (useApi && isLoading) {
     return (
-      <div className="max-w-[900px] mx-auto animate-pulse">
-        <div className="h-10 bg-secondary rounded w-1/3 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="h-40 bg-secondary rounded-2xl" />
-          <div className="h-40 bg-secondary rounded-2xl" />
+      <PageFrame className="animate-pulse">
+        <div className="h-10 w-1/3 rounded-xl bg-secondary" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="h-40 rounded-xl bg-secondary" />
+          <div className="h-40 rounded-xl bg-secondary" />
         </div>
-      </div>
+      </PageFrame>
     )
   }
 
   return (
-    <div className="max-w-[900px] mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-            <Building2 size={20} className="text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-foreground">Мои компании</h1>
-            <p className="text-sm text-muted-foreground">
-              {roleLabel} · {companies.length} компаний
-              {limit !== null && ` · лимит ${ownedCount}/${limit}`}
-            </p>
-          </div>
-        </div>
-
-        {canCreate ? (
-          <Link
-            href={`${basePath}/new`}
-            className="h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            <Plus size={16} />
-            Создать компанию
-          </Link>
-        ) : (
-          <Link
-            href={actorType === "supplier" ? "/supplier/subscription" : `${basePath}/new`}
-            className="h-11 px-5 rounded-xl border border-input text-sm font-semibold flex items-center justify-center hover:bg-secondary transition-colors"
-          >
-            Лимит исчерпан
-          </Link>
-        )}
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Мои компании"
+        description={`${roleLabel} · ${companies.length} компаний${limit !== null ? ` · лимит ${ownedCount}/${limit}` : ""}`}
+        actions={
+          canCreate ? (
+            <Button asChild size="lg">
+              <Link href={`${basePath}/new`}>
+                <Plus size={16} />
+                Создать компанию
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild size="lg" variant="outline">
+              <Link href={actorType === "supplier" ? "/supplier/subscription" : `${basePath}/new`}>
+                Лимит исчерпан
+              </Link>
+            </Button>
+          )
+        }
+      />
 
       {companies.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-input bg-white p-12 text-center">
-          <Building2 size={40} className="text-muted-foreground mx-auto mb-4 opacity-40" />
-          <h2 className="text-lg font-bold mb-2">Нет компаний</h2>
-          <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-            Создайте профиль компании, чтобы участвовать в сделках на платформе
-          </p>
-          {canCreate && (
-            <Link
-              href={`${basePath}/new`}
-              className="inline-flex h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold items-center gap-2 hover:opacity-90 transition-opacity"
-            >
-              <Plus size={16} />
-              Создать первую компанию
-            </Link>
-          )}
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            icon={<Building2 size={40} />}
+            title="Нет компаний"
+            description="Создайте профиль компании, чтобы участвовать в сделках на платформе"
+          />
+          {canCreate ? (
+            <div className="flex justify-center pb-10">
+              <Button asChild size="lg">
+                <Link href={`${basePath}/new`}>
+                  <Plus size={16} />
+                  Создать первую компанию
+                </Link>
+              </Button>
+            </div>
+          ) : null}
+        </PageSurface>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {companies.map((company) => (
             <CompanyCard
               key={company.id}
@@ -158,6 +150,6 @@ export const CompanyListPage = ({
           ))}
         </div>
       )}
-    </div>
+    </PageFrame>
   )
 }

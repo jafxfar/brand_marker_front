@@ -1,8 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Search, Store } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Search } from "lucide-react"
 import { catalogCategories as mockCatalogCategories } from "@/lib/mock/catalog-categories"
 import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
 import { mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
@@ -19,6 +18,14 @@ import {
   toPublicSupplierFromCompany,
 } from "@/lib/supplier-directory"
 import { SupplierDirectoryCard } from "@/components/cabinet/suppliers/supplier-directory-card"
+import { Input } from "@/components/ui/input"
+import {
+  PageEmptyState,
+  PageFrame,
+  PageHeader,
+  PageSurface,
+  SegmentedControl,
+} from "@/components/layout"
 import type { PublicSupplier } from "@/types"
 
 export default function SuppliersPage() {
@@ -87,77 +94,58 @@ export default function SuppliersPage() {
     ? (apiSuppliers ?? [])
     : localSuppliers
 
+  const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(event.target.value)
+  }
+
   return (
-    <div className="max-w-[1100px] mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Store size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Каталог поставщиков</h1>
-          <p className="text-sm text-muted-foreground">
-            Компании и физлица — поиск и приглашение к заявке
-          </p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Каталог поставщиков"
+        description="Компании и физлица - поиск и приглашение к заявке"
+      />
 
       <div className="relative">
         <Search
           size={18}
           className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
         />
-        <input
+        <Input
           type="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={handleQueryChange}
           placeholder="Поиск по названию, ФИО, описанию, категории..."
-          className="w-full h-11 pl-11 pr-4 rounded-xl border border-border bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="pl-11"
           aria-label="Поиск поставщиков"
         />
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        <button
-          type="button"
-          onClick={() => setCategorySlug("")}
-          className={cn(
-            "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors",
-            categorySlug === ""
-              ? "bg-primary text-primary-foreground"
-              : "bg-card border border-border text-muted-foreground hover:text-foreground",
-          )}
-        >
-          Все
-        </button>
-        {categoryTabs.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => setCategorySlug(c.slug)}
-            className={cn(
-              "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors",
-              categorySlug === c.slug
-                ? "bg-primary text-primary-foreground"
-                : "bg-card border border-border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {c.name}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        value={categorySlug}
+        options={[
+          { value: "", label: "Все" },
+          ...categoryTabs.map((c) => ({ value: c.slug, label: c.name })),
+        ]}
+        onChange={setCategorySlug}
+        ariaLabel="Категория поставщиков"
+      />
 
       {!hydrated || (useApi && isLoading) ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 bg-secondary rounded-xl animate-pulse" />
+            <div key={i} className="h-40 animate-pulse rounded-xl bg-secondary" />
           ))}
         </div>
       ) : suppliers.length === 0 ? (
-        <div className="bg-card border border-border rounded-xl p-12 text-center text-sm text-muted-foreground">
-          Поставщики не найдены. Попробуйте изменить фильтры.
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            title="Поставщики не найдены"
+            description="Попробуйте изменить фильтры"
+          />
+        </PageSurface>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {suppliers.map((supplier) => (
             <SupplierDirectoryCard
               key={supplier.actor_id}
@@ -168,6 +156,6 @@ export default function SuppliersPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageFrame>
   )
 }

@@ -15,6 +15,7 @@ import {
   milestoneStatusMeta,
 } from "@/lib/contract-display"
 import { milestoneTriggerLabel, paymentTypeMeta } from "@/lib/payment-display"
+import { resolveFileUrl } from "@/lib/file-url"
 import type {
   ContractStatus,
   PaymentMilestoneStatus,
@@ -271,7 +272,7 @@ export const AdminContractDetailSections = ({
             {contract.files.map((file) => (
               <a
                 key={file.id}
-                href={file.file_url}
+                href={resolveFileUrl(file.file_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"

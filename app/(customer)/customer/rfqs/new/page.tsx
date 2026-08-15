@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { RfqForm } from "@/components/cabinet/rfq/rfq-form"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -40,6 +40,7 @@ export default function NewRfqPage() {
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
 
   const useApi = isApiEnabled()
   const createMutation = useCreateRfqMutation()
@@ -94,9 +95,12 @@ export default function NewRfqPage() {
   }
 
   const handleCreateApi = async (input: RfqCreate, publish: boolean) => {
-    if (!user) return
+    if (!user) {
+      submittingRef.current = false
+      setSubmitting(false)
+      return
+    }
     setError(null)
-    setSubmitting(true)
     try {
       const payload = buildInput(input)
       let rfq = await createMutation.mutateAsync(payload)
@@ -120,30 +124,38 @@ export default function NewRfqPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось создать заявку")
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
 
   const handleCreate = (input: RfqCreate, publish: boolean) => {
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setSubmitting(true)
+
     if (useApi) {
       void handleCreateApi(input, publish)
       return
     }
     handleCreateLocal(input, publish)
+    submittingRef.current = false
+    setSubmitting(false)
   }
 
   return (
     <div className="space-y-4">
-      {error && (
-        <p className="max-w-[820px] mx-auto text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3">
+      {error ? (
+        <p className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
-      )}
+      ) : null}
       <RfqForm
         cancelHref="/customer/rfqs"
         invitedSupplierId={invitedSupplierId}
         invitedSupplierName={invitedSupplier?.title}
         pendingAttachments={pendingFiles.map((f) => ({ id: f.id, file_name: f.file_name }))}
+        isSubmitting={submitting}
         onSaveDraft={(input) => handleCreate(input, false)}
         onPublish={(input) => handleCreate(input, true)}
         onAddAttachment={(file) => {

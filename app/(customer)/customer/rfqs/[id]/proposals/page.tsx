@@ -3,12 +3,12 @@
 import { use, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
-import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { usePublicSuppliersByActor } from "@/hooks/api/use-supplier-name"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useRfqQuery } from "@/hooks/api/use-rfqs-query"
@@ -46,7 +46,6 @@ export default function ProposalsReviewPage({ params }: PageProps) {
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const updateProposalStatus = useProposalsStore((s) => s.updateProposalStatus)
   const acceptProposalLocal = useProposalsStore((s) => s.acceptProposal)
-  const getCompany = useCompaniesStore((s) => s.getCompany)
 
   const { data: apiRfq, isLoading: rfqLoading } = useRfqQuery(id, hydrated && useApi)
   const { data: apiProposals = [] } = useProposalsForRfqQuery(id, hydrated && useApi)
@@ -74,24 +73,24 @@ export default function ProposalsReviewPage({ params }: PageProps) {
       ),
     [allProposals, statusFilter, sortMode],
   )
+  const { getSupplier, getName: getSupplierName } = usePublicSuppliersByActor(
+    allProposals.map((p) => p.supplier_actor_id),
+  )
 
   if (!hydrated || (useApi && rfqLoading)) {
     return (
-      <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-32 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="h-8 w-1/3 rounded-xl bg-secondary" />
+        <div className="h-32 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   if (!rfq || rfq.actor_id !== String(actorId)) {
     return (
-      <div className="max-w-[900px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">Заявка не найдена</p>
-        <Link href="/customer/rfqs" className="text-sm text-primary hover:underline mt-2 inline-block">
-          К списку заявок
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader title="Заявка не найдена" backHref="/customer/rfqs" backLabel="К списку заявок" />
+      </PageFrame>
     )
   }
 
@@ -112,34 +111,26 @@ export default function ProposalsReviewPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-6">
-      <Link
-        href={`/customer/rfqs/${rfq.id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft size={16} /> Назад к заявке
-      </Link>
+    <PageFrame>
+      <PageHeader
+        title="Обзор предложений"
+        description={rfq.title}
+        backHref={`/customer/rfqs/${rfq.id}`}
+        backLabel="Назад к заявке"
+        actions={<RfqStatusBadge status={rfq.status} />}
+      />
 
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Обзор предложений</h1>
-            <p className="text-sm text-muted-foreground mt-1">{rfq.title}</p>
-            <div className="mt-2">
-              <RfqStatusBadge status={rfq.status} />
-            </div>
-          </div>
-          <div className="text-sm sm:text-right">
-            <p className="text-muted-foreground">Бюджет</p>
-            <p className="font-bold text-primary">
-              {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Дедлайн: {formatIsoDate(rfq.deadline)}
-            </p>
-          </div>
+      <PageSurface className="p-6">
+        <div className="flex flex-col gap-1 sm:text-right">
+          <p className="text-sm text-muted-foreground">Бюджет</p>
+          <p className="font-bold text-primary">
+            {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Дедлайн: {formatIsoDate(rfq.deadline)}
+          </p>
         </div>
-      </div>
+      </PageSurface>
 
       <ProposalsReviewToolbar
         total={proposals.length}
@@ -150,21 +141,24 @@ export default function ProposalsReviewPage({ params }: PageProps) {
       />
 
       {proposals.length === 0 ? (
-        <div className="bg-card border border-border rounded-xl p-10 text-center">
-          <p className="text-sm font-semibold text-foreground">Предложений нет</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {statusFilter !== "all"
-              ? "Попробуйте сменить фильтр"
-              : "Дождитесь откликов поставщиков"}
-          </p>
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            title="Предложений нет"
+            description={
+              statusFilter !== "all"
+                ? "Попробуйте сменить фильтр"
+                : "Дождитесь откликов поставщиков"
+            }
+          />
+        </PageSurface>
       ) : (
         <div className="space-y-4">
           {proposals.map((proposal) => (
             <ProposalReviewCard
               key={proposal.id}
               proposal={proposal}
-              supplier={getCompany(proposal.supplier_actor_id)}
+              supplier={getSupplier(proposal.supplier_actor_id)}
+              supplierName={getSupplierName(proposal.supplier_actor_id)}
               canManage={canManage}
               onShortlist={() => {
                 if (useApi) {
@@ -190,15 +184,12 @@ export default function ProposalsReviewPage({ params }: PageProps) {
         <AcceptProposalDialog
           open={!!acceptTarget}
           onOpenChange={(open) => !open && setAcceptTarget(null)}
-          supplierName={
-            getCompany(acceptTarget.supplier_actor_id)?.title ??
-            `Поставщик #${acceptTarget.supplier_actor_id}`
-          }
+          supplierName={getSupplierName(acceptTarget.supplier_actor_id)}
           price={acceptTarget.price}
           currency={acceptTarget.currency}
           onConfirm={(terms) => void handleAccept(acceptTarget.id, terms)}
         />
       )}
-    </div>
+    </PageFrame>
   )
 }

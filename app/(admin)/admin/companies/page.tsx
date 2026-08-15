@@ -30,7 +30,9 @@ import type {
   AdminCompany,
   AdminCompanyStatusFilter,
 } from "@/lib/api/admin"
-import { cn } from "@/lib/utils"
+import { resolveFileUrl } from "@/lib/file-url"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
+import { Input } from "@/components/ui/input"
 
 const PAGE_SIZE = 20
 const statusFilters: Array<{ value: AdminCompanyStatusFilter; label: string }> = [
@@ -64,7 +66,7 @@ const CompanyIdentity = ({ company }: { company: AdminCompany }) => {
       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-sm font-bold text-primary">
         {company.logo ? (
           <Image
-            src={company.logo}
+            src={resolveFileUrl(company.logo)}
             alt=""
             fill
             unoptimized
@@ -86,11 +88,11 @@ const CompanyIdentity = ({ company }: { company: AdminCompany }) => {
 }
 
 const CompaniesSkeleton = () => (
-  <div className="mx-auto max-w-350 animate-pulse space-y-6" aria-label="Загрузка компаний">
+  <PageFrame className="animate-pulse" aria-label="Загрузка компаний">
     <div className="h-16 w-80 max-w-full rounded-xl bg-muted" />
     <div className="h-28 rounded-xl bg-muted" />
     <div className="h-96 rounded-xl bg-muted" />
-  </div>
+  </PageFrame>
 )
 
 const AdminCompaniesContent = () => {
@@ -174,25 +176,16 @@ const AdminCompaniesContent = () => {
   }
 
   return (
-    <div className="mx-auto max-w-350 space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
-            <Building2 size={21} aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Компании</h1>
-            <p className="text-sm text-muted-foreground">
-              Верификация, доступ и данные организаций
-            </p>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">
+    <PageFrame>
+      <PageHeader
+        title="Компании"
+        description="Верификация, доступ и данные организаций"
+        actions={<p className="text-sm text-muted-foreground">
           Найдено <strong className="ml-1 text-foreground">{total}</strong>
-        </p>
-      </header>
+        </p>}
+      />
 
-      <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <PageSurface>
         <div className="border-b border-border p-4">
           <div className="relative">
             <Search
@@ -200,73 +193,55 @@ const AdminCompaniesContent = () => {
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
             />
-            <input
+            <Input
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Название, юр. лицо, ИНН, владелец или ID"
-              className="h-11 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-11"
               aria-label="Поиск компаний"
             />
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto p-3" role="tablist">
-          {statusFilters.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              role="tab"
-              aria-selected={status === filter.value}
-              onClick={() =>
-                replaceSearchParams({ status: filter.value, page: null })
-              }
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold",
-                status === filter.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-              )}
-            >
-              {filter.label}
-              <span className={cn(
-                "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                status === filter.value ? "bg-card/20" : "bg-muted",
-              )}>
-                {statusCounts[filter.value]}
-              </span>
-            </button>
-          ))}
+        <div className="p-3">
+          <SegmentedControl
+            value={status}
+            options={statusFilters.map((filter) => ({
+              ...filter,
+              count: statusCounts[filter.value],
+            }))}
+            onChange={(next) => replaceSearchParams({ status: next, page: null })}
+            className="w-full max-w-full border-0 bg-transparent p-0"
+          />
         </div>
-      </section>
+      </PageSurface>
 
       {items.length === 0 ? (
-        <section className="rounded-xl border border-border bg-card px-6 py-16 text-center">
-          <Search className="mx-auto text-muted-foreground/40" aria-hidden="true" />
-          <h2 className="mt-4 font-bold">
-            {hasFilters ? "Компании не найдены" : "Компаний пока нет"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {hasFilters
+        <PageSurface>
+          <PageEmptyState
+            title={hasFilters ? "Компании не найдены" : "Компаний пока нет"}
+            description={hasFilters
               ? "Измените поисковый запрос или выбранный статус."
               : "Зарегистрированные организации появятся здесь."}
-          </p>
+          />
           {hasFilters && (
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-5"
-              onClick={() => {
-                setSearchInput("")
-                replaceSearchParams({ query: null, status: null, page: null })
-              }}
-            >
-              Сбросить фильтры
-            </Button>
+            <div className="flex justify-center pb-10">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSearchInput("")
+                  replaceSearchParams({ query: null, status: null, page: null })
+                }}
+              >
+                Сбросить фильтры
+              </Button>
+            </div>
           )}
-        </section>
+        </PageSurface>
       ) : (
         <>
-          <div className="relative hidden overflow-hidden rounded-xl border border-border bg-card lg:block">
+          <PageSurface className="relative hidden lg:block">
             {companiesQuery.isFetching && (
               <div className="absolute inset-x-0 top-0 z-10 h-0.5 animate-pulse bg-primary" />
             )}
@@ -312,7 +287,7 @@ const AdminCompaniesContent = () => {
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </PageSurface>
 
           <div className="grid gap-3 lg:hidden">
             {items.map((company) => (
@@ -360,7 +335,7 @@ const AdminCompaniesContent = () => {
           </Button>
         </nav>
       )}
-    </div>
+    </PageFrame>
   )
 }
 

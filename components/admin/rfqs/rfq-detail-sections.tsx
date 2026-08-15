@@ -13,6 +13,7 @@ import {
 } from "@/lib/admin-display"
 import { budgetTypeMeta, rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { proposalStatusMeta } from "@/lib/proposal-display"
+import { resolveFileUrl } from "@/lib/file-url"
 import type { BudgetType, ProposalStatus, RfqStatus, RfqType } from "@/types"
 
 const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
@@ -123,7 +124,7 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
             {requirements.attachments.map((attachment) => (
               <a
                 key={attachment.id}
-                href={attachment.file_url}
+                href={resolveFileUrl(attachment.file_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"

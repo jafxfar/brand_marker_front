@@ -29,7 +29,7 @@ export default function CustomerTopbar() {
   }
 
   return (
-    <header className="h-[68px] bg-card border-b border-border flex items-center gap-4 px-4 sm:px-6 sticky top-0 z-30">
+    <header className="sticky top-0 z-30 flex h-[68px] items-center gap-4 border-b border-border bg-card px-4 sm:px-6">
       {/* Mobile nav trigger */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>

@@ -2,7 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, ShoppingCart, FileText } from "lucide-react"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -63,21 +63,18 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-48 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="h-8 w-1/3 rounded-xl bg-secondary" />
+        <div className="h-48 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   if (!rfq) {
     return (
-      <div className="max-w-[900px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">Заявка не найдена</p>
-        <Link href="/supplier/rfqs" className="text-sm text-primary hover:underline mt-2 inline-block">
-          Вернуться к заявкам заказчиков
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader title="Заявка не найдена" backHref="/supplier/rfqs" backLabel="Вернуться к заявкам заказчиков" />
+      </PageFrame>
     )
   }
 
@@ -113,54 +110,38 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-6">
-      <Link
-        href="/supplier/rfqs"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft size={16} /> Назад к маркетплейсу
-      </Link>
+    <PageFrame>
+      <PageHeader
+        title={rfq.title}
+        description={`${getRfqCategoryLabel(rfq.category_id)} · ${buyerName}`}
+        backHref="/supplier/rfqs"
+        backLabel="Назад к маркетплейсу"
+      />
 
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-            {rfq.type === "product" ? (
-              <ShoppingCart size={20} className="text-primary" />
-            ) : (
-              <FileText size={20} className="text-primary" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-foreground">{rfq.title}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {getRfqCategoryLabel(rfq.category_id)} · {buyerName}
-            </p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.className}`}>
-                {meta.label}
-              </span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-foreground">
-                {rfqTypeLabel[rfq.type]}
-              </span>
-            </div>
-          </div>
+      <PageSurface className="p-6">
+        <div className="mb-6 flex flex-wrap gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${meta.className}`}>
+            {meta.label}
+          </span>
+          <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-foreground">
+            {rfqTypeLabel[rfq.type]}
+          </span>
         </div>
-
-        <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border">
+        <div className="grid grid-cols-2 gap-4 border-t border-border pt-6">
           <div>
             <p className="text-xs text-muted-foreground">Бюджет</p>
-            <p className="text-sm font-semibold text-foreground mt-0.5">
+            <p className="mt-0.5 text-sm font-semibold text-foreground">
               {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Дедлайн откликов</p>
-            <p className="text-sm font-semibold text-foreground mt-0.5">
+            <p className="mt-0.5 text-sm font-semibold text-foreground">
               {formatIsoDate(rfq.deadline)}
             </p>
           </div>
         </div>
-      </div>
+      </PageSurface>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -182,6 +163,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           <RfqBuyerProfileCard buyer={buyer} />
           <RfqSubmitProposalCard
             myProposal={myProposal}
+            buyerName={buyerName}
             onSubmit={() => setDialogOpen(true)}
           />
         </div>
@@ -198,6 +180,6 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
         defaultPrice={rfq.budget_from ?? rfq.budget_to}
         onSubmit={handleSubmitProposal}
       />
-    </div>
+    </PageFrame>
   )
 }

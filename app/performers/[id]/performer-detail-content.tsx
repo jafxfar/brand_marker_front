@@ -7,8 +7,8 @@ import { getPerformer } from "@/lib/mock/marketplace-performers"
 import { getServicesByCategory } from "@/lib/mock/marketplace-services"
 import { getIcon } from "@/lib/icon-map"
 import { isApiEnabled } from "@/lib/api/config"
-import { usePublicCompanyQuery, usePublicCompanyCatalogQuery } from "@/hooks/api/use-public-query"
-import { mapCompanyToPerformer, mapCatalogItemToService } from "@/lib/marketplace-hybrid"
+import { usePublicSupplierQuery, usePublicSupplierCatalogQuery } from "@/hooks/api/use-public-query"
+import { mapPublicSupplierToPerformer, mapCatalogItemToService } from "@/lib/marketplace-hybrid"
 import { loginRedirect, performersUrl, serviceUrl } from "@/lib/marketplace-routes"
 import type { MarketplacePerformer } from "@/types/marketplace"
 
@@ -19,17 +19,17 @@ type PerformerDetailContentProps = {
 export const PerformerDetailContent = ({ performerId }: PerformerDetailContentProps) => {
   const useApi = isApiEnabled()
   const mockPerformer = useApi ? null : getPerformer(performerId)
-  const { data: apiCompany, isLoading } = usePublicCompanyQuery(
+  const { data: apiSupplier, isLoading } = usePublicSupplierQuery(
     performerId,
     useApi,
   )
-  const { data: apiCatalog = [] } = usePublicCompanyCatalogQuery(
+  const { data: apiCatalog = [] } = usePublicSupplierCatalogQuery(
     performerId,
-    useApi && Boolean(apiCompany),
+    useApi && Boolean(apiSupplier),
   )
 
   const performer: MarketplacePerformer | null = useApi
-    ? (apiCompany ? mapCompanyToPerformer(apiCompany) : null)
+    ? (apiSupplier ? mapPublicSupplierToPerformer(apiSupplier) : null)
     : mockPerformer
 
   if (useApi && isLoading) {
@@ -58,7 +58,7 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
   const Icon = getIcon(performer.icon)
   const services = useApi
     ? apiCatalog.map((item) =>
-        mapCatalogItemToService(item, apiCompany ?? undefined),
+        mapCatalogItemToService(item, null, apiSupplier ?? undefined),
       )
     : getServicesByCategory(performer.categoryId).filter(
         (s) => s.providerId === performer.id,

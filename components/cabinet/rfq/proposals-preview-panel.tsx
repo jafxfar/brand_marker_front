@@ -2,14 +2,15 @@
 
 import Link from "next/link"
 import { ArrowRight, Inbox } from "lucide-react"
-import type { CompanyWithRelations, Proposal } from "@/types"
+import type { Proposal, PublicSupplier } from "@/types"
 import { ProposalReviewCard } from "@/components/cabinet/rfq/proposal-review-card"
 
 type ProposalsPreviewPanelProps = {
   rfqId: string
   proposals: Proposal[]
   canManage: boolean
-  getCompany: (id: number) => CompanyWithRelations | undefined
+  getSupplier: (actorId: number) => PublicSupplier | undefined
+  getSupplierName: (actorId: number) => string
   onShortlist: (proposalId: number) => void
   onReject: (proposalId: number) => void
   onAccept: (proposalId: number) => void
@@ -19,7 +20,8 @@ export const ProposalsPreviewPanel = ({
   rfqId,
   proposals,
   canManage,
-  getCompany,
+  getSupplier,
+  getSupplierName,
   onShortlist,
   onReject,
   onAccept,
@@ -59,7 +61,8 @@ export const ProposalsPreviewPanel = ({
           <ProposalReviewCard
             key={proposal.id}
             proposal={proposal}
-            supplier={getCompany(proposal.supplier_actor_id)}
+            supplier={getSupplier(proposal.supplier_actor_id)}
+            supplierName={getSupplierName(proposal.supplier_actor_id)}
             canManage={canManage}
             onShortlist={() => onShortlist(proposal.id)}
             onReject={() => onReject(proposal.id)}

@@ -10,6 +10,7 @@ import {
   adminReportStatusLabels,
 } from "@/lib/admin-display"
 import { contractStatusMeta } from "@/lib/contract-display"
+import { resolveFileUrl } from "@/lib/file-url"
 import type { ContractStatus } from "@/types"
 
 const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
@@ -156,7 +157,7 @@ export const AdminProposalDetailSections = ({
         <h2 className="mb-5 text-lg font-bold">Вложения</h2>
         {proposal.attachment ? (
           <a
-            href={proposal.attachment.file_url}
+            href={resolveFileUrl(proposal.attachment.file_url)}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"

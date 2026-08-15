@@ -2,42 +2,62 @@ import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { publicApi } from "@/lib/api/public"
 import { isApiEnabled } from "@/lib/api/config"
+import { publicKeys } from "@/hooks/api/use-public-query"
 import { useCompaniesStore } from "@/lib/store/companies-store"
+import {
+  isSupplierCompany,
+  toPublicSupplierFromCompany,
+} from "@/lib/supplier-directory"
 import type { PublicSupplier } from "@/types"
 
-const findSupplierTitle = (
+const findSupplier = (
   actorId: number,
   suppliers: PublicSupplier[],
-): string | null => {
+): PublicSupplier | undefined => {
   for (const supplier of suppliers) {
-    if (supplier.actor_id === actorId) return supplier.display_name
+    if (supplier.actor_id === actorId) return supplier
   }
-  return null
+  return undefined
 }
 
-export const useSupplierActorName = (actorIds: number[]) => {
+export const usePublicSuppliersByActor = (actorIds: number[]) => {
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const useApi = isApiEnabled()
-  const uniqueIds = [...new Set(actorIds.filter(Boolean))]
+  const uniqueKey = [...new Set(actorIds.filter((id) => id > 0))]
+    .sort((a, b) => a - b)
+    .join(",")
 
   const { data: suppliers } = useQuery({
-    queryKey: ["public-suppliers-names"],
+    queryKey: publicKeys.suppliers(),
     queryFn: () => publicApi.suppliers(),
-    enabled: useApi && uniqueIds.length > 0,
+    enabled: useApi && uniqueKey.length > 0,
     staleTime: 5 * 60 * 1000,
   })
 
   return useMemo(() => {
-    const map = new Map<number, string>()
-    for (const id of uniqueIds) {
-      const fromList = suppliers ? findSupplierTitle(id, suppliers) : null
+    const ids = uniqueKey ? uniqueKey.split(",").map(Number) : []
+    const map = new Map<number, PublicSupplier>()
+    for (const id of ids) {
+      const fromList = suppliers ? findSupplier(id, suppliers) : undefined
       if (fromList) {
         map.set(id, fromList)
         continue
       }
-      const local = getCompany(id)?.title
-      map.set(id, local ?? `Поставщик #${id}`)
+      const local = getCompany(id)
+      if (local && isSupplierCompany(local)) {
+        map.set(id, toPublicSupplierFromCompany(local))
+      }
     }
-    return (actorId: number) => map.get(actorId) ?? `Поставщик #${actorId}`
-  }, [uniqueIds, getCompany, suppliers])
+
+    const getSupplier = (actorId: number) => map.get(actorId)
+    const getName = (actorId: number) =>
+      map.get(actorId)?.display_name ?? `Поставщик #${actorId}`
+
+    return { getSupplier, getName }
+  }, [uniqueKey, getCompany, suppliers])
+}
+
+export const useSupplierActorName = (actorIds: number[]) => {
+  const { getName } = usePublicSuppliersByActor(actorIds)
+  return getName
 }

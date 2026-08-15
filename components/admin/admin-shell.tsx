@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import AdminTopbar from "@/components/admin/admin-topbar"
+import { CabinetShell } from "@/components/layout/cabinet-shell"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { useAuthStore } from "@/lib/store/auth-store"
 
@@ -36,14 +37,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="flex min-h-dvh bg-background">
-      <aside className="sticky top-0 hidden h-dvh w-68 shrink-0 border-r border-border lg:block">
-        <AdminSidebar />
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <AdminTopbar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
-      </div>
-    </div>
+    <CabinetShell sidebar={<AdminSidebar />} topbar={<AdminTopbar />}>
+      {children}
+    </CabinetShell>
   )
 }

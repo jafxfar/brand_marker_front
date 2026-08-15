@@ -30,6 +30,8 @@ import {
   getSupplierRevenue,
   getSupplierUnreadMessageCount,
 } from "@/lib/supplier-dashboard"
+import { Button } from "@/components/ui/button"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { StatCard } from "@/components/supplier/dashboard/stat-card"
 import { ActiveContractsPanel } from "@/components/supplier/dashboard/active-contracts-panel"
 import { NewRfqPanel } from "@/components/supplier/dashboard/new-rfq-panel"
@@ -126,23 +128,18 @@ export default function SupplierDashboard() {
   const isLoading = useApi && (contractsLoading || rfqsLoading)
 
   return (
-    <div className="max-w-[1200px] mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Здравствуйте{hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ваши договоры, заявки заказчиков и финансы
-          </p>
-        </div>
-        <Link
-          href="/supplier/rfqs"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
-        >
-          Откликнуться на заявку <ArrowRight size={17} />
-        </Link>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
+        description="Ваши договоры, заявки заказчиков и финансы"
+        actions={
+          <Button asChild size="lg">
+            <Link href="/supplier/rfqs">
+              Откликнуться на заявку <ArrowRight size={17} />
+            </Link>
+          </Button>
+        }
+      />
 
       <HowItWorks variant="supplier" />
 
@@ -211,6 +208,6 @@ export default function SupplierDashboard() {
           />
         </div>
       </div>
-    </div>
+    </PageFrame>
   )
 }

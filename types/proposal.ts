@@ -53,3 +53,12 @@ export type ProposalAttachmentCreate = Omit<ProposalAttachment, "id">
 export type ProposalAttachmentUpdate = Partial<
   Omit<ProposalAttachmentCreate, "proposal_id">
 >
+
+export type ProposalMessage = {
+  id: number
+  proposal_id: number
+  sender_id: number
+  sender_name: string
+  text: string
+  created_at: string
+}

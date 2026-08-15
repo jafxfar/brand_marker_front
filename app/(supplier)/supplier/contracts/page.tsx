@@ -2,7 +2,13 @@
 
 import { useState } from "react"
 import { FileCheck } from "lucide-react"
-import { cn } from "@/lib/utils"
+import {
+  PageEmptyState,
+  PageFrame,
+  PageHeader,
+  PageSurface,
+  SegmentedControl,
+} from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -43,51 +49,35 @@ export default function SupplierContractsPage() {
   const isEmpty = !hydrated || isLoading || contracts.length === 0
 
   return (
-    <div className="max-w-[1000px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <FileCheck size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Контракты</h1>
-          <p className="text-sm text-muted-foreground">Управление сделками как поставщик</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Контракты"
+        description="Управление сделками как поставщик"
+      />
 
-      <div className="flex flex-wrap items-center gap-1 mb-5 bg-card border border-border rounded-xl p-1 w-fit">
-        {CONTRACT_LIST_TABS.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            onClick={() => setTab(t.value)}
-            className={cn(
-              "px-4 py-2 rounded-lg text-sm font-semibold transition-colors",
-              tab === t.value
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        value={tab}
+        options={CONTRACT_LIST_TABS}
+        onChange={setTab}
+        ariaLabel="Статус контракта"
+      />
 
       {isEmpty ? (
-        <div className="bg-card border border-border rounded-xl p-12 text-center">
-          <FileCheck size={32} className="text-primary mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground">
-            {isLoading ? "Загрузка контрактов..." : "Контрактов нет"}
-          </p>
-          {!isLoading && (
-            <p className="text-xs text-muted-foreground mt-1">{emptyMessages[tab]}</p>
-          )}
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            icon={<FileCheck size={32} />}
+            title={isLoading ? "Загрузка контрактов..." : "Контрактов нет"}
+            description={!isLoading ? emptyMessages[tab] : undefined}
+          />
+        </PageSurface>
       ) : (
-        <ContractsListTable
-          contracts={contracts}
-          getBuyerName={(id) => getCompany(id)?.title ?? "Заказчик"}
-        />
+        <PageSurface>
+          <ContractsListTable
+            contracts={contracts}
+            getBuyerName={(id) => getCompany(id)?.title ?? "Заказчик"}
+          />
+        </PageSurface>
       )}
-    </div>
+    </PageFrame>
   )
 }

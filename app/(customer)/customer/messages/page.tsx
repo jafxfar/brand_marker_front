@@ -18,6 +18,7 @@ import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
 import { ConversationsSidebar } from "@/components/contracts/conversations-sidebar"
 import { buildChatConversations } from "@/lib/chat-conversations"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import type { ContractWithRelations } from "@/types"
 
 export default function BuyerMessagesPage() {
@@ -67,35 +68,28 @@ export default function BuyerMessagesPage() {
 
   if (useApi && isLoading) {
     return (
-      <div className="max-w-[900px] mx-auto animate-pulse">
-        <div className="h-10 bg-secondary rounded w-1/3 mb-6" />
-        <div className="h-64 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="h-10 w-1/3 rounded-xl bg-secondary" />
+        <div className="h-64 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   return (
-    <div className="max-w-[960px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <MessageSquare size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Сообщения</h1>
-          <p className="text-sm text-muted-foreground">
-            Переписка по контрактам с поставщиками
-          </p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Сообщения"
+        description="Переписка по контрактам с поставщиками"
+      />
 
       {conversations.length === 0 ? (
-        <div className="bg-card border border-border rounded-xl p-12 text-center">
-          <MessageSquare size={32} className="text-primary mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Сообщения появятся в активных контрактах
-          </p>
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            icon={<MessageSquare size={32} />}
+            title="Сообщений пока нет"
+            description="Сообщения появятся в активных контрактах"
+          />
+        </PageSurface>
       ) : (
         <div className="grid md:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[420px]">
           <ConversationsSidebar
@@ -134,13 +128,13 @@ export default function BuyerMessagesPage() {
                 </Link>
               </>
             ) : (
-              <div className="bg-card border border-border rounded-xl flex-1 flex items-center justify-center">
+              <PageSurface className="flex flex-1 items-center justify-center">
                 <p className="text-sm text-muted-foreground">Выберите диалог</p>
-              </div>
+              </PageSurface>
             )}
           </div>
         </div>
       )}
-    </div>
+    </PageFrame>
   )
 }

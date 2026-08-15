@@ -1,6 +1,7 @@
 "use client"
 
 import { Crown, Check, ShieldCheck } from "lucide-react"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { cn } from "@/lib/utils"
 import { useSubscriptionStore } from "@/lib/store/subscription-store"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
@@ -56,16 +57,11 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Crown size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Подписка для продвижения</h1>
-          <p className="text-sm text-muted-foreground">Поднимайте отклики и профиль в топ</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Подписка для продвижения"
+        description="Поднимайте отклики и профиль в топ"
+      />
 
       <div
         className="rounded-xl p-5 mb-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -151,6 +147,6 @@ export default function SubscriptionPage() {
         <ShieldCheck size={14} className="text-primary flex-shrink-0" />
         Демо-оплата: реальное списание не выполняется. Подписка действует 30 дней.
       </div>
-    </div>
+    </PageFrame>
   )
 }

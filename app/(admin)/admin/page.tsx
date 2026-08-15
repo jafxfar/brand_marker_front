@@ -22,7 +22,9 @@ import {
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { ru } from "date-fns/locale"
+import { Button } from "@/components/ui/button"
 import { useAdminDashboardQuery } from "@/hooks/api/use-admin-dashboard-query"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import type {
   AdminActivityItem,
   AdminActivityType,
@@ -90,7 +92,7 @@ const formatMetric = (value: number, currency = false) =>
   currency ? formatCurrency(value) : formatNumber(value)
 
 const DashboardSkeleton = () => (
-  <div className="mx-auto max-w-[1400px] animate-pulse space-y-6" aria-label="Загрузка дашборда">
+  <PageFrame className="animate-pulse" aria-label="Загрузка дашборда">
     <div className="space-y-2">
       <div className="h-8 w-52 rounded-lg bg-muted" />
       <div className="h-4 w-80 max-w-full rounded bg-muted" />
@@ -107,7 +109,7 @@ const DashboardSkeleton = () => (
       <div className="h-96 rounded-xl border border-border bg-card" />
       <div className="h-96 rounded-xl border border-border bg-card" />
     </div>
-  </div>
+  </PageFrame>
 )
 
 const MetricCard = ({
@@ -204,45 +206,38 @@ export default function AdminDashboardPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Проверьте подключение к API и повторите запрос.
           </p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
+          <Button type="button" className="mt-5" onClick={() => refetch()}>
             <RefreshCcw size={16} aria-hidden="true" />
             Повторить
-          </button>
+          </Button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Дашборд
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ключевые показатели и последние события платформы
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/35 hover:bg-secondary disabled:cursor-wait disabled:opacity-60 sm:self-auto"
-          aria-label="Обновить данные дашборда"
-        >
-          <RefreshCcw
-            size={15}
-            className={isFetching ? "animate-spin" : undefined}
-            aria-hidden="true"
-          />
-          Обновить
-        </button>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Дашборд"
+        description="Ключевые показатели и последние события платформы"
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            aria-label="Обновить данные дашборда"
+          >
+            <RefreshCcw
+              size={15}
+              className={isFetching ? "animate-spin" : undefined}
+              aria-hidden="true"
+            />
+            Обновить
+          </Button>
+        }
+      />
 
       <section aria-labelledby="metrics-title">
         <h2 id="metrics-title" className="sr-only">
@@ -260,10 +255,7 @@ export default function AdminDashboardPage() {
       </section>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-        <section
-          className="overflow-hidden rounded-xl border border-border bg-card"
-          aria-labelledby="activity-title"
-        >
+        <PageSurface aria-labelledby="activity-title">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <div>
               <h2 id="activity-title" className="font-bold text-foreground">
@@ -282,21 +274,16 @@ export default function AdminDashboardPage() {
               ))}
             </ul>
           ) : (
-            <div className="px-5 py-14 text-center">
-              <Activity size={24} className="mx-auto text-muted-foreground/40" aria-hidden="true" />
-              <p className="mt-3 text-sm font-semibold text-foreground">Событий пока нет</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Новая активность появится здесь автоматически
-              </p>
-            </div>
+            <PageEmptyState
+              icon={<Activity size={24} />}
+              title="Событий пока нет"
+              description="Новая активность появится здесь автоматически"
+            />
           )}
-        </section>
+        </PageSurface>
 
         <aside className="space-y-6">
-          <section
-            className="rounded-xl border border-border bg-card p-5"
-            aria-labelledby="attention-title"
-          >
+          <PageSurface className="p-5" aria-labelledby="attention-title">
             <div className="flex items-center justify-between">
               <h2 id="attention-title" className="font-bold text-foreground">
                 Требует внимания
@@ -349,12 +336,9 @@ export default function AdminDashboardPage() {
                 </div>
               </Link>
             </div>
-          </section>
+          </PageSurface>
 
-          <section
-            className="rounded-xl border border-border bg-card p-5"
-            aria-labelledby="actions-title"
-          >
+          <PageSurface className="p-5" aria-labelledby="actions-title">
             <h2 id="actions-title" className="font-bold text-foreground">
               Быстрые действия
             </h2>
@@ -382,9 +366,9 @@ export default function AdminDashboardPage() {
                 ),
               )}
             </div>
-          </section>
+          </PageSurface>
         </aside>
       </div>
-    </div>
+    </PageFrame>
   )
 }

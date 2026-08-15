@@ -6,6 +6,7 @@ import { ArrowLeft, ShoppingCart, Briefcase, Paperclip, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { rfqCategories } from "@/lib/rfq-categories-list"
 import { validateRfqForm, type RfqFormValues } from "@/lib/schemas/rfq-form"
+import { PageFrame, PageHeader } from "@/components/layout"
 
 type FormState = {
   type: "product" | "service"
@@ -42,12 +43,17 @@ type RfqFormProps = {
   invitedSupplierName?: string
   pendingAttachments?: PreviewAttachment[]
   cancelHref: string
+  isSubmitting?: boolean
   onSaveDraft: (input: RfqCreate) => void
   onPublish: (input: RfqCreate) => void
   onAddAttachment?: (file: File) => void
   onRemoveAttachment?: (attachmentId: string) => void
   onRemovePendingAttachment?: (id: string) => void
 }
+
+const DATE_INPUT_MAX = "9999-12-31"
+
+const clipDateValue = (value: string) => (value.length > 10 ? value.slice(0, 10) : value)
 
 const defaultValues = (
   initial?: RfqWithRelations,
@@ -192,6 +198,7 @@ export const RfqForm = ({
   invitedSupplierName,
   pendingAttachments = [],
   cancelHref,
+  isSubmitting = false,
   onSaveDraft,
   onPublish,
   onAddAttachment,
@@ -208,6 +215,13 @@ export const RfqForm = ({
     setValues((prev) => ({ ...prev, [key]: value }))
   }
 
+  const handleDateChange = (
+    key: "deadline" | "delivery_date" | "start_date",
+    value: string,
+  ) => {
+    setField(key, clipDateValue(value))
+  }
+
   const inputClass = (field: string) =>
     cn(
       "w-full h-11 px-4 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
@@ -221,11 +235,13 @@ export const RfqForm = ({
   }
 
   const handleSaveDraft = () => {
+    if (isSubmitting) return
     if (!handleValidate()) return
     onSaveDraft(toRfqCreate(values))
   }
 
   const handlePublish = () => {
+    if (isSubmitting) return
     if (!handleValidate()) return
     onPublish(toRfqCreate(values))
   }
@@ -238,20 +254,13 @@ export const RfqForm = ({
   }
 
   return (
-    <div className="max-w-[820px] mx-auto">
-      <Link
-        href={cancelHref}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-4"
-      >
-        <ArrowLeft size={16} /> Назад
-      </Link>
-
-      <h1 className="text-2xl font-bold text-foreground mb-1">
-        {initial ? "Редактирование заявки" : "Создание заявки"}
-      </h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Опишите, что вам нужно — поставщики смогут прислать предложения
-      </p>
+    <PageFrame>
+      <PageHeader
+        title={initial ? "Редактирование заявки" : "Создание заявки"}
+        description="Опишите, что вам нужно - поставщики смогут прислать предложения"
+        backHref={cancelHref}
+        backLabel="Назад"
+      />
 
       {invitedSupplierName && (
         <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
@@ -425,8 +434,9 @@ export const RfqForm = ({
             <input
               id="deadline"
               type="date"
+              max={DATE_INPUT_MAX}
               value={values.deadline}
-              onChange={(e) => setField("deadline", e.target.value)}
+              onChange={(e) => handleDateChange("deadline", e.target.value)}
               className={inputClass("deadline")}
             />
             {errors.deadline && <p className="text-xs text-destructive mt-1">{errors.deadline}</p>}
@@ -455,8 +465,9 @@ export const RfqForm = ({
                 <input
                   id="delivery-date"
                   type="date"
+                  max={DATE_INPUT_MAX}
                   value={values.delivery_date}
-                  onChange={(e) => setField("delivery_date", e.target.value)}
+                  onChange={(e) => handleDateChange("delivery_date", e.target.value)}
                   className={inputClass("delivery_date")}
                 />
                 {errors.delivery_date && <p className="text-xs text-destructive mt-1">{errors.delivery_date}</p>}
@@ -508,8 +519,9 @@ export const RfqForm = ({
                 <input
                   id="start-date"
                   type="date"
+                  max={DATE_INPUT_MAX}
                   value={values.start_date}
-                  onChange={(e) => setField("start_date", e.target.value)}
+                  onChange={(e) => handleDateChange("start_date", e.target.value)}
                   className={inputClass("start_date")}
                 />
                 {errors.start_date && <p className="text-xs text-destructive mt-1">{errors.start_date}</p>}
@@ -587,19 +599,23 @@ export const RfqForm = ({
           <button
             type="button"
             onClick={handleSaveDraft}
-            className="h-11 px-5 rounded-xl border border-primary text-primary text-sm font-bold hover:bg-secondary transition-colors"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+            className="h-11 px-5 rounded-xl border border-primary text-primary text-sm font-bold hover:bg-secondary transition-colors disabled:opacity-50 disabled:pointer-events-none"
           >
             Сохранить черновик
           </button>
           <button
             type="button"
             onClick={handlePublish}
-            className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+            className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors disabled:opacity-50 disabled:pointer-events-none"
           >
-            Опубликовать
+            {isSubmitting ? "Публикация..." : "Опубликовать"}
           </button>
         </div>
       </div>
-    </div>
+    </PageFrame>
   )
 }

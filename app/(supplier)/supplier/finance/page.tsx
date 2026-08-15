@@ -1,6 +1,7 @@
 "use client"
 
-import { ArrowDownToLine, FileText, Star, Wallet } from "lucide-react"
+import { ArrowDownToLine, FileText, Star } from "lucide-react"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useFinanceStore } from "@/lib/store/finance-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
@@ -131,20 +132,15 @@ export default function SupplierFinancePage() {
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-8">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Wallet size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Финансы</h1>
-          <p className="text-sm text-muted-foreground">Баланс, выводы и документы</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Финансы"
+        description="Баланс, выводы и документы"
+      />
 
       <BalanceCards balances={balances} hydrated={hydrated} />
 
-      <section className="bg-card border border-border rounded-xl p-6">
+      <PageSurface className="p-6">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <ArrowDownToLine size={16} className="text-primary" />
@@ -168,10 +164,10 @@ export default function SupplierFinancePage() {
             />
           </div>
         </div>
-      </section>
+      </PageSurface>
 
       {useApi && paymentHistory && paymentHistory.length > 0 && (
-        <section className="bg-card border border-border rounded-xl p-6">
+        <PageSurface className="p-6">
           <h2 className="text-base font-bold text-foreground mb-4">История безопасных выплат</h2>
           <div className="space-y-2 text-sm">
             {paymentHistory.map((p) => (
@@ -186,10 +182,10 @@ export default function SupplierFinancePage() {
               </div>
             ))}
           </div>
-        </section>
+        </PageSurface>
       )}
 
-      <section className="bg-card border border-border rounded-xl p-6">
+      <PageSurface className="p-6">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <FileText size={16} className="text-primary" />
@@ -197,9 +193,9 @@ export default function SupplierFinancePage() {
           <h2 className="text-base font-bold text-foreground">Счета</h2>
         </div>
         <InvoicesTable invoices={invoiceList} getContractTitle={getContractTitle} />
-      </section>
+      </PageSurface>
 
-      <section className="bg-card border border-border rounded-xl p-6">
+      <PageSurface className="p-6">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <Star size={16} className="text-primary" />
@@ -211,7 +207,7 @@ export default function SupplierFinancePage() {
           getReviewerName={getReviewerName}
           getContractTitle={(id) => getContractTitle(id)}
         />
-      </section>
-    </div>
+      </PageSurface>
+    </PageFrame>
   )
 }

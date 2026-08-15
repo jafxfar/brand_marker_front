@@ -10,6 +10,7 @@ import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
 import { getActorId } from "@/lib/auth-display"
 import { formatPrice } from "@/lib/format"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import type { ContractWithRelations } from "@/types"
 
 interface CustomerGroup {
@@ -71,33 +72,28 @@ export default function SupplierCustomersPage() {
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[900px] mx-auto animate-pulse">
-        <div className="h-10 bg-secondary rounded w-1/3 mb-6" />
-        <div className="h-32 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="mb-6 h-10 w-1/3 rounded bg-secondary" />
+        <div className="h-32 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   return (
-    <div className="max-w-[900px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Users size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Заказчики</h1>
-          <p className="text-sm text-muted-foreground">Клиенты по договорам и сделкам</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Заказчики"
+        description="Клиенты по договорам и сделкам"
+      />
 
       {customers.length === 0 ? (
-        <div className="bg-card border border-border rounded-xl p-12 text-center">
-          <Users size={32} className="text-primary mx-auto mb-3" />
-          <p className="text-sm font-semibold text-foreground">Заказчиков пока нет</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Заказчики появятся после принятых предложений и договоров
-          </p>
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            icon={<Users size={32} />}
+            title="Заказчиков пока нет"
+            description="Заказчики появятся после принятых предложений и договоров"
+          />
+        </PageSurface>
       ) : (
         <div className="space-y-3">
           {customers.map((customer) => (
@@ -127,6 +123,6 @@ export default function SupplierCustomersPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageFrame>
   )
 }

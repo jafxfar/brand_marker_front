@@ -1,4 +1,4 @@
-import { FileText, Download } from "lucide-react"
+import { FilePreviewLink } from "@/components/shared/file-preview-link"
 import type { RfqAttachment } from "@/types"
 
 type RfqAttachmentsSectionProps = {
@@ -14,20 +14,11 @@ export const RfqAttachmentsSection = ({ attachments }: RfqAttachmentsSectionProp
       <ul className="space-y-2">
         {attachments.map((file) => (
           <li key={file.id}>
-            <a
-              href={file.file_url}
-              className="flex items-center gap-3 rounded-xl border border-border p-3 hover:border-primary/30 hover:bg-secondary/30 transition-colors"
-              onClick={(e) => e.preventDefault()}
-              aria-label={`Скачать ${file.file_name}`}
-            >
-              <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                <FileText size={16} className="text-primary" />
-              </div>
-              <span className="text-sm font-medium text-foreground flex-1 truncate">
-                {file.file_name}
-              </span>
-              <Download size={16} className="text-muted-foreground flex-shrink-0" />
-            </a>
+            <FilePreviewLink
+              url={file.file_url}
+              fileName={file.file_name}
+              fileType={file.file_type}
+            />
           </li>
         ))}
       </ul>

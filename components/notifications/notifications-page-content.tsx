@@ -16,6 +16,8 @@ import {
 } from "@/hooks/api/use-notifications-query"
 import { useNotificationItems } from "@/hooks/use-notifications"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
+import { Button } from "@/components/ui/button"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
 const typeIcon: Record<NotificationType, LucideIcon> = {
   order: FileText,
@@ -60,42 +62,31 @@ export const NotificationsPageContent = ({ role }: NotificationsPageContentProps
   }
 
   return (
-    <div className="max-w-[800px] mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-            <Bell size={20} className="text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-foreground">Уведомления</h1>
-            <p className="text-sm text-muted-foreground">События по вашим заказам и платежам</p>
-          </div>
-        </div>
-        {hydrated && hasUnread && (
-          <button
-            type="button"
-            onClick={handleMarkAllRead}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-          >
-            <CheckCheck size={15} /> Прочитать все
-          </button>
-        )}
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Уведомления"
+        description="События по вашим заказам и платежам"
+        actions={
+          hydrated && hasUnread ? (
+            <Button type="button" variant="ghost" size="lg" onClick={handleMarkAllRead}>
+              <CheckCheck size={15} /> Прочитать все
+            </Button>
+          ) : undefined
+        }
+      />
 
       {!hydrated || isLoading ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center text-sm text-muted-foreground">
-          Загрузка уведомлений...
-        </div>
+        <PageSurface>
+          <PageEmptyState title="Загрузка уведомлений..." />
+        </PageSurface>
       ) : items.length === 0 ? (
-        <div className="bg-white border border-border rounded-2xl p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
-            <Bell size={26} className="text-primary" />
-          </div>
-          <p className="text-base font-bold text-foreground">Уведомлений нет</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Здесь появятся события: новые отклики, статусы оплаты и споров
-          </p>
-        </div>
+        <PageSurface>
+          <PageEmptyState
+            icon={<Bell size={26} />}
+            title="Уведомлений нет"
+            description="Здесь появятся события: новые отклики, статусы оплаты и споров"
+          />
+        </PageSurface>
       ) : (
         <div className="space-y-2.5">
           {items.map((n) => {
@@ -155,6 +146,6 @@ export const NotificationsPageContent = ({ role }: NotificationsPageContentProps
           })}
         </div>
       )}
-    </div>
+    </PageFrame>
   )
 }

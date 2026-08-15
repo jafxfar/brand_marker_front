@@ -6,6 +6,7 @@ import type { NotificationRole } from "@/lib/api/notifications"
 import { contractsApi } from "@/lib/api/contracts"
 import { supplierContractsApi } from "@/lib/api/supplier/contracts"
 import { isApiEnabled } from "@/lib/api/config"
+import { ensureAccessToken } from "@/lib/api/client"
 import { getNotificationsWsUrl } from "@/lib/notifications-ws"
 import {
   prependNotificationToCache,
@@ -61,12 +62,12 @@ export const useNotificationsSocket = (
       }
     }
 
-    const connect = () => {
+    const connect = async () => {
       if (cancelled) return
-      const url = getNotificationsWsUrl()
-      if (!url) return
+      const token = await ensureAccessToken()
+      if (!token || cancelled) return
 
-      const socket = new WebSocket(url)
+      const socket = new WebSocket(getNotificationsWsUrl(token))
       socketRef.current = socket
 
       socket.onopen = () => {
@@ -108,16 +109,25 @@ export const useNotificationsSocket = (
         }
       }
 
-      socket.onclose = () => {
+      socket.onclose = (event) => {
         socketRef.current = null
         if (cancelled) return
         const delay = Math.min(1000 * 2 ** reconnectAttempt.current, 30000)
         reconnectAttempt.current += 1
-        reconnectTimer = setTimeout(connect, delay)
+        reconnectTimer = setTimeout(() => {
+          if (event.code === 4401) {
+            void ensureAccessToken(true).then((token) => {
+              if (!token || cancelled) return
+              void connect()
+            })
+            return
+          }
+          void connect()
+        }, delay)
       }
     }
 
-    connect()
+    void connect()
 
     return () => {
       cancelled = true

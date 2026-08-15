@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Proposal, ProposalAcceptInput, ProposalCreate, ProposalStatus } from "@/types"
+import type { Proposal, ProposalAcceptInput, ProposalCreate, ProposalMessage, ProposalStatus } from "@/types"
 import { mockProposals } from "@/lib/mock/proposals"
 import { API_MODE } from "@/lib/api/config"
 import { useContractsStore } from "@/lib/store/contracts-store"
@@ -15,6 +15,7 @@ export type IncomingProposalItem = {
 
 interface ProposalsState {
   proposals: Proposal[]
+  proposalMessages: Record<number, ProposalMessage[]>
   hasProposal: (rfqId: string, actorId: number) => boolean
   getProposalForRfq: (rfqId: string, actorId: number) => Proposal | undefined
   getProposalsBySupplier: (actorId: number) => Proposal[]
@@ -28,6 +29,14 @@ interface ProposalsState {
     actorId: number,
     getRfqActorId: (rfqId: string) => string | undefined,
   ) => number
+  getProposalMessages: (proposalId: number) => ProposalMessage[]
+  addProposalMessage: (input: {
+    proposalId: number
+    senderId: number
+    senderName: string
+    text: string
+    side: "buyer" | "supplier"
+  }) => ProposalMessage
   updateProposalStatus: (id: number, status: ProposalStatus) => void
   submitProposal: (input: ProposalCreate) => Proposal
   acceptProposal: (
@@ -41,10 +50,21 @@ interface ProposalsState {
 const nextProposalId = (proposals: Proposal[]): number =>
   proposals.reduce((max, p) => Math.max(max, p.id), 0) + 1
 
+const nextMessageId = (messages: Record<number, ProposalMessage[]>): number => {
+  let maxId = 0
+  for (const list of Object.values(messages)) {
+    for (const message of list) {
+      if (message.id > maxId) maxId = message.id
+    }
+  }
+  return maxId + 1
+}
+
 export const useProposalsStore = create<ProposalsState>()(
   persist(
     (set, get) => ({
       proposals: API_MODE ? [] : mockProposals,
+      proposalMessages: {},
 
       hasProposal: (rfqId, actorId) =>
         get().proposals.some(
@@ -95,6 +115,42 @@ export const useProposalsStore = create<ProposalsState>()(
           return ownerId === String(actorId) && p.status === "submitted"
         }).length,
 
+      getProposalMessages: (proposalId) =>
+        (get().proposalMessages[proposalId] ?? []).slice(),
+
+      addProposalMessage: ({ proposalId, senderId, senderName, text, side }) => {
+        const message: ProposalMessage = {
+          id: nextMessageId(get().proposalMessages),
+          proposal_id: proposalId,
+          sender_id: senderId,
+          sender_name: senderName,
+          text,
+          created_at: new Date().toISOString(),
+        }
+        set((state) => ({
+          proposalMessages: {
+            ...state.proposalMessages,
+            [proposalId]: [...(state.proposalMessages[proposalId] ?? []), message],
+          },
+        }))
+        const proposal = get().proposals.find((p) => p.id === proposalId)
+        const rfq = proposal
+          ? useRfqsStore.getState().getRfqWithRelations(proposal.rfq_id)
+          : undefined
+        if (rfq) {
+          useNotificationsStore.getState().add({
+            type: "proposal",
+            title: "Новое сообщение по предложению",
+            body: `Обсуждение заявки «${rfq.title}»`,
+            href:
+              side === "buyer"
+                ? `/supplier/rfqs/${rfq.id}`
+                : `/customer/rfqs/${rfq.id}/proposals`,
+          })
+        }
+        return message
+      },
+
       updateProposalStatus: (id, status) =>
         set((state) => ({
           proposals: state.proposals.map((p) =>
@@ -138,6 +194,11 @@ export const useProposalsStore = create<ProposalsState>()(
           currency: proposal.currency,
           payment_type: terms.payment_type,
           milestones: terms.milestones,
+          files: rfq.attachments.map((attachment) => ({
+            file_name: attachment.file_name,
+            file_url: attachment.file_url,
+            file_type: attachment.file_type,
+          })),
         })
 
         set((state) => ({
@@ -167,7 +228,12 @@ export const useProposalsStore = create<ProposalsState>()(
       name: "bm-proposals",
       merge: (persisted, current) => {
         if (API_MODE) return current
-        return { ...current, ...(persisted as Partial<ProposalsState>) }
+        const stored = persisted as Partial<ProposalsState> | undefined
+        return {
+          ...current,
+          ...stored,
+          proposalMessages: stored?.proposalMessages ?? current.proposalMessages,
+        }
       },
     },
   ),

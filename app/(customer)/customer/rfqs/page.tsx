@@ -3,15 +3,26 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { PageFrame, PageHeader, PageToolbar, PageSurface, PageEmptyState } from "@/components/layout"
 import { useQueries } from "@tanstack/react-query"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
-import { BUYER_RFQ_LIST_TABS, type BuyerRfqListTab } from "@/lib/buyer-rfq-display"
+import {
+  BUYER_RFQ_STATUS_FILTER_OPTIONS,
+  type BuyerRfqStatusFilter,
+} from "@/lib/buyer-rfq-display"
 import { RfqListTable } from "@/components/cabinet/rfq/rfq-list-table"
-import { cn } from "@/lib/utils"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { isApiEnabled } from "@/lib/api/config"
 import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { proposalsApi } from "@/lib/api/proposals"
@@ -21,13 +32,13 @@ export default function MyRfqsPage() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
-  const [tab, setTab] = useState<BuyerRfqListTab>("draft")
+  const [statusFilter, setStatusFilter] = useState<BuyerRfqStatusFilter>("all")
   const getRfqsByBuyerTab = useRfqsStore((s) => s.getRfqsByBuyerTab)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const useApi = isApiEnabled()
-  const { data: apiRfqs, isLoading } = useRfqsQuery(tab, hydrated && useApi)
+  const { data: apiRfqs, isLoading } = useRfqsQuery(statusFilter, hydrated && useApi)
 
-  const localRfqs = hydrated ? getRfqsByBuyerTab(actorId, tab) : []
+  const localRfqs = hydrated ? getRfqsByBuyerTab(actorId, statusFilter) : []
   const rfqs = useApi ? (apiRfqs ?? []) : localRfqs
 
   const proposalQueries = useQueries({
@@ -44,44 +55,46 @@ export default function MyRfqsPage() {
     return proposalQueries[index]?.data?.length ?? 0
   }
 
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value as BuyerRfqStatusFilter)
+  }
+
   return (
-    <div className="max-w-[900px] mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Мои заявки</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ваши запросы поставщикам и их статусы
-          </p>
-        </div>
-        <Link
-          href="/customer/rfqs/new"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
-        >
-          <Plus size={17} /> Создать заявку
-        </Link>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Мои заявки"
+        description="Ваши запросы поставщикам и их статусы"
+        actions={
+          <Button asChild size="lg">
+            <Link href="/customer/rfqs/new">
+              <Plus size={17} /> Создать заявку
+            </Link>
+          </Button>
+        }
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {BUYER_RFQ_LIST_TABS.map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            onClick={() => setTab(item.value)}
-            className={cn(
-              "h-9 px-4 rounded-xl text-sm font-semibold transition-colors",
-              tab === item.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-card border border-border text-muted-foreground hover:text-foreground",
-            )}
+      <PageToolbar label="Статус" htmlFor="rfq-status-filter">
+        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+          <SelectTrigger
+            id="rfq-status-filter"
+            className="w-[220px]"
+            aria-label="Фильтр по статусу заявки"
           >
-            {item.label}
-          </button>
-        ))}
-      </div>
+            <SelectValue placeholder="Все статусы" />
+          </SelectTrigger>
+          <SelectContent>
+            {BUYER_RFQ_STATUS_FILTER_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </PageToolbar>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <PageSurface>
         {useApi && isLoading ? (
-          <p className="p-8 text-sm text-muted-foreground text-center">Загрузка…</p>
+          <PageEmptyState title="Загрузка…" />
         ) : (
           <RfqListTable
             rfqs={rfqs}
@@ -89,7 +102,7 @@ export default function MyRfqsPage() {
             getProposalCount={getProposalCount}
           />
         )}
-      </div>
-    </div>
+      </PageSurface>
+    </PageFrame>
   )
 }

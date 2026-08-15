@@ -4,7 +4,6 @@ import { use, useState } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
-  ArrowLeft,
   ClipboardList,
   EyeOff,
   RefreshCcw,
@@ -20,6 +19,7 @@ import type { AdminRfqAction } from "@/lib/api/admin"
 import { rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { useAuthStore } from "@/lib/store/auth-store"
 import type { RfqStatus, RfqType } from "@/types"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
 const sections = [
   ["requirements", "Требования"],
@@ -30,12 +30,12 @@ const sections = [
 ] as const
 
 const DetailSkeleton = () => (
-  <div className="mx-auto max-w-350 animate-pulse space-y-5">
+  <PageFrame className="animate-pulse space-y-5">
     <div className="h-5 w-36 rounded bg-muted" />
     <div className="h-56 rounded-xl bg-muted" />
     <div className="h-14 rounded-xl bg-muted" />
     <div className="h-80 rounded-xl bg-muted" />
-  </div>
+  </PageFrame>
 )
 
 type PageProps = {
@@ -93,27 +93,23 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
   const canClose = !["completed", "cancelled", "expired", "archived"].includes(rfq.status)
 
   return (
-    <div className="mx-auto max-w-350 space-y-5">
-      <Link
-        href="/admin/rfqs"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft size={16} aria-hidden="true" />
-        Все заявки
-      </Link>
-
-      <header className="rounded-xl border border-border bg-card p-5 sm:p-6">
+    <PageFrame>
+      <PageHeader
+        title={rfq.title}
+        description={
+          <>
+            {rfq.buyer?.company_title || rfq.buyer?.name || "Без покупателя"}
+            {rfq.category_id ? ` · ${rfq.category_id}` : ""}
+          </>
+        }
+        backHref="/admin/rfqs"
+        backLabel="Все заявки"
+      />
+      <PageSurface className="p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {rfqTypeLabel[rfq.type as RfqType] || rfq.type} · {rfq.id.slice(0, 8)}
-            </p>
-            <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
-              {rfq.title}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {rfq.buyer?.company_title || rfq.buyer?.name || "Без покупателя"}
-              {rfq.category_id ? ` · ${rfq.category_id}` : ""}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="outline" className={statusMeta.className}>
@@ -171,7 +167,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
             )}
           </div>
         </div>
-      </header>
+      </PageSurface>
 
       <nav
         className="sticky top-17 z-20 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card/95 p-2 backdrop-blur"
@@ -198,6 +194,6 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
           if (!open) setSelectedAction(null)
         }}
       />
-    </div>
+    </PageFrame>
   )
 }

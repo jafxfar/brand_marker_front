@@ -45,14 +45,25 @@ export const useSupplierContractQuery = (id: number, enabled = true) =>
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
+const invalidateContractChat = (
+  qc: ReturnType<typeof useQueryClient>,
+  contractId: number,
+) => {
+  qc.invalidateQueries({ queryKey: contractKeys.list() })
+  qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+  qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
+  qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+}
+
 export const useSendMessageMutation = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ contractId, text }: { contractId: number; text: string }) =>
       contractsApi.sendMessage(contractId, text),
     onSuccess: (contract) => {
-      replaceContractInCache(qc, contract as ContractWithRelations)
-      qc.invalidateQueries({ queryKey: contractKeys.list() })
+      const typed = contract as ContractWithRelations
+      replaceContractInCache(qc, typed)
+      invalidateContractChat(qc, typed.id)
     },
   })
 }
@@ -63,8 +74,9 @@ export const useSupplierSendMessageMutation = () => {
     mutationFn: ({ contractId, text }: { contractId: number; text: string }) =>
       supplierContractsApi.sendMessage(contractId, text),
     onSuccess: (contract) => {
-      replaceContractInCache(qc, contract as ContractWithRelations)
-      qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
+      const typed = contract as ContractWithRelations
+      replaceContractInCache(qc, typed)
+      invalidateContractChat(qc, typed.id)
     },
   })
 }

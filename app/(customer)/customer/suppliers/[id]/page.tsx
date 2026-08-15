@@ -2,7 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useItemsStore } from "@/lib/store/items-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
@@ -104,24 +104,18 @@ export default function SupplierProfilePage({ params }: PageProps) {
 
   if (!hydrated || (useApi && supplierLoading)) {
     return (
-      <div className="max-w-[1000px] mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-secondary rounded-xl w-1/4" />
-        <div className="h-48 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="h-8 w-1/4 rounded-xl bg-secondary" />
+        <div className="h-48 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   if (!supplier) {
     return (
-      <div className="max-w-[1000px] mx-auto text-center py-16">
-        <p className="text-lg font-bold text-foreground">Поставщик не найден</p>
-        <Link
-          href="/customer/suppliers"
-          className="text-primary font-semibold hover:underline mt-2 inline-block"
-        >
-          К каталогу
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader title="Поставщик не найден" backHref="/customer/suppliers" backLabel="К каталогу" />
+      </PageFrame>
     )
   }
 
@@ -155,13 +149,12 @@ export default function SupplierProfilePage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-6">
-      <Link
-        href="/customer/suppliers"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-      >
-        <ArrowLeft size={16} /> К каталогу
-      </Link>
+    <PageFrame>
+      <PageHeader
+        title={supplier.display_name}
+        backHref="/customer/suppliers"
+        backLabel="К каталогу"
+      />
 
       <SupplierProfileHeader
         supplier={supplier}
@@ -187,6 +180,6 @@ export default function SupplierProfilePage({ params }: PageProps) {
         invitableRfqs={invitableRfqs}
         onInviteExisting={handleInviteExisting}
       />
-    </div>
+    </PageFrame>
   )
 }

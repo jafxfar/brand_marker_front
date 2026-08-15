@@ -5,6 +5,9 @@ import Link from "next/link"
 import { User, Truck, Check, LogOut, Building2, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
@@ -71,28 +74,23 @@ export default function ProfilePage() {
   }
 
   const inputClass =
-    "w-full h-11 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+    "w-full h-11 px-4 rounded-xl border border-primary/35 bg-card text-sm outline-none transition-[color,border-color,box-shadow] duration-180 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/60 focus:border-primary focus:ring-[3px] focus:ring-primary/20"
 
   if (!hydrated) return null
 
   return (
-    <div className="max-w-[720px] mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <User size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Профиль заказчика</h1>
-          <p className="text-sm text-muted-foreground">Контактные данные и настройки доставки</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Профиль заказчика"
+        description="Контактные данные и настройки доставки"
+      />
 
       <form onSubmit={handleSave} className="space-y-6">
-        <div className="bg-card border border-border rounded-xl p-5 sm:p-6 space-y-5">
+        <PageSurface className="space-y-5 p-5 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Имя / контактное лицо</label>
-              <input id="name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="sm:col-span-2">
               <Link
@@ -126,10 +124,9 @@ export default function ProfilePage() {
               <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Душанбе" className={inputClass} />
             </div>
           </div>
-        </div>
+        </PageSurface>
 
-        {/* Delivery */}
-        <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
+        <PageSurface className="p-5 sm:p-6">
           <h2 className="text-sm font-bold text-foreground mb-1">Доставка</h2>
           <p className="text-xs text-muted-foreground mb-4">
             Укажите, если вы можете организовать доставку своими силами
@@ -147,24 +144,19 @@ export default function ProfilePage() {
               <div className="text-[11px] text-muted-foreground">Готов забрать или организовать доставку самостоятельно</div>
             </div>
           </label>
-        </div>
+        </PageSurface>
 
         <div className="flex items-center justify-between gap-3">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="lg"
+            className="text-destructive hover:bg-destructive/5"
             onClick={handleLogout}
-            className="h-11 px-5 rounded-xl border border-border text-sm font-semibold text-destructive hover:bg-destructive/5 transition-colors flex items-center gap-2"
           >
             <LogOut size={16} /> Выйти
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className={cn(
-              "h-11 px-6 rounded-xl text-white text-sm font-bold transition-colors flex items-center gap-2",
-              saved ? "bg-primary" : "bg-primary hover:bg-primary/90",
-            )}
-          >
+          </Button>
+          <Button type="submit" size="lg" disabled={saving}>
             {saved ? (
               <>
                 <Check size={16} /> Сохранено
@@ -172,9 +164,9 @@ export default function ProfilePage() {
             ) : (
               "Сохранить изменения"
             )}
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
+    </PageFrame>
   )
 }

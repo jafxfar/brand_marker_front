@@ -65,14 +65,11 @@ export const useMockConfirmMutation = () => {
   })
 }
 
-/** Fund + mock confirm for dev escrow flow */
+/** Fund escrow for a milestone. Mock confirm is already applied inside fund. */
 export const useFundAndConfirmMilestoneMutation = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (milestoneId: number) => {
-      await paymentsApi.fundMilestone(milestoneId)
-      return paymentsApi.mockConfirm(milestoneId)
-    },
+    mutationFn: (milestoneId: number) => paymentsApi.fundMilestone(milestoneId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: paymentKeys.all })
       qc.invalidateQueries({ queryKey: contractKeys.all })

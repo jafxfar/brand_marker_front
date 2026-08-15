@@ -1,8 +1,8 @@
 "use client"
 
-import { use } from "react"
+import { use, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { RfqForm } from "@/components/cabinet/rfq/rfq-form"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
@@ -40,36 +40,42 @@ export default function EditRfqPage({ params }: PageProps) {
   const publishMutation = usePublishRfqMutation()
   const uploadMutation = useUploadRfqAttachmentMutation()
   const deleteAttachmentMutation = useDeleteRfqAttachmentMutation()
+  const [submitting, setSubmitting] = useState(false)
+  const submittingRef = useRef(false)
 
   const localRfq = hydrated ? getRfqWithRelations(id) : undefined
   const rfq: RfqWithRelations | undefined = useApi ? apiRfq : localRfq
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[820px] mx-auto animate-pulse h-96 bg-secondary rounded-xl" />
+      <PageFrame className="animate-pulse">
+        <div className="h-96 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   if (!rfq || rfq.actor_id !== String(actorId)) {
     return (
-      <div className="max-w-[820px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">Заявка не найдена</p>
-        <Link href="/customer/rfqs" className="text-sm text-primary hover:underline mt-2 inline-block">
-          К списку заявок
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader
+          title="Заявка не найдена"
+          backHref="/customer/rfqs"
+          backLabel="К списку заявок"
+        />
+      </PageFrame>
     )
   }
 
   if (rfq.status !== "draft") {
     return (
-      <div className="max-w-[820px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">Редактирование недоступно</p>
-        <p className="text-xs text-muted-foreground mt-1">Только черновики можно изменять</p>
-        <Link href={`/customer/rfqs/${rfq.id}`} className="text-sm text-primary hover:underline mt-3 inline-block">
-          К заявке
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader
+          title="Редактирование недоступно"
+          description="Только черновики можно изменять"
+          backHref={`/customer/rfqs/${rfq.id}`}
+          backLabel="К заявке"
+        />
+      </PageFrame>
     )
   }
 
@@ -79,35 +85,44 @@ export default function EditRfqPage({ params }: PageProps) {
   }
 
   const applyUpdateApi = async (input: RfqCreate, publish: boolean) => {
-    const patch: RfqUpdate = { ...input }
-    await updateMutation.mutateAsync({ id, data: patch })
+    try {
+      const patch: RfqUpdate = { ...input }
+      await updateMutation.mutateAsync({ id, data: patch })
+      if (publish) {
+        await publishMutation.mutateAsync(id)
+      }
+      router.push(`/customer/rfqs/${id}`)
+    } finally {
+      submittingRef.current = false
+      setSubmitting(false)
+    }
+  }
+
+  const handleSubmit = (input: RfqCreate, publish: boolean) => {
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setSubmitting(true)
+
+    if (useApi) {
+      void applyUpdateApi(input, publish)
+      return
+    }
+    applyUpdateLocal(input)
     if (publish) {
-      await publishMutation.mutateAsync(id)
+      publishRfqLocal(id)
     }
     router.push(`/customer/rfqs/${id}`)
+    submittingRef.current = false
+    setSubmitting(false)
   }
 
   return (
     <RfqForm
       initial={rfq}
       cancelHref={`/customer/rfqs/${id}`}
-      onSaveDraft={(input) => {
-        if (useApi) {
-          void applyUpdateApi(input, false)
-          return
-        }
-        applyUpdateLocal(input)
-        router.push(`/customer/rfqs/${id}`)
-      }}
-      onPublish={(input) => {
-        if (useApi) {
-          void applyUpdateApi(input, true)
-          return
-        }
-        applyUpdateLocal(input)
-        publishRfqLocal(id)
-        router.push(`/customer/rfqs/${id}`)
-      }}
+      isSubmitting={submitting}
+      onSaveDraft={(input) => handleSubmit(input, false)}
+      onPublish={(input) => handleSubmit(input, true)}
       onAddAttachment={(file) => {
         if (useApi) {
           uploadMutation.mutate({ id, file })

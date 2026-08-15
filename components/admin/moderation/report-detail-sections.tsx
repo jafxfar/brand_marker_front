@@ -8,6 +8,7 @@ import {
   adminReportStatusLabels,
   adminReportTargetLabels,
 } from "@/lib/admin-display"
+import { resolveFileUrl } from "@/lib/file-url"
 
 const sectionClassName = "rounded-xl border border-border bg-card p-5 sm:p-6"
 
@@ -135,7 +136,7 @@ export const AdminReportDetailSections = ({
             {report.evidence.files.map((file) => (
               <li key={`${file.file_url}-${file.file_name}`}>
                 <a
-                  href={file.file_url}
+                  href={resolveFileUrl(file.file_url)}
                   target="_blank"
                   rel="noreferrer"
                   className="text-sm font-semibold text-primary hover:underline"

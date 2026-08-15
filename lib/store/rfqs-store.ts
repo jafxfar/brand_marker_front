@@ -6,8 +6,8 @@ import { API_MODE } from "@/lib/api/config"
 import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
 import {
   ACTIVE_RFQ_STATUSES,
-  type BuyerRfqListTab,
-  getRfqStatusesForBuyerTab,
+  type BuyerRfqStatusFilter,
+  getRfqStatusesForBuyerFilter,
 } from "@/lib/buyer-rfq-display"
 
 type AttachmentInput = {
@@ -24,7 +24,7 @@ interface RfqsState {
   getNewRfqsForSupplier: (actorId: number, hasProposal: (rfqId: string) => boolean) => RfqWithRelations[]
   getRfqsByBuyer: (actorId: number) => RfqWithRelations[]
   getActiveRfqsByBuyer: (actorId: number) => RfqWithRelations[]
-  getRfqsByBuyerTab: (actorId: number, tab: BuyerRfqListTab) => RfqWithRelations[]
+  getRfqsByBuyerTab: (actorId: number, filter: BuyerRfqStatusFilter) => RfqWithRelations[]
   createRfq: (input: RfqCreate, actorId: number, createdBy: string) => RfqWithRelations
   updateRfq: (id: string, patch: RfqUpdate) => void
   updateRfqStatus: (id: string, status: RfqStatus) => void
@@ -74,12 +74,13 @@ export const useRfqsStore = create<RfqsState>()(
               new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
           ),
 
-      getRfqsByBuyerTab: (actorId, tab) => {
-        const statuses = getRfqStatusesForBuyerTab(tab)
+      getRfqsByBuyerTab: (actorId, filter) => {
+        const statuses = getRfqStatusesForBuyerFilter(filter)
         return get()
           .rfqs.filter(
             (r) =>
-              r.actor_id === String(actorId) && statuses.includes(r.status),
+              r.actor_id === String(actorId) &&
+              (statuses === null || statuses.includes(r.status)),
           )
           .sort(
             (a, b) =>

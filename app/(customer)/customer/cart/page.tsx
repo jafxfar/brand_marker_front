@@ -15,6 +15,8 @@ import { isApiEnabled } from "@/lib/api/config"
 import { getSupplier as getMockSupplier } from "@/lib/mock/suppliers"
 import PaymentDialog from "@/components/cabinet/payment-dialog"
 import { TermHint } from "@/components/ui/term-hint"
+import { Button } from "@/components/ui/button"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import type { PaymentScheme } from "@/types"
 
 export default function CartPage() {
@@ -45,30 +47,27 @@ export default function CartPage() {
 
   if (hydrated && items.length === 0) {
     return (
-      <div className="max-w-[900px] mx-auto">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Корзина</h1>
-        <div className="bg-card border border-border rounded-xl p-12 text-center">
-          <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-4">
-            <ShoppingCart size={26} className="text-primary" />
+      <PageFrame>
+        <PageHeader title="Корзина" description="Товары и услуги к оформлению" />
+        <PageSurface>
+          <PageEmptyState
+            icon={<ShoppingCart size={26} />}
+            title="Корзина пуста"
+            description="Добавьте товары или услуги из каталога поставщиков"
+          />
+          <div className="flex justify-center pb-10">
+            <Button asChild size="lg">
+              <Link href="/customer/suppliers">Перейти в каталог</Link>
+            </Button>
           </div>
-          <p className="text-base font-bold text-foreground">Корзина пуста</p>
-          <p className="text-sm text-muted-foreground mt-1 mb-5">
-            Добавьте товары или услуги из каталога поставщиков
-          </p>
-          <Link
-            href="/customer/suppliers"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            Перейти в каталог
-          </Link>
-        </div>
-      </div>
+        </PageSurface>
+      </PageFrame>
     )
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Корзина</h1>
+    <PageFrame>
+      <PageHeader title="Корзина" description="Товары и услуги к оформлению" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
@@ -164,15 +163,14 @@ export default function CartPage() {
               <span className="text-lg font-bold text-primary">{formatPrice(hydrated ? total : 0)}</span>
             </div>
 
-            <button
+            <Button
+              type="button"
+              size="lg"
+              className="w-full"
               onClick={() => setPayOpen(true)}
-              className={cn(
-                "w-full h-11 rounded-xl text-white text-sm font-bold transition-colors flex items-center justify-center gap-2",
-                "bg-primary hover:bg-primary/90",
-              )}
             >
               <ShieldCheck size={16} /> Оформить безопасно
-            </button>
+            </Button>
 
             <p className="text-[11px] text-muted-foreground mt-3 text-center inline-flex items-center justify-center gap-1 w-full flex-wrap">
               Оплата защищена <TermHint term="escrow">безопасной сделкой</TermHint>. Постоплата для товаров недоступна.
@@ -189,6 +187,6 @@ export default function CartPage() {
         defaultScheme="prepay"
         onConfirm={handleCheckout}
       />
-    </div>
+    </PageFrame>
   )
 }

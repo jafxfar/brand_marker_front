@@ -5,7 +5,6 @@ import { useState } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
-  ArrowLeft,
   Ban,
   CheckCircle2,
   RefreshCcw,
@@ -18,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminReportQuery } from "@/hooks/api/use-admin-reports-query"
 import type { AdminReportAction, AdminReportTargetType } from "@/lib/api/admin"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import {
   adminLabel,
   adminReportReasonLabels,
@@ -33,12 +33,12 @@ const sections = [
 ] as const
 
 const DetailSkeleton = () => (
-  <div className="mx-auto max-w-350 animate-pulse space-y-5">
+  <PageFrame className="animate-pulse space-y-5">
     <div className="h-5 w-36 rounded bg-muted" />
     <div className="h-56 rounded-xl bg-muted" />
     <div className="h-14 rounded-xl bg-muted" />
     <div className="h-80 rounded-xl bg-muted" />
-  </div>
+  </PageFrame>
 )
 
 const isTargetType = (value: string): value is AdminReportTargetType =>
@@ -97,29 +97,26 @@ export default function AdminReportDetailPage({ params }: PageProps) {
   const isOpen = report.status === "open"
 
   return (
-    <div className="mx-auto max-w-350 space-y-5">
-      <Link
-        href="/admin/moderation"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft size={16} aria-hidden="true" />
-        Все жалобы
-      </Link>
+    <PageFrame>
+      <PageHeader
+        title={report.reported_object.title}
+        description={
+          <>
+            {report.reporter.name || report.reporter.email}
+            {" · "}
+            {adminLabel(adminReportReasonLabels, report.reason)}
+          </>
+        }
+        backHref="/admin/moderation"
+        backLabel="Все жалобы"
+      />
 
-      <header className="rounded-xl border border-border bg-card p-5 sm:p-6">
+      <PageSurface className="p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Report · {adminLabel(adminReportTargetLabels, report.target_type)} · #
               {report.id}
-            </p>
-            <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
-              {report.reported_object.title}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {report.reporter.name || report.reporter.email}
-              {" · "}
-              {adminLabel(adminReportReasonLabels, report.reason)}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="outline">
@@ -187,7 +184,7 @@ export default function AdminReportDetailPage({ params }: PageProps) {
             </a>
           ))}
         </nav>
-      </header>
+      </PageSurface>
 
       <AdminReportDetailSections report={report} />
 
@@ -200,6 +197,6 @@ export default function AdminReportDetailPage({ params }: PageProps) {
           if (!open) setSelectedAction(null)
         }}
       />
-    </div>
+    </PageFrame>
   )
 }

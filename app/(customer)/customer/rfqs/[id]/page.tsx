@@ -3,13 +3,14 @@
 import { use, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ShoppingCart, FileText, FileCheck, Pencil } from "lucide-react"
+import { FileCheck, Pencil } from "lucide-react"
+import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
-import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { usePublicSuppliersByActor } from "@/hooks/api/use-supplier-name"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import {
@@ -57,7 +58,6 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
   const updateProposalStatus = useProposalsStore((s) => s.updateProposalStatus)
   const acceptProposalLocal = useProposalsStore((s) => s.acceptProposal)
   const getContractByRfqId = useContractsStore((s) => s.getContractByRfqId)
-  const getCompany = useCompaniesStore((s) => s.getCompany)
 
   const { data: apiRfq, isLoading } = useRfqQuery(id, hydrated && useApi)
   const { data: apiProposals = [] } = useProposalsForRfqQuery(id, hydrated && useApi)
@@ -83,24 +83,24 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
     : rfq
       ? getContractByRfqId(rfq.id)
       : undefined
+  const { getSupplier, getName: getSupplierName } = usePublicSuppliersByActor(
+    proposals.map((p) => p.supplier_actor_id),
+  )
 
   if (!hydrated || (useApi && isLoading)) {
     return (
-      <div className="max-w-[900px] mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-secondary rounded-xl w-1/3" />
-        <div className="h-48 bg-secondary rounded-xl" />
-      </div>
+      <PageFrame className="animate-pulse">
+        <div className="h-8 w-1/3 rounded-xl bg-secondary" />
+        <div className="h-48 rounded-xl bg-secondary" />
+      </PageFrame>
     )
   }
 
   if (!rfq || rfq.actor_id !== String(actorId)) {
     return (
-      <div className="max-w-[900px] mx-auto text-center py-16">
-        <p className="text-sm font-semibold text-foreground">Заявка не найдена</p>
-        <Link href="/customer/rfqs" className="text-sm text-primary hover:underline mt-2 inline-block">
-          Вернуться к списку
-        </Link>
-      </div>
+      <PageFrame>
+        <PageHeader title="Заявка не найдена" backHref="/customer/rfqs" backLabel="Вернуться к списку" />
+      </PageFrame>
     )
   }
 
@@ -154,38 +154,24 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-6">
-      <Link
-        href="/customer/rfqs"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft size={16} /> Назад к моим заявкам
-      </Link>
-
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-            {rfq.type === "product" ? (
-              <ShoppingCart size={20} className="text-primary" />
-            ) : (
-              <FileText size={20} className="text-primary" />
-            )}
+    <PageFrame>
+      <PageHeader
+        title={rfq.title}
+        description={getRfqCategoryLabel(rfq.category_id)}
+        backHref="/customer/rfqs"
+        backLabel="Назад к моим заявкам"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <RfqStatusBadge status={rfq.status} />
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-foreground">
+              {rfqTypeLabel[rfq.type]}
+            </span>
           </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-foreground">{rfq.title}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {getRfqCategoryLabel(rfq.category_id)}
-            </p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <RfqStatusBadge status={rfq.status} />
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-foreground">
-                {rfqTypeLabel[rfq.type]}
-              </span>
-            </div>
-          </div>
-        </div>
+        }
+      />
 
-        <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border">
+      <PageSurface className="p-6">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground">Бюджет</p>
             <p className="text-sm font-semibold text-foreground mt-0.5">
@@ -199,7 +185,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-      </div>
+      </PageSurface>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -210,7 +196,8 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
             rfqId={rfq.id}
             proposals={proposals}
             canManage={canManageProposals}
-            getCompany={getCompany}
+            getSupplier={getSupplier}
+            getSupplierName={getSupplierName}
             onShortlist={handleShortlist}
             onReject={handleReject}
             onAccept={(proposalId) => {
@@ -277,15 +264,12 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
         <AcceptProposalDialog
           open={!!acceptTarget}
           onOpenChange={(open) => !open && setAcceptTarget(null)}
-          supplierName={
-            getCompany(acceptTarget.supplier_actor_id)?.title ??
-            `Поставщик #${acceptTarget.supplier_actor_id}`
-          }
+          supplierName={getSupplierName(acceptTarget.supplier_actor_id)}
           price={acceptTarget.price}
           currency={acceptTarget.currency}
           onConfirm={(terms) => void handleAccept(acceptTarget.id, terms)}
         />
       )}
-    </div>
+    </PageFrame>
   )
 }

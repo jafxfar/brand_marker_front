@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin-display"
 import { catalogReportReasonLabels, formatItemPricing, itemStatusMeta } from "@/lib/item-display"
 import type { ItemPricing, ItemStatus } from "@/types"
+import { resolveFileUrl } from "@/lib/file-url"
 
 const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
@@ -49,7 +50,7 @@ export const AdminCatalogDetailSections = ({
               >
                 {media.file_url && media.file_url !== "#" ? (
                   <Image
-                    src={media.file_url}
+                    src={resolveFileUrl(media.file_url)}
                     alt={media.file_name}
                     fill
                     unoptimized
@@ -72,7 +73,7 @@ export const AdminCatalogDetailSections = ({
             {otherMedia.map((media) => (
               <a
                 key={media.id}
-                href={media.file_url}
+                href={resolveFileUrl(media.file_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"

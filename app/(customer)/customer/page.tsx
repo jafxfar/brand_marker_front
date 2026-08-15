@@ -28,6 +28,8 @@ import {
   getBuyerNewProposalsCount,
   getBuyerUnreadMessageCount,
 } from "@/lib/buyer-dashboard"
+import { Button } from "@/components/ui/button"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { StatCard } from "@/components/supplier/dashboard/stat-card"
 import { ActiveRfqsPanel } from "@/components/cabinet/dashboard/active-rfqs-panel"
 import { IncomingProposalsPanel } from "@/components/cabinet/dashboard/incoming-proposals-panel"
@@ -178,28 +180,23 @@ export default function CustomerDashboard() {
     : 0
 
   return (
-    <div className="max-w-[1200px] mx-auto space-y-6">
+    <PageFrame>
       <ActivateRoleBanner
         targetSide="supplier"
         redirectTo="/supplier"
         label="Хотите продавать на платформе? Активируйте роль поставщика на этом же аккаунте."
       />
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Здравствуйте{hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ваши заявки, предложения и договоры
-          </p>
-        </div>
-        <Link
-          href="/customer/rfqs/new"
-          className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
-        >
-          <Plus size={17} /> Создать заявку
-        </Link>
-      </div>
+      <PageHeader
+        title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
+        description="Ваши заявки, предложения и договоры"
+        actions={
+          <Button asChild size="lg">
+            <Link href="/customer/rfqs/new">
+              <Plus size={17} /> Создать заявку
+            </Link>
+          </Button>
+        }
+      />
 
       <HowItWorks variant="buyer" />
 
@@ -266,6 +263,6 @@ export default function CustomerDashboard() {
           </Link>
         </div>
       </div>
-    </div>
+    </PageFrame>
   )
 }

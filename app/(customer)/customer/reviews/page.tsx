@@ -1,6 +1,6 @@
 "use client"
 
-import { Star } from "lucide-react"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
@@ -48,20 +48,15 @@ export default function BuyerReviewsPage() {
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-          <Star size={20} className="text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Мои отзывы</h1>
-          <p className="text-sm text-muted-foreground">Отзывы, которые вы оставили поставщикам</p>
-        </div>
-      </div>
+    <PageFrame>
+      <PageHeader
+        title="Мои отзывы"
+        description="Отзывы, которые вы оставили поставщикам"
+      />
 
-      <section className="bg-card border border-border rounded-xl p-6">
+      <PageSurface className="p-6">
         {useApi && isLoading ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Загрузка…</p>
+          <PageEmptyState title="Загрузка…" />
         ) : (
           <ReviewsGivenTable
             reviews={reviews}
@@ -69,7 +64,7 @@ export default function BuyerReviewsPage() {
             getContractTitle={getContractTitle}
           />
         )}
-      </section>
-    </div>
+      </PageSurface>
+    </PageFrame>
   )
 }

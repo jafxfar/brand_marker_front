@@ -1,4 +1,4 @@
-import type { ProposalUpdate, ProposalWithRelations, RfqWithRelations } from "@/types"
+import type { ProposalMessage, ProposalUpdate, ProposalWithRelations, RfqWithRelations } from "@/types"
 import { apiFetch } from "../client"
 
 const RFQ_PREFIX = "/supplier/rfqs"
@@ -32,4 +32,13 @@ export const supplierProposalsApi = {
 
   withdraw: (id: number) =>
     apiFetch<ProposalWithRelations>(`${PROPOSAL_PREFIX}/${id}/withdraw`, { method: "POST" }),
+
+  listMessages: (id: number) =>
+    apiFetch<ProposalMessage[]>(`${PROPOSAL_PREFIX}/${id}/messages`),
+
+  sendMessage: (id: number, text: string) =>
+    apiFetch<ProposalMessage>(`${PROPOSAL_PREFIX}/${id}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
 }

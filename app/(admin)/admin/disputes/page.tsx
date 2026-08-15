@@ -23,7 +23,8 @@ import {
 import { useAdminDisputesQuery } from "@/hooks/api/use-admin-disputes-query"
 import type { AdminDisputeView } from "@/lib/api/admin"
 import { adminDisputeStatusMeta } from "@/lib/admin-display"
-import { cn } from "@/lib/utils"
+import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
+import { Input } from "@/components/ui/input"
 
 const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminDisputeView; label: string }> = [
@@ -53,11 +54,11 @@ const formatMoney = (value: number | null | undefined, currency: string | null) 
 }
 
 const DisputesSkeleton = () => (
-  <div className="mx-auto max-w-350 animate-pulse space-y-6" aria-label="Загрузка споров">
+  <PageFrame className="animate-pulse" aria-label="Загрузка споров">
     <div className="h-16 w-80 max-w-full rounded-xl bg-muted" />
     <div className="h-28 rounded-xl bg-muted" />
     <div className="h-96 rounded-xl bg-muted" />
-  </div>
+  </PageFrame>
 )
 
 const AdminDisputesContent = () => {
@@ -141,25 +142,16 @@ const AdminDisputesContent = () => {
   }
 
   return (
-    <div className="mx-auto max-w-350 space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
-            <Gavel size={21} aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Споры</h1>
-            <p className="text-sm text-muted-foreground">
-              Разрешение споров по контрактам и escrow
-            </p>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">
+    <PageFrame>
+      <PageHeader
+        title="Споры"
+        description="Разрешение споров по контрактам и escrow"
+        actions={<p className="text-sm text-muted-foreground">
           Найдено <strong className="ml-1 text-foreground">{total}</strong>
-        </p>
-      </header>
+        </p>}
+      />
 
-      <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <PageSurface>
         <div className="border-b border-border p-4">
           <div className="relative">
             <Search
@@ -167,56 +159,37 @@ const AdminDisputesContent = () => {
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
             />
-            <input
+            <Input
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Контракт, ID спора"
-              className="h-11 w-full rounded-xl border border-input bg-background pl-11 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="pl-11"
               aria-label="Поиск по спорам"
             />
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto p-3" role="tablist">
-          {viewFilters.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              role="tab"
-              aria-selected={view === filter.value}
-              onClick={() => replaceSearchParams({ view: filter.value, page: null })}
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold",
-                view === filter.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-              )}
-            >
-              {filter.label}
-              <span
-                className={cn(
-                  "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                  view === filter.value ? "bg-card/20" : "bg-muted",
-                )}
-              >
-                {viewCounts[filter.value]}
-              </span>
-            </button>
-          ))}
+        <div className="p-3">
+          <SegmentedControl
+            value={view}
+            options={viewFilters.map((filter) => ({
+              ...filter,
+              count: viewCounts[filter.value],
+            }))}
+            onChange={(next) => replaceSearchParams({ view: next, page: null })}
+            className="w-full max-w-full border-0 bg-transparent p-0"
+          />
         </div>
-      </section>
+      </PageSurface>
 
-      <section className="overflow-hidden rounded-xl border border-border bg-card">
+      <PageSurface>
         {items.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <Gavel className="mx-auto text-muted-foreground" aria-hidden="true" />
-            <h2 className="mt-4 text-lg font-bold">Споры не найдены</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {hasFilters
+          <PageEmptyState
+            title="Споры не найдены"
+            description={hasFilters
                 ? "Измените фильтр или поисковый запрос."
                 : "Открытых споров пока нет."}
-            </p>
-          </div>
+          />
         ) : (
           <Table>
             <TableHeader>
@@ -306,8 +279,8 @@ const AdminDisputesContent = () => {
             </div>
           </div>
         )}
-      </section>
-    </div>
+      </PageSurface>
+    </PageFrame>
   )
 }
 
