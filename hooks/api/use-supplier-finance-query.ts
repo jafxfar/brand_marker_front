@@ -40,5 +40,9 @@ export const useRequestWithdrawalMutation = () => {
       qc.invalidateQueries({ queryKey: supplierFinanceKeys.all })
       qc.invalidateQueries({ queryKey: supplierPaymentKeys.balance() })
     },
+    meta: {
+      successMessage: "Заявка на вывод отправлена",
+      errorMessage: "Не удалось отправить заявку на вывод",
+    },
   })
 }

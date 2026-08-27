@@ -96,7 +96,7 @@ export default function CustomerDashboard() {
   }
 
   const getSupplierNameLocal = (supplierId: number) =>
-    getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
+    getCompany(supplierId)?.title ?? `Исполнитель #${supplierId}`
 
   const supplierIds = useApi
     ? (apiContracts as ContractWithRelations[]).map((c) => c.supplier_actor_id)
@@ -184,7 +184,7 @@ export default function CustomerDashboard() {
       <ActivateRoleBanner
         targetSide="supplier"
         redirectTo="/supplier"
-        label="Хотите продавать на платформе? Активируйте роль поставщика на этом же аккаунте."
+        label="Хотите продавать на платформе? Активируйте роль исполнителя на этом же аккаунте."
       />
       <PageHeader
         title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
@@ -259,7 +259,7 @@ export default function CustomerDashboard() {
             href="/customer/suppliers"
             className="block bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-all text-sm font-bold text-foreground hover:text-primary"
           >
-            Каталог поставщиков <ArrowRight size={14} className="inline ml-1" />
+            Каталог исполнителей <ArrowRight size={14} className="inline ml-1" />
           </Link>
         </div>
       </div>

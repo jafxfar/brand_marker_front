@@ -5,7 +5,8 @@ import Link from "next/link"
 import { BadgeCheck, Eye, Heart, MapPin, Star } from "lucide-react"
 import type { MarketplaceService } from "@/types/marketplace"
 import { getIcon } from "@/lib/icon-map"
-import { loginRedirect, serviceUrl } from "@/lib/marketplace-routes"
+import { serviceUrl } from "@/lib/marketplace-routes"
+import { createRfqHref } from "@/lib/create-rfq-href"
 
 type ServiceCardProps = {
   service: MarketplaceService
@@ -14,11 +15,12 @@ type ServiceCardProps = {
 export const ServiceCard = ({ service }: ServiceCardProps) => {
   const [isSaved, setIsSaved] = useState(false)
   const Icon = getIcon(service.icon)
+  const detailHref = serviceUrl(service.id)
 
   const handleToggleSave = () => setIsSaved((prev) => !prev)
 
   const handleRequest = () => {
-    window.location.href = loginRedirect(`/customer/rfqs/new?service=${service.id}`)
+    window.location.href = createRfqHref({ service: service.id })
   }
 
   return (
@@ -40,18 +42,33 @@ export const ServiceCard = ({ service }: ServiceCardProps) => {
             className={isSaved ? "fill-red-500 text-red-500" : "text-muted-foreground"}
           />
         </button>
-        <div className="w-14 h-14 rounded-2xl bg-white/70 flex items-center justify-center shadow-sm">
-          <Icon size={26} className={service.iconColor} />
-        </div>
+        <Link
+          href={detailHref}
+          className="absolute inset-0 flex items-center justify-center"
+          aria-label={service.title}
+        >
+          <div className="w-14 h-14 rounded-2xl bg-white/70 flex items-center justify-center shadow-sm">
+            <Icon size={26} className={service.iconColor} />
+          </div>
+        </Link>
       </div>
 
       <div className="p-3.5">
         <Link
-          href={serviceUrl(service.id)}
+          href={detailHref}
           className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors leading-snug line-clamp-2 block"
         >
           {service.title}
         </Link>
+
+        {service.description ? (
+          <Link
+            href={detailHref}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors leading-relaxed line-clamp-2 mt-1.5 block"
+          >
+            {service.description}
+          </Link>
+        ) : null}
 
         <div className="flex items-center gap-1.5 mt-2">
           <div className="flex items-center gap-1 min-w-0">

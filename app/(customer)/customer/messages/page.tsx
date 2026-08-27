@@ -49,7 +49,7 @@ export default function BuyerMessagesPage() {
 
   const getSupplierName = (supplierId: number) => {
     if (useApi) return resolveSupplierName(supplierId)
-    return getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
+    return getCompany(supplierId)?.title ?? `Исполнитель #${supplierId}`
   }
 
   const conversations = useMemo(
@@ -79,7 +79,7 @@ export default function BuyerMessagesPage() {
     <PageFrame>
       <PageHeader
         title="Сообщения"
-        description="Переписка по контрактам с поставщиками"
+        description="Переписка по контрактам с исполнителями"
       />
 
       {conversations.length === 0 ? (
@@ -96,7 +96,7 @@ export default function BuyerMessagesPage() {
             conversations={conversations}
             selectedId={selectedId}
             onSelect={handleSelect}
-            searchPlaceholder="Поиск по названию, поставщику..."
+            searchPlaceholder="Поиск по названию, исполнителю..."
           />
 
           <div className="min-h-0 flex flex-col gap-2">

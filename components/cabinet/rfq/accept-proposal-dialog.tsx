@@ -55,7 +55,7 @@ export const AcceptProposalDialog = ({
         <DialogHeader>
           <DialogTitle>Принять предложение?</DialogTitle>
           <DialogDescription>
-            Вы выбираете поставщика {supplierName} на сумму{" "}
+            Вы выбираете исполнителя {supplierName} на сумму{" "}
             {formatCurrency(price, currency)}. Выберите тип оплаты — будет создан контракт,
             остальные предложения отклонены.
           </DialogDescription>

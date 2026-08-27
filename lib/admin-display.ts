@@ -15,16 +15,16 @@ export const adminActorKindLabels: Record<string, string> = {
 }
 
 export const adminReportReasonLabels: Record<string, string> = {
-  spam: "Spam",
-  fraud: "Fraud",
-  counterfeit: "Counterfeit",
-  abuse: "Abuse",
-  other: "Other",
+  spam: "Спам",
+  fraud: "Мошенничество",
+  counterfeit: "Подделка",
+  abuse: "Оскорбления",
+  other: "Другое",
 }
 
 export const adminReportTargetLabels: Record<string, string> = {
   catalog: "Каталог",
-  rfq: "RFQ",
+  rfq: "Заявка",
   proposal: "Предложение",
 }
 
@@ -39,12 +39,12 @@ export const adminHistoryActionLabels: Record<string, string> = {
   "admin.rfq.warn_buyer": "Предупреждение покупателя",
   "admin.proposal.delete": "Удаление предложения",
   "admin.proposal.investigate": "Расследование жалобы",
-  "admin.proposal.block_supplier": "Блокировка поставщика",
+  "admin.proposal.block_supplier": "Блокировка исполнителя",
   "admin.contract.freeze": "Заморозка escrow",
   "admin.contract.cancel": "Отмена контракта",
   "admin.contract.force_complete": "Принудительное завершение",
   "admin.contract.open_investigation": "Открытие расследования",
-  "admin.dispute.release_funds": "Выплата поставщику",
+  "admin.dispute.release_funds": "Выплата исполнителю",
   "admin.dispute.refund_buyer": "Возврат покупателю",
   "admin.dispute.partial_refund": "Частичный возврат",
   "admin.dispute.request_evidence": "Запрос доказательств",
@@ -82,7 +82,7 @@ export const adminDisputeStatusMeta: Record<
 }
 
 export const adminDisputeResolutionLabels: Record<string, string> = {
-  release_funds: "Выплата поставщику",
+  release_funds: "Выплата исполнителю",
   refund_buyer: "Возврат покупателю",
   partial_refund: "Частичный возврат",
   close_case: "Закрытие дела",

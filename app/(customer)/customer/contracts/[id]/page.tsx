@@ -2,7 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, FileCheck, MessageSquare, Paperclip, Clock, Package } from "lucide-react"
+import { AlertTriangle, FileCheck, MessageSquare, Paperclip, Clock, Package, Gavel } from "lucide-react"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
@@ -37,6 +37,7 @@ import { ContractEscrowCard } from "@/components/supplier/contracts/contract-esc
 import { ContractFilesPanel } from "@/components/supplier/contracts/contract-files-panel"
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
 import { ContractDisputeDialog } from "@/components/supplier/contracts/contract-dispute-dialog"
+import { ContractDisputePanel } from "@/components/contracts/contract-dispute-panel"
 import type { PaymentHistoryEvent } from "@/lib/buyer-payments-display"
 import { mapApiPaymentHistoryEvent } from "@/lib/buyer-payments-display"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -115,7 +116,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const supplier = getCompany(contract.supplier_actor_id)
   const supplierName = useApi
     ? resolveSupplierName(contract.supplier_actor_id)
-    : (supplier?.title ?? "Поставщик")
+    : (supplier?.title ?? "Исполнитель")
   const canDispute = !DISPUTE_DISABLED_STATUSES.includes(
     contract.status as (typeof DISPUTE_DISABLED_STATUSES)[number],
   )
@@ -191,6 +192,11 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const messageCount = contract.conversation?.messages?.length ?? 0
   const fileCount = contract.files?.length ?? 0
   const submissionCount = contract.submissions?.length ?? 0
+  const activeDispute = contract.dispute ?? null
+  const showDisputeTab =
+    Boolean(activeDispute) || contract.status === "disputed"
+  const defaultTab =
+    activeDispute?.status === "under_review" ? "dispute" : "overview"
 
   return (
     <PageFrame>
@@ -231,18 +237,23 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
               Спор
             </button>
           )}
-          {contract.status === "disputed" && (
+          {showDisputeTab && (
             <span className="ml-auto text-xs font-semibold text-destructive">Спор открыт</span>
           )}
         </div>
         <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview" className="gap-1.5">
             <FileCheck size={14} /> Обзор
           </TabsTrigger>
+          {showDisputeTab && (
+            <TabsTrigger value="dispute" className="gap-1.5">
+              <Gavel size={14} /> Спор
+            </TabsTrigger>
+          )}
           <TabsTrigger value="messages" className="gap-1.5">
             <MessageSquare size={14} /> Сообщения
             {messageCount > 0 && (
@@ -305,6 +316,21 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
             </div>
           </div>
         </TabsContent>
+
+        {showDisputeTab && (
+          <TabsContent value="dispute">
+            {activeDispute ? (
+              <ContractDisputePanel dispute={activeDispute} />
+            ) : (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5">
+                <p className="text-sm font-semibold text-destructive">Спор открыт</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Закрыть спор может только администратор.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        )}
 
         <TabsContent value="messages">
           <ContractMessagesPanel

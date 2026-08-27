@@ -181,18 +181,29 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="supplier-statement" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-bold">Заявление поставщика</h2>
+        <h2 className="mb-5 text-lg font-bold">Заявление исполнителя</h2>
         {dispute.supplier_statement ? (
           <p className="text-sm leading-6 text-muted-foreground whitespace-pre-wrap">
             {dispute.supplier_statement}
           </p>
         ) : (
-          <EmptyState>Заявление поставщика отсутствует.</EmptyState>
+          <EmptyState>Заявление исполнителя отсутствует.</EmptyState>
+        )}
+      </section>
+
+      <section id="admin-instructions" className={sectionClassName}>
+        <h2 className="mb-5 text-lg font-bold">Инструкции сторонам</h2>
+        {dispute.admin_instructions ? (
+          <p className="text-sm leading-6 text-muted-foreground whitespace-pre-wrap">
+            {dispute.admin_instructions}
+          </p>
+        ) : (
+          <EmptyState>Инструкции ещё не отправлены.</EmptyState>
         )}
       </section>
 
       <PartySection id="buyer" title="Покупатель" party={dispute.buyer} />
-      <PartySection id="supplier" title="Поставщик" party={dispute.supplier} />
+      <PartySection id="supplier" title="Исполнитель" party={dispute.supplier} />
 
       <section id="evidence" className={sectionClassName}>
         <h2 className="mb-5 text-lg font-bold">Доказательства</h2>

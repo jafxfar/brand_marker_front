@@ -26,10 +26,10 @@ import {
 } from "@/lib/admin-display"
 
 const sections = [
-  ["reporter", "Reporter"],
-  ["reported-object", "Reported Object"],
-  ["evidence", "Evidence"],
-  ["history", "History"],
+  ["reporter", "Заявитель"],
+  ["reported-object", "Объект"],
+  ["evidence", "Доказательства"],
+  ["history", "История"],
 ] as const
 
 const DetailSkeleton = () => (
@@ -115,7 +115,7 @@ export default function AdminReportDetailPage({ params }: PageProps) {
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Report · {adminLabel(adminReportTargetLabels, report.target_type)} · #
+              Жалоба · {adminLabel(adminReportTargetLabels, report.target_type)} · #
               {report.id}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -137,7 +137,7 @@ export default function AdminReportDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("dismiss")}
               >
                 <CheckCircle2 aria-hidden="true" />
-                Dismiss
+                Отклонить
               </Button>
               <Button
                 type="button"
@@ -146,7 +146,7 @@ export default function AdminReportDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("warn")}
               >
                 <AlertTriangle aria-hidden="true" />
-                Warn
+                Предупредить
               </Button>
               <Button
                 type="button"
@@ -155,7 +155,7 @@ export default function AdminReportDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("suspend")}
               >
                 <Ban aria-hidden="true" />
-                Suspend
+                Заблокировать
               </Button>
               <Button
                 type="button"
@@ -164,7 +164,7 @@ export default function AdminReportDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("delete")}
               >
                 <Trash2 aria-hidden="true" />
-                Delete
+                Удалить
               </Button>
             </div>
           )}

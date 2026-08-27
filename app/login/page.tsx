@@ -1,17 +1,19 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Briefcase, ShoppingBag, Store, ArrowRight, ShieldCheck } from "lucide-react"
+import { toast } from "sonner"
 import { useAuthStore } from "@/lib/store/auth-store"
 import type { MarketplaceSessionRole } from "@/lib/store/auth-store"
 import { isApiEnabled } from "@/lib/api/config"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { registerUrl } from "@/lib/marketplace-routes"
+import { useHydrated } from "@/hooks/use-hydrated"
 
 const schema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -34,7 +36,7 @@ const roleCards: {
   },
   {
     role: "supplier",
-    title: "Я поставщик",
+    title: "Я исполнитель",
     desc: "Предлагаю товары и услуги, откликаюсь на заказы",
     Icon: Store,
   },
@@ -43,8 +45,12 @@ const roleCards: {
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const hydrated = useHydrated()
   const login = useAuthStore((s) => s.login)
   const loginWithCredentials = useAuthStore((s) => s.loginWithCredentials)
+  const isReady = useAuthStore((s) => s.isReady)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const user = useAuthStore((s) => s.user)
   const [role, setRole] = useState<MarketplaceSessionRole>("customer")
   const [apiError, setApiError] = useState<string | null>(null)
   const useApi = isApiEnabled()
@@ -58,6 +64,24 @@ function LoginContent() {
     defaultValues: { email: "", password: "" },
   })
 
+  useEffect(() => {
+    if (!hydrated || !isReady || !isAuthenticated || !user) return
+    if (user.role === "admin") {
+      router.replace("/admin")
+      return
+    }
+    if (user.role !== "customer" && user.role !== "supplier") return
+    const roleHome = user.role === "supplier" ? "/supplier" : "/customer"
+    const redirect = searchParams.get("redirect")
+    const safeRedirect =
+      redirect
+      && !redirect.startsWith("/admin")
+      && redirect.startsWith(roleHome)
+        ? redirect
+        : roleHome
+    router.replace(safeRedirect)
+  }, [hydrated, isReady, isAuthenticated, user, router, searchParams])
+
   const onSubmit = async (values: FormValues) => {
     setApiError(null)
     try {
@@ -68,21 +92,27 @@ function LoginContent() {
           role,
         })
         if (sessionRole === "admin") {
+          toast.success("Вы вошли в систему")
           router.push("/admin")
           return
         }
       } else {
         login({ email: values.email, role })
       }
+      toast.success("Вы вошли в систему")
       const redirect = searchParams.get("redirect")
-      const marketplaceRedirect = redirect?.startsWith("/admin") ? null : redirect
-      if (role === "customer") {
-        router.replace(marketplaceRedirect || "/customer")
-        return
-      }
-      router.replace(marketplaceRedirect || "/supplier")
+      const roleHome = role === "customer" ? "/customer" : "/supplier"
+      const marketplaceRedirect =
+        redirect &&
+        !redirect.startsWith("/admin") &&
+        redirect.startsWith(roleHome)
+          ? redirect
+          : null
+      router.replace(marketplaceRedirect || roleHome)
     } catch (err) {
-      setApiError(getApiErrorMessage(err, "Ошибка входа"))
+      const message = getApiErrorMessage(err, "Ошибка входа")
+      setApiError(message)
+      toast.error(message)
     }
   }
 
@@ -108,8 +138,8 @@ function LoginContent() {
             B2B маркетплейс<br />товаров и услуг
           </h1>
           <p className="text-white/70 text-sm leading-relaxed max-w-sm mb-8">
-            Размещайте заказы, получайте отклики проверенных поставщиков и платите
-            безопасно — деньги переводятся поставщику только после приёмки работы.
+            Размещайте заказы, получайте отклики проверенных исполнителей и платите
+            безопасно — деньги переводятся исполнителю только после приёмки работы.
           </p>
           <div className="flex items-center gap-2.5 text-sm text-white/80">
             <ShieldCheck size={18} className="text-primary" />
@@ -205,7 +235,7 @@ function LoginContent() {
               disabled={isSubmitting}
               className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              Войти как {role === "customer" ? "заказчик" : "поставщик"}
+              Войти как {role === "customer" ? "заказчик" : "исполнитель"}
               <ArrowRight size={16} />
             </button>
             {apiError && (

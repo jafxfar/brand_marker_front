@@ -6,7 +6,8 @@ import { Clock, FileText, MapPin, Users } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { getRecentRequests } from "@/lib/mock/marketplace-requests"
 import { getIcon } from "@/lib/icon-map"
-import { newRfqRedirect, supplierRfqRedirect } from "@/lib/marketplace-routes"
+import { supplierRfqRedirect } from "@/lib/marketplace-routes"
+import { createRfqHref } from "@/lib/create-rfq-href"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicRfqsQuery } from "@/hooks/api/use-public-query"
 import { mergeByKey, mapRfqToRequest } from "@/lib/marketplace-hybrid"
@@ -37,7 +38,7 @@ export default function OrdersPage() {
               </div>
             </div>
             <Link
-              href={newRfqRedirect()}
+              href={createRfqHref()}
               className="text-sm font-bold bg-primary text-primary-foreground px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors"
             >
               Разместить заказ

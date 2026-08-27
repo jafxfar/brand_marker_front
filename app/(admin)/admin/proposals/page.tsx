@@ -145,7 +145,7 @@ const AdminProposalsContent = () => {
     <PageFrame>
       <PageHeader
         title="Предложения"
-        description="Модерация ответов поставщиков на RFQ"
+        description="Модерация ответов исполнителей на RFQ"
         actions={<p className="text-sm text-muted-foreground">
           Найдено <strong className="ml-1 text-foreground">{total}</strong>
         </p>}
@@ -188,7 +188,7 @@ const AdminProposalsContent = () => {
             title={hasFilters ? "Предложения не найдены" : "Предложений пока нет"}
             description={hasFilters
               ? "Измените поисковый запрос или выбранный фильтр."
-              : "Новые предложения появятся после откликов поставщиков."}
+              : "Новые предложения появятся после откликов исполнителей."}
           />
         </PageSurface>
       ) : (
@@ -197,7 +197,7 @@ const AdminProposalsContent = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Предложение</TableHead>
-                <TableHead>Поставщик</TableHead>
+                <TableHead>Исполнитель</TableHead>
                 <TableHead>Покупатель</TableHead>
                 <TableHead>Цена</TableHead>
                 <TableHead>Статус</TableHead>

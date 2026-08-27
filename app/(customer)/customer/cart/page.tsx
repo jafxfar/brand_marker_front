@@ -53,11 +53,11 @@ export default function CartPage() {
           <PageEmptyState
             icon={<ShoppingCart size={26} />}
             title="Корзина пуста"
-            description="Добавьте товары или услуги из каталога поставщиков"
+            description="Добавьте товары или услуги из каталога исполнителей"
           />
           <div className="flex justify-center pb-10">
             <Button asChild size="lg">
-              <Link href="/customer/suppliers">Перейти в каталог</Link>
+              <Link href="/customer/catalog">Перейти в каталог</Link>
             </Button>
           </div>
         </PageSurface>
@@ -91,7 +91,7 @@ export default function CartPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground leading-snug">{item.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {supplier?.name ?? "Поставщик"}
+                        {supplier?.name ?? "Исполнитель"}
                         {item.color && item.color !== "—" ? ` · ${item.color}` : ""}
                         {item.sku ? ` · ${item.sku}` : ""}
                       </p>
@@ -155,7 +155,7 @@ export default function CartPage() {
               <span className="font-semibold text-foreground">{formatPrice(hydrated ? total : 0)}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-primary mb-4">
-              <Truck size={13} /> Доставка по договорённости с поставщиком
+              <Truck size={13} /> Доставка по договорённости с исполнителем
             </div>
 
             <div className="border-t border-border pt-4 mb-4 flex items-center justify-between">

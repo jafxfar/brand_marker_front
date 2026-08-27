@@ -143,6 +143,12 @@ const normalizeContract = (
 ): ContractWithRelations => ({
   ...contract,
   files: contract.files ?? [],
+  dispute: contract.dispute
+    ? {
+        ...contract.dispute,
+        evidence: contract.dispute.evidence ?? [],
+      }
+    : contract.dispute ?? null,
   submissions: (contract.submissions ?? []).map((submission) => ({
     ...submission,
     assets: submission.assets ?? [],
@@ -408,6 +414,7 @@ export const useContractsStore = create<ContractsState>()(
             created_at: createdAt,
           })),
           submissions: [],
+          dispute: null,
         }
 
         set((state) => ({
@@ -622,6 +629,7 @@ export const useContractsStore = create<ContractsState>()(
         set((state) => ({
           contracts: state.contracts.map((contract) => {
             if (contract.id !== contractId) return contract
+            if (contract.status === "disputed" || contract.dispute) return contract
             const submission = {
               id: nextSubmissionId(state.contracts),
               contract_id: contractId,
@@ -655,6 +663,7 @@ export const useContractsStore = create<ContractsState>()(
         set((state) => ({
           contracts: state.contracts.map((contract) => {
             if (contract.id !== contractId) return contract
+            if (contract.status === "disputed" || contract.dispute) return contract
             return {
               ...contract,
               status: "completed" as const,
@@ -671,6 +680,7 @@ export const useContractsStore = create<ContractsState>()(
         set((state) => ({
           contracts: state.contracts.map((contract) => {
             if (contract.id !== contractId) return contract
+            if (contract.status === "disputed" || contract.dispute) return contract
             return {
               ...contract,
               status: "active" as const,
@@ -700,9 +710,22 @@ export const useContractsStore = create<ContractsState>()(
               text: `Открыт спор: ${reason}`,
               attachment: null,
             }
+            const now = new Date().toISOString()
+            const isBuyer = initiatorId === contract.buyer_actor_id
             return {
               ...contract,
               status: "disputed" as const,
+              dispute: {
+                id: contractId,
+                status: "open" as const,
+                opened_by_actor_id: initiatorId,
+                buyer_statement: isBuyer ? reason : null,
+                supplier_statement: isBuyer ? null : reason,
+                admin_instructions: null,
+                created_at: now,
+                updated_at: now,
+                evidence: [],
+              },
               payment_plan: contract.payment_plan
                 ? { ...contract.payment_plan, milestones: milestones ?? [] }
                 : null,

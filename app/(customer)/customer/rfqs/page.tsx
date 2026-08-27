@@ -63,7 +63,7 @@ export default function MyRfqsPage() {
     <PageFrame>
       <PageHeader
         title="Мои заявки"
-        description="Ваши запросы поставщикам и их статусы"
+        description="Ваши запросы исполнителям и их статусы"
         actions={
           <Button asChild size="lg">
             <Link href="/customer/rfqs/new">

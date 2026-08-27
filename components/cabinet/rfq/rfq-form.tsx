@@ -257,7 +257,7 @@ export const RfqForm = ({
     <PageFrame>
       <PageHeader
         title={initial ? "Редактирование заявки" : "Создание заявки"}
-        description="Опишите, что вам нужно - поставщики смогут прислать предложения"
+        description="Опишите, что вам нужно - исполнители смогут прислать предложения"
         backHref={cancelHref}
         backLabel="Назад"
       />

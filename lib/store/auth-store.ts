@@ -6,7 +6,7 @@ import {
 } from "@/lib/mock/companies"
 import { authApi, type ActorSummary } from "@/lib/api/auth"
 import { isApiEnabled } from "@/lib/api/config"
-import { tokenStorage } from "@/lib/api/client"
+import { setSessionActorResolver, tokenStorage } from "@/lib/api/client"
 
 export type SessionRole = "customer" | "supplier" | "admin"
 export type MarketplaceSessionRole = Exclude<SessionRole, "admin">
@@ -55,12 +55,13 @@ interface AuthState {
     phone?: string
     role: MarketplaceSessionRole
   }) => Promise<void>
-  restoreSession: (role: MarketplaceSessionRole) => Promise<boolean>
+  restoreSession: () => Promise<boolean>
   logout: () => Promise<void>
   updateProfile: (patch: Partial<SessionUser>) => void
   switchActor: (actorId: number) => Promise<void>
   switchCompany: (companyId: number) => Promise<void>
   activateRole: (side: "buyer" | "supplier") => Promise<void>
+  switchSessionRole: (role: MarketplaceSessionRole) => Promise<void>
   linkCompany: (companyId: number, options?: { setActive?: boolean; title?: string }) => void
 }
 
@@ -247,7 +248,7 @@ export const useAuthStore = create<AuthState>()(
           }
         }
         if (!active) {
-          const sideLabel = role === "customer" ? "заказчика" : "поставщика"
+          const sideLabel = role === "customer" ? "заказчика" : "исполнителя"
           throw new Error(
             `Нет профиля ${sideLabel}. Активируйте роль в настройках или создайте компанию.`,
           )
@@ -306,7 +307,7 @@ export const useAuthStore = create<AuthState>()(
         const me = await authApi.me()
         const active = pickActorForRole(me.actors, role, me.active_actor_id)
         if (!active) {
-          const sideLabel = role === "customer" ? "заказчика" : "поставщика"
+          const sideLabel = role === "customer" ? "заказчика" : "исполнителя"
           throw new Error(
             `Нет профиля ${sideLabel}. Активируйте роль в настройках или создайте компанию.`,
           )
@@ -318,21 +319,25 @@ export const useAuthStore = create<AuthState>()(
         })
       },
 
-      restoreSession: async (role) => {
+      restoreSession: async () => {
         if (!isApiEnabled()) return false
         if (!tokenStorage.getAccess() && !tokenStorage.getRefresh()) return false
         try {
-          let me = await authApi.me()
-          let active = pickActorForRole(me.actors, role, me.active_actor_id)
-          if (!active) {
-            try {
-              me = await authApi.activateRole(sideForRole(role))
-              active = pickActorForRole(me.actors, role, me.active_actor_id)
-            } catch {
-              return false
-            }
+          const me = await authApi.me()
+          if (["admin", "superadmin", "moderator"].includes(me.user.role)) {
+            set({
+              isAuthenticated: true,
+              isReady: true,
+              user: sessionFromMe(me, "admin"),
+            })
+            return true
           }
+          const active =
+            me.actors.find((a) => a.id === me.active_actor_id)
+            ?? me.actors[0]
           if (!active) return false
+          const role: MarketplaceSessionRole =
+            active.side === "supplier" ? "supplier" : "customer"
           set({
             isAuthenticated: true,
             isReady: true,
@@ -367,6 +372,7 @@ export const useAuthStore = create<AuthState>()(
         set((state) => {
           if (!state.user) return state
           const actor = state.user.actors.find((a) => a.id === actorId)
+          tokenStorage.setActorId(actorId)
           return {
             user: {
               ...state.user,
@@ -412,6 +418,58 @@ export const useAuthStore = create<AuthState>()(
         })
       },
 
+      switchSessionRole: async (role) => {
+        if (!isApiEnabled()) {
+          const state = get()
+          if (!state.user) return
+          const actorId = demoCompanyIdForRole(role)
+          tokenStorage.setActorId(actorId)
+          set({
+            user: migrateUser({
+              ...state.user,
+              role,
+              platformRole: sideForRole(role),
+              actorId,
+              activeActorId: actorId,
+              companyId: actorId,
+              activeCompanyId: actorId,
+              companyIds: state.user.companyIds.includes(actorId)
+                ? state.user.companyIds
+                : [...state.user.companyIds, actorId],
+              capabilities: {
+                buyer: role === "customer" || state.user.capabilities.buyer,
+                supplier: role === "supplier" || state.user.capabilities.supplier,
+              },
+            }),
+            isAuthenticated: true,
+          })
+          return
+        }
+
+        const state = get()
+        if (!state.user) return
+
+        const side = sideForRole(role)
+        const hasCapability =
+          side === "buyer" ? state.user.capabilities.buyer : state.user.capabilities.supplier
+        const existing = pickActorForRole(state.user.actors, role)
+
+        if (hasCapability && existing) {
+          const me = await authApi.switchActor(existing.id)
+          set({
+            isAuthenticated: true,
+            user: sessionFromMe(me, role),
+          })
+          return
+        }
+
+        const me = await authApi.activateRole(side)
+        set({
+          isAuthenticated: true,
+          user: sessionFromMe(me, role),
+        })
+      },
+
       linkCompany: (companyId, options) =>
         set((state) => {
           if (!state.user) return state
@@ -450,6 +508,10 @@ export const useAuthStore = create<AuthState>()(
         }
         if (state?.user) {
           state.user = migrateUser(state.user)
+          const actorId = state.user.activeActorId ?? state.user.actorId
+          if (actorId && actorId > 0) {
+            tokenStorage.setActorId(actorId)
+          }
         }
         useAuthStore.setState({ isReady: true })
       },
@@ -476,10 +538,24 @@ export const useAuthStore = create<AuthState>()(
 )
 
 if (typeof window !== "undefined") {
+  setSessionActorResolver(() => {
+    const id = useAuthStore.getState().user?.activeActorId
+    return id && id > 0 ? id : null
+  })
   useAuthStore.persist.onFinishHydration(() => {
+    const user = useAuthStore.getState().user
+    const actorId = user?.activeActorId ?? user?.actorId
+    if (actorId && actorId > 0) {
+      tokenStorage.setActorId(actorId)
+    }
     useAuthStore.setState({ isReady: true })
   })
   if (useAuthStore.persist.hasHydrated()) {
+    const user = useAuthStore.getState().user
+    const actorId = user?.activeActorId ?? user?.actorId
+    if (actorId && actorId > 0) {
+      tokenStorage.setActorId(actorId)
+    }
     useAuthStore.setState({ isReady: true })
   }
 }

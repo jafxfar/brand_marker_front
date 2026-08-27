@@ -136,13 +136,13 @@ export default function BuyerPaymentsPage() {
         {tab === "outgoing" && (
           <OutgoingPaymentsTable
             payments={effectiveOutgoing}
-            getSupplierName={(id) => getCompany(id)?.title ?? "Поставщик"}
+            getSupplierName={(id) => getCompany(id)?.title ?? "Исполнитель"}
           />
         )}
         {tab === "escrow" && (
           <EscrowFundingTable
             rows={effectiveEscrowQueue}
-            getSupplierName={(id) => getCompany(id)?.title ?? "Поставщик"}
+            getSupplierName={(id) => getCompany(id)?.title ?? "Исполнитель"}
             onFund={handleFund}
           />
         )}

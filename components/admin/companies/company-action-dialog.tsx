@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminCompanyActionMutation } from "@/hooks/api/use-admin-companies-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type { AdminCompanyAction } from "@/lib/api/admin"
 
 const actionMetadata: Record<
@@ -100,8 +99,8 @@ export const CompanyActionDialog = ({
       })
       toast.success(metadata.success)
       onOpenChange(false)
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось изменить статус компании"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

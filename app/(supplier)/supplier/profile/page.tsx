@@ -59,7 +59,7 @@ export default function SupplierProfilePage() {
   return (
     <PageFrame>
       <PageHeader
-        title="Профиль поставщика"
+        title="Профиль исполнителя"
         description="Контактные данные и настройки доставки"
       />
 

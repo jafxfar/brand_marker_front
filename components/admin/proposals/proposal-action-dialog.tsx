@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminProposalActionMutation } from "@/hooks/api/use-admin-proposals-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type { AdminProposalAction } from "@/lib/api/admin"
 
 const actionMetadata: Record<
@@ -34,9 +33,9 @@ const actionMetadata: Record<
     success: "Жалобы закрыты",
   },
   block_supplier: {
-    title: "Заблокировать поставщика?",
-    description: "Компания поставщика будет заблокирована на платформе.",
-    success: "Поставщик заблокирован",
+    title: "Заблокировать исполнителя?",
+    description: "Компания исполнителя будет заблокирована на платформе.",
+    success: "Исполнитель заблокирован",
     destructive: true,
   },
 }
@@ -81,8 +80,8 @@ export const ProposalActionDialog = ({
       if (result.status === "deleted") {
         router.push("/admin/proposals")
       }
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось изменить предложение"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

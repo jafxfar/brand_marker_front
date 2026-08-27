@@ -46,7 +46,7 @@ export default function PaymentDialog({
           </DialogTitle>
           <DialogDescription>
             Выберите схему оплаты. Деньги замораживаются на счёте площадки и переводятся
-            поставщику только после того, как вы примете работу.
+            исполнителю только после того, как вы примете работу.
           </DialogDescription>
         </DialogHeader>
 

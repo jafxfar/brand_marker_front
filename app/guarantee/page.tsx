@@ -1,7 +1,9 @@
+"use client"
+
 import Link from "next/link"
 import { CircleDollarSign, ShieldCheck } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
-import { newRfqRedirect } from "@/lib/marketplace-routes"
+import { createRfqHref } from "@/lib/create-rfq-href"
 
 export default function GuaranteePage() {
   return (
@@ -47,7 +49,7 @@ export default function GuaranteePage() {
             </div>
 
             <Link
-              href={newRfqRedirect()}
+              href={createRfqHref()}
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-bold px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors"
             >
               Разместить заказ

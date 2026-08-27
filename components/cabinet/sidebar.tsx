@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, FileText, ShoppingCart, Store, Bell, User,
-  Briefcase, Plus, FileCheck, Wallet, Star, Building2, MessageSquare, type LucideIcon,
+  Briefcase, Plus, FileCheck, Wallet, Star, Building2, MessageSquare, Package, type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCartStore } from "@/lib/store/cart-store"
@@ -29,6 +29,7 @@ const navSections: NavSection[] = [
     title: "Главное",
     items: [
       { href: "/customer", label: "Дашборд", Icon: LayoutDashboard },
+      { href: "/customer/catalog", label: "Товары и услуги", Icon: Package },
       { href: "/customer/rfqs", label: "Мои заявки", Icon: FileText },
       { href: "/customer/contracts", label: "Договоры", Icon: FileCheck },
     ],
@@ -43,7 +44,7 @@ const navSections: NavSection[] = [
   {
     title: "Партнёры",
     items: [
-      { href: "/customer/suppliers", label: "Поставщики", Icon: Store },
+      { href: "/customer/suppliers", label: "Исполнители", Icon: Store },
       { href: "/customer/messages", label: "Сообщения", Icon: MessageSquare },
       { href: "/customer/reviews", label: "Мои отзывы", Icon: Star },
     ],

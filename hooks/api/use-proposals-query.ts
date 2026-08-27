@@ -46,6 +46,9 @@ export const useSendProposalMessageMutation = (side: ProposalChatSide) => {
       qc.invalidateQueries({ queryKey: proposalKeys.messages(id) })
       qc.invalidateQueries({ queryKey: notificationKeys.all })
     },
+    meta: {
+      errorMessage: "Не удалось отправить сообщение",
+    },
   })
 }
 
@@ -57,6 +60,10 @@ export const useShortlistProposalMutation = () => {
       qc.invalidateQueries({ queryKey: ["proposals"] })
       qc.invalidateQueries({ queryKey: rfqKeys.all })
     },
+    meta: {
+      successMessage: "Предложение в шортлисте",
+      errorMessage: "Не удалось добавить в шортлист",
+    },
   })
 }
 
@@ -67,6 +74,10 @@ export const useRejectProposalMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["proposals"] })
       qc.invalidateQueries({ queryKey: rfqKeys.all })
+    },
+    meta: {
+      successMessage: "Предложение отклонено",
+      errorMessage: "Не удалось отклонить предложение",
     },
   })
 }
@@ -82,6 +93,10 @@ export const useAcceptProposalMutation = () => {
       qc.invalidateQueries({ queryKey: contractKeys.all })
       qc.invalidateQueries({ queryKey: supplierContractKeys.all })
       qc.invalidateQueries({ queryKey: notificationKeys.all })
+    },
+    meta: {
+      successMessage: "Предложение принято",
+      errorMessage: "Не удалось принять предложение",
     },
   })
 }

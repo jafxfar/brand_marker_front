@@ -2,6 +2,7 @@
 
 import { use, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { RfqForm } from "@/components/cabinet/rfq/rfq-form"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -90,6 +91,8 @@ export default function EditRfqPage({ params }: PageProps) {
       await updateMutation.mutateAsync({ id, data: patch })
       if (publish) {
         await publishMutation.mutateAsync(id)
+      } else {
+        toast.success("Заявка обновлена")
       }
       router.push(`/customer/rfqs/${id}`)
     } finally {
@@ -125,7 +128,10 @@ export default function EditRfqPage({ params }: PageProps) {
       onPublish={(input) => handleSubmit(input, true)}
       onAddAttachment={(file) => {
         if (useApi) {
-          uploadMutation.mutate({ id, file })
+          uploadMutation.mutate(
+            { id, file },
+            { onSuccess: () => toast.success("Файл загружен") },
+          )
           return
         }
         addAttachmentLocal(id, {

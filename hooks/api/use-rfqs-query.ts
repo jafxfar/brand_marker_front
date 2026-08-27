@@ -39,6 +39,9 @@ export const useCreateRfqMutation = () => {
   return useMutation({
     mutationFn: (data: RfqCreate) => rfqsApi.create(data),
     onSuccess: () => invalidateRfqs(qc),
+    meta: {
+      errorMessage: "Не удалось создать заявку",
+    },
   })
 }
 
@@ -49,6 +52,9 @@ export const useUpdateRfqMutation = () => {
     onSuccess: (_d, { id }) => {
       invalidateRfqs(qc)
       qc.invalidateQueries({ queryKey: rfqKeys.detail(id) })
+    },
+    meta: {
+      errorMessage: "Не удалось обновить заявку",
     },
   })
 }
@@ -61,6 +67,10 @@ export const usePublishRfqMutation = () => {
       invalidateRfqs(qc)
       qc.invalidateQueries({ queryKey: rfqKeys.detail(id) })
     },
+    meta: {
+      successMessage: "Заявка опубликована",
+      errorMessage: "Не удалось опубликовать заявку",
+    },
   })
 }
 
@@ -71,6 +81,10 @@ export const useCloseRfqMutation = () => {
     onSuccess: (_d, id) => {
       invalidateRfqs(qc)
       qc.invalidateQueries({ queryKey: rfqKeys.detail(id) })
+    },
+    meta: {
+      successMessage: "Заявка закрыта",
+      errorMessage: "Не удалось закрыть заявку",
     },
   })
 }
@@ -84,6 +98,9 @@ export const useInviteSuppliersMutation = () => {
       invalidateRfqs(qc)
       qc.invalidateQueries({ queryKey: rfqKeys.detail(id) })
     },
+    meta: {
+      errorMessage: "Не удалось пригласить поставщика",
+    },
   })
 }
 
@@ -96,6 +113,9 @@ export const useUploadRfqAttachmentMutation = () => {
       invalidateRfqs(qc)
       qc.invalidateQueries({ queryKey: rfqKeys.detail(id) })
     },
+    meta: {
+      errorMessage: "Не удалось загрузить файл",
+    },
   })
 }
 
@@ -107,6 +127,10 @@ export const useDeleteRfqAttachmentMutation = () => {
     onSuccess: (_d, { id }) => {
       invalidateRfqs(qc)
       qc.invalidateQueries({ queryKey: rfqKeys.detail(id) })
+    },
+    meta: {
+      successMessage: "Вложение удалено",
+      errorMessage: "Не удалось удалить вложение",
     },
   })
 }

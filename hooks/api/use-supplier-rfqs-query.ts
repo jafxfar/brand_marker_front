@@ -53,6 +53,10 @@ export const useSubmitSupplierProposalMutation = () => {
       qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
       qc.invalidateQueries({ queryKey: notificationKeys.all })
     },
+    meta: {
+      successMessage: "Предложение отправлено",
+      errorMessage: "Не удалось отправить предложение",
+    },
   })
 }
 
@@ -64,6 +68,10 @@ export const useWithdrawProposalMutation = () => {
       qc.invalidateQueries({ queryKey: supplierRfqKeys.all })
       qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
       qc.invalidateQueries({ queryKey: notificationKeys.all })
+    },
+    meta: {
+      successMessage: "Предложение отозвано",
+      errorMessage: "Не удалось отозвать предложение",
     },
   })
 }
@@ -86,6 +94,10 @@ export const useUpdateSupplierProposalMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supplierRfqKeys.all })
       qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+    },
+    meta: {
+      successMessage: "Предложение обновлено",
+      errorMessage: "Не удалось обновить предложение",
     },
   })
 }

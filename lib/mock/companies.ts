@@ -13,7 +13,7 @@ export const mockCompanies: CompanyWithRelations[] = [
     legal_name: "ООО «ТехноСнаб»",
     tax_number: "7701234567",
     website: "https://technosnab.example",
-    description: "Поставщик IT-оборудования и интеграционных услуг",
+    description: "Исполнитель IT-оборудования и интеграционных услуг",
     logo: null,
     country: "Таджикистан",
     city: "Душанбе",

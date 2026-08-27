@@ -53,5 +53,8 @@ export const useAdminDisputeActionMutation = () => {
         queryClient.invalidateQueries({ queryKey: adminDashboardKeys.all }),
       ])
     },
+    meta: {
+      errorMessage: "Не удалось выполнить действие",
+    },
   })
 }

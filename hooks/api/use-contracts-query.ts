@@ -65,6 +65,9 @@ export const useSendMessageMutation = () => {
       replaceContractInCache(qc, typed)
       invalidateContractChat(qc, typed.id)
     },
+    meta: {
+      errorMessage: "Не удалось отправить сообщение",
+    },
   })
 }
 
@@ -77,6 +80,9 @@ export const useSupplierSendMessageMutation = () => {
       const typed = contract as ContractWithRelations
       replaceContractInCache(qc, typed)
       invalidateContractChat(qc, typed.id)
+    },
+    meta: {
+      errorMessage: "Не удалось отправить сообщение",
     },
   })
 }
@@ -96,6 +102,7 @@ export const useMarkMessagesReadMutation = (role: "buyer" | "supplier") => {
         qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
       }
     },
+    meta: { silent: true },
   })
 }
 
@@ -112,6 +119,10 @@ export const useApproveSubmissionMutation = () => {
     onSuccess: (_d, { contractId }) => {
       qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: contractKeys.list() })
+    },
+    meta: {
+      successMessage: "Сдача принята",
+      errorMessage: "Не удалось принять сдачу",
     },
   })
 }
@@ -130,6 +141,10 @@ export const useRejectSubmissionMutation = () => {
       qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: contractKeys.list() })
     },
+    meta: {
+      successMessage: "Сдача отклонена",
+      errorMessage: "Не удалось отклонить сдачу",
+    },
   })
 }
 
@@ -142,6 +157,10 @@ export const useOpenDisputeMutation = () => {
       qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: contractKeys.list() })
     },
+    meta: {
+      successMessage: "Спор открыт",
+      errorMessage: "Не удалось открыть спор",
+    },
   })
 }
 
@@ -153,6 +172,10 @@ export const useSupplierOpenDisputeMutation = () => {
     onSuccess: (_d, { contractId }) => {
       qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
+    },
+    meta: {
+      successMessage: "Спор открыт",
+      errorMessage: "Не удалось открыть спор",
     },
   })
 }
@@ -185,6 +208,10 @@ export const useSupplierSubmitWorkMutation = () => {
       qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
     },
+    meta: {
+      successMessage: "Работа отправлена",
+      errorMessage: "Не удалось отправить работу",
+    },
   })
 }
 
@@ -195,6 +222,10 @@ export const useSupplierUploadContractFileMutation = () => {
       supplierContractsApi.uploadFile(contractId, file),
     onSuccess: (_d, { contractId }) => {
       qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+    },
+    meta: {
+      successMessage: "Файл загружен",
+      errorMessage: "Не удалось загрузить файл",
     },
   })
 }

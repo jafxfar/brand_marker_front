@@ -27,6 +27,7 @@ export const useMarkNotificationReadMutation = (role: NotificationRole) => {
         old?.map((n) => (n.id === id ? { ...n, read: true } : n)),
       )
     },
+    meta: { silent: true },
   })
 }
 
@@ -38,6 +39,10 @@ export const useMarkAllNotificationsReadMutation = (role: NotificationRole) => {
       qc.setQueryData<ApiNotification[]>(notificationKeys.list(role), (old) =>
         old?.map((n) => ({ ...n, read: true })),
       )
+    },
+    meta: {
+      successMessage: "Все уведомления прочитаны",
+      errorMessage: "Не удалось отметить уведомления",
     },
   })
 }

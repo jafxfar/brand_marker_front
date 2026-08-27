@@ -40,6 +40,10 @@ export const useFundMilestoneMutation = () => {
       qc.invalidateQueries({ queryKey: paymentKeys.all })
       qc.invalidateQueries({ queryKey: contractKeys.all })
     },
+    meta: {
+      successMessage: "Оплата отправлена",
+      errorMessage: "Не удалось оплатить этап",
+    },
   })
 }
 
@@ -50,6 +54,10 @@ export const useApproveMilestoneMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: paymentKeys.all })
       qc.invalidateQueries({ queryKey: contractKeys.all })
+    },
+    meta: {
+      successMessage: "Этап принят",
+      errorMessage: "Не удалось принять этап",
     },
   })
 }
@@ -62,6 +70,10 @@ export const useMockConfirmMutation = () => {
       qc.invalidateQueries({ queryKey: paymentKeys.all })
       qc.invalidateQueries({ queryKey: contractKeys.all })
     },
+    meta: {
+      successMessage: "Оплата подтверждена",
+      errorMessage: "Не удалось подтвердить оплату",
+    },
   })
 }
 
@@ -73,6 +85,10 @@ export const useFundAndConfirmMilestoneMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: paymentKeys.all })
       qc.invalidateQueries({ queryKey: contractKeys.all })
+    },
+    meta: {
+      successMessage: "Оплата подтверждена",
+      errorMessage: "Не удалось оплатить этап",
     },
   })
 }

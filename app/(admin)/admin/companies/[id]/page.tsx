@@ -131,7 +131,7 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
             {company.owner.name || company.owner.email}
             {" · "}
             {company.actor_types
-              .map((type) => (type === "buyer" ? "Заказчик" : "Поставщик"))
+              .map((type) => (type === "buyer" ? "Заказчик" : "Исполнитель"))
               .join(", ")}
           </>
         }

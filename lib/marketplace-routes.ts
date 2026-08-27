@@ -46,6 +46,7 @@ export const registerUrl = () => "/register"
 export const loginRedirect = (path: string) =>
   `/login?redirect=${encodeURIComponent(path)}`
 
+/** Guest/static CTA: always login → customer RFQ form. Authed suppliers are bounced by login/gate. */
 export const newRfqRedirect = () => loginRedirect("/customer/rfqs/new")
 
 export const supplierRfqRedirect = () => loginRedirect("/supplier/rfqs")

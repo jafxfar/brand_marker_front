@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Briefcase, ShoppingBag, Store, ArrowRight, ShieldCheck } from "lucide-react"
+import { toast } from "sonner"
 import { useAuthStore } from "@/lib/store/auth-store"
 import type { MarketplaceSessionRole } from "@/lib/store/auth-store"
 import { isApiEnabled } from "@/lib/api/config"
@@ -42,7 +43,7 @@ const roleCards: {
   },
   {
     role: "supplier",
-    title: "Я поставщик",
+    title: "Я исполнитель",
     desc: "Предлагаю товары и услуги, откликаюсь на заказы",
     Icon: Store,
   },
@@ -86,14 +87,20 @@ function RegisterContent() {
         phone: values.phone?.trim() || undefined,
         role,
       })
+      toast.success("Регистрация прошла успешно")
       const redirect = searchParams.get("redirect")
-      if (role === "customer") {
-        router.push(redirect || "/customer")
-        return
-      }
-      router.push(redirect || "/supplier")
+      const roleHome = role === "customer" ? "/customer" : "/supplier"
+      const marketplaceRedirect =
+        redirect &&
+        !redirect.startsWith("/admin") &&
+        redirect.startsWith(roleHome)
+          ? redirect
+          : null
+      router.push(marketplaceRedirect || roleHome)
     } catch (err) {
-      setApiError(getApiErrorMessage(err, "Ошибка регистрации"))
+      const message = getApiErrorMessage(err, "Ошибка регистрации")
+      setApiError(message)
+      toast.error(message)
     }
   }
 
@@ -123,7 +130,7 @@ function RegisterContent() {
           </p>
           <div className="flex items-center gap-2.5 text-sm text-white/80">
             <ShieldCheck size={18} className="text-primary" />
-            Бесплатная регистрация для заказчиков и поставщиков
+            Бесплатная регистрация для заказчиков и исполнителей
           </div>
         </div>
 
@@ -279,7 +286,7 @@ function RegisterContent() {
               disabled={isSubmitting}
               className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              Зарегистрироваться как {role === "customer" ? "заказчик" : "поставщик"}
+              Зарегистрироваться как {role === "customer" ? "заказчик" : "исполнитель"}
               <ArrowRight size={16} />
             </button>
             {apiError && (

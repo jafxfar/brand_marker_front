@@ -18,6 +18,7 @@ import {
   performerUrl,
   servicesUrl,
 } from "@/lib/marketplace-routes"
+import { createRfqHref } from "@/lib/create-rfq-href"
 import { tokenStorage } from "@/lib/api/client"
 import type { MarketplaceService } from "@/types/marketplace"
 
@@ -27,9 +28,9 @@ type ServiceDetailContentProps = {
 
 export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) => {
   const useApi = isApiEnabled()
-  const mockService = useApi ? null : getService(serviceId)
+  const mockService = getService(serviceId)
   const [reportOpen, setReportOpen] = useState(false)
-  const { data: apiItem, isLoading } = usePublicCatalogItemQuery(
+  const { data: apiItem, isLoading, isFetched } = usePublicCatalogItemQuery(
     serviceId,
     useApi,
   )
@@ -39,11 +40,13 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
   )
   const isAuthenticated = Boolean(tokenStorage.getAccess())
 
-  const service: MarketplaceService | null = useApi
-    ? (apiItem ? mapCatalogItemToService(apiItem, null, apiSupplier) : null)
-    : mockService
+  const service: MarketplaceService | null = apiItem
+    ? mapCatalogItemToService(apiItem, null, apiSupplier)
+    : (!useApi || isFetched ? (mockService ?? null) : null)
 
-  if (useApi && (isLoading || supplierLoading)) {
+  const isFromApi = Boolean(apiItem)
+
+  if (useApi && (isLoading || (apiItem && supplierLoading))) {
     return (
       <PageShell>
         <div className="max-w-[900px] mx-auto px-6 py-16 animate-pulse">
@@ -142,7 +145,7 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="text-2xl font-black text-primary">{service.price}</div>
                 <div className="flex flex-wrap gap-3">
-                  {useApi && (
+                  {isFromApi && (
                     isAuthenticated ? (
                       <Button
                         type="button"
@@ -169,7 +172,7 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
                     Профиль исполнителя
                   </Link>
                   <Link
-                    href={loginRedirect(`/customer/rfqs/new?service=${service.id}`)}
+                    href={createRfqHref({ service: service.id })}
                     className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
                   >
                     Отправить запрос
@@ -180,7 +183,7 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
           </div>
         </div>
       </section>
-      {useApi && (
+      {isFromApi && (
         <ReportItemDialog
           itemId={serviceId}
           itemTitle={service.title}

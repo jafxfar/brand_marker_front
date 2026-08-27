@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, Bell, Search, LogOut, User, ChevronDown } from "lucide-react"
+import { Menu, Bell, Search, LogOut, User, ChevronDown, ShoppingBag } from "lucide-react"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -22,6 +22,7 @@ export default function SupplierTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const switchSessionRole = useAuthStore((s) => s.switchSessionRole)
   const unread = useUnreadNotificationsCount("supplier")
 
   const handleLogout = () => {
@@ -83,7 +84,7 @@ export default function SupplierTopbar() {
                 <span className="text-xs font-semibold text-foreground max-w-[120px] truncate">
                   {hydrated && user ? getUserDisplayName(user) : "Гость"}
                 </span>
-                <span className="text-[10px] text-muted-foreground">Поставщик</span>
+                <span className="text-[10px] text-muted-foreground">Исполнитель</span>
               </div>
               <ChevronDown size={14} className="text-muted-foreground hidden sm:block" />
             </button>
@@ -103,6 +104,19 @@ export default function SupplierTopbar() {
                 <User size={15} /> Профиль
               </Link>
             </DropdownMenuItem>
+            {hydrated && user?.role === "supplier" && (
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => {
+                  void (async () => {
+                    await switchSessionRole("customer")
+                    router.push("/customer")
+                  })()
+                }}
+              >
+                <ShoppingBag size={15} /> Кабинет заказчика
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
               <LogOut size={15} /> Выйти

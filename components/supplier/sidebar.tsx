@@ -125,7 +125,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
       <div className="p-4 border-t border-border flex-shrink-0">
         {!isApiEnabled() && (
           <div className="rounded-xl bg-secondary p-3.5">
-            <p className="text-xs font-bold text-foreground">Кабинет поставщика</p>
+            <p className="text-xs font-bold text-foreground">Кабинет исполнителя</p>
             <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
               Демо-режим. Данные хранятся локально в браузере.
             </p>

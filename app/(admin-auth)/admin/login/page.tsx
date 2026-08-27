@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowRight, Briefcase, LockKeyhole, ShieldCheck } from "lucide-react"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 import { z } from "zod"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getApiErrorMessage } from "@/lib/api/client"
@@ -70,9 +71,12 @@ const AdminLoginContent = () => {
 
     try {
       await loginAdminWithCredentials(values)
+      toast.success("Вы вошли в систему")
       router.replace(adminRedirect)
     } catch (error) {
-      setApiError(getApiErrorMessage(error, "Ошибка входа администратора"))
+      const message = getApiErrorMessage(error, "Ошибка входа администратора")
+      setApiError(message)
+      toast.error(message)
     }
   }
 
@@ -205,7 +209,7 @@ const AdminLoginContent = () => {
               href="/login"
               className="text-sm text-muted-foreground transition-colors hover:text-primary"
             >
-              Вход для заказчиков и поставщиков
+              Вход для заказчиков и исполнителей
             </Link>
           </div>
         </div>

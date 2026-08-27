@@ -24,7 +24,7 @@ import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 const sections = [
   ["overview", "Обзор"],
   ["buyer", "Покупатель"],
-  ["supplier", "Поставщик"],
+  ["supplier", "Исполнитель"],
   ["payment-plan", "План оплаты"],
   ["milestones", "Этапы"],
   ["files", "Файлы"],
@@ -112,7 +112,7 @@ export default function AdminContractDetailPage({ params }: PageProps) {
     contract.supplier?.company_title ||
     contract.supplier?.name ||
     contract.supplier?.display_name ||
-    "Без поставщика"
+    "Без исполнителя"
 
   return (
     <PageFrame>

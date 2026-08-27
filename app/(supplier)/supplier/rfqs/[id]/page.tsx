@@ -153,7 +153,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
               proposals={proposals}
               currentActorId={actorId}
               getSupplierName={(supplierId) =>
-                getCompany(supplierId)?.title ?? `Поставщик #${supplierId}`
+                getCompany(supplierId)?.title ?? `Исполнитель #${supplierId}`
               }
             />
           )}

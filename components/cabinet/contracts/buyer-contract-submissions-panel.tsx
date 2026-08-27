@@ -40,7 +40,7 @@ export const BuyerContractSubmissionsPanel = ({
 
       {submissions.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Поставщик ещё не отправил demo или результат работы
+          Исполнитель ещё не отправил demo или результат работы
         </p>
       ) : (
         <div className="space-y-3">

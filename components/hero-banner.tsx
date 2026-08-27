@@ -13,10 +13,10 @@ import { getIcon } from "@/lib/icon-map"
 import {
   categoryUrl,
   guaranteeUrl,
-  newRfqRedirect,
   performersUrl,
   verificationUrl,
 } from "@/lib/marketplace-routes"
+import { createRfqHref } from "@/lib/create-rfq-href"
 
 const slides = [
   {
@@ -28,7 +28,7 @@ const slides = [
     cta: "Найти исполнителя",
     ctaHref: performersUrl(),
     ctaSecondary: "Разместить заказ",
-    ctaSecondaryHref: newRfqRedirect(),
+    ctaSecondaryHref: "create-rfq" as const,
     bg: "oklch(0.18 0.04 160)",
     bgTo: "oklch(0.30 0.08 155)",
   },
@@ -54,7 +54,7 @@ const slides = [
     cta: "Заказать перевозку",
     ctaHref: categoryUrl("logistics"),
     ctaSecondary: "Рассчитать стоимость",
-    ctaSecondaryHref: newRfqRedirect(),
+    ctaSecondaryHref: "create-rfq" as const,
     bg: "oklch(0.25 0.06 155)",
     bgTo: "oklch(0.38 0.10 150)",
   },
@@ -89,6 +89,9 @@ export default function HeroBanner() {
 
   const slide = slides[current]
   const sidebarCategories = getAllCategories()
+  const secondaryHref =
+    slide.ctaSecondaryHref === "create-rfq" ? createRfqHref() : slide.ctaSecondaryHref
+  const placeOrderHref = createRfqHref()
 
   return (
     <section className="bg-background">
@@ -146,7 +149,7 @@ export default function HeroBanner() {
                   {slide.cta}
                 </Link>
                 <Link
-                  href={slide.ctaSecondaryHref}
+                  href={secondaryHref}
                   className="bg-white/15 hover:bg-white/25 text-white font-medium px-6 py-2.5 rounded-xl transition-all text-sm border border-white/25 hover:-translate-y-px"
                 >
                   {slide.ctaSecondary}
@@ -208,7 +211,7 @@ export default function HeroBanner() {
               cta="Смотреть"
             />
             <PromoCard
-              href={newRfqRedirect()}
+              href={placeOrderHref}
               bg="bg-primary/5"
               border="border-primary/15"
               accentClass="text-primary"

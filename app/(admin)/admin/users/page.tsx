@@ -43,7 +43,6 @@ import {
   useAdminUsersQuery,
   useUpdateAdminUserStatusMutation,
 } from "@/hooks/api/use-admin-users-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type {
   AdminUser,
   AdminUserRole,
@@ -69,8 +68,8 @@ const statusFilters: Array<{
 
 const roleLabels: Record<AdminUserRole, string> = {
   buyer: "Заказчик",
-  supplier: "Поставщик",
-  both: "Заказчик и поставщик",
+  supplier: "Исполнитель",
+  both: "Заказчик и исполнитель",
   admin: "Администратор",
   superadmin: "Суперадминистратор",
   moderator: "Модератор",
@@ -273,8 +272,8 @@ const AdminUsersContent = () => {
           : "Пользователь разблокирован",
       )
       setSelectedUser(null)
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось изменить статус пользователя"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

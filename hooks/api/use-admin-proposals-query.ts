@@ -52,5 +52,8 @@ export const useAdminProposalActionMutation = () => {
         queryClient.invalidateQueries({ queryKey: adminDashboardKeys.all }),
       ])
     },
+    meta: {
+      errorMessage: "Не удалось изменить предложение",
+    },
   })
 }

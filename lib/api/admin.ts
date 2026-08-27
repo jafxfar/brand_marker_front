@@ -678,6 +678,7 @@ export type AdminDisputeListResponse = {
 export type AdminDisputeDetail = AdminDispute & {
   buyer_statement: string | null
   supplier_statement: string | null
+  admin_instructions: string | null
   resolution: string | null
   resolution_note: string | null
   partial_buyer_amount: number | null

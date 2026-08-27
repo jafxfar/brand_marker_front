@@ -33,11 +33,11 @@ import { Input } from "@/components/ui/input"
 const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminReportView; label: string }> = [
   { value: "all", label: "Все" },
-  { value: "spam", label: "Spam" },
-  { value: "fraud", label: "Fraud" },
-  { value: "counterfeit", label: "Counterfeit" },
-  { value: "abuse", label: "Abuse" },
-  { value: "other", label: "Other" },
+  { value: "spam", label: "Спам" },
+  { value: "fraud", label: "Мошенничество" },
+  { value: "counterfeit", label: "Подделка" },
+  { value: "abuse", label: "Оскорбления" },
+  { value: "other", label: "Другое" },
 ]
 
 const isViewFilter = (value: string | null): value is AdminReportView =>
@@ -141,8 +141,8 @@ const AdminReportsContent = () => {
   return (
     <PageFrame>
       <PageHeader
-        title="Reports"
-        description="Единый inbox жалоб на каталог, RFQ и предложения"
+        title="Жалобы"
+        description="Единый список жалоб на каталог, заявки и предложения"
         actions={<p className="text-sm text-muted-foreground">
           Найдено <strong className="ml-1 text-foreground">{total}</strong>
         </p>}
@@ -195,7 +195,7 @@ const AdminReportsContent = () => {
               <TableRow>
                 <TableHead>Объект</TableHead>
                 <TableHead>Тип</TableHead>
-                <TableHead>Reporter</TableHead>
+                <TableHead>Заявитель</TableHead>
                 <TableHead>Причина</TableHead>
                 <TableHead>Дата</TableHead>
               </TableRow>

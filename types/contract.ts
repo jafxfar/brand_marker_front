@@ -90,6 +90,37 @@ export type WorkSubmission = {
   assets?: SubmissionAsset[]
 }
 
+export const DISPUTE_STATUSES = [
+  "open",
+  "under_review",
+  "resolved",
+  "appealed",
+] as const
+
+export type DisputeStatus = (typeof DISPUTE_STATUSES)[number]
+
+export type DisputeEvidence = {
+  id: number
+  file_name: string
+  file_url: string
+  file_type: string
+  note: string | null
+  uploaded_by_actor_id: number
+  created_at: string
+}
+
+export type ContractDispute = {
+  id: number
+  status: DisputeStatus
+  opened_by_actor_id: number | null
+  buyer_statement: string | null
+  supplier_statement: string | null
+  admin_instructions: string | null
+  created_at: string
+  updated_at: string
+  evidence: DisputeEvidence[]
+}
+
 export type Contract = {
   id: number
   rfq_id: string
@@ -112,6 +143,7 @@ export type ContractWithRelations = Contract & {
   conversation: ConversationWithMessages | null
   files: ContractFile[]
   submissions: WorkSubmission[]
+  dispute?: ContractDispute | null
 }
 
 export type ContractCreate = Omit<

@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminRfqActionMutation } from "@/hooks/api/use-admin-rfqs-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type { AdminRfqAction } from "@/lib/api/admin"
 
 const actionMetadata: Record<
@@ -24,7 +23,7 @@ const actionMetadata: Record<
 > = {
   hide: {
     title: "Скрыть заявку?",
-    description: "Заявка будет перенесена в архив и скрыта с доски поставщиков.",
+    description: "Заявка будет перенесена в архив и скрыта с доски исполнителей.",
     success: "Заявка скрыта",
     destructive: true,
   },
@@ -87,8 +86,8 @@ export const RfqActionDialog = ({
       if (result.status === "deleted") {
         router.push("/admin/rfqs")
       }
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось изменить заявку"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

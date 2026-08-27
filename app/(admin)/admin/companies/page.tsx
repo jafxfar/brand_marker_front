@@ -266,7 +266,7 @@ const AdminCompaniesContent = () => {
                     </TableCell>
                     <TableCell className="capitalize">
                       {company.actor_types.map((type) =>
-                        type === "buyer" ? "Заказчик" : "Поставщик",
+                        type === "buyer" ? "Заказчик" : "Исполнитель",
                       ).join(", ")}
                     </TableCell>
                     <TableCell>
@@ -307,7 +307,7 @@ const AdminCompaniesContent = () => {
                     <MapPin size={14} aria-hidden="true" />
                     {[company.city, company.country].filter(Boolean).join(", ") || "Не указано"}
                   </p>
-                  <p>{company.actor_type === "buyer" ? "Заказчик" : "Поставщик"}</p>
+                  <p>{company.actor_type === "buyer" ? "Заказчик" : "Исполнитель"}</p>
                   <p>{formatDate(company.created_at)}</p>
                 </div>
               </Link>

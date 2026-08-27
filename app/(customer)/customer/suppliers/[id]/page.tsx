@@ -2,6 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
+import { toast } from "sonner"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useItemsStore } from "@/lib/store/items-store"
@@ -114,7 +115,7 @@ export default function SupplierProfilePage({ params }: PageProps) {
   if (!supplier) {
     return (
       <PageFrame>
-        <PageHeader title="Поставщик не найден" backHref="/customer/suppliers" backLabel="К каталогу" />
+        <PageHeader title="Исполнитель не найден" backHref="/customer/suppliers" backLabel="К каталогу" />
       </PageFrame>
     )
   }
@@ -123,18 +124,21 @@ export default function SupplierProfilePage({ params }: PageProps) {
     notify({
       type: "order",
       title: "Запрос отправлен",
-      body: `Поставщик «${supplier.display_name}» получит уведомление о вашем интересе.`,
+      body: `Исполнитель «${supplier.display_name}» получит уведомление о вашем интересе.`,
       href: `/customer/suppliers/${supplier.actor_id}`,
     })
   }
 
   const handleInviteExisting = (rfqId: string) => {
     if (useApi) {
-      inviteMutation.mutate({ id: rfqId, supplierIds: [supplier.actor_id] })
+      inviteMutation.mutate(
+        { id: rfqId, supplierIds: [supplier.actor_id] },
+        { onSuccess: () => toast.success("Поставщик приглашён") },
+      )
       notify({
         type: "order",
         title: "Приглашение отправлено",
-        body: `Поставщик «${supplier.display_name}» приглашён к участию в заявке.`,
+        body: `Исполнитель «${supplier.display_name}» приглашён к участию в заявке.`,
         href: `/customer/rfqs/${rfqId}`,
       })
       return
@@ -143,7 +147,7 @@ export default function SupplierProfilePage({ params }: PageProps) {
     notify({
       type: "order",
       title: "Приглашение отправлено",
-      body: `Поставщик «${supplier.display_name}» приглашён к участию в заявке.`,
+      body: `Исполнитель «${supplier.display_name}» приглашён к участию в заявке.`,
       href: `/customer/rfqs/${rfqId}`,
     })
   }

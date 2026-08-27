@@ -10,7 +10,7 @@ export const SupplierCatalogGrid = ({ items }: SupplierCatalogGridProps) => {
   if (items.length === 0) {
     return (
       <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">
-        У поставщика пока нет опубликованных позиций в каталоге
+        У исполнителя пока нет опубликованных позиций в каталоге
       </div>
     )
   }

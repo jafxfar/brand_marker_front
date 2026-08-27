@@ -35,7 +35,7 @@ export default function ReviewDialog({
         <DialogHeader>
           <DialogTitle>Оставить отзыв</DialogTitle>
           <DialogDescription>
-            Поделитесь опытом работы с поставщиком «{supplierName}»
+            Поделитесь опытом работы с исполнителем «{supplierName}»
           </DialogDescription>
         </DialogHeader>
 

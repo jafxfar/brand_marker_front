@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminReportActionMutation } from "@/hooks/api/use-admin-reports-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type { AdminReportAction, AdminReportTargetType } from "@/lib/api/admin"
 
 const actionMetadata: Record<
@@ -98,8 +97,8 @@ export const ReportActionDialog = ({
       onOpenChange(false)
       router.push("/admin/moderation")
       router.refresh()
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось выполнить действие"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

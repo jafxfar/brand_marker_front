@@ -23,7 +23,7 @@ import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 const sections = [
   ["overview", "Обзор"],
   ["buyer-statement", "Заявление покупателя"],
-  ["supplier-statement", "Заявление поставщика"],
+  ["supplier-statement", "Заявление исполнителя"],
   ["evidence", "Доказательства"],
   ["files", "Файлы"],
   ["chat", "Чат"],
@@ -108,7 +108,7 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
     dispute.supplier?.company_title ||
     dispute.supplier?.name ||
     dispute.supplier?.display_name ||
-    "Без поставщика"
+    "Без исполнителя"
 
   return (
     <PageFrame>

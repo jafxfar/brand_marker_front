@@ -86,6 +86,6 @@ export const buildPaymentHistoryFromContract = (
 
 export const paymentHistoryTypeLabel: Record<PaymentHistoryEventType, string> = {
   funding: "Безопасная оплата",
-  release: "Выплата поставщику",
+  release: "Выплата исполнителю",
   refund: "Возврат",
 }

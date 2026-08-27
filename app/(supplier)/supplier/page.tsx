@@ -39,6 +39,7 @@ import { IncomingMessagesPanel } from "@/components/supplier/dashboard/incoming-
 import { RatingSummaryCard } from "@/components/supplier/dashboard/rating-summary-card"
 import { PendingPaymentsPanel } from "@/components/supplier/dashboard/pending-payments-panel"
 import { HowItWorks } from "@/components/onboarding/how-it-works"
+import { ActivateRoleBanner } from "@/components/company/activate-role-banner"
 import type { ContractWithRelations } from "@/types"
 
 export default function SupplierDashboard() {
@@ -129,6 +130,11 @@ export default function SupplierDashboard() {
 
   return (
     <PageFrame>
+      <ActivateRoleBanner
+        targetSide="buyer"
+        redirectTo="/customer"
+        label="Хотите размещать заказы? Активируйте роль заказчика на этом же аккаунте."
+      />
       <PageHeader
         title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
         description="Ваши договоры, заявки заказчиков и финансы"

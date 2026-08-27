@@ -66,6 +66,10 @@ export const tokenStorage = {
   setCompanyId: (id: number) => {
     localStorage.setItem(COMPANY_KEY, String(id))
   },
+  clearActor: () => {
+    localStorage.removeItem(ACTOR_KEY)
+    localStorage.removeItem(COMPANY_KEY)
+  },
   clear: () => {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_KEY)
@@ -135,6 +139,13 @@ export const ensureAccessToken = async (forceRefresh = false): Promise<string | 
   return refreshAccessToken()
 }
 
+let sessionActorResolver: (() => number | null) | null = null
+
+/** Called from auth-store to avoid a circular import with apiFetch. */
+export const setSessionActorResolver = (resolver: () => number | null) => {
+  sessionActorResolver = resolver
+}
+
 export const apiFetch = async <T>(
   path: string,
   options: RequestInit & {
@@ -153,7 +164,8 @@ export const apiFetch = async <T>(
     }
   }
 
-  const activeActor = actorId ?? tokenStorage.getActorId()
+  const sessionActorId = sessionActorResolver?.() ?? null
+  const activeActor = actorId ?? sessionActorId ?? tokenStorage.getActorId()
   if (activeActor) {
     headers.set("X-Actor-Id", String(activeActor))
   } else {

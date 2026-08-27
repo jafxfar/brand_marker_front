@@ -9,7 +9,8 @@ import { getIcon } from "@/lib/icon-map"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicSupplierQuery, usePublicSupplierCatalogQuery } from "@/hooks/api/use-public-query"
 import { mapPublicSupplierToPerformer, mapCatalogItemToService } from "@/lib/marketplace-hybrid"
-import { loginRedirect, performersUrl, serviceUrl } from "@/lib/marketplace-routes"
+import { performersUrl, serviceUrl } from "@/lib/marketplace-routes"
+import { createRfqHref } from "@/lib/create-rfq-href"
 import type { MarketplacePerformer } from "@/types/marketplace"
 
 type PerformerDetailContentProps = {
@@ -18,8 +19,8 @@ type PerformerDetailContentProps = {
 
 export const PerformerDetailContent = ({ performerId }: PerformerDetailContentProps) => {
   const useApi = isApiEnabled()
-  const mockPerformer = useApi ? null : getPerformer(performerId)
-  const { data: apiSupplier, isLoading } = usePublicSupplierQuery(
+  const mockPerformer = getPerformer(performerId) ?? null
+  const { data: apiSupplier, isLoading, isFetched } = usePublicSupplierQuery(
     performerId,
     useApi,
   )
@@ -28,9 +29,9 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
     useApi && Boolean(apiSupplier),
   )
 
-  const performer: MarketplacePerformer | null = useApi
-    ? (apiSupplier ? mapPublicSupplierToPerformer(apiSupplier) : null)
-    : mockPerformer
+  const performer: MarketplacePerformer | null = apiSupplier
+    ? mapPublicSupplierToPerformer(apiSupplier)
+    : (!useApi || isFetched ? mockPerformer : null)
 
   if (useApi && isLoading) {
     return (
@@ -56,9 +57,9 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
   }
 
   const Icon = getIcon(performer.icon)
-  const services = useApi
+  const services = apiSupplier
     ? apiCatalog.map((item) =>
-        mapCatalogItemToService(item, null, apiSupplier ?? undefined),
+        mapCatalogItemToService(item, null, apiSupplier),
       )
     : getServicesByCategory(performer.categoryId).filter(
         (s) => s.providerId === performer.id,
@@ -145,7 +146,7 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
 
             <div className="mt-8 flex gap-3">
               <Link
-                href={loginRedirect(`/customer/rfqs/new?performer=${performer.id}`)}
+                href={createRfqHref({ performer: performer.id })}
                 className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
               >
                 Пригласить на заказ

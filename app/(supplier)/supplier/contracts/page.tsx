@@ -25,6 +25,7 @@ import { ContractsListTable } from "@/components/supplier/contracts/contracts-li
 import type { ContractWithRelations } from "@/types"
 
 const emptyMessages: Record<ContractListTab, string> = {
+  all: "Контрактов нет",
   active: "Активные контракты появятся после принятия предложений",
   completed: "Завершённые контракты отобразятся здесь",
   disputed: "Спорных контрактов нет",
@@ -37,7 +38,7 @@ export default function SupplierContractsPage() {
   const actorId = getActorId(user)
   const getContractsByTab = useContractsStore((s) => s.getContractsByTab)
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [tab, setTab] = useState<ContractListTab>("active")
+  const [tab, setTab] = useState<ContractListTab>("all")
   const useApi = isApiEnabled()
   const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi)
 
@@ -52,7 +53,7 @@ export default function SupplierContractsPage() {
     <PageFrame>
       <PageHeader
         title="Контракты"
-        description="Управление сделками как поставщик"
+        description="Управление сделками как исполнитель"
       />
 
       <SegmentedControl

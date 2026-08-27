@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminFinanceActionMutation } from "@/hooks/api/use-admin-finance-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type { AdminFinanceAction } from "@/lib/api/admin"
 
 const actionMetadata: Record<
@@ -87,8 +86,8 @@ export const FinanceActionDialog = ({
       toast.success(metadata.success)
       onOpenChange(false)
       router.refresh()
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось выполнить действие"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

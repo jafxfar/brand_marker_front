@@ -65,7 +65,7 @@ export default function BuyerContractsPage() {
         <PageSurface>
           <BuyerContractsListTable
             contracts={contracts}
-            getSupplierName={(id) => getCompany(id)?.title ?? "Поставщик"}
+            getSupplierName={(id) => getCompany(id)?.title ?? "Исполнитель"}
           />
         </PageSurface>
       )}

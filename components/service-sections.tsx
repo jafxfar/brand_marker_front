@@ -32,13 +32,13 @@ import { PerformerCard } from "@/components/marketplace/performer-card"
 import {
   categoriesUrl,
   guaranteeUrl,
-  newRfqRedirect,
   ordersUrl,
   performersUrl,
   servicesUrl,
   supplierRfqRedirect,
   verificationUrl,
 } from "@/lib/marketplace-routes"
+import { createRfqHref } from "@/lib/create-rfq-href"
 
 export function CategoryGrid() {
   const useApi = isApiEnabled()
@@ -197,7 +197,7 @@ export function TrustBanners() {
                 Опубликуйте задание бесплатно и получите предложения от проверенных компаний
               </p>
               <Link
-                href={newRfqRedirect()}
+                href={createRfqHref()}
                 className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-lg hover:-translate-y-px"
               >
                 Разместить заказ <ChevronRight size={15} />

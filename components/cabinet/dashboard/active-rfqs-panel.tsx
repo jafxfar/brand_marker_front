@@ -31,7 +31,7 @@ export const ActiveRfqsPanel = ({ rfqs, hydrated }: ActiveRfqsPanelProps) => (
         </div>
         <p className="text-sm font-semibold text-foreground">Активных заявок нет</p>
         <p className="text-xs text-muted-foreground mt-1 mb-4">
-          Создайте заявку, и поставщики пришлют вам предложения
+          Создайте заявку, и исполнители пришлют вам предложения
         </p>
         <Link
           href="/customer/rfqs/new"

@@ -16,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminDisputeActionMutation } from "@/hooks/api/use-admin-disputes-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type { AdminDisputeAction } from "@/lib/api/admin"
 
 const actionMetadata: Record<
@@ -30,7 +29,7 @@ const actionMetadata: Record<
   }
 > = {
   release_funds: {
-    title: "Выплатить средства поставщику?",
+    title: "Выплатить средства исполнителю?",
     description:
       "Held и disputed этапы будут переведены в «Выплачен», спор закрыт, контракт завершён.",
     success: "Средства выплачены",
@@ -45,7 +44,7 @@ const actionMetadata: Record<
   partial_refund: {
     title: "Частичный возврат?",
     description:
-      "Укажите сумму возврата покупателю. Остаток escrow будет выплачен поставщику.",
+      "Укажите сумму возврата покупателю. Остаток escrow будет выплачен исполнителю.",
     success: "Частичный возврат выполнен",
     needsAmount: true,
     destructive: true,
@@ -113,8 +112,8 @@ export const DisputeActionDialog = ({
       toast.success(metadata.success)
       onOpenChange(false)
       router.refresh()
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось выполнить действие"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

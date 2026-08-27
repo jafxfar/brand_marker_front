@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import { RfqForm } from "@/components/cabinet/rfq/rfq-form"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
@@ -79,8 +80,8 @@ export default function NewRfqPage() {
         type: "order",
         title: "Заявка опубликована",
         body: invitedSupplier
-          ? `Запрос «${rfq.title}» отправлен поставщику «${invitedSupplier.title}».`
-          : `Запрос «${rfq.title}» доступен поставщикам на маркетплейсе.`,
+          ? `Запрос «${rfq.title}» отправлен исполнителю «${invitedSupplier.title}».`
+          : `Запрос «${rfq.title}» доступен исполнителям на маркетплейсе.`,
         href: `/customer/rfqs/${rfq.id}`,
       })
     } else {
@@ -118,6 +119,8 @@ export default function NewRfqPage() {
 
       if (publish) {
         rfq = await publishMutation.mutateAsync(rfq.id)
+      } else {
+        toast.success("Заявка создана")
       }
 
       router.push(`/customer/rfqs/${rfq.id}`)

@@ -7,7 +7,7 @@ export default function SupplierCompanyPage() {
     <CompanyListPage
       actorType="supplier"
       basePath="/supplier/company"
-      roleLabel="Поставщик"
+      roleLabel="Исполнитель"
     />
   )
 }

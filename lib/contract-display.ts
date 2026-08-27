@@ -2,9 +2,10 @@ import type { ContractStatus, ContractWithRelations, WorkSubmissionStatus } from
 import type { PaymentMilestoneStatus } from "@/types"
 import { formatCurrency } from "@/lib/format"
 
-export type ContractListTab = "active" | "completed" | "disputed" | "cancelled"
+export type ContractListTab = "all" | "active" | "completed" | "disputed" | "cancelled"
 
 export const CONTRACT_LIST_TABS: { value: ContractListTab; label: string }[] = [
+  { value: "all", label: "Все" },
   { value: "active", label: "Активные" },
   { value: "completed", label: "Завершённые" },
   { value: "disputed", label: "Спорные" },
@@ -21,6 +22,9 @@ export const filterContractsByTab = (
   contracts: ContractWithRelations[],
   tab: ContractListTab,
 ): ContractWithRelations[] => {
+  if (tab === "all") {
+    return contracts
+  }
   if (tab === "active") {
     return contracts.filter((c) => ACTIVE_STATUSES.includes(c.status))
   }

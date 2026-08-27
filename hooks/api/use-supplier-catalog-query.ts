@@ -28,6 +28,10 @@ export const useCreateCatalogItemMutation = () => {
   return useMutation({
     mutationFn: (data: CatalogItemInput) => supplierCatalogApi.create(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: supplierCatalogKeys.all }),
+    meta: {
+      successMessage: "Услуга добавлена",
+      errorMessage: "Не удалось добавить услугу",
+    },
   })
 }
 
@@ -40,6 +44,10 @@ export const useUpdateCatalogItemMutation = () => {
       qc.invalidateQueries({ queryKey: supplierCatalogKeys.all })
       qc.invalidateQueries({ queryKey: supplierCatalogKeys.detail(id) })
     },
+    meta: {
+      successMessage: "Услуга обновлена",
+      errorMessage: "Не удалось обновить услугу",
+    },
   })
 }
 
@@ -48,5 +56,9 @@ export const useArchiveCatalogItemMutation = () => {
   return useMutation({
     mutationFn: (id: number) => supplierCatalogApi.archive(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: supplierCatalogKeys.all }),
+    meta: {
+      successMessage: "Услуга архивирована",
+      errorMessage: "Не удалось архивировать услугу",
+    },
   })
 }

@@ -18,6 +18,10 @@ export const useActivateSubscriptionMutation = () => {
   return useMutation({
     mutationFn: (plan: string) => supplierSubscriptionApi.activate(plan),
     onSuccess: () => qc.invalidateQueries({ queryKey: supplierSubscriptionKeys.all }),
+    meta: {
+      successMessage: "Подписка активирована",
+      errorMessage: "Не удалось активировать подписку",
+    },
   })
 }
 
@@ -26,5 +30,9 @@ export const useCancelSubscriptionMutation = () => {
   return useMutation({
     mutationFn: () => supplierSubscriptionApi.cancel(),
     onSuccess: () => qc.invalidateQueries({ queryKey: supplierSubscriptionKeys.all }),
+    meta: {
+      successMessage: "Подписка отменена",
+      errorMessage: "Не удалось отменить подписку",
+    },
   })
 }

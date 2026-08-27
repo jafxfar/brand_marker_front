@@ -28,5 +28,9 @@ export const useCreateReviewMutation = () => {
       qc.invalidateQueries({ queryKey: reviewKeys.all })
       qc.invalidateQueries({ queryKey: contractKeys.all })
     },
+    meta: {
+      successMessage: "Отзыв отправлен",
+      errorMessage: "Не удалось отправить отзыв",
+    },
   })
 }

@@ -45,7 +45,7 @@ export const ReviewsGivenTable = ({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/40">
-              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Поставщик</th>
+              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Исполнитель</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Рейтинг</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Комментарий</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Контракт</th>

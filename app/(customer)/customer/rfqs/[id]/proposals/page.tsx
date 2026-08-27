@@ -147,7 +147,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
             description={
               statusFilter !== "all"
                 ? "Попробуйте сменить фильтр"
-                : "Дождитесь откликов поставщиков"
+                : "Дождитесь откликов исполнителей"
             }
           />
         </PageSurface>

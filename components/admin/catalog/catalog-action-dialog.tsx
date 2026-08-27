@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminCatalogActionMutation } from "@/hooks/api/use-admin-catalog-query"
-import { getApiErrorMessage } from "@/lib/api/client"
 import type { AdminCatalogAction } from "@/lib/api/admin"
 
 const actionMetadata: Record<
@@ -88,8 +87,8 @@ export const CatalogActionDialog = ({
       })
       toast.success(metadata.success)
       onOpenChange(false)
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Не удалось изменить статус позиции"))
+    } catch {
+      // error toast via MutationCache
     }
   }
 

@@ -45,6 +45,7 @@ export const authApi = {
       skipAuth: true,
     })
     tokenStorage.setTokens(data)
+    tokenStorage.clearActor()
     return data
   },
 
@@ -62,6 +63,7 @@ export const authApi = {
       skipAuth: true,
     })
     tokenStorage.setTokens(data)
+    tokenStorage.clearActor()
     return data
   },
 

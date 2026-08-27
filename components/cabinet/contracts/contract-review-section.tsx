@@ -35,7 +35,7 @@ export const ContractReviewSection = ({
       ) : (
         <>
           <p className="text-sm text-muted-foreground mb-4">
-            Контракт завершён — поделитесь опытом работы с поставщиком.
+            Контракт завершён — поделитесь опытом работы с исполнителем.
           </p>
           <button
             type="button"

@@ -51,7 +51,7 @@ export const usePublicSuppliersByActor = (actorIds: number[]) => {
 
     const getSupplier = (actorId: number) => map.get(actorId)
     const getName = (actorId: number) =>
-      map.get(actorId)?.display_name ?? `Поставщик #${actorId}`
+      map.get(actorId)?.display_name ?? `Исполнитель #${actorId}`
 
     return { getSupplier, getName }
   }, [uniqueKey, getCompany, suppliers])

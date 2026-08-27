@@ -35,5 +35,8 @@ export const useUpdateAdminUserStatusMutation = () => {
         queryClient.invalidateQueries({ queryKey: adminDashboardKeys.all }),
       ])
     },
+    meta: {
+      errorMessage: "Не удалось изменить статус пользователя",
+    },
   })
 }

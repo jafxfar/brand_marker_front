@@ -44,14 +44,14 @@ export default function BuyerReviewsPage() {
 
   const getSupplierName = (supplierActorId: number) => {
     if (useApi) return resolveName(supplierActorId)
-    return getCompany(supplierActorId)?.title ?? "Поставщик"
+    return getCompany(supplierActorId)?.title ?? "Исполнитель"
   }
 
   return (
     <PageFrame>
       <PageHeader
         title="Мои отзывы"
-        description="Отзывы, которые вы оставили поставщикам"
+        description="Отзывы, которые вы оставили исполнителям"
       />
 
       <PageSurface className="p-6">

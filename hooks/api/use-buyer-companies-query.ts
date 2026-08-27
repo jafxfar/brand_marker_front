@@ -22,6 +22,10 @@ export const useCreateBuyerCompanyMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buyerCompanyKeys.all })
     },
+    meta: {
+      successMessage: "Компания создана",
+      errorMessage: "Не удалось создать компанию",
+    },
   })
 }
 
@@ -37,6 +41,10 @@ export const useUpdateBuyerCompanyMutation = () => {
     }) => buyerCompaniesApi.update(companyId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: buyerCompanyKeys.all })
+    },
+    meta: {
+      successMessage: "Компания обновлена",
+      errorMessage: "Не удалось обновить компанию",
     },
   })
 }

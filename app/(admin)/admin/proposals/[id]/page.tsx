@@ -21,7 +21,7 @@ import type { ProposalStatus } from "@/types"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
 const sections = [
-  ["supplier", "Поставщик"],
+  ["supplier", "Исполнитель"],
   ["buyer", "Покупатель"],
   ["price", "Цена"],
   ["attachments", "Вложения"],
@@ -107,7 +107,7 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
           <>
             {formatMoney(proposal.price, proposal.currency)}
             {" · "}
-            {proposal.supplier?.company_title || proposal.supplier?.name || "Поставщик"}
+            {proposal.supplier?.company_title || proposal.supplier?.name || "Исполнитель"}
           </>
         }
         backHref="/admin/proposals"
@@ -148,7 +148,7 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
                 onClick={() => setSelectedAction("block_supplier")}
               >
                 <ShieldBan aria-hidden="true" />
-                Заблокировать поставщика
+                Заблокировать исполнителя
               </Button>
             )}
             {!isModerator && !proposal.has_contract && (
