@@ -1,12 +1,9 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { ChevronDown, ChevronRight } from "lucide-react"
-import { getAllCategories } from "@/lib/mock/categories"
-import { isApiEnabled } from "@/lib/api/config"
-import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
-import { mergeByKey, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
+import { useMarketplaceCategories } from "@/hooks/use-marketplace-categories"
 import { categoryUrl } from "@/lib/marketplace-routes"
 
 type MobileCategoryAccordionProps = {
@@ -14,14 +11,7 @@ type MobileCategoryAccordionProps = {
 }
 
 export const MobileCategoryAccordion = ({ onNavigate }: MobileCategoryAccordionProps) => {
-  const useApi = isApiEnabled()
-  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
-  const mockCategories = getAllCategories()
-  const categories = useMemo(() => {
-    if (!useApi || !apiCategories?.length) return mockCategories
-    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
-    return mergeByKey(mockCategories, apiMapped, "slug")
-  }, [useApi, apiCategories, mockCategories])
+  const { categories, isLoading } = useMarketplaceCategories()
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const handleToggle = (id: string) => {
@@ -29,6 +19,22 @@ export const MobileCategoryAccordion = ({ onNavigate }: MobileCategoryAccordionP
   }
 
   const handleNavigate = () => onNavigate?.()
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2 px-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="h-10 rounded-xl bg-secondary animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (categories.length === 0) {
+    return (
+      <p className="px-3 text-sm text-muted-foreground">Категории пока недоступны</p>
+    )
+  }
 
   return (
     <div className="space-y-1">
