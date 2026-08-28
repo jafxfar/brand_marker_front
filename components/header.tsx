@@ -4,11 +4,12 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
-  Search, ChevronDown, Globe, Bell, User, Menu, X,
+  ChevronDown, Globe, Bell, User, Menu, X,
   Phone, ShieldCheck, Star, Briefcase, ShoppingBag,
   MessageSquare, LogOut,
 } from "lucide-react"
 import { CategoryMegaMenu } from "@/components/marketplace/category-mega-menu"
+import { MarketplaceSearch } from "@/components/marketplace/marketplace-search"
 import { MobileCategoryAccordion } from "@/components/marketplace/mobile-category-accordion"
 import {
   DropdownMenu,
@@ -26,19 +27,7 @@ import {
   helpUrl,
   loginRedirect,
   performersUrl,
-  servicesUrl,
 } from "@/lib/marketplace-routes"
-
-const searchSuggestions = [
-  "Разработка сайтов",
-  "SEO продвижение",
-  "Бухгалтерские услуги",
-  "Юридические консультации",
-  "Перевозка грузов",
-  "1С внедрение",
-  "Аудит",
-  "Подбор персонала",
-]
 
 const getCabinetBase = (role: SessionRole): string => {
   if (role === "supplier") return "/supplier"
@@ -83,8 +72,6 @@ export default function Header() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const navTabs = getNavTabs(pathname, searchParams.get("scope"))
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSuggestions, setShowSuggestions] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
@@ -101,21 +88,6 @@ export default function Header() {
     void logout()
     setMobileMenuOpen(false)
     router.push("/")
-  }
-
-  const handleSearch = (query?: string) => {
-    const value = (query ?? searchQuery).trim()
-    if (!value) {
-      router.push(servicesUrl())
-      return
-    }
-    router.push(servicesUrl({ q: value }))
-    setShowSuggestions(false)
-    setMobileMenuOpen(false)
-  }
-
-  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") handleSearch()
   }
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
@@ -159,52 +131,10 @@ export default function Header() {
             </div>
           </Link>
 
-          <div className="flex-1 max-w-[680px] relative">
-            <div className="flex items-center border-2 border-primary rounded-xl overflow-hidden shadow-sm">
-              <CategoryMegaMenu variant="search" />
-              <input
-                type="text"
-                placeholder="Поиск B2B услуг, исполнителей, компаний..."
-                className="flex-1 px-4 py-2.5 text-sm outline-none bg-white h-11"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                onKeyDown={handleSearchKeyDown}
-                aria-label="Поиск услуг"
-              />
-              <button
-                type="button"
-                onClick={() => handleSearch()}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-5 h-11 transition-colors flex items-center gap-2 font-semibold text-sm"
-              >
-                <Search size={16} />
-                <span className="hidden md:block">Найти</span>
-              </button>
-            </div>
-
-            {showSuggestions && (
-              <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white border border-border shadow-xl z-50 rounded-xl overflow-hidden">
-                <div className="px-4 pt-3 pb-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Популярные запросы</p>
-                </div>
-                {searchSuggestions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary flex items-center gap-3 transition-colors"
-                    onMouseDown={() => {
-                      setSearchQuery(s)
-                      handleSearch(s)
-                    }}
-                  >
-                    <Search size={13} className="text-muted-foreground flex-shrink-0" />
-                    <span>{s}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <MarketplaceSearch
+            className="flex-1 max-w-[680px]"
+            onNavigate={closeMobileMenu}
+          />
 
           <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
             <Link

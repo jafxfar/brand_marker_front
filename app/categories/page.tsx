@@ -1,26 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo } from "react"
 import { ArrowRight } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { CategoryCard } from "@/components/marketplace/category-card"
-import { getAllCategories } from "@/lib/mock/categories"
+import { useMarketplaceCategories } from "@/hooks/use-marketplace-categories"
 import { servicesUrl } from "@/lib/marketplace-routes"
-import { isApiEnabled } from "@/lib/api/config"
-import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
-import { mergeByKey, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 
 export default function CategoriesPage() {
-  const useApi = isApiEnabled()
-  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
-  const mockCategories = getAllCategories()
-
-  const categories = useMemo(() => {
-    if (!useApi) return mockCategories
-    if (!apiCategories?.length) return []
-    return mapCategoryTreeToMarketplace(apiCategories)
-  }, [useApi, apiCategories, mockCategories])
+  const { categories, isLoading } = useMarketplaceCategories()
 
   return (
     <PageShell>
@@ -40,11 +28,23 @@ export default function CategoriesPage() {
               Все услуги <ArrowRight size={14} />
             </Link>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <div key={index} className="rounded-2xl p-4 bg-secondary animate-pulse h-[120px]" />
+              ))}
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-secondary/30 p-10 text-center">
+              <p className="text-sm text-muted-foreground">Категории пока недоступны</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+              {categories.map((category) => (
+                <CategoryCard key={category.id} category={category} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </PageShell>
