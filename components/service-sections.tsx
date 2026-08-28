@@ -7,20 +7,18 @@ import {
   FileText, Building2, Briefcase, CircleDollarSign,
   Star, MapPin, BadgeCheck, ArrowRight,
 } from "lucide-react"
-import { getAllCategories } from "@/lib/mock/categories"
+import { useMarketplaceCategories } from "@/hooks/use-marketplace-categories"
 import { getFeaturedServices } from "@/lib/mock/marketplace-services"
 import { getTopPerformers } from "@/lib/mock/marketplace-performers"
 import { getRecentRequests } from "@/lib/mock/marketplace-requests"
 import { isApiEnabled } from "@/lib/api/config"
 import {
-  usePublicCategoriesQuery,
   usePublicCatalogQuery,
   usePublicSuppliersQuery,
   usePublicRfqsQuery,
 } from "@/hooks/api/use-public-query"
 import {
   mergeByKey,
-  mapCategoryTreeToMarketplace,
   mapCatalogItemToService,
   mapPublicSupplierToPerformer,
   mapRfqToRequest,
@@ -41,14 +39,7 @@ import {
 import { createRfqHref } from "@/lib/create-rfq-href"
 
 export function CategoryGrid() {
-  const useApi = isApiEnabled()
-  const { data: apiCategories } = usePublicCategoriesQuery(useApi)
-  const mockCategories = getAllCategories()
-  const categories = useMemo(() => {
-    if (!useApi || !apiCategories?.length) return mockCategories
-    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
-    return mergeByKey(mockCategories, apiMapped, "slug")
-  }, [useApi, apiCategories, mockCategories])
+  const { categories, isLoading } = useMarketplaceCategories()
 
   return (
     <section className="bg-white border-b border-border py-9">
@@ -62,11 +53,33 @@ export function CategoryGrid() {
             Все категории <ArrowRight size={14} />
           </Link>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-          {categories.map((category) => (
-            <CategoryCard key={category.id} category={category} />
-          ))}
-        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <div key={index} className="rounded-2xl p-4 bg-secondary animate-pulse h-[120px]" />
+            ))}
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-secondary/30 p-10 text-center">
+            <p className="text-sm text-muted-foreground">Категории пока недоступны</p>
+          </div>
+        ) : (
+          <>
+            <div className="sm:hidden -mx-6 px-6">
+              <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide">
+                {categories.map((category) => (
+                  <CategoryCard key={category.id} category={category} variant="scroll" />
+                ))}
+              </div>
+            </div>
+            <div className="hidden sm:grid sm:grid-cols-4 md:grid-cols-6 gap-3">
+              {categories.map((category) => (
+                <CategoryCard key={category.id} category={category} variant="grid" />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   )

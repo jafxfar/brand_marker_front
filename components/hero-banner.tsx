@@ -8,8 +8,7 @@ import {
   ThumbsUp, TrendingUp, ChevronRight as ChevronRightIcon, ShieldCheck,
   FileText,
 } from "lucide-react"
-import { getAllCategories } from "@/lib/mock/categories"
-import { getIcon } from "@/lib/icon-map"
+import { CategorySidebar } from "@/components/marketplace/category-sidebar"
 import {
   categoryUrl,
   guaranteeUrl,
@@ -88,7 +87,6 @@ export default function HeroBanner() {
   }, [current])
 
   const slide = slides[current]
-  const sidebarCategories = getAllCategories()
   const secondaryHref =
     slide.ctaSecondaryHref === "create-rfq" ? createRfqHref() : slide.ctaSecondaryHref
   const placeOrderHref = createRfqHref()
@@ -97,25 +95,7 @@ export default function HeroBanner() {
     <section className="bg-background">
       <div className="max-w-[1440px] mx-auto px-6 py-5">
         <div className="flex gap-4">
-          {/* Left sidebar */}
-          <aside className="hidden lg:block w-[210px] flex-shrink-0">
-            <nav className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm h-full">
-              {sidebarCategories.map((category) => {
-                const Icon = getIcon(category.icon)
-                return (
-                  <Link
-                    key={category.id}
-                    href={categoryUrl(category.slug)}
-                    className="flex items-center gap-2.5 px-3.5 py-[9px] text-xs font-medium hover:bg-secondary hover:text-primary border-b border-border/60 last:border-0 transition-colors group"
-                  >
-                    <Icon size={14} className="text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                    <span className="text-foreground group-hover:text-primary transition-colors leading-tight">{category.label}</span>
-                    <ChevronRightIcon size={12} className="ml-auto text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
-                  </Link>
-                )
-              })}
-            </nav>
-          </aside>
+          <CategorySidebar />
 
           {/* Main banner */}
           <div className="flex-1 relative rounded-2xl overflow-hidden min-h-[330px] group shadow-lg">
