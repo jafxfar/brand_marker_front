@@ -28,7 +28,7 @@ export const BuyerRefundsTable = ({
           <thead>
             <tr className="border-b border-border bg-secondary/40">
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дата</th>
-              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Контракт</th>
+              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Договор</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Причина</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Сумма</th>
             </tr>

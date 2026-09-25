@@ -399,7 +399,7 @@ export const useContractsStore = create<ContractsState>()(
                 id: nextMessageId(contracts),
                 conversation_id: contractId,
                 sender_id: input.buyer_actor_id,
-                text: "Контракт создан. Готовы обсудить детали.",
+                text: "Договор создан. Готовы обсудить детали.",
                 attachment: null,
               },
             ],

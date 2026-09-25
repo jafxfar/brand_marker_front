@@ -103,7 +103,7 @@ export default function SupplierRfqsPage() {
     <PageFrame>
       <PageHeader
         title="Заявки заказчиков"
-        description="Открытые заявки, на которые можно откликнуться"
+        description="Открытые заявки, на которые можно ответить"
       />
 
       <SegmentedControl

@@ -55,7 +55,7 @@ export default function RespondDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Откликнуться на заказ</DialogTitle>
+          <DialogTitle>Ответить на заказ</DialogTitle>
           <DialogDescription>
             Бюджет заказчика: {formatPrice(budget)}. Предложите свои условия.
           </DialogDescription>
@@ -90,7 +90,7 @@ export default function RespondDialog({
         {promoted && (
           <div className="flex items-center gap-2 text-[11px] text-primary bg-secondary rounded-xl p-2.5">
             <Crown size={14} className="flex-shrink-0" />
-            Подписка активна — ваш отклик будет помечен как «Продвигается».
+            Подписка активна — ваше предложение будет помечено как «Продвигается».
           </div>
         )}
 
@@ -107,7 +107,7 @@ export default function RespondDialog({
             onClick={handleConfirm}
             className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2"
           >
-            <Send size={15} /> Отправить отклик
+            <Send size={15} /> Отправить предложение
           </button>
         </DialogFooter>
       </DialogContent>

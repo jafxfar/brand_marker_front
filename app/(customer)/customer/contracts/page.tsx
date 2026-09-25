@@ -42,7 +42,7 @@ export default function BuyerContractsPage() {
   return (
     <PageFrame>
       <PageHeader
-        title="Контракты"
+        title="Договоры"
         description="Управление сделками как заказчик"
       />
 
@@ -50,14 +50,14 @@ export default function BuyerContractsPage() {
         value={tab}
         options={BUYER_CONTRACT_LIST_TABS}
         onChange={setTab}
-        ariaLabel="Фильтр контрактов"
+        ariaLabel="Фильтр договоров"
       />
 
       {!hydrated || contracts.length === 0 ? (
         <PageSurface>
           <PageEmptyState
             icon={<FileCheck size={32} />}
-            title="Контрактов нет"
+            title="Договоров нет"
             description={buyerContractEmptyMessages[tab]}
           />
         </PageSurface>

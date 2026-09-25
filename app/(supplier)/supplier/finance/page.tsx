@@ -114,7 +114,7 @@ export default function SupplierFinancePage() {
 
   const getContractTitle = (contractId: number | null) => {
     if (!contractId) return "—"
-    return getContract(contractId)?.title ?? `Контракт #${contractId}`
+    return getContract(contractId)?.title ?? `Договор #${contractId}`
   }
 
   const getReviewerName = (reviewerActorId: number) =>

@@ -79,7 +79,7 @@ export default function BuyerMessagesPage() {
     <PageFrame>
       <PageHeader
         title="Сообщения"
-        description="Переписка по контрактам с исполнителями"
+        description="Переписка по договорам с исполнителями"
       />
 
       {conversations.length === 0 ? (
@@ -87,7 +87,7 @@ export default function BuyerMessagesPage() {
           <PageEmptyState
             icon={<MessageSquare size={32} />}
             title="Сообщений пока нет"
-            description="Сообщения появятся в активных контрактах"
+            description="Сообщения появятся в активных договорах"
           />
         </PageSurface>
       ) : (
@@ -124,7 +124,7 @@ export default function BuyerMessagesPage() {
                   href={`/customer/contracts/${selected.contract.id}`}
                   className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 px-1"
                 >
-                  Открыть контракт <ChevronRight size={14} />
+                  Открыть договор <ChevronRight size={14} />
                 </Link>
               </>
             ) : (

@@ -15,7 +15,7 @@ const baseSchema = z.object({
   budget_from: z.string().optional(),
   budget_to: z.string().optional(),
   currency: z.enum(["TJS", "USD", "EUR", "KZT", "CNY"]),
-  deadline: isoDate4Year("Укажите дедлайн"),
+  deadline: isoDate4Year("Укажите срок ответов"),
   visibility: z.enum(["public", "invited_only"]).default("public"),
 })
 
