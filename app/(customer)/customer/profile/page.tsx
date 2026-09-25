@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
-import { User, Truck, Check, LogOut, Building2, ArrowRight } from "lucide-react"
+import { Truck, Check, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -91,25 +90,6 @@ export default function ProfilePage() {
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Имя / контактное лицо</label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="sm:col-span-2">
-              <Link
-                href="/customer/company"
-                className="flex items-center justify-between gap-3 p-4 rounded-xl border border-border hover:border-primary/40 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
-                    <Building2 size={16} className="text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Мои компании</p>
-                    <p className="text-xs text-muted-foreground">
-                      Создание и управление профилем компании
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
-              </Link>
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">Email</label>

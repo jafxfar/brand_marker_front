@@ -63,7 +63,7 @@ export const RfqBuyerProfileCard = ({ buyer }: RfqBuyerProfileCardProps) => {
         )}
         {buyer.completed_contracts != null && buyer.completed_contracts > 0 && (
           <p className="text-xs text-muted-foreground pt-1">
-            {buyer.completed_contracts} завершённых контрактов на платформе
+            {buyer.completed_contracts} завершённых договоров на платформе
           </p>
         )}
       </div>

@@ -25,11 +25,11 @@ import { ContractsListTable } from "@/components/supplier/contracts/contracts-li
 import type { ContractWithRelations } from "@/types"
 
 const emptyMessages: Record<ContractListTab, string> = {
-  all: "Контрактов нет",
-  active: "Активные контракты появятся после принятия предложений",
-  completed: "Завершённые контракты отобразятся здесь",
-  disputed: "Спорных контрактов нет",
-  cancelled: "Отменённых контрактов нет",
+  all: "Договоров нет",
+  active: "Активные договоры появятся после принятия предложений",
+  completed: "Завершённые договоры отобразятся здесь",
+  disputed: "Спорных договоров нет",
+  cancelled: "Отменённых договоров нет",
 }
 
 export default function SupplierContractsPage() {
@@ -52,7 +52,7 @@ export default function SupplierContractsPage() {
   return (
     <PageFrame>
       <PageHeader
-        title="Контракты"
+        title="Договоры"
         description="Управление сделками как исполнитель"
       />
 
@@ -60,14 +60,14 @@ export default function SupplierContractsPage() {
         value={tab}
         options={CONTRACT_LIST_TABS}
         onChange={setTab}
-        ariaLabel="Статус контракта"
+        ariaLabel="Статус договора"
       />
 
       {isEmpty ? (
         <PageSurface>
           <PageEmptyState
             icon={<FileCheck size={32} />}
-            title={isLoading ? "Загрузка контрактов..." : "Контрактов нет"}
+            title={isLoading ? "Загрузка договоров..." : "Договоров нет"}
             description={!isLoading ? emptyMessages[tab] : undefined}
           />
         </PageSurface>

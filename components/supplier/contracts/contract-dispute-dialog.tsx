@@ -50,7 +50,7 @@ export const ContractDisputeDialog = ({
           <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center mb-1">
             <AlertTriangle size={18} className="text-destructive" />
           </div>
-          <DialogTitle>Открыть спор по контракту</DialogTitle>
+          <DialogTitle>Открыть спор по договору</DialogTitle>
           <DialogDescription>
             Деньги по безопасной сделке будут заморожены до разрешения спора. Опишите проблему —
             мы рассмотрим обращение.

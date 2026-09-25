@@ -135,7 +135,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Дедлайн откликов</p>
+            <p className="text-xs text-muted-foreground">Принимать ответы до</p>
             <p className="mt-0.5 text-sm font-semibold text-foreground">
               {formatIsoDate(rfq.deadline)}
             </p>

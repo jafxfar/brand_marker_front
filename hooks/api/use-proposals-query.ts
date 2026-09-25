@@ -33,6 +33,7 @@ export const useProposalMessagesQuery = (
         ? proposalsApi.listMessages(proposalId)
         : supplierProposalsApi.listMessages(proposalId),
     enabled: enabled && isApiEnabled() && proposalId > 0,
+    refetchInterval: enabled ? 4000 : false,
   })
 
 export const useSendProposalMessageMutation = (side: ProposalChatSide) => {

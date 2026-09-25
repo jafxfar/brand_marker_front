@@ -141,7 +141,7 @@ export default function SupplierDashboard() {
         actions={
           <Button asChild size="lg">
             <Link href="/supplier/rfqs">
-              Откликнуться на заявку <ArrowRight size={17} />
+              Ответить на заявку <ArrowRight size={17} />
             </Link>
           </Button>
         }
@@ -152,7 +152,7 @@ export default function SupplierDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           Icon={FileCheck}
-          label="Активные контракты"
+          label="Активные договоры"
           value={!hydrated || isLoading ? "—" : String(activeContracts.length)}
           accent="bg-primary/10 text-primary"
         />

@@ -16,6 +16,6 @@ export const BUYER_CONTRACT_LIST_TABS: {
 
 export const buyerContractEmptyMessages: Record<BuyerContractListTab, string> = {
   active: "Активные договоры появятся после принятия предложения по заявке",
-  completed: "Завершённые контракты отобразятся здесь",
-  disputed: "Спорных контрактов нет",
+  completed: "Завершённые договоры отобразятся здесь",
+  disputed: "Спорных договоров нет",
 }

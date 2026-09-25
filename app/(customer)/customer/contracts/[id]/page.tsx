@@ -107,7 +107,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   if (!contract || contract.buyer_actor_id !== actorId) {
     return (
       <PageFrame>
-        <PageHeader title="Контракт не найден" backHref="/customer/contracts" backLabel="Вернуться к списку" />
+        <PageHeader title="Договор не найден" backHref="/customer/contracts" backLabel="Вернуться к списку" />
       </PageFrame>
     )
   }
@@ -204,7 +204,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         title={contract.title}
         description={supplierName}
         backHref="/customer/contracts"
-        backLabel="Назад к контрактам"
+        backLabel="Назад к договорам"
         actions={
           <p className="text-lg font-bold text-primary">
             {formatCurrency(contract.agreed_amount, contract.currency)}

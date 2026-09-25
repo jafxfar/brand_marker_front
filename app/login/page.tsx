@@ -243,11 +243,6 @@ function LoginContent() {
             )}
           </form>
 
-          <p className="text-xs text-muted-foreground text-center mt-6">
-            {useApi
-              ? "Вход через API BrandMarket. Демо: buyer@example.com / Buyer123!"
-              : "Это демо-вход: данные не проверяются и хранятся локально в браузере."}
-          </p>
           <p className="text-sm text-center mt-4">
             Нет аккаунта?{" "}
             <Link href={registerUrl()} className="text-primary font-semibold hover:underline">

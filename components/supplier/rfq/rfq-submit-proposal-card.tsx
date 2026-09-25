@@ -27,7 +27,7 @@ export const RfqSubmitProposalCard = ({
         <div>
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 size={18} className="text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Вы откликнулись</h2>
+            <h2 className="text-sm font-semibold text-foreground">Вы отправили предложение</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-3">
             Ваше предложение отправлено заказчику и ожидает рассмотрения.
@@ -67,7 +67,7 @@ export const RfqSubmitProposalCard = ({
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-2">Отправить предложение</h2>
           <p className="text-xs text-muted-foreground mb-4">
-            Укажите цену, срок и сообщение заказчику. Предложение будет видно в списке откликов.
+            Укажите цену, срок и сообщение заказчику. Предложение будет видно в списке предложений.
           </p>
           <button
             type="button"

@@ -141,7 +141,7 @@ export default function CustomerDashboard() {
         return {
           contract: {
             id: p.contract_id,
-            title: contract?.title ?? `Контракт #${p.contract_id}`,
+            title: contract?.title ?? `Договор #${p.contract_id}`,
           },
           title: p.title,
           amount: p.amount,
@@ -215,7 +215,7 @@ export default function CustomerDashboard() {
         />
         <StatCard
           Icon={FileCheck}
-          label="Активные контракты"
+          label="Активные договоры"
           value={hydrated ? String(activeContracts.length) : "—"}
           accent="bg-muted text-muted-foreground"
         />

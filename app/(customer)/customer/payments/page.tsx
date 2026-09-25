@@ -66,7 +66,7 @@ export default function BuyerPaymentsPage() {
         const contract = contractById.get(event.contractId)
         return {
           ...event,
-          contractTitle: contract?.title ?? `Контракт #${event.contractId}`,
+          contractTitle: contract?.title ?? `Договор #${event.contractId}`,
           supplierActorId: contract?.supplier_actor_id ?? 0,
         }
       })
@@ -78,7 +78,7 @@ export default function BuyerPaymentsPage() {
       const contract = contractById.get(p.contract_id)
       return {
         contractId: p.contract_id,
-        contractTitle: contract?.title ?? `Контракт #${p.contract_id}`,
+        contractTitle: contract?.title ?? `Договор #${p.contract_id}`,
         milestoneId: p.milestone_id,
         title: p.title,
         amount: p.amount,
@@ -104,7 +104,7 @@ export default function BuyerPaymentsPage() {
 
   const getContractTitle = (contractId: number | null) => {
     if (!contractId) return "—"
-    return getContract(contractId)?.title ?? `Контракт #${contractId}`
+    return getContract(contractId)?.title ?? `Договор #${contractId}`
   }
 
   const handleFund = (contractId: number, milestoneId: number) => {

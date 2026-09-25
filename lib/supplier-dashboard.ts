@@ -115,7 +115,7 @@ export const getSupplierPendingMilestonesFromApi = (
     return {
       contract: {
         id: item.contract_id,
-        title: contract?.title ?? `Контракт #${item.contract_id}`,
+        title: contract?.title ?? `Договор #${item.contract_id}`,
       },
       milestoneId: item.milestone_id,
       title: item.title,

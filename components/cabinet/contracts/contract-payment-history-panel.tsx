@@ -21,7 +21,7 @@ export const ContractPaymentHistoryPanel = ({
     <h2 className="text-sm font-semibold text-foreground mb-4">История платежей</h2>
 
     {events.length === 0 ? (
-      <p className="text-sm text-muted-foreground">Платежей по контракту пока нет</p>
+      <p className="text-sm text-muted-foreground">Платежей по договору пока нет</p>
     ) : (
       <div className="space-y-3">
         {events.map((event) => (

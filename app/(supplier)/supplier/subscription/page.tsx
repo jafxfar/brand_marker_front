@@ -43,7 +43,7 @@ export default function SubscriptionPage() {
     notify({
       type: "payment",
       title: "Подписка оформлена",
-      body: `Тариф «${name}» активирован на 30 дней. Ваши отклики продвигаются.`,
+      body: `Тариф «${name}» активирован на 30 дней. Ваши предложения продвигаются.`,
       href: "/supplier/subscription",
     })
   }
@@ -60,7 +60,7 @@ export default function SubscriptionPage() {
     <PageFrame>
       <PageHeader
         title="Подписка для продвижения"
-        description="Поднимайте отклики и профиль в топ"
+        description="Поднимайте предложения и профиль в топ"
       />
 
       <div
