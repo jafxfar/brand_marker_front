@@ -32,6 +32,7 @@ export const isUnauthorizedError = (err: unknown): boolean =>
 export type TokenPair = {
   access_token: string
   refresh_token: string
+  role?: "buyer" | "supplier" | null
 }
 
 const TOKEN_KEY = "bm-access-token"

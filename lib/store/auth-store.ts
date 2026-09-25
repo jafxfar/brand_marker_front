@@ -228,7 +228,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginWithCredentials: async ({ email, password, role }) => {
-        await authApi.login(email, password)
+        const apiRole = role === "supplier" ? "supplier" : "buyer"
+        await authApi.login(email, password, apiRole)
         let me = await authApi.me()
         if (["admin", "superadmin", "moderator"].includes(me.user.role)) {
           set({
