@@ -16,6 +16,7 @@ import { buildDefaultMilestones, splitAmounts } from "@/lib/payment-milestones"
 import { mockContracts } from "@/lib/mock/contracts"
 import { mockRfqs } from "@/lib/mock/rfqs"
 import { API_MODE } from "@/lib/api/config"
+import { useNotificationsStore } from "@/lib/store/notifications-store"
 import {
   PENDING_MILESTONE_STATUSES,
   filterContractsByTab,
@@ -51,6 +52,7 @@ export type CreateContractFromProposalInput = {
   agreed_amount: number
   currency: Currency
   payment_type: PaymentType
+  delivery_time?: string | null
   milestones?: PaymentMilestoneInput[]
   files?: Array<{
     file_name: string
@@ -206,6 +208,14 @@ const daysFromNowIso = (days: number): string => {
   const d = new Date()
   d.setDate(d.getDate() + days)
   return d.toISOString().split("T")[0]!
+}
+
+const parseDeliveryDays = (value?: string | null): number | null => {
+  if (!value) return null
+  const match = String(value).match(/(\d+)/)
+  if (!match) return null
+  const days = Number(match[1])
+  return Number.isFinite(days) && days > 0 ? days : null
 }
 
 const getSubmissionType = (contract: ContractWithRelations): WorkSubmissionType => {
@@ -381,7 +391,7 @@ export const useContractsStore = create<ContractsState>()(
           agreed_amount: input.agreed_amount,
           currency: input.currency,
           start_date: today,
-          due_date: daysFromNowIso(30),
+          due_date: daysFromNowIso(parseDeliveryDays(input.delivery_time) ?? 30),
           payment_type: input.payment_type,
           created_at: new Date().toISOString(),
           status: "pending_payment",
@@ -411,6 +421,8 @@ export const useContractsStore = create<ContractsState>()(
             file_url: file.file_url,
             file_type: file.file_type,
             uploaded_by: input.buyer_actor_id,
+            uploaded_by_name: "Заказчик",
+            uploaded_by_side: "buyer" as const,
             created_at: createdAt,
           })),
           submissions: [],
@@ -659,7 +671,8 @@ export const useContractsStore = create<ContractsState>()(
           }),
         })),
 
-      approveSubmission: (contractId, submissionId) =>
+      approveSubmission: (contractId, submissionId) => {
+        const current = get().contracts.find((c) => c.id === contractId)
         set((state) => ({
           contracts: state.contracts.map((contract) => {
             if (contract.id !== contractId) return contract
@@ -674,7 +687,16 @@ export const useContractsStore = create<ContractsState>()(
               ),
             }
           }),
-        })),
+        }))
+        if (current && current.status !== "completed") {
+          useNotificationsStore.getState().add({
+            type: "contract",
+            title: "Проект закрыт",
+            body: `Договор «${current.title}» завершён`,
+            href: `/supplier/contracts/${contractId}`,
+          })
+        }
+      },
 
       rejectSubmission: (contractId, submissionId) =>
         set((state) => ({

@@ -188,4 +188,8 @@ export type PublicSupplier = {
   industries: string[]
   active_catalog_count: number
   trust_level: string
+  completed_contracts?: number
+  active_contracts?: number
+  disputed_contracts?: number
+  success_rate?: number | null
 }

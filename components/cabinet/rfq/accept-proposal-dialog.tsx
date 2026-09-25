@@ -31,7 +31,7 @@ export const AcceptProposalDialog = ({
   onConfirm,
 }: AcceptProposalDialogProps) => {
   const [terms, setTerms] = useState<ProposalAcceptInput>({
-    payment_type: "split_payment",
+    payment_type: "full_postpayment",
   })
   const [isValid, setIsValid] = useState(true)
 
@@ -56,7 +56,7 @@ export const AcceptProposalDialog = ({
           <DialogTitle>Принять предложение?</DialogTitle>
           <DialogDescription>
             Вы выбираете исполнителя {supplierName} на сумму{" "}
-            {formatCurrency(price, currency)}. Выберите тип оплаты — будет создан договор,
+            {formatCurrency(price, currency)}. Будет создан договор с постоплатой,
             остальные предложения отклонены.
           </DialogDescription>
         </DialogHeader>

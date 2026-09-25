@@ -126,7 +126,7 @@ export const ProposalDialog = ({
 
         <div>
           <label htmlFor="p-delivery" className="block text-sm font-medium text-foreground mb-1.5">
-            Срок выполнения
+            Срок выполнения, дней
           </label>
           <input
             id="p-delivery"

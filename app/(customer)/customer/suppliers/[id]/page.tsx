@@ -28,6 +28,7 @@ import {
   toPublicSupplierFromCompany,
 } from "@/lib/supplier-directory"
 import { SupplierProfileHeader } from "@/components/cabinet/suppliers/supplier-profile-header"
+import { SupplierStatsPanel } from "@/components/cabinet/suppliers/supplier-stats-panel"
 import { SupplierCatalogGrid } from "@/components/cabinet/suppliers/supplier-catalog-grid"
 import { SupplierReviewsList } from "@/components/cabinet/suppliers/supplier-reviews-list"
 import { InviteRfqDialog } from "@/components/cabinet/suppliers/invite-rfq-dialog"
@@ -166,6 +167,8 @@ export default function SupplierProfilePage({ params }: PageProps) {
         onContact={handleContact}
         onInvite={() => setInviteOpen(true)}
       />
+
+      <SupplierStatsPanel supplier={supplier} />
 
       <div>
         <h2 className="text-base font-bold text-foreground mb-3">
