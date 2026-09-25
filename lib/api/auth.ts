@@ -38,10 +38,14 @@ export type MeResponse = {
 }
 
 export const authApi = {
-  login: async (email: string, password: string): Promise<TokenPair> => {
+  login: async (
+    email: string,
+    password: string,
+    role?: "buyer" | "supplier",
+  ): Promise<TokenPair> => {
     const data = await apiFetch<TokenPair>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, ...(role ? { role } : {}) }),
       skipAuth: true,
     })
     tokenStorage.setTokens(data)
