@@ -173,7 +173,7 @@ export default function CartPage() {
             </Button>
 
             <p className="text-[11px] text-muted-foreground mt-3 text-center inline-flex items-center justify-center gap-1 w-full flex-wrap">
-              Оплата защищена <TermHint term="escrow">безопасной сделкой</TermHint>. Постоплата для товаров недоступна.
+              Оплата защищена <TermHint term="escrow">безопасной сделкой</TermHint>. Доступна постоплата после приёмки.
             </p>
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function CartPage() {
         onOpenChange={setPayOpen}
         kind="product"
         amount={total}
-        defaultScheme="prepay"
+        defaultScheme="postpay"
         onConfirm={handleCheckout}
       />
     </PageFrame>

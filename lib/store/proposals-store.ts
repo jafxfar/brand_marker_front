@@ -78,7 +78,9 @@ export const useProposalsStore = create<ProposalsState>()(
 
       getProposalsBySupplier: (actorId) =>
         get()
-          .proposals.filter((p) => p.supplier_actor_id === actorId)
+          .proposals.filter(
+            (p) => p.supplier_actor_id === actorId && p.status !== "accepted",
+          )
           .sort(
             (a, b) =>
               new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
@@ -194,6 +196,7 @@ export const useProposalsStore = create<ProposalsState>()(
           currency: proposal.currency,
           payment_type: terms.payment_type,
           milestones: terms.milestones,
+          delivery_time: proposal.delivery_time,
           files: rfq.attachments.map((attachment) => ({
             file_name: attachment.file_name,
             file_url: attachment.file_url,
@@ -202,14 +205,15 @@ export const useProposalsStore = create<ProposalsState>()(
         })
 
         set((state) => ({
-          proposals: state.proposals.map((p) => {
-            if (p.rfq_id !== rfqId) return p
-            if (p.id === proposalId) return { ...p, status: "accepted" as ProposalStatus }
-            if (!["rejected", "withdrawn"].includes(p.status)) {
-              return { ...p, status: "rejected" as ProposalStatus }
-            }
-            return p
-          }),
+          proposals: state.proposals
+            .filter((p) => p.id !== proposalId)
+            .map((p) => {
+              if (p.rfq_id !== rfqId) return p
+              if (!["rejected", "withdrawn"].includes(p.status)) {
+                return { ...p, status: "rejected" as ProposalStatus }
+              }
+              return p
+            }),
         }))
 
         useRfqsStore.getState().updateRfqStatus(rfqId, "contract_created")

@@ -67,25 +67,43 @@ export const formatPublicSupplierSummary = (supplier: PublicSupplier): string =>
   return parts.join(" · ") || "Исполнитель на платформе"
 }
 
+export const computeSupplierSuccessRate = (
+  completed: number,
+  disputed: number,
+): number | null => {
+  const total = completed + disputed
+  if (total <= 0) return null
+  return Math.round((completed / total) * 1000) / 10
+}
+
 export const toPublicSupplierFromCompany = (
   company: CompanyWithRelations,
   activeCatalogCount = 0,
-): PublicSupplier => ({
-  actor_id: company.id,
-  kind: "company",
-  display_name: company.title,
-  company_id: company.id,
-  city: company.city,
-  country: company.country,
-  description: company.description,
-  website: company.website,
-  rating: company.rating,
-  verification_status: company.verification_status,
-  reviews_count: company.reviews?.length ?? 0,
-  industries: company.profile?.industries ?? [],
-  active_catalog_count: activeCatalogCount,
-  trust_level: "basic",
-})
+): PublicSupplier => {
+  const completed = company.stats?.completed_contracts ?? 0
+  const active = company.stats?.active_contracts ?? 0
+  const disputed = company.stats?.disputes_count ?? 0
+  return {
+    actor_id: company.id,
+    kind: "company",
+    display_name: company.title,
+    company_id: company.id,
+    city: company.city,
+    country: company.country,
+    description: company.description,
+    website: company.website,
+    rating: company.rating,
+    verification_status: company.verification_status,
+    reviews_count: company.reviews?.length ?? 0,
+    industries: company.profile?.industries ?? [],
+    active_catalog_count: activeCatalogCount,
+    trust_level: "basic",
+    completed_contracts: completed,
+    active_contracts: active,
+    disputed_contracts: disputed,
+    success_rate: computeSupplierSuccessRate(completed, disputed),
+  }
+}
 
 export const matchesSupplierSearch = (
   company: CompanyWithRelations,

@@ -45,8 +45,8 @@ export default function PaymentDialog({
             <TermHint term="escrow" iconOnly />
           </DialogTitle>
           <DialogDescription>
-            Выберите схему оплаты. Деньги замораживаются на счёте площадки и переводятся
-            исполнителю только после того, как вы примете работу.
+            Оплата после приёмки. Деньги переводятся исполнителю только после того,
+            как вы примете работу.
           </DialogDescription>
         </DialogHeader>
 
@@ -111,7 +111,7 @@ export default function PaymentDialog({
             onClick={handleConfirm}
             className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors"
           >
-            Оплатить {formatPrice(upfront)}
+            {upfront > 0 ? `Оплатить ${formatPrice(upfront)}` : "Оформить заказ"}
           </button>
         </DialogFooter>
       </DialogContent>

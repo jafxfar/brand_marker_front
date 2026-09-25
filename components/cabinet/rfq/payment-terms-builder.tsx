@@ -33,7 +33,7 @@ type PaymentTermsBuilderProps = {
 const TRIGGERS: PaymentMilestoneTrigger[] = ["contract_signed", "delivery_accepted"]
 
 export const PaymentTermsBuilder = ({ price, currency, onChange }: PaymentTermsBuilderProps) => {
-  const [paymentType, setPaymentType] = useState<PaymentType>("split_payment")
+  const [paymentType, setPaymentType] = useState<PaymentType>("full_postpayment")
   const [milestones, setMilestones] = useState<PaymentMilestoneInput[]>(() =>
     buildDefaultMilestones("milestone"),
   )

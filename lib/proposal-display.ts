@@ -3,7 +3,6 @@ import type { ProposalStatus } from "@/types"
 export const MY_PROPOSAL_FILTER_STATUSES = [
   "submitted",
   "shortlisted",
-  "accepted",
   "rejected",
   "withdrawn",
 ] as const
@@ -19,7 +18,6 @@ export const PROPOSAL_CHAT_OPEN_STATUSES: ProposalStatus[] = [
 export const myProposalTabLabels: Record<MyProposalFilterStatus, string> = {
   submitted: "Отправлено",
   shortlisted: "В избранном",
-  accepted: "Принято",
   rejected: "Отклонено",
   withdrawn: "Отозвано",
 }

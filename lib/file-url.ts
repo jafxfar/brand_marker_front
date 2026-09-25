@@ -8,6 +8,13 @@ export const resolveFileUrl = (url: string | null | undefined): string => {
   if (!value || value === "#") return ""
   if (value.startsWith("blob:") || value.startsWith("data:")) return value
   if (/^https?:\/\//i.test(value)) return value
+  if (value === FILES_BASE_URL || value.startsWith(`${FILES_BASE_URL}/`)) {
+    return value
+  }
+  // API may already return a site-relative path when FILES_BASE_URL is relative
+  if (value.startsWith("/") && FILES_BASE_URL.startsWith("/")) {
+    return value
+  }
 
   const path = value.replace(/^\/+/, "")
   return `${FILES_BASE_URL}/${path}`

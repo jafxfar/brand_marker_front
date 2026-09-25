@@ -23,9 +23,6 @@ export const paymentTypeMeta: Record<
 }
 
 export const PAYMENT_TYPE_ORDER: PaymentType[] = [
-  "full_prepayment",
-  "split_payment",
-  "milestone",
   "full_postpayment",
 ]
 

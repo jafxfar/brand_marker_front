@@ -602,6 +602,8 @@ export type AdminContractDetail = AdminContract & {
     file_url: string
     file_type: string
     uploaded_by: number
+    uploaded_by_name?: string | null
+    uploaded_by_side?: "buyer" | "supplier" | null
     created_at: string
   }>
   messages: Array<{
@@ -710,6 +712,8 @@ export type AdminDisputeDetail = AdminDispute & {
     file_url: string
     file_type: string
     uploaded_by: number
+    uploaded_by_name?: string | null
+    uploaded_by_side?: "buyer" | "supplier" | null
     created_at: string
   }>
   messages: Array<{

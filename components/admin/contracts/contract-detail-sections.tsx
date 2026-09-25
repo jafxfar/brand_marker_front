@@ -31,6 +31,19 @@ const formatDate = (value: string) =>
     timeStyle: "short",
   }).format(new Date(value))
 
+const fileUploaderSideLabel: Record<"buyer" | "supplier", string> = {
+  buyer: "Заказчик",
+  supplier: "Исполнитель",
+}
+
+const fileMetaLine = (file: AdminContractDetail["files"][number]): string => {
+  const parts: string[] = []
+  if (file.uploaded_by_name) parts.push(file.uploaded_by_name)
+  if (file.uploaded_by_side) parts.push(fileUploaderSideLabel[file.uploaded_by_side])
+  parts.push(formatDate(file.created_at))
+  return parts.join(" · ")
+}
+
 const formatMoney = (value: number | null | undefined, currency: string) => {
   if (value == null) return "—"
   return new Intl.NumberFormat("ru-RU", {
@@ -275,12 +288,14 @@ export const AdminContractDetailSections = ({
                 href={resolveFileUrl(file.file_url)}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                className="flex flex-col gap-0.5 text-sm font-medium text-primary hover:underline"
               >
-                <FileText size={15} aria-hidden="true" />
-                {file.file_name}
-                <span className="text-xs font-normal text-muted-foreground">
-                  · {formatDate(file.created_at)}
+                <span className="inline-flex items-center gap-2">
+                  <FileText size={15} aria-hidden="true" />
+                  {file.file_name}
+                </span>
+                <span className="pl-6 text-xs font-normal text-muted-foreground">
+                  {fileMetaLine(file)}
                 </span>
               </a>
             ))}

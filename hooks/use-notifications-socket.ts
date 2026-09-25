@@ -12,6 +12,10 @@ import {
   prependNotificationToCache,
 } from "@/hooks/api/use-notifications-query"
 import {
+  contractKeys,
+  supplierContractKeys,
+} from "@/hooks/api/use-contracts-query"
+import {
   appendContractMessageToCache,
   updateContractMessageStatusInCache,
 } from "@/lib/contract-chat-cache"
@@ -88,6 +92,10 @@ export const useNotificationsSocket = (
               void queryClient.invalidateQueries({ queryKey: ["proposals"] })
               void queryClient.invalidateQueries({ queryKey: ["proposal-messages"] })
               void queryClient.invalidateQueries({ queryKey: ["supplier-proposals"] })
+            }
+            if (notification.type === "contract") {
+              void queryClient.invalidateQueries({ queryKey: contractKeys.all })
+              void queryClient.invalidateQueries({ queryKey: supplierContractKeys.all })
             }
             return
           }

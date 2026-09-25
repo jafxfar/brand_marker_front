@@ -61,6 +61,11 @@ export const SupplierDirectoryCard = ({
       <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{summary}</p>
 
       <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border">
+        {supplier.completed_contracts != null && supplier.completed_contracts > 0 && (
+          <span className="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-lg font-semibold">
+            {supplier.completed_contracts} завершённых
+          </span>
+        )}
         {supplier.active_catalog_count > 0 && (
           <span className="text-[10px] bg-secondary text-foreground px-2.5 py-1 rounded-lg font-semibold">
             {supplier.active_catalog_count} в каталоге

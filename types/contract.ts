@@ -67,6 +67,8 @@ export type ContractFile = {
   file_url: string
   file_type: string
   uploaded_by: number
+  uploaded_by_name?: string | null
+  uploaded_by_side?: "buyer" | "supplier" | null
   created_at: string
 }
 
