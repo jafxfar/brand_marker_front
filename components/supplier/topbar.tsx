@@ -10,7 +10,6 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import SupplierSidebar from "@/components/supplier/sidebar"
-import { CompanySwitcher } from "@/components/company/company-switcher"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { getUserDisplayName, getUserInitials } from "@/lib/auth-display"
 import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
@@ -59,8 +58,6 @@ export default function SupplierTopbar() {
       </div>
 
       <div className="flex items-center gap-1.5 ml-auto">
-        <CompanySwitcher actorType="supplier" basePath="/supplier/company" />
-
         <Link
           href="/supplier/notifications"
           className="relative p-2.5 rounded-lg hover:bg-secondary transition-colors"

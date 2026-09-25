@@ -38,7 +38,7 @@ export const ContractDisputePanel = ({ dispute }: ContractDisputePanelProps) => 
           </div>
         </div>
         <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-          Закрыть спор может только администратор. До решения статус контракта остаётся «Спор».
+          Закрыть спор может только администратор. До решения статус договора остаётся «Спор».
         </p>
       </div>
 

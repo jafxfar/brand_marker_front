@@ -45,7 +45,7 @@ const filterProposals = <T extends Proposal>(proposals: T[], tab: Tab): T[] => {
 }
 
 const emptyText: Record<Tab, string> = {
-  all: "Вы ещё не отправляли откликов на заявки.",
+  all: "Вы ещё не отправляли предложений на заявки.",
   submitted: "Нет предложений со статусом «Отправлено».",
   shortlisted: "Нет предложений в избранном у заказчика.",
   accepted: "Нет принятых предложений.",
@@ -82,7 +82,7 @@ export default function SupplierProposalsPage() {
     <PageFrame>
       <PageHeader
         title="Мои предложения"
-        description="Отслеживайте статус ваших откликов на заявки"
+        description="Отслеживайте статус ваших предложений на заявки"
       />
 
       <SegmentedControl

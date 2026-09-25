@@ -54,7 +54,7 @@ export const ContractBuyerCard = ({ buyer }: ContractBuyerCardProps) => {
         </div>
         {buyer.stats && (
           <p className="text-xs text-muted-foreground pt-1">
-            {buyer.stats.completed_contracts} завершённых контрактов на платформе
+            {buyer.stats.completed_contracts} завершённых договоров на платформе
           </p>
         )}
       </div>

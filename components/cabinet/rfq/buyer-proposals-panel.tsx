@@ -35,7 +35,7 @@ export const BuyerProposalsPanel = ({
 
       {proposals.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Пока нет предложений. Опубликуйте заявку и дождитесь откликов исполнителей.
+          Пока нет предложений. Опубликуйте заявку и дождитесь предложений исполнителей.
         </p>
       ) : (
         <div className="space-y-3">

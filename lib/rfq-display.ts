@@ -15,7 +15,7 @@ export const rfqStatusMeta: Record<
     className: "bg-muted text-muted-foreground",
   },
   contract_created: {
-    label: "Контракт создан",
+    label: "Договор создан",
     className: "bg-muted text-muted-foreground",
   },
   in_progress: { label: "В работе", className: "bg-warning/10 text-warning" },

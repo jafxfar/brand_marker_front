@@ -429,7 +429,7 @@ export const RfqForm = ({
 
           <div>
             <label htmlFor="deadline" className="block text-sm font-medium text-foreground mb-1.5">
-              Дедлайн откликов
+              Принимать ответы до
             </label>
             <input
               id="deadline"

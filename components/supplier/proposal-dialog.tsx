@@ -57,11 +57,12 @@ export const ProposalDialog = ({
   const handleConfirm = () => {
     const e: Record<string, string> = {}
     const priceNum = Number(price)
+    const daysNum = Number(deliveryTime)
     if (!price || Number.isNaN(priceNum) || priceNum <= 0) {
       e.price = "Укажите цену"
     }
-    if (!deliveryTime.trim()) {
-      e.delivery_time = "Укажите срок выполнения"
+    if (!deliveryTime.trim() || Number.isNaN(daysNum) || daysNum <= 0) {
+      e.delivery_time = "Срок должен быть больше 0"
     }
     if (message.trim().length < 10) {
       e.message = "Сообщение от 10 символов"
@@ -71,7 +72,7 @@ export const ProposalDialog = ({
 
     onSubmit({
       price: priceNum,
-      delivery_time: deliveryTime.trim(),
+      delivery_time: String(daysNum),
       message: message.trim(),
     })
     onOpenChange(false)
@@ -129,10 +130,11 @@ export const ProposalDialog = ({
           </label>
           <input
             id="p-delivery"
-            type="text"
+            type="number"
+            min={1}
             value={deliveryTime}
             onChange={(e) => setDeliveryTime(e.target.value)}
-            placeholder="Например: 14 рабочих дней"
+            placeholder="14"
             className={inputClass("delivery_time")}
           />
           {errors.delivery_time && (

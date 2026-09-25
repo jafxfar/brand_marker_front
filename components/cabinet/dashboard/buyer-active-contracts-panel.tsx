@@ -20,12 +20,12 @@ export const BuyerActiveContractsPanel = ({
 }: BuyerActiveContractsPanelProps) => (
   <div className="bg-card border border-border rounded-xl">
     <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-sm font-semibold text-foreground">Активные контракты</h2>
+      <h2 className="text-sm font-semibold text-foreground">Активные договоры</h2>
       <Link
         href="/customer/contracts"
         className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
       >
-        Все контракты <ArrowRight size={14} />
+        Все договоры <ArrowRight size={14} />
       </Link>
     </div>
 
@@ -34,7 +34,7 @@ export const BuyerActiveContractsPanel = ({
         <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
           <FileCheck size={22} className="text-primary" />
         </div>
-        <p className="text-sm font-semibold text-foreground">Активных контрактов нет</p>
+        <p className="text-sm font-semibold text-foreground">Активных договоров нет</p>
         <p className="text-xs text-muted-foreground mt-1">
           Примите предложение по заявке, чтобы начать сделку
         </p>

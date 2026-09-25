@@ -170,7 +170,7 @@ export const useProposalsStore = create<ProposalsState>()(
         if (rfq) {
           useNotificationsStore.getState().add({
             type: "proposal",
-            title: "Новый отклик",
+            title: "Новое предложение",
             body: `Исполнитель отправил предложение на заявку «${rfq.title}»`,
             href: `/customer/rfqs/${rfq.id}/proposals`,
           })
@@ -217,7 +217,7 @@ export const useProposalsStore = create<ProposalsState>()(
         useNotificationsStore.getState().add({
           type: "contract",
           title: "Предложение принято",
-          body: `Заказчик принял ваш отклик на заявку «${rfq.title}»`,
+          body: `Заказчик принял ваше предложение на заявку «${rfq.title}»`,
           href: `/supplier/contracts/${contractId}`,
         })
 

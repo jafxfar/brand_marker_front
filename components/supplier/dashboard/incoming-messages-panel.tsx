@@ -31,7 +31,7 @@ export const IncomingMessagesPanel = ({
         </div>
         <p className="text-sm font-semibold text-foreground">Сообщений нет</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Переписка по контрактам появится здесь
+          Переписка по договорам появится здесь
         </p>
       </div>
     ) : (

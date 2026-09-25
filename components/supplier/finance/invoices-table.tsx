@@ -29,7 +29,7 @@ export const InvoicesTable = ({
           <thead>
             <tr className="border-b border-border bg-secondary/40">
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Номер</th>
-              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Контракт</th>
+              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Договор</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Сумма</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Статус</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Срок оплаты</th>

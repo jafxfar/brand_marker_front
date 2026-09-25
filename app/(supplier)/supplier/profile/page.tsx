@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Store, Truck, Check, LogOut, Building2, ArrowRight } from "lucide-react"
+import { Truck, Check, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useRouter } from "next/navigation"
@@ -66,25 +65,6 @@ export default function SupplierProfilePage() {
       <form onSubmit={handleSave} className="space-y-6">
         <PageSurface className="space-y-5 p-5 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <Link
-                href="/supplier/company"
-                className="flex items-center justify-between gap-3 p-4 rounded-xl border border-border hover:border-primary/40 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center">
-                    <Building2 size={16} className="text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Мои компании</p>
-                    <p className="text-xs text-muted-foreground">
-                      Создание и управление профилем бренда
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
-              </Link>
-            </div>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Контактное лицо</label>
               <input id="name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />

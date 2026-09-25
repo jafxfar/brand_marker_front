@@ -3,11 +3,10 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, Boxes, Inbox, Users, Crown, User,
-  Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, Building2, type LucideIcon,
+  LayoutDashboard, Boxes, Inbox, Users, Crown,
+  Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { isApiEnabled } from "@/lib/api/config"
 
 interface NavItem {
   href: string
@@ -24,9 +23,9 @@ const navSections: NavSection[] = [
   {
     title: "Главное",
     items: [
-      { href: "/supplier", label: "Дашборд", Icon: LayoutDashboard },
+      { href: "/supplier", label: "Главная", Icon: LayoutDashboard },
       { href: "/supplier/rfqs", label: "Заявки заказчиков", Icon: Inbox },
-      { href: "/supplier/proposals", label: "Мои отклики", Icon: Send },
+      { href: "/supplier/proposals", label: "Мои предложения", Icon: Send },
       { href: "/supplier/contracts", label: "Договоры", Icon: FileCheck },
     ],
   },
@@ -48,13 +47,6 @@ const navSections: NavSection[] = [
     items: [
       { href: "/supplier/messages", label: "Сообщения", Icon: MessageSquare },
       { href: "/supplier/customers", label: "Заказчики", Icon: Users },
-    ],
-  },
-  {
-    title: "Аккаунт",
-    items: [
-      { href: "/supplier/company", label: "Мои компании", Icon: Building2 },
-      { href: "/supplier/profile", label: "Профиль", Icon: User },
     ],
   },
 ]
@@ -122,16 +114,6 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border flex-shrink-0">
-        {!isApiEnabled() && (
-          <div className="rounded-xl bg-secondary p-3.5">
-            <p className="text-xs font-bold text-foreground">Кабинет исполнителя</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-              Демо-режим. Данные хранятся локально в браузере.
-            </p>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

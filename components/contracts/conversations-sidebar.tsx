@@ -74,7 +74,7 @@ export const ConversationsSidebar = ({
                     "w-full text-left p-4 hover:bg-secondary/50 transition-colors",
                     isSelected && "bg-secondary",
                   )}
-                  aria-label={`Открыть переписку по контракту ${item.contract.title}`}
+                  aria-label={`Открыть переписку по договору ${item.contract.title}`}
                   aria-current={isSelected ? "true" : undefined}
                 >
                   <div className="flex items-start gap-2">

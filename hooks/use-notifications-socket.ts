@@ -82,7 +82,13 @@ export const useNotificationsSocket = (
             return
           }
           if (payload.event === "notification.created" && payload.data) {
-            prependNotificationToCache(queryClient, role, payload.data as ApiNotification)
+            const notification = payload.data as ApiNotification
+            prependNotificationToCache(queryClient, role, notification)
+            if (notification.type === "proposal") {
+              void queryClient.invalidateQueries({ queryKey: ["proposals"] })
+              void queryClient.invalidateQueries({ queryKey: ["proposal-messages"] })
+              void queryClient.invalidateQueries({ queryKey: ["supplier-proposals"] })
+            }
             return
           }
           if (payload.event === "contract.message" && payload.data) {

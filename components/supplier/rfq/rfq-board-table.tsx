@@ -33,7 +33,7 @@ export const RfqBoardTable = ({
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Заказчик</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Категория</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Бюджет</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дедлайн</th>
+            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Срок</th>
             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Рейтинг заказчика</th>
             <th className="text-right px-4 py-3 text-xs font-bold text-muted-foreground">Действия</th>
           </tr>
@@ -74,7 +74,7 @@ export const RfqBoardTable = ({
                 <td className="px-4 py-3 text-right">
                   {responded ? (
                     <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                      Отклик отправлен
+                      Предложение отправлено
                     </span>
                   ) : (
                     <button
@@ -121,7 +121,7 @@ export const RfqBoardTable = ({
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Дедлайн</p>
+                <p className="text-muted-foreground">Срок</p>
                 <p className="font-semibold text-foreground mt-0.5">{formatIsoDate(rfq.deadline)}</p>
               </div>
               <div>
@@ -133,7 +133,7 @@ export const RfqBoardTable = ({
             </div>
             {responded ? (
               <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                Отклик отправлен
+                Предложение отправлено
               </span>
             ) : (
               <button

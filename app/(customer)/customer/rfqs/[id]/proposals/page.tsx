@@ -127,7 +127,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
             {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
           </p>
           <p className="text-xs text-muted-foreground">
-            Дедлайн: {formatIsoDate(rfq.deadline)}
+            Срок ответов: {formatIsoDate(rfq.deadline)}
           </p>
         </div>
       </PageSurface>
@@ -147,7 +147,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
             description={
               statusFilter !== "all"
                 ? "Попробуйте сменить фильтр"
-                : "Дождитесь откликов исполнителей"
+                : "Дождитесь предложений исполнителей"
             }
           />
         </PageSurface>

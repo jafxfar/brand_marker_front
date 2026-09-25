@@ -144,7 +144,7 @@ export const ContractMessagesPanel = ({
             <MessageSquare size={28} className="text-muted-foreground mb-2" />
             <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Напишите первое сообщение по контракту
+              Напишите первое сообщение по договору
             </p>
           </div>
         ) : (

@@ -179,7 +179,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Дедлайн откликов</p>
+            <p className="text-xs text-muted-foreground">Принимать ответы до</p>
             <p className="text-sm font-semibold text-foreground mt-0.5">
               {formatIsoDate(rfq.deadline)}
             </p>
@@ -238,7 +238,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
                   <FileCheck size={18} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">Контракт создан</p>
+                  <p className="text-sm font-bold text-foreground">Договор создан</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Перейти к чату и оплате
                   </p>

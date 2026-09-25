@@ -46,7 +46,7 @@ export const RatingSummaryCard = ({
 
     <p className="text-xs text-muted-foreground mt-2">
       {hydrated
-        ? `${reviewCount} отзывов · ${completedContracts} завершённых контрактов`
+        ? `${reviewCount} отзывов · ${completedContracts} завершённых договоров`
         : "Загрузка..."}
     </p>
 

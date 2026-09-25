@@ -1,13 +1,5 @@
-"use client"
-
-import { CompanyListPage } from "@/components/company/company-list-page"
+import { redirect } from "next/navigation"
 
 export default function CustomerCompanyPage() {
-  return (
-    <CompanyListPage
-      actorType="buyer"
-      basePath="/customer/company"
-      roleLabel="Заказчик"
-    />
-  )
+  redirect("/customer")
 }

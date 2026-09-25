@@ -3,14 +3,13 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, FileText, ShoppingCart, Store, Bell, User,
-  Briefcase, Plus, FileCheck, Wallet, Star, Building2, MessageSquare, Package, type LucideIcon,
+  LayoutDashboard, FileText, ShoppingCart, Store,
+  Briefcase, Plus, FileCheck, Wallet, Star, MessageSquare, Package, type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCartStore } from "@/lib/store/cart-store"
 import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { isApiEnabled } from "@/lib/api/config"
 
 interface NavItem {
   href: string
@@ -28,7 +27,7 @@ const navSections: NavSection[] = [
   {
     title: "Главное",
     items: [
-      { href: "/customer", label: "Дашборд", Icon: LayoutDashboard },
+      { href: "/customer", label: "Главная", Icon: LayoutDashboard },
       { href: "/customer/catalog", label: "Товары и услуги", Icon: Package },
       { href: "/customer/rfqs", label: "Мои заявки", Icon: FileText },
       { href: "/customer/contracts", label: "Договоры", Icon: FileCheck },
@@ -47,14 +46,6 @@ const navSections: NavSection[] = [
       { href: "/customer/suppliers", label: "Исполнители", Icon: Store },
       { href: "/customer/messages", label: "Сообщения", Icon: MessageSquare },
       { href: "/customer/reviews", label: "Мои отзывы", Icon: Star },
-    ],
-  },
-  {
-    title: "Аккаунт",
-    items: [
-      { href: "/customer/company", label: "Мои компании", Icon: Building2 },
-      { href: "/customer/notifications", label: "Уведомления", Icon: Bell, badge: "notifications" },
-      { href: "/customer/profile", label: "Профиль", Icon: User },
     ],
   },
 ]
@@ -135,17 +126,6 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
           </div>
         ))}
       </nav>
-
-      <div className="p-4 border-t border-border flex-shrink-0">
-        <div className="rounded-xl bg-secondary p-3.5">
-          <p className="text-xs font-bold text-foreground">Кабинет заказчика</p>
-          {!isApiEnabled() && (
-            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-              Демо-режим. Данные хранятся локально в браузере.
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

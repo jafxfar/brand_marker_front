@@ -10,7 +10,6 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import CustomerSidebar from "@/components/cabinet/sidebar"
-import { CompanySwitcher } from "@/components/company/company-switcher"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
@@ -60,8 +59,6 @@ export default function CustomerTopbar() {
       </div>
 
       <div className="flex items-center gap-1.5 ml-auto">
-        <CompanySwitcher actorType="buyer" basePath="/customer/company" />
-
         {/* Notifications */}
         <Link
           href="/customer/notifications"
