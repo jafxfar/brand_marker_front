@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { COMPANY_ROLES } from "@/types/user"
 import type { CompanyWizardInput } from "@/types"
+import { ISO_DATE_MESSAGE, isValidIsoDate } from "@/lib/iso-date"
 
 export const WIZARD_STEPS = [
   "basic",
@@ -37,9 +38,10 @@ const locationSchema = z.object({
 const profileSchema = z.object({
   founded_year: z.string().refine((v) => {
     if (!v) return true
+    if (!/^\d+$/.test(v)) return false
     const year = Number(v)
     const current = new Date().getFullYear()
-    return year >= 1800 && year <= current
+    return Number.isInteger(year) && year >= 1800 && year <= current
   }, "Год основания от 1800 до текущего"),
   employees_count: z.string(),
   annual_revenue_range: z.string(),
@@ -48,13 +50,49 @@ const profileSchema = z.object({
   category_ids: z.array(z.number()),
 })
 
-const certificateItemSchema = z.object({
-  title: z.string().min(1, "Укажите название сертификата"),
-  issuer: z.string().min(1, "Укажите орган выдачи"),
-  issue_date: z.string().min(1, "Укажите дату выдачи"),
-  expiry_date: z.string(),
-  file_url: z.string().min(1, "Укажите ссылку на файл"),
-})
+const currentYear = () => new Date().getFullYear()
+
+const certificateItemSchema = z
+  .object({
+    title: z.string().min(1, "Укажите название сертификата"),
+    issuer: z.string().min(1, "Укажите орган выдачи"),
+    issue_date: z
+      .string()
+      .min(1, "Укажите дату выдачи")
+      .refine(
+        (v) =>
+          isValidIsoDate(v, {
+            minYear: 1900,
+            maxYear: currentYear(),
+          }),
+        ISO_DATE_MESSAGE,
+      ),
+    expiry_date: z.string(),
+    file_url: z.string().min(1, "Укажите ссылку на файл"),
+  })
+  .superRefine((cert, ctx) => {
+    if (!cert.expiry_date) return
+    if (
+      !isValidIsoDate(cert.expiry_date, {
+        minYear: 1900,
+        maxYear: currentYear() + 50,
+      })
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: ISO_DATE_MESSAGE,
+        path: ["expiry_date"],
+      })
+      return
+    }
+    if (cert.expiry_date < cert.issue_date) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Срок действия не раньше даты выдачи",
+        path: ["expiry_date"],
+      })
+    }
+  })
 
 const certificatesSchema = z.object({
   certificates: z.array(certificateItemSchema),

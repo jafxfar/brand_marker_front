@@ -60,9 +60,13 @@ export const ProposalDialog = ({
     const daysNum = Number(deliveryTime)
     if (!price || Number.isNaN(priceNum) || priceNum <= 0) {
       e.price = "Укажите цену"
+    } else if (priceNum > 1_000_000_000_000) {
+      e.price = "Цена не больше 1 трлн"
     }
     if (!deliveryTime.trim() || Number.isNaN(daysNum) || daysNum <= 0) {
       e.delivery_time = "Срок должен быть больше 0"
+    } else if (!Number.isInteger(daysNum) || daysNum > 3650) {
+      e.delivery_time = "Срок от 1 до 3650 дней"
     }
     if (message.trim().length < 10) {
       e.message = "Сообщение от 10 символов"
@@ -104,6 +108,7 @@ export const ProposalDialog = ({
               id="p-price"
               type="number"
               min={0}
+              max={1_000_000_000_000}
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               className={inputClass("price")}
@@ -132,6 +137,7 @@ export const ProposalDialog = ({
             id="p-delivery"
             type="number"
             min={1}
+            max={3650}
             value={deliveryTime}
             onChange={(e) => setDeliveryTime(e.target.value)}
             placeholder="14"

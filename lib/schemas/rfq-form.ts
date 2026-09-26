@@ -1,10 +1,16 @@
 import { z } from "zod"
+import { ISO_DATE_MESSAGE, isValidIsoDate } from "@/lib/iso-date"
 
-const isoDate4Year = (emptyMessage: string) =>
+const rfqDateYearRange = () => {
+  const current = new Date().getFullYear()
+  return { minYear: current - 1, maxYear: current + 10 }
+}
+
+const isoDateRequired = (emptyMessage: string) =>
   z
     .string()
     .min(1, emptyMessage)
-    .refine((v) => /^\d{4}-\d{2}-\d{2}$/.test(v), "Год должен содержать 4 цифры")
+    .refine((v) => isValidIsoDate(v, rfqDateYearRange()), ISO_DATE_MESSAGE)
 
 const baseSchema = z.object({
   type: z.enum(["product", "service"]),
@@ -15,7 +21,7 @@ const baseSchema = z.object({
   budget_from: z.string().optional(),
   budget_to: z.string().optional(),
   currency: z.enum(["TJS", "USD", "EUR", "KZT", "CNY"]),
-  deadline: isoDate4Year("Укажите срок ответов"),
+  deadline: isoDateRequired("Укажите срок ответов"),
   visibility: z.enum(["public", "invited_only"]).default("public"),
 })
 
@@ -25,13 +31,13 @@ const productSchema = baseSchema.extend({
   delivery_country: z.string().min(1, "Укажите страну"),
   delivery_city: z.string().min(1, "Укажите город"),
   delivery_address: z.string().optional(),
-  delivery_date: isoDate4Year("Укажите дату поставки"),
+  delivery_date: isoDateRequired("Укажите дату поставки"),
 })
 
 const serviceSchema = baseSchema.extend({
   type: z.literal("service"),
   project_duration: z.string().min(1, "Укажите длительность"),
-  start_date: isoDate4Year("Укажите дату начала"),
+  start_date: isoDateRequired("Укажите дату начала"),
   team_size_required: z.string().optional(),
   experience_required: z.string().optional(),
 })

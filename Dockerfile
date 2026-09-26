@@ -43,7 +43,7 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \
-    PORT=4000 \
+    PORT=3000 \
     HOSTNAME=0.0.0.0 \
     NEXT_TELEMETRY_DISABLED=1
 
@@ -56,6 +56,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 4000
+EXPOSE 3000
 
 CMD ["node", "server.js"]

@@ -172,10 +172,13 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
                     Профиль исполнителя
                   </Link>
                   <Link
-                    href={createRfqHref({ service: service.id })}
+                    href={createRfqHref({
+                      service: service.id,
+                      supplierId: service.providerId,
+                    })}
                     className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
                   >
-                    Отправить запрос
+                    Откликнуться
                   </Link>
                 </div>
               </div>

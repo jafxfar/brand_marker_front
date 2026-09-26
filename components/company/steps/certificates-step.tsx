@@ -2,6 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react"
 import type { CompanyWizardCertificate, CompanyWizardInput } from "@/types"
+import { isoDateBounds } from "@/lib/iso-date"
 import { WizardField, wizardInputClass } from "@/components/company/wizard-field"
 
 const emptyCertificate = (): CompanyWizardCertificate => ({
@@ -11,6 +12,10 @@ const emptyCertificate = (): CompanyWizardCertificate => ({
   expiry_date: "",
   file_url: "",
 })
+
+const certYear = new Date().getFullYear()
+const issueDateBounds = isoDateBounds(1900, certYear)
+const expiryDateBounds = isoDateBounds(1900, certYear + 50)
 
 type CertificatesStepProps = {
   data: CompanyWizardInput
@@ -105,6 +110,8 @@ export const CertificatesStep = ({
             >
               <input
                 type="date"
+                min={issueDateBounds.min}
+                max={issueDateBounds.max}
                 value={cert.issue_date}
                 onChange={(e) =>
                   handleUpdate(index, { issue_date: e.target.value })
@@ -113,9 +120,14 @@ export const CertificatesStep = ({
               />
             </WizardField>
 
-            <WizardField label="Срок действия">
+            <WizardField
+              label="Срок действия"
+              error={errors[`certificates.${index}.expiry_date`]}
+            >
               <input
                 type="date"
+                min={expiryDateBounds.min}
+                max={expiryDateBounds.max}
                 value={cert.expiry_date}
                 onChange={(e) =>
                   handleUpdate(index, { expiry_date: e.target.value })

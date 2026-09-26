@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { RfqForm } from "@/components/cabinet/rfq/rfq-form"
@@ -16,6 +16,15 @@ import {
   usePublishRfqMutation,
   useUploadRfqAttachmentMutation,
 } from "@/hooks/api/use-rfqs-query"
+import {
+  usePublicCatalogItemQuery,
+  usePublicSupplierQuery,
+} from "@/hooks/api/use-public-query"
+import { getService } from "@/lib/mock/marketplace-services"
+import {
+  prefillFromCatalogItem,
+  prefillFromMarketplaceService,
+} from "@/lib/rfq-from-listing"
 import type { RfqCreate } from "@/types"
 
 type PendingFile = {
@@ -28,7 +37,8 @@ export default function NewRfqPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supplierIdParam = searchParams.get("supplierId")
-  const invitedSupplierId = supplierIdParam ? Number(supplierIdParam) : undefined
+  const serviceParam = searchParams.get("service")
+  const serviceId = serviceParam ? Number(serviceParam) : 0
 
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
@@ -49,7 +59,45 @@ export default function NewRfqPage() {
   const inviteMutation = useInviteSuppliersMutation()
   const uploadMutation = useUploadRfqAttachmentMutation()
 
-  const invitedSupplier = invitedSupplierId ? getCompany(invitedSupplierId) : undefined
+  const { data: catalogItem, isLoading: itemLoading } = usePublicCatalogItemQuery(
+    serviceId,
+    useApi && serviceId > 0,
+  )
+  const mockService = !useApi && serviceId > 0 ? getService(serviceId) : undefined
+
+  const invitedSupplierId = useMemo(() => {
+    if (catalogItem?.actor_id) return catalogItem.actor_id
+    if (mockService?.providerId) return mockService.providerId
+    if (supplierIdParam) {
+      const id = Number(supplierIdParam)
+      return Number.isFinite(id) && id > 0 ? id : undefined
+    }
+    return undefined
+  }, [catalogItem?.actor_id, mockService?.providerId, supplierIdParam])
+
+  const { data: publicSupplier } = usePublicSupplierQuery(
+    invitedSupplierId ?? 0,
+    useApi && Boolean(invitedSupplierId),
+  )
+
+  const invitedSupplierLocal = invitedSupplierId
+    ? getCompany(invitedSupplierId)
+    : undefined
+  const invitedSupplierName =
+    publicSupplier?.display_name
+    ?? invitedSupplierLocal?.title
+    ?? mockService?.provider
+
+  const listingPrefill = useMemo(() => {
+    if (catalogItem) return prefillFromCatalogItem(catalogItem)
+    if (mockService) return prefillFromMarketplaceService(mockService)
+    return undefined
+  }, [catalogItem, mockService])
+
+  const listingTitle = catalogItem?.title ?? mockService?.title
+
+  const waitingForListing =
+    serviceId > 0 && useApi && itemLoading && !catalogItem
 
   const buildInput = (input: RfqCreate): RfqCreate => {
     if (!invitedSupplierId) return input
@@ -79,8 +127,8 @@ export default function NewRfqPage() {
       notify({
         type: "order",
         title: "Заявка опубликована",
-        body: invitedSupplier
-          ? `Запрос «${rfq.title}» отправлен исполнителю «${invitedSupplier.title}».`
+        body: invitedSupplierName
+          ? `Запрос «${rfq.title}» отправлен исполнителю «${invitedSupplierName}».`
           : `Запрос «${rfq.title}» доступен исполнителям на маркетплейсе.`,
         href: `/customer/rfqs/${rfq.id}`,
       })
@@ -146,6 +194,14 @@ export default function NewRfqPage() {
     setSubmitting(false)
   }
 
+  if (waitingForListing) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-8 text-sm text-muted-foreground">
+        Загрузка позиции каталога...
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {error ? (
@@ -154,9 +210,12 @@ export default function NewRfqPage() {
         </p>
       ) : null}
       <RfqForm
+        key={`rfq-new-${serviceId || "blank"}-${invitedSupplierId ?? 0}`}
         cancelHref="/customer/rfqs"
+        prefill={listingPrefill}
+        listingTitle={listingTitle}
         invitedSupplierId={invitedSupplierId}
-        invitedSupplierName={invitedSupplier?.title}
+        invitedSupplierName={invitedSupplierName}
         pendingAttachments={pendingFiles.map((f) => ({ id: f.id, file_name: f.file_name }))}
         isSubmitting={submitting}
         onSaveDraft={(input) => handleCreate(input, false)}

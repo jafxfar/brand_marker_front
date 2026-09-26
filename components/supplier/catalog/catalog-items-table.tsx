@@ -55,7 +55,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{category?.name ?? "—"}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
+                  <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                     {meta.label}
                   </span>
                 </td>
@@ -103,7 +103,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
                   {category?.name} · {catalogItemTypeLabel[item.type]}
                 </p>
               </div>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${meta.className}`}>
+              <span className={`text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${meta.className}`}>
                 {meta.label}
               </span>
             </div>

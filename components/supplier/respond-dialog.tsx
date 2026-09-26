@@ -36,7 +36,9 @@ export default function RespondDialog({
     const priceNum = Number(price)
     const daysNum = Number(days)
     if (!price || Number.isNaN(priceNum) || priceNum <= 0) e.price = "Укажите цену"
+    else if (priceNum > 1_000_000_000_000) e.price = "Цена не больше 1 трлн"
     if (!days || Number.isNaN(daysNum) || daysNum < 1) e.days = "Срок от 1 дня"
+    else if (!Number.isInteger(daysNum) || daysNum > 3650) e.days = "Срок от 1 до 3650 дней"
     if (message.trim().length < 10) e.message = "Сообщение от 10 символов"
     setErrors(e)
     if (Object.keys(e).length > 0) return
@@ -64,12 +66,12 @@ export default function RespondDialog({
         <div className="grid grid-cols-2 gap-3 py-1">
           <div>
             <label htmlFor="r-price" className="block text-sm font-medium text-foreground mb-1.5">Ваша цена, TJS</label>
-            <input id="r-price" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass("price")} />
+            <input id="r-price" type="number" min={0} max={1_000_000_000_000} value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass("price")} />
             {errors.price && <p className="text-xs text-destructive mt-1">{errors.price}</p>}
           </div>
           <div>
             <label htmlFor="r-days" className="block text-sm font-medium text-foreground mb-1.5">Срок, дней</label>
-            <input id="r-days" type="number" min={1} value={days} onChange={(e) => setDays(e.target.value)} className={inputClass("days")} />
+            <input id="r-days" type="number" min={1} max={3650} value={days} onChange={(e) => setDays(e.target.value)} className={inputClass("days")} />
             {errors.days && <p className="text-xs text-destructive mt-1">{errors.days}</p>}
           </div>
         </div>

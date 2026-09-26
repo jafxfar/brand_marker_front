@@ -6,7 +6,11 @@ import { ArrowLeft, ShoppingCart, Briefcase, Paperclip, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { rfqCategories } from "@/lib/rfq-categories-list"
 import { validateRfqForm, type RfqFormValues } from "@/lib/schemas/rfq-form"
+import { isValidIsoDate, isoDateBounds } from "@/lib/iso-date"
 import { PageFrame, PageHeader } from "@/components/layout"
+import type { RfqCreate, RfqWithRelations } from "@/types"
+import { budgetTypeMeta } from "@/lib/rfq-display"
+import type { RfqFormPrefill } from "@/lib/rfq-from-listing"
 
 type FormState = {
   type: "product" | "service"
@@ -29,8 +33,8 @@ type FormState = {
   team_size_required: string
   experience_required: string
 }
-import type { RfqCreate, RfqWithRelations } from "@/types"
-import { budgetTypeMeta } from "@/lib/rfq-display"
+
+export type { RfqFormPrefill }
 
 type PreviewAttachment = {
   id: string
@@ -39,6 +43,8 @@ type PreviewAttachment = {
 
 type RfqFormProps = {
   initial?: RfqWithRelations
+  prefill?: RfqFormPrefill
+  listingTitle?: string
   invitedSupplierId?: number
   invitedSupplierName?: string
   pendingAttachments?: PreviewAttachment[]
@@ -51,16 +57,21 @@ type RfqFormProps = {
   onRemovePendingAttachment?: (id: string) => void
 }
 
-const DATE_INPUT_MAX = "9999-12-31"
+const rfqDateYear = new Date().getFullYear()
+const { min: DATE_INPUT_MIN, max: DATE_INPUT_MAX } = isoDateBounds(
+  rfqDateYear - 1,
+  rfqDateYear + 10,
+)
 
 const clipDateValue = (value: string) => (value.length > 10 ? value.slice(0, 10) : value)
 
 const defaultValues = (
   initial?: RfqWithRelations,
   invitedSupplierId?: number,
+  prefill?: RfqFormPrefill,
 ): FormState => {
   if (!initial) {
-    return {
+    const base: FormState = {
       type: "service",
       title: "",
       category_id: "",
@@ -80,6 +91,12 @@ const defaultValues = (
       delivery_city: "",
       delivery_address: "",
       delivery_date: "",
+    }
+    if (!prefill) return base
+    return {
+      ...base,
+      ...prefill,
+      visibility: invitedSupplierId ? "invited_only" : (prefill.visibility ?? base.visibility),
     }
   }
 
@@ -194,6 +211,8 @@ const toRfqCreate = (values: FormState): RfqCreate => {
 
 export const RfqForm = ({
   initial,
+  prefill,
+  listingTitle,
   invitedSupplierId,
   invitedSupplierName,
   pendingAttachments = [],
@@ -207,7 +226,7 @@ export const RfqForm = ({
 }: RfqFormProps) => {
   const fileRef = useRef<HTMLInputElement>(null)
   const [values, setValues] = useState<FormState>(() =>
-    defaultValues(initial, invitedSupplierId),
+    defaultValues(initial, invitedSupplierId, prefill),
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -219,7 +238,18 @@ export const RfqForm = ({
     key: "deadline" | "delivery_date" | "start_date",
     value: string,
   ) => {
-    setField(key, clipDateValue(value))
+    const clipped = clipDateValue(value)
+    if (
+      clipped &&
+      !isValidIsoDate(clipped, {
+        minYear: rfqDateYear - 1,
+        maxYear: rfqDateYear + 10,
+      })
+    ) {
+      setField(key, "")
+      return
+    }
+    setField(key, clipped)
   }
 
   const inputClass = (field: string) =>
@@ -264,9 +294,13 @@ export const RfqForm = ({
 
       {invitedSupplierName && (
         <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
-          <span className="font-semibold text-foreground">Приглашение: </span>
+          <span className="font-semibold text-foreground">
+            {listingTitle ? "Отклик: " : "Приглашение: "}
+          </span>
           <span className="text-muted-foreground">
-            Заявка будет доступна только для {invitedSupplierName}
+            {listingTitle
+              ? `Отклик на «${listingTitle}» — заявка только для ${invitedSupplierName}`
+              : `Заявка будет доступна только для ${invitedSupplierName}`}
           </span>
         </div>
       )}
@@ -434,6 +468,7 @@ export const RfqForm = ({
             <input
               id="deadline"
               type="date"
+              min={DATE_INPUT_MIN}
               max={DATE_INPUT_MAX}
               value={values.deadline}
               onChange={(e) => handleDateChange("deadline", e.target.value)}
@@ -465,6 +500,7 @@ export const RfqForm = ({
                 <input
                   id="delivery-date"
                   type="date"
+                  min={DATE_INPUT_MIN}
                   max={DATE_INPUT_MAX}
                   value={values.delivery_date}
                   onChange={(e) => handleDateChange("delivery_date", e.target.value)}
@@ -519,6 +555,7 @@ export const RfqForm = ({
                 <input
                   id="start-date"
                   type="date"
+                  min={DATE_INPUT_MIN}
                   max={DATE_INPUT_MAX}
                   value={values.start_date}
                   onChange={(e) => handleDateChange("start_date", e.target.value)}

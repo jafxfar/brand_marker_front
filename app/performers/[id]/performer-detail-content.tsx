@@ -146,7 +146,7 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
 
             <div className="mt-8 flex gap-3">
               <Link
-                href={createRfqHref({ performer: performer.id })}
+                href={createRfqHref({ supplierId: performer.id, performer: performer.id })}
                 className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
               >
                 Пригласить на заказ

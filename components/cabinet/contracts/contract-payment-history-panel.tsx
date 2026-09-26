@@ -40,7 +40,7 @@ export const ContractPaymentHistoryPanel = ({
                 {formatCurrency(event.amount, event.currency)}
               </p>
               <span
-                className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${typeClassName[event.type]}`}
+                className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${typeClassName[event.type]}`}
               >
                 {paymentHistoryTypeLabel[event.type]}
               </span>

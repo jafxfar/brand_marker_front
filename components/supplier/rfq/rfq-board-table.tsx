@@ -73,7 +73,7 @@ export const RfqBoardTable = ({
                 </td>
                 <td className="px-4 py-3 text-right">
                   {responded ? (
-                    <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                    <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary">
                       Предложение отправлено
                     </span>
                   ) : (
@@ -132,7 +132,7 @@ export const RfqBoardTable = ({
               </div>
             </div>
             {responded ? (
-              <span className="inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+              <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary">
                 Предложение отправлено
               </span>
             ) : (
