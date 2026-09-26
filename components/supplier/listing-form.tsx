@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, ShoppingCart, Briefcase, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { categories } from "@/lib/mock/categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import type { Listing, OrderKind } from "@/types"
 import type { ListingInput } from "@/lib/store/listings-store"
 
@@ -17,6 +17,7 @@ interface ListingFormProps {
 
 export default function ListingForm({ initial, onSubmit, submitLabel }: ListingFormProps) {
   const router = useRouter()
+  const { rfqCategories: categories } = useCategoryOptions()
   const [kind, setKind] = useState<OrderKind>(initial?.kind ?? "service")
   const [title, setTitle] = useState(initial?.title ?? "")
   const [description, setDescription] = useState(initial?.description ?? "")

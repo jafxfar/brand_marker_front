@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ShoppingCart, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
-import { catalogCategories } from "@/lib/mock/catalog-categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import type { CatalogItemInput, CatalogItemWithRelations, CatalogItemType } from "@/types"
 import { AttributeFields, type AttributeFieldRow } from "@/components/supplier/catalog/attribute-fields"
 import { MediaFields, type MediaFieldRow } from "@/components/supplier/catalog/media-fields"
@@ -41,6 +41,7 @@ const pricingFromItem = (item?: CatalogItemWithRelations): PricingFieldValues =>
 }
 
 export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => {
+  const { catalogCategories } = useCategoryOptions()
   const [type, setType] = useState<CatalogItemType>(initial?.type ?? "product")
   const [title, setTitle] = useState(initial?.title ?? "")
   const [categoryId, setCategoryId] = useState(

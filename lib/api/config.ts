@@ -5,7 +5,7 @@ const normalizeApiUrl = (raw: string): string =>
     .replace(/\/docs$/i, "/api/v1")
 
 export const API_URL = normalizeApiUrl(
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1",
 )
 
 export const FILES_BASE_URL = (

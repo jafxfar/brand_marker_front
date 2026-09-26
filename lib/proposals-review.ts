@@ -8,6 +8,7 @@ const STATUS_PRIORITY: Record<ProposalStatus, number> = {
   accepted: 3,
   rejected: 4,
   withdrawn: 5,
+  archived: 6,
 }
 
 export const sortProposalsForReview = (

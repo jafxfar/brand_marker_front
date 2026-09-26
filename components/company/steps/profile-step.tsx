@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { catalogCategories } from "@/lib/mock/catalog-categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import type { CompanyWizardInput } from "@/types"
 import { WizardField, wizardInputClass } from "@/components/company/wizard-field"
 
@@ -27,6 +27,8 @@ type ProfileStepProps = {
 }
 
 export const ProfileStep = ({ data, errors, onChange }: ProfileStepProps) => {
+  const { catalogCategories } = useCategoryOptions()
+
   const handleToggleLanguage = (lang: string) => {
     const languages = data.languages.includes(lang)
       ? data.languages.filter((l) => l !== lang)

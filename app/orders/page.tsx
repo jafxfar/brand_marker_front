@@ -10,7 +10,7 @@ import { supplierRfqRedirect } from "@/lib/marketplace-routes"
 import { createRfqHref } from "@/lib/create-rfq-href"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicRfqsQuery } from "@/hooks/api/use-public-query"
-import { mergeByKey, mapRfqToRequest } from "@/lib/marketplace-hybrid"
+import { mapRfqToRequest } from "@/lib/marketplace-hybrid"
 
 export default function OrdersPage() {
   const useApi = isApiEnabled()

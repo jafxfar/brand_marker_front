@@ -8,7 +8,7 @@ import { PerformerCard } from "@/components/marketplace/performer-card"
 import { filterPerformers } from "@/lib/mock/marketplace-performers"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicSuppliersQuery } from "@/hooks/api/use-public-query"
-import { mergeByKey, mapPublicSupplierToPerformer } from "@/lib/marketplace-hybrid"
+import { mapPublicSupplierToPerformer } from "@/lib/marketplace-hybrid"
 
 export const PerformersPageContent = () => {
   const searchParams = useSearchParams()

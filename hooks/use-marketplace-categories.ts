@@ -4,19 +4,18 @@ import { useMemo } from "react"
 import { getAllCategories } from "@/lib/mock/categories"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
-import { mergeByKey, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
+import { mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import type { MarketplaceCategory } from "@/types/marketplace"
 
 export const useMarketplaceCategories = () => {
   const useApi = isApiEnabled()
   const { data: apiCategories, isLoading } = usePublicCategoriesQuery(useApi)
-  const mockCategories = getAllCategories()
 
   const categories = useMemo(() => {
-    if (!useApi || !apiCategories?.length) return mockCategories
-    const apiMapped = mapCategoryTreeToMarketplace(apiCategories)
-    return mergeByKey(mockCategories, apiMapped, "slug")
-  }, [useApi, apiCategories, mockCategories])
+    if (!useApi) return getAllCategories()
+    if (!apiCategories?.length) return []
+    return mapCategoryTreeToMarketplace(apiCategories)
+  }, [useApi, apiCategories])
 
   return {
     categories,

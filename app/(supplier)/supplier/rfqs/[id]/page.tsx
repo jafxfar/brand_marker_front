@@ -10,7 +10,7 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { getRfqBuyerName, getRfqBuyerSummary } from "@/lib/buyer-display"
-import { getRfqCategoryLabel } from "@/lib/mock/rfq-categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import { getRfqRequirements } from "@/lib/rfq-requirements"
 import { rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
@@ -38,6 +38,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const { getRfqCategoryLabel } = useCategoryOptions()
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
   const getProposalForRfq = useProposalsStore((s) => s.getProposalForRfq)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)

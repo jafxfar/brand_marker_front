@@ -1,51 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FileText, Inbox, ShieldCheck, Building2, Send, Wallet, X, type LucideIcon } from "lucide-react"
+import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-type Step = {
-  Icon: LucideIcon
-  title: string
-  description: string
-}
-
-const STEPS: Record<"buyer" | "supplier", Step[]> = {
-  buyer: [
-    {
-      Icon: FileText,
-      title: "1. Создайте заявку",
-      description: "Опишите, какой товар или услуга вам нужны, бюджет и сроки.",
-    },
-    {
-      Icon: Inbox,
-      title: "2. Получите предложения",
-      description: "Проверенные исполнители пришлют цены и условия. Сравните и выберите лучшее.",
-    },
-    {
-      Icon: ShieldCheck,
-      title: "3. Оплатите безопасно",
-      description: "Деньги замораживаются на счёте площадки и уходят исполнителю только после приёмки.",
-    },
-  ],
-  supplier: [
-    {
-      Icon: Building2,
-      title: "1. Заполните компанию и каталог",
-      description: "Добавьте данные о компании и позиции каталога, чтобы вам доверяли заказчики.",
-    },
-    {
-      Icon: Send,
-      title: "2. Откликайтесь на заявки",
-      description: "Находите заявки заказчиков и отправляйте отклики с ценой и сроками.",
-    },
-    {
-      Icon: Wallet,
-      title: "3. Работайте и получайте оплату",
-      description: "Заключайте договоры, выполняйте этапы и получайте оплату после приёмки.",
-    },
-  ],
-}
+import { LANDING_HOW_IT_WORKS_STEPS } from "@/lib/landing-copy"
 
 const TITLES: Record<"buyer" | "supplier", string> = {
   buyer: "Как это работает",
@@ -76,7 +34,7 @@ export const HowItWorks = ({ variant, className }: HowItWorksProps) => {
 
   if (!visible) return null
 
-  const steps = STEPS[variant]
+  const steps = LANDING_HOW_IT_WORKS_STEPS[variant]
 
   return (
     <section

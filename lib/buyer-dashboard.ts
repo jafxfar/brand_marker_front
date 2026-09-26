@@ -1,5 +1,6 @@
 import type { ContractWithRelations, Message, Proposal, RfqWithRelations } from "@/types"
 import type { IncomingProposalItem } from "@/lib/store/proposals-store"
+import { countUnreadMessages } from "@/lib/chat-conversations"
 
 const ACTIVE_CONTRACT_STATUSES = ["pending_payment", "active", "delivered"] as const
 
@@ -40,15 +41,14 @@ export const getBuyerIncomingMessages = (
 
 export const getBuyerUnreadMessageCount = (
   contracts: ContractWithRelations[],
-  buyerActorId: number,
+  currentUserId: number,
 ): number =>
-  contracts.reduce((count, contract) => {
-    const messages = contract.conversation?.messages ?? []
-    const unread = messages.filter(
-      (m) => m.sender_id !== buyerActorId,
-    ).length
-    return count + unread
-  }, 0)
+  contracts.reduce(
+    (count, contract) =>
+      count +
+      countUnreadMessages(contract.conversation?.messages ?? [], currentUserId),
+    0,
+  )
 
 export const getBuyerIncomingProposals = (
   rfqs: RfqWithRelations[],

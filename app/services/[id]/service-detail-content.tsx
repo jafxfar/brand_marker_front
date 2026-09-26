@@ -28,9 +28,8 @@ type ServiceDetailContentProps = {
 
 export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) => {
   const useApi = isApiEnabled()
-  const mockService = getService(serviceId)
   const [reportOpen, setReportOpen] = useState(false)
-  const { data: apiItem, isLoading, isFetched } = usePublicCatalogItemQuery(
+  const { data: apiItem, isLoading } = usePublicCatalogItemQuery(
     serviceId,
     useApi,
   )
@@ -40,9 +39,9 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
   )
   const isAuthenticated = Boolean(tokenStorage.getAccess())
 
-  const service: MarketplaceService | null = apiItem
-    ? mapCatalogItemToService(apiItem, null, apiSupplier)
-    : (!useApi || isFetched ? (mockService ?? null) : null)
+  const service: MarketplaceService | null = useApi
+    ? (apiItem ? mapCatalogItemToService(apiItem, null, apiSupplier) : null)
+    : (getService(serviceId) ?? null)
 
   const isFromApi = Boolean(apiItem)
 
@@ -69,7 +68,12 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
     )
   }
 
-  const category = getCategory(service.categoryId)
+  const categoryLabel = useApi
+    ? (apiItem?.category?.name ?? service.categoryId)
+    : (getCategory(service.categoryId)?.label ?? service.categoryId)
+  const categorySlug = useApi
+    ? (apiItem?.category?.slug ?? service.categoryId)
+    : (getCategory(service.categoryId)?.slug ?? service.categoryId)
   const Icon = getIcon(service.icon)
 
   return (
@@ -132,11 +136,11 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
                     {service.rating} ({service.reviews})
                   </div>
                 </div>
-                {category && (
+                {(categoryLabel || categorySlug) && (
                   <div>
                     <div className="text-xs text-muted-foreground mb-1">Категория</div>
-                    <Link href={categoryUrl(category.slug)} className="text-sm font-semibold hover:text-primary transition-colors">
-                      {category.label}
+                    <Link href={categoryUrl(categorySlug)} className="text-sm font-semibold hover:text-primary transition-colors">
+                      {categoryLabel}
                     </Link>
                   </div>
                 )}
