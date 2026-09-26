@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { Proposal, PublicSupplier } from "@/types"
 import { proposalStatusMeta } from "@/lib/proposal-display"
-import { formatCurrency } from "@/lib/format"
+import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 import { SupplierProposalInfo } from "@/components/cabinet/rfq/supplier-proposal-info"
 import { ProposalChatDialog } from "@/components/cabinet/rfq/proposal-chat-dialog"
 import { Banknote, Clock, MessageSquare } from "lucide-react"
@@ -42,30 +42,30 @@ export const ProposalReviewCard = ({
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-border">
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 min-w-0">
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
             <Banknote size={16} className="text-primary" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs text-muted-foreground">Цена</p>
-            <p className="text-sm font-bold text-primary mt-0.5">
-              {formatCurrency(proposal.price, proposal.currency)}
+            <p className="text-sm font-bold text-primary mt-0.5 truncate" title={formatMoneyDisplay(proposal.price, proposal.currency)}>
+              {formatMoneyDisplay(proposal.price, proposal.currency)}
             </p>
           </div>
         </div>
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 min-w-0">
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
             <Clock size={16} className="text-primary" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs text-muted-foreground">Срок поставки / работ</p>
-            <p className="text-sm font-semibold text-foreground mt-0.5">
-              {proposal.delivery_time ?? "Не указан"}
+            <p className="text-sm font-semibold text-foreground mt-0.5 truncate" title={formatDeliveryTime(proposal.delivery_time)}>
+              {formatDeliveryTime(proposal.delivery_time)}
             </p>
           </div>
         </div>
         <div className="flex items-center sm:justify-end">
-          <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
+          <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
             {meta.label}
           </span>
         </div>

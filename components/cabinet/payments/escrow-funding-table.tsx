@@ -60,7 +60,7 @@ export const EscrowFundingTable = ({
                     {formatCurrency(row.amount, row.currency)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
+                    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                       {meta.label}
                     </span>
                   </td>
@@ -101,7 +101,7 @@ export const EscrowFundingTable = ({
                 <p className="text-sm font-bold text-primary">
                   {formatCurrency(row.amount, row.currency)}
                 </p>
-                <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
+                <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                   {meta.label}
                 </span>
               </div>

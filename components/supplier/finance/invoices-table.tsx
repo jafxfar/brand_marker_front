@@ -60,7 +60,7 @@ export const InvoicesTable = ({
                     {formatCurrency(invoice.amount, invoice.currency)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
+                    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                       {meta.label}
                     </span>
                   </td>
@@ -84,7 +84,7 @@ export const InvoicesTable = ({
                   <p className="text-sm font-bold text-foreground">{invoice.number}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{invoice.title}</p>
                 </div>
-                <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${meta.className}`}>
+                <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${meta.className}`}>
                   {meta.label}
                 </span>
               </div>

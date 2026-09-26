@@ -14,6 +14,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-border": "var(--border)",
         } as React.CSSProperties
       }
+      toastOptions={{
+        classNames: {
+          title: "whitespace-normal break-words",
+          description: "whitespace-normal break-words",
+        },
+      }}
       {...props}
     />
   )

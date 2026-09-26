@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Package, Briefcase } from "lucide-react"
 import type { CatalogItemWithRelations } from "@/types"
 import { catalogItemTypeLabel, formatItemPricing } from "@/lib/item-display"
+import { createRfqHref } from "@/lib/create-rfq-href"
 
 type CustomerCatalogGridProps = {
   items: CatalogItemWithRelations[]
@@ -56,16 +57,25 @@ export const CustomerCatalogGrid = ({
             </p>
           )}
 
-          <div className="mt-auto flex items-center justify-between gap-3 pt-4 border-t border-border">
-            <div className="text-sm font-semibold text-primary">
-              {formatItemPricing(item.pricing)}
+          <div className="mt-auto pt-4 border-t border-border space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold text-primary">
+                {formatItemPricing(item.pricing)}
+              </div>
+              <Link
+                href={`/customer/suppliers/${item.actor_id}`}
+                className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors truncate max-w-[50%] text-right"
+                aria-label={`Открыть профиль исполнителя ${getSupplierName(item.actor_id)}`}
+              >
+                {getSupplierName(item.actor_id)}
+              </Link>
             </div>
             <Link
-              href={`/customer/suppliers/${item.actor_id}`}
-              className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors truncate max-w-[50%] text-right"
-              aria-label={`Открыть профиль исполнителя ${getSupplierName(item.actor_id)}`}
+              href={createRfqHref({ service: item.id, supplierId: item.actor_id })}
+              className="inline-flex w-full items-center justify-center h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+              aria-label={`Откликнуться на ${item.title}`}
             >
-              {getSupplierName(item.actor_id)}
+              Откликнуться
             </Link>
           </div>
         </article>

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { CheckCircle2, MessageSquare, Send } from "lucide-react"
 import type { Proposal } from "@/types"
-import { formatCurrency } from "@/lib/format"
+import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 import { ProposalChatDialog } from "@/components/cabinet/rfq/proposal-chat-dialog"
 
 type RfqSubmitProposalCardProps = {
@@ -33,16 +33,18 @@ export const RfqSubmitProposalCard = ({
             Ваше предложение отправлено заказчику и ожидает рассмотрения.
           </p>
           <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Цена</span>
-              <span className="font-bold text-foreground">
-                {formatCurrency(myProposal.price, myProposal.currency)}
+            <div className="flex justify-between gap-3 text-sm min-w-0">
+              <span className="text-muted-foreground shrink-0">Цена</span>
+              <span className="font-bold text-foreground truncate text-right" title={formatMoneyDisplay(myProposal.price, myProposal.currency)}>
+                {formatMoneyDisplay(myProposal.price, myProposal.currency)}
               </span>
             </div>
             {myProposal.delivery_time && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Срок</span>
-                <span className="font-semibold text-foreground">{myProposal.delivery_time}</span>
+              <div className="flex justify-between gap-3 text-sm min-w-0">
+                <span className="text-muted-foreground shrink-0">Срок</span>
+                <span className="font-semibold text-foreground truncate text-right" title={formatDeliveryTime(myProposal.delivery_time)}>
+                  {formatDeliveryTime(myProposal.delivery_time)}
+                </span>
               </div>
             )}
           </div>

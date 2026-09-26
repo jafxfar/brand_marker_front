@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import type { NotificationRole } from "@/lib/api/notifications"
 import { contractsApi } from "@/lib/api/contracts"
 import { supplierContractsApi } from "@/lib/api/supplier/contracts"
@@ -41,6 +43,7 @@ export const useNotificationsSocket = (
   enabled = true,
 ) => {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const userId = useAuthStore((s) => s.user?.userId ?? 0)
   const reconnectAttempt = useRef(0)
   const socketRef = useRef<WebSocket | null>(null)
@@ -88,6 +91,16 @@ export const useNotificationsSocket = (
           if (payload.event === "notification.created" && payload.data) {
             const notification = payload.data as ApiNotification
             prependNotificationToCache(queryClient, role, notification)
+            toast(notification.title, {
+              description: notification.body,
+              duration: 5000,
+              action: notification.href
+                ? {
+                    label: "Открыть",
+                    onClick: () => router.push(notification.href!),
+                  }
+                : undefined,
+            })
             if (notification.type === "proposal") {
               void queryClient.invalidateQueries({ queryKey: ["proposals"] })
               void queryClient.invalidateQueries({ queryKey: ["proposal-messages"] })
@@ -149,7 +162,7 @@ export const useNotificationsSocket = (
       socketRef.current?.close()
       socketRef.current = null
     }
-  }, [enabled, role, queryClient, userId])
+  }, [enabled, role, queryClient, userId, router])
 
   useEffect(() => {
     if (!enabled || !isApiEnabled()) return

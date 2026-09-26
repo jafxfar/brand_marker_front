@@ -61,7 +61,7 @@ export const OutgoingPaymentsTable = ({
                 </td>
                 <td className="px-4 py-3 text-foreground">{payment.title}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block text-[10px] text-center font-semibold px-2.5 py-1 rounded-full ${typeClassName[payment.type]}`}>
+                  <span className={`inline-block text-xs text-center font-semibold px-3 py-1.5 rounded-full ${typeClassName[payment.type]}`}>
                     {paymentHistoryTypeLabel[payment.type]}
                   </span>
                 </td>
@@ -93,7 +93,7 @@ export const OutgoingPaymentsTable = ({
               </p>
             </div>
             <p className="text-xs text-muted-foreground mt-2">{payment.title}</p>
-            <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mt-2 ${typeClassName[payment.type]}`}>
+            <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-2 ${typeClassName[payment.type]}`}>
               {paymentHistoryTypeLabel[payment.type]}
             </span>
           </Link>

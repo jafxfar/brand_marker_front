@@ -73,7 +73,7 @@ export const BuyerContractMilestonesPanel = ({
                     <p className="text-sm font-bold text-primary">
                       {formatCurrency(milestone.amount, contract.currency)}
                     </p>
-                    <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${meta.className}`}>
+                    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
                       {meta.label}
                     </span>
                   </div>

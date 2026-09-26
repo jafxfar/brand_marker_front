@@ -2,7 +2,7 @@
 
 import type { Proposal } from "@/types"
 import { proposalStatusMeta } from "@/lib/proposal-display"
-import { formatCurrency } from "@/lib/format"
+import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 
 type ProposalActionCardProps = {
   proposal: Proposal
@@ -33,14 +33,16 @@ export const ProposalActionCard = ({
             <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{proposal.message}</p>
           )}
         </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-sm font-bold text-primary">
-            {formatCurrency(proposal.price, proposal.currency)}
+        <div className="text-right flex-shrink-0 min-w-0 max-w-[45%]">
+          <p className="text-sm font-bold text-primary truncate" title={formatMoneyDisplay(proposal.price, proposal.currency)}>
+            {formatMoneyDisplay(proposal.price, proposal.currency)}
           </p>
           {proposal.delivery_time && (
-            <p className="text-[11px] text-muted-foreground mt-0.5">{proposal.delivery_time}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 truncate" title={formatDeliveryTime(proposal.delivery_time)}>
+              {formatDeliveryTime(proposal.delivery_time)}
+            </p>
           )}
-          <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${meta.className}`}>
+          <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
             {meta.label}
           </span>
         </div>

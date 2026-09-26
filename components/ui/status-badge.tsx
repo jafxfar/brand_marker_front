@@ -8,7 +8,7 @@ type StatusBadgeProps = {
 export const StatusBadge = ({ label, className }: StatusBadgeProps) => (
   <span
     className={cn(
-      "inline-block text-[10px] font-semibold px-2.5 py-0.5 rounded-full",
+      "inline-block text-xs font-semibold px-3 py-1.5 rounded-full",
       className,
     )}
   >

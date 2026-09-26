@@ -53,7 +53,7 @@ export const WithdrawalsHistoryTable = ({
                     {formatCurrency(withdrawal.amount, withdrawal.currency)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
+                    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                       {meta.label}
                     </span>
                   </td>
@@ -85,7 +85,7 @@ export const WithdrawalsHistoryTable = ({
                     {formatIsoDate(withdrawal.created_at.split("T")[0] ?? withdrawal.created_at)}
                   </p>
                 </div>
-                <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${meta.className}`}>
+                <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${meta.className}`}>
                   {meta.label}
                 </span>
               </div>

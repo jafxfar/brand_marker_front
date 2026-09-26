@@ -68,7 +68,7 @@ export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
                 <div className="text-xs text-muted-foreground">
                   до {formatRelativeIso(rfq.deadline)}
                 </div>
-                <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${meta.className}`}>
+                <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
                   {meta.label}
                 </span>
               </div>

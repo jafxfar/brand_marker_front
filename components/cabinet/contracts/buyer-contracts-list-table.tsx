@@ -57,7 +57,7 @@ export const BuyerContractsListTable = ({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${meta.className}`}>
+                  <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                     {meta.label}
                   </span>
                 </td>
@@ -114,7 +114,7 @@ export const BuyerContractsListTable = ({
                 </div>
               </div>
             </div>
-            <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mt-3 ${meta.className}`}>
+            <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-3 ${meta.className}`}>
               {meta.label}
             </span>
           </Link>

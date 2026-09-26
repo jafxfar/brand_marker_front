@@ -20,7 +20,10 @@ export const ServiceCard = ({ service }: ServiceCardProps) => {
   const handleToggleSave = () => setIsSaved((prev) => !prev)
 
   const handleRequest = () => {
-    window.location.href = createRfqHref({ service: service.id })
+    window.location.href = createRfqHref({
+      service: service.id,
+      supplierId: service.providerId,
+    })
   }
 
   return (
@@ -109,7 +112,7 @@ export const ServiceCard = ({ service }: ServiceCardProps) => {
             onClick={handleRequest}
             className="text-[11px] font-semibold text-primary hover:bg-secondary px-2 py-1 rounded-lg transition-colors"
           >
-            Запрос
+            Откликнуться
           </button>
         </div>
       </div>

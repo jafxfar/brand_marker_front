@@ -1,6 +1,8 @@
+import Link from "next/link"
 import { Package, Briefcase } from "lucide-react"
 import type { CatalogItemWithRelations } from "@/types"
 import { catalogItemTypeLabel, formatItemPricing } from "@/lib/item-display"
+import { createRfqHref } from "@/lib/create-rfq-href"
 
 type SupplierCatalogGridProps = {
   items: CatalogItemWithRelations[]
@@ -18,9 +20,9 @@ export const SupplierCatalogGrid = ({ items }: SupplierCatalogGridProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {items.map((item) => (
-        <div key={item.id} className="bg-card border border-border rounded-xl p-5">
+        <div key={item.id} className="bg-card border border-border rounded-xl p-5 flex flex-col">
           <div className="flex items-start gap-3">
-            <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center shrink-0">
               {item.type === "product" ? (
                 <Package size={19} className="text-primary" />
               ) : (
@@ -42,10 +44,17 @@ export const SupplierCatalogGrid = ({ items }: SupplierCatalogGridProps) => {
               {item.description}
             </p>
           )}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
+          <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-border">
             <div className="text-sm font-semibold text-primary">
               {formatItemPricing(item.pricing)}
             </div>
+            <Link
+              href={createRfqHref({ service: item.id, supplierId: item.actor_id })}
+              className="text-xs font-bold text-primary hover:bg-secondary px-3 py-1.5 rounded-lg transition-colors"
+              aria-label={`Откликнуться на ${item.title}`}
+            >
+              Откликнуться
+            </Link>
           </div>
         </div>
       ))}

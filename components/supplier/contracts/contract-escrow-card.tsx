@@ -30,7 +30,7 @@ export const ContractEscrowCard = ({ contract }: ContractEscrowCardProps) => {
         <h2 className="text-sm font-semibold text-foreground">Безопасная оплата</h2>
       </div>
 
-      <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mb-4 ${statusMeta.className}`}>
+      <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mb-4 ${statusMeta.className}`}>
         {contract.status === "disputed" ? "Средства заморожены" : statusMeta.label}
       </span>
 
@@ -42,7 +42,7 @@ export const ContractEscrowCard = ({ contract }: ContractEscrowCardProps) => {
             const meta = escrowSummaryMeta[row.key]
             return (
               <div key={row.key} className="flex items-center justify-between">
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${meta.className}`}>
+                <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                   {meta.label}
                 </span>
                 <span className="text-sm font-bold text-foreground">
