@@ -26,6 +26,7 @@ const statusFilters: { value: ProposalStatus | "all"; label: string }[] = [
   { value: "shortlisted", label: "Избранное" },
   { value: "accepted", label: "Принятые" },
   { value: "rejected", label: "Отклонённые" },
+  { value: "archived", label: "Архив" },
 ]
 
 export const ProposalsReviewToolbar = ({

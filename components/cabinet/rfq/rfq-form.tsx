@@ -4,13 +4,13 @@ import { useRef, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, ShoppingCart, Briefcase, Paperclip, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { rfqCategories } from "@/lib/rfq-categories-list"
 import { validateRfqForm, type RfqFormValues } from "@/lib/schemas/rfq-form"
 import { isValidIsoDate, isoDateBounds } from "@/lib/iso-date"
 import { PageFrame, PageHeader } from "@/components/layout"
 import type { RfqCreate, RfqWithRelations } from "@/types"
 import { budgetTypeMeta } from "@/lib/rfq-display"
 import type { RfqFormPrefill } from "@/lib/rfq-from-listing"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 
 type FormState = {
   type: "product" | "service"
@@ -225,6 +225,7 @@ export const RfqForm = ({
   onRemovePendingAttachment,
 }: RfqFormProps) => {
   const fileRef = useRef<HTMLInputElement>(null)
+  const { rfqCategories } = useCategoryOptions()
   const [values, setValues] = useState<FormState>(() =>
     defaultValues(initial, invitedSupplierId, prefill),
   )

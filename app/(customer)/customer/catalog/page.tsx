@@ -36,7 +36,8 @@ export default function CustomerCatalogPage() {
 
   const { data: apiCategories } = usePublicCategoriesQuery(useApi)
   const categoryTabs = useMemo(() => {
-    if (!useApi || !apiCategories?.length) return mockCatalogCategories
+    if (!useApi) return mockCatalogCategories
+    if (!apiCategories?.length) return []
     return mapCategoryTreeToMarketplace(apiCategories).map((c) => ({
       id: c.id,
       slug: c.slug,

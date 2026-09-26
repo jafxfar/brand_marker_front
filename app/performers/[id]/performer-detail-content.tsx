@@ -19,8 +19,7 @@ type PerformerDetailContentProps = {
 
 export const PerformerDetailContent = ({ performerId }: PerformerDetailContentProps) => {
   const useApi = isApiEnabled()
-  const mockPerformer = getPerformer(performerId) ?? null
-  const { data: apiSupplier, isLoading, isFetched } = usePublicSupplierQuery(
+  const { data: apiSupplier, isLoading } = usePublicSupplierQuery(
     performerId,
     useApi,
   )
@@ -29,9 +28,9 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
     useApi && Boolean(apiSupplier),
   )
 
-  const performer: MarketplacePerformer | null = apiSupplier
-    ? mapPublicSupplierToPerformer(apiSupplier)
-    : (!useApi || isFetched ? mockPerformer : null)
+  const performer: MarketplacePerformer | null = useApi
+    ? (apiSupplier ? mapPublicSupplierToPerformer(apiSupplier) : null)
+    : (getPerformer(performerId) ?? null)
 
   if (useApi && isLoading) {
     return (
@@ -57,7 +56,7 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
   }
 
   const Icon = getIcon(performer.icon)
-  const services = apiSupplier
+  const services = useApi
     ? apiCatalog.map((item) =>
         mapCatalogItemToService(item, null, apiSupplier),
       )

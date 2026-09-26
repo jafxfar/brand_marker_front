@@ -32,23 +32,23 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const { data: apiCategories } = usePublicCategoriesQuery(useApi)
   const { data: apiCatalog } = usePublicCatalogQuery(undefined, slug, useApi)
 
-  const mockCategory = getCategoryBySlug(slug)
-
   const category: MarketplaceCategory | null = useMemo(() => {
-    if (useApi && apiCategories?.length) {
+    if (useApi) {
+      if (!apiCategories?.length) return null
       const mapped = mapCategoryTreeToMarketplace(apiCategories)
       return mapped.find((c) => c.slug === slug) ?? null
     }
-    return mockCategory ?? null
-  }, [useApi, apiCategories, mockCategory, slug])
+    return getCategoryBySlug(slug) ?? null
+  }, [useApi, apiCategories, slug])
 
   const services: MarketplaceService[] = useMemo(() => {
     if (useApi) {
       if (!apiCatalog?.length) return []
       return apiCatalog.map((item) => mapCatalogItemToService(item))
     }
+    const mockCategory = getCategoryBySlug(slug)
     return mockCategory ? getServicesByCategory(mockCategory.id) : []
-  }, [useApi, apiCatalog, mockCategory])
+  }, [useApi, apiCatalog, slug])
 
   if (!category) {
     return (

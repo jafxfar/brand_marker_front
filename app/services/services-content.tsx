@@ -25,7 +25,8 @@ export const ServicesPageContent = () => {
   )
   const { data: apiCategories } = usePublicCategoriesQuery(useApi)
   const categories = useMemo(() => {
-    if (!useApi || !apiCategories?.length) return getAllCategories()
+    if (!useApi) return getAllCategories()
+    if (!apiCategories?.length) return []
     return mapCategoryTreeToMarketplace(apiCategories)
   }, [useApi, apiCategories])
 

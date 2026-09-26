@@ -4,10 +4,17 @@ import Link from "next/link"
 import { Package, Briefcase, Pencil } from "lucide-react"
 import type { CatalogItemWithRelations } from "@/types"
 import { itemStatusMeta, formatItemPricing, catalogItemTypeLabel } from "@/lib/item-display"
+import { isApiEnabled } from "@/lib/api/config"
 import { getCatalogCategory } from "@/lib/mock/catalog-categories"
 
 type CatalogItemsTableProps = {
   items: CatalogItemWithRelations[]
+}
+
+const resolveCategoryName = (item: CatalogItemWithRelations): string => {
+  if (item.category?.name) return item.category.name
+  if (isApiEnabled()) return "—"
+  return getCatalogCategory(item.category_id)?.name ?? "—"
 }
 
 export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
@@ -28,7 +35,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
         <tbody className="divide-y divide-border">
           {items.map((item) => {
             const meta = itemStatusMeta[item.status]
-            const category = item.category ?? getCatalogCategory(item.category_id)
+            const categoryName = resolveCategoryName(item)
             return (
               <tr key={item.id} className="hover:bg-secondary/30 transition-colors">
                 <td className="px-4 py-3">
@@ -53,7 +60,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{category?.name ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{categoryName}</td>
                 <td className="px-4 py-3">
                   <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
                     {meta.label}
@@ -82,7 +89,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
     <div className="lg:hidden space-y-3">
       {items.map((item) => {
         const meta = itemStatusMeta[item.status]
-        const category = item.category ?? getCatalogCategory(item.category_id)
+        const categoryName = resolveCategoryName(item)
         return (
           <Link
             key={item.id}
@@ -100,7 +107,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">{item.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {category?.name} · {catalogItemTypeLabel[item.type]}
+                  {categoryName} · {catalogItemTypeLabel[item.type]}
                 </p>
               </div>
               <span className={`text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${meta.className}`}>

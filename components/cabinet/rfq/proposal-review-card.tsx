@@ -28,7 +28,7 @@ export const ProposalReviewCard = ({
   onAccept,
 }: ProposalReviewCardProps) => {
   const meta = proposalStatusMeta[proposal.status]
-  const isFinal = ["accepted", "rejected", "withdrawn"].includes(proposal.status)
+  const isFinal = ["accepted", "rejected", "withdrawn", "archived"].includes(proposal.status)
   const [chatOpen, setChatOpen] = useState(false)
 
   const handleOpenChat = () => setChatOpen(true)

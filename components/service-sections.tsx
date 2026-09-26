@@ -18,7 +18,6 @@ import {
   usePublicRfqsQuery,
 } from "@/hooks/api/use-public-query"
 import {
-  mergeByKey,
   mapCatalogItemToService,
   mapPublicSupplierToPerformer,
   mapRfqToRequest,
@@ -88,12 +87,11 @@ export function CategoryGrid() {
 export function FeaturedServices() {
   const useApi = isApiEnabled()
   const { data: apiCatalog } = usePublicCatalogQuery(undefined, undefined, useApi)
-  const mockServices = getFeaturedServices(10)
   const featuredServices = useMemo(() => {
-    if (!useApi || !apiCatalog?.length) return mockServices
-    const apiServices = apiCatalog.map((item) => mapCatalogItemToService(item))
-    return mergeByKey(mockServices, apiServices, "id").slice(0, 10)
-  }, [useApi, apiCatalog, mockServices])
+    if (!useApi) return getFeaturedServices(10)
+    if (!apiCatalog?.length) return []
+    return apiCatalog.map((item) => mapCatalogItemToService(item)).slice(0, 10)
+  }, [useApi, apiCatalog])
 
   return (
     <section className="bg-background py-9">
@@ -126,12 +124,11 @@ export function FeaturedServices() {
 export function ProviderShowcase() {
   const useApi = isApiEnabled()
   const { data: apiSuppliers } = usePublicSuppliersQuery(undefined, undefined, useApi)
-  const mockPerformers = getTopPerformers(6)
   const topProviders = useMemo(() => {
-    if (!useApi || !apiSuppliers?.length) return mockPerformers
-    const apiPerformers = apiSuppliers.map(mapPublicSupplierToPerformer)
-    return mergeByKey(mockPerformers, apiPerformers, "id").slice(0, 6)
-  }, [useApi, apiSuppliers, mockPerformers])
+    if (!useApi) return getTopPerformers(6)
+    if (!apiSuppliers?.length) return []
+    return apiSuppliers.map(mapPublicSupplierToPerformer).slice(0, 6)
+  }, [useApi, apiSuppliers])
 
   return (
     <section className="bg-white border-t border-b border-border py-9">
@@ -250,12 +247,11 @@ export function TrustBanners() {
 export function RecentRequests() {
   const useApi = isApiEnabled()
   const { data: apiRfqs } = usePublicRfqsQuery(useApi)
-  const mockRequests = getRecentRequests(6)
   const recentRequests = useMemo(() => {
-    if (!useApi || !apiRfqs?.length) return mockRequests
-    const apiRequests = apiRfqs.map(mapRfqToRequest)
-    return mergeByKey(mockRequests, apiRequests, "id").slice(0, 6)
-  }, [useApi, apiRfqs, mockRequests])
+    if (!useApi) return getRecentRequests(6)
+    if (!apiRfqs?.length) return []
+    return apiRfqs.map(mapRfqToRequest).slice(0, 6)
+  }, [useApi, apiRfqs])
 
   return (
     <section className="bg-white border-t border-b border-border py-9">

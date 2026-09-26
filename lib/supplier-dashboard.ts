@@ -1,5 +1,6 @@
 import type { ContractWithRelations, ProposalWithRelations, RfqWithRelations } from "@/types"
 import { hasSupplierProposalForRfq } from "@/hooks/api/use-supplier-rfqs-query"
+import { countUnreadMessages } from "@/lib/chat-conversations"
 
 const ACTIVE_CONTRACT_STATUSES = ["pending_payment", "active", "delivered"] as const
 
@@ -55,15 +56,14 @@ export const getSupplierIncomingMessages = (
 
 export const getSupplierUnreadMessageCount = (
   contracts: ContractWithRelations[],
-  supplierActorId: number,
+  currentUserId: number,
 ): number =>
-  contracts.reduce((count, contract) => {
-    const messages = contract.conversation?.messages ?? []
-    const unread = messages.filter(
-      (m) => m.sender_id !== supplierActorId,
-    ).length
-    return count + unread
-  }, 0)
+  contracts.reduce(
+    (count, contract) =>
+      count +
+      countUnreadMessages(contract.conversation?.messages ?? [], currentUserId),
+    0,
+  )
 
 export type SupplierPendingMilestone = {
   contract: { id: number; title: string }

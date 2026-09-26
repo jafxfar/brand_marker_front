@@ -25,7 +25,7 @@ import {
   useShortlistProposalMutation,
 } from "@/hooks/api/use-proposals-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
-import { getRfqCategoryLabel } from "@/lib/mock/rfq-categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import { getRfqRequirements } from "@/lib/rfq-requirements"
 import { rfqTypeLabel } from "@/lib/rfq-display"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
@@ -50,6 +50,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const useApi = isApiEnabled()
+  const { getRfqCategoryLabel } = useCategoryOptions()
 
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
   const publishRfqLocal = useRfqsStore((s) => s.publishRfq)

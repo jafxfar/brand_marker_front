@@ -4,7 +4,7 @@ import Link from "next/link"
 import { FileText, ShoppingCart } from "lucide-react"
 import type { RfqWithRelations } from "@/types"
 import { RfqStatusBadge } from "@/components/rfq/rfq-status-badge"
-import { getRfqCategoryLabel } from "@/lib/mock/rfq-categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
 
 type RfqListTableProps = {
@@ -14,6 +14,8 @@ type RfqListTableProps = {
 }
 
 export const RfqListTable = ({ rfqs, getProposalCount, hydrated }: RfqListTableProps) => {
+  const { getRfqCategoryLabel } = useCategoryOptions()
+
   if (!hydrated || rfqs.length === 0) {
     return (
       <div className="p-10 text-center">

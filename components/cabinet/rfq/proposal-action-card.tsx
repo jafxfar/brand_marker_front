@@ -22,7 +22,7 @@ export const ProposalActionCard = ({
   onAccept,
 }: ProposalActionCardProps) => {
   const meta = proposalStatusMeta[proposal.status]
-  const isFinal = ["accepted", "rejected", "withdrawn"].includes(proposal.status)
+  const isFinal = ["accepted", "rejected", "withdrawn", "archived"].includes(proposal.status)
 
   return (
     <div className="rounded-xl border border-border p-4">
