@@ -1,7 +1,7 @@
 import { RFQ_STATUSES, type RfqStatus } from "@/types"
 import { rfqStatusMeta } from "@/lib/rfq-display"
 
-export type BuyerRfqStatusFilter = "all" | RfqStatus
+export type BuyerRfqStatusFilter = "all" | "active" | RfqStatus
 
 const CLOSED_STATUSES: RfqStatus[] = [
   "supplier_selected",
@@ -25,16 +25,22 @@ export const BUYER_RFQ_STATUS_FILTER_OPTIONS: {
   label: string
 }[] = [
   { value: "all", label: "Все статусы" },
+  { value: "active", label: "Активные" },
   ...RFQ_STATUSES.filter((status) => status !== "archived").map((status) => ({
     value: status as BuyerRfqStatusFilter,
     label: rfqStatusMeta[status].label,
   })),
 ]
 
+export const BUYER_RFQ_STATUS_FILTER_VALUES = BUYER_RFQ_STATUS_FILTER_OPTIONS.map(
+  (option) => option.value,
+)
+
 export const getRfqStatusesForBuyerFilter = (
   filter: BuyerRfqStatusFilter,
 ): RfqStatus[] | null => {
   if (filter === "all") return null
+  if (filter === "active") return ACTIVE_RFQ_STATUSES
   return [filter]
 }
 

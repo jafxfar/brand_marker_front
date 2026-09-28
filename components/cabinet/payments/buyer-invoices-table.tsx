@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import type { BuyerInvoice } from "@/types"
 import { invoiceStatusMeta } from "@/lib/finance-display"
@@ -60,7 +61,7 @@ export const BuyerInvoicesTable = ({
                     {formatCurrency(invoice.amount, invoice.currency)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+                    <span className={`${statusPillClass} ${meta.className}`}>
                       {meta.label}
                     </span>
                   </td>
@@ -93,7 +94,7 @@ export const BuyerInvoicesTable = ({
                 <p className="text-sm font-bold text-primary">
                   {formatCurrency(invoice.amount, invoice.currency)}
                 </p>
-                <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+                <span className={`${statusPillClass} ${meta.className}`}>
                   {meta.label}
                 </span>
               </div>

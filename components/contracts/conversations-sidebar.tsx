@@ -4,20 +4,33 @@ import { useMemo, useState } from "react"
 import { MessageSquare, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
-  filterChatConversations,
-  type ChatConversationItem,
+  filterChatGroups,
+  type CounterpartChatGroup,
 } from "@/lib/chat-conversations"
 import { formatRelativeIso } from "@/lib/format"
 
 type ConversationsSidebarProps = {
-  conversations: ChatConversationItem[]
+  groups: CounterpartChatGroup[]
   selectedId: number | null
-  onSelect: (contractId: number) => void
+  onSelect: (counterpartId: number) => void
   searchPlaceholder?: string
 }
 
+const formatProjectCount = (count: number): string => {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  if (mod10 === 1 && mod100 !== 11) return `${count} проект`
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} проекта`
+  return `${count} проектов`
+}
+
+const getProjectsLine = (group: CounterpartChatGroup): string =>
+  group.projects.length === 1
+    ? group.projects[0]!.contract.title
+    : formatProjectCount(group.projects.length)
+
 export const ConversationsSidebar = ({
-  conversations,
+  groups,
   selectedId,
   onSelect,
   searchPlaceholder = "Поиск по чатам...",
@@ -25,8 +38,8 @@ export const ConversationsSidebar = ({
   const [query, setQuery] = useState("")
 
   const filtered = useMemo(
-    () => filterChatConversations(conversations, query),
-    [conversations, query],
+    () => filterChatGroups(groups, query),
+    [groups, query],
   )
 
   return (
@@ -58,23 +71,23 @@ export const ConversationsSidebar = ({
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.map((item) => {
-              const isSelected = selectedId === item.contract.id
-              const hasUnread = item.unreadCount > 0
-              const timeLabel = item.lastMessage.created_at
-                ? formatRelativeIso(item.lastMessage.created_at)
+            {filtered.map((group) => {
+              const isSelected = selectedId === group.counterpartId
+              const hasUnread = group.unreadCount > 0
+              const timeLabel = group.lastMessage.created_at
+                ? formatRelativeIso(group.lastMessage.created_at)
                 : null
 
               return (
                 <button
-                  key={item.contract.id}
+                  key={group.counterpartId}
                   type="button"
-                  onClick={() => onSelect(item.contract.id)}
+                  onClick={() => onSelect(group.counterpartId)}
                   className={cn(
                     "w-full text-left p-4 hover:bg-secondary/50 transition-colors",
                     isSelected && "bg-secondary",
                   )}
-                  aria-label={`Открыть переписку по договору ${item.contract.title}`}
+                  aria-label={`Открыть переписку с ${group.counterpartName}`}
                   aria-current={isSelected ? "true" : undefined}
                 >
                   <div className="flex items-start gap-2">
@@ -88,7 +101,7 @@ export const ConversationsSidebar = ({
                               : "font-semibold text-foreground",
                           )}
                         >
-                          {item.contract.title}
+                          {group.counterpartName}
                         </p>
                         {timeLabel && (
                           <span className="text-[10px] text-muted-foreground flex-shrink-0">
@@ -97,7 +110,7 @@ export const ConversationsSidebar = ({
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {item.counterpartName}
+                        {getProjectsLine(group)}
                       </p>
                       <p
                         className={cn(
@@ -107,15 +120,15 @@ export const ConversationsSidebar = ({
                             : "text-muted-foreground",
                         )}
                       >
-                        {item.senderName}: {item.lastMessage.text}
+                        {group.senderName}: {group.lastMessage.text}
                       </p>
                     </div>
                     {hasUnread && (
                       <span
                         className="mt-0.5 min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center flex-shrink-0"
-                        aria-label={`Непрочитанных: ${item.unreadCount}`}
+                        aria-label={`Непрочитанных: ${group.unreadCount}`}
                       >
-                        {item.unreadCount > 99 ? "99+" : item.unreadCount}
+                        {group.unreadCount > 99 ? "99+" : group.unreadCount}
                       </span>
                     )}
                   </div>

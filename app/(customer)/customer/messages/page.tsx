@@ -17,7 +17,8 @@ import {
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
 import { ConversationsSidebar } from "@/components/contracts/conversations-sidebar"
-import { buildChatConversations } from "@/lib/chat-conversations"
+import { ChatProjectSwitcher } from "@/components/contracts/chat-project-switcher"
+import { groupChatsByCounterpart, pickDefaultProject } from "@/lib/chat-conversations"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import type { ContractWithRelations } from "@/types"
 
@@ -32,7 +33,8 @@ export default function BuyerMessagesPage() {
   const markConversationRead = useContractsStore((s) => s.markConversationRead)
   const addMessageLocal = useContractsStore((s) => s.addMessage)
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [selectedCounterpartId, setSelectedCounterpartId] = useState<number | null>(null)
+  const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
 
   const { data: apiContracts, isLoading } = useContractsQuery(hydrated && useApi)
   const sendMessageMutation = useSendMessageMutation()
@@ -52,18 +54,32 @@ export default function BuyerMessagesPage() {
     return getCompany(supplierId)?.title ?? `Исполнитель #${supplierId}`
   }
 
-  const conversations = useMemo(
+  const groups = useMemo(
     () =>
-      buildChatConversations(contracts, userId, (contract) =>
-        getSupplierName(contract.supplier_actor_id),
+      groupChatsByCounterpart(
+        contracts,
+        userId,
+        (contract) => contract.supplier_actor_id,
+        (contract) => getSupplierName(contract.supplier_actor_id),
       ),
     [contracts, userId, useApi, resolveSupplierName],
   )
-  const selected = conversations.find((c) => c.contract.id === selectedId)
+  const selectedGroup = groups.find((g) => g.counterpartId === selectedCounterpartId)
+  const selected = selectedGroup
+    ? (selectedGroup.projects.find((p) => p.contract.id === selectedContractId)
+      ?? pickDefaultProject(selectedGroup))
+    : undefined
 
-  const handleSelect = (contractId: number) => {
-    setSelectedId(contractId)
+  const handleSelectProject = (contractId: number) => {
+    setSelectedContractId(contractId)
     if (!useApi) markConversationRead(contractId)
+  }
+
+  const handleSelectCounterpart = (counterpartId: number) => {
+    setSelectedCounterpartId(counterpartId)
+    const group = groups.find((g) => g.counterpartId === counterpartId)
+    const project = group ? pickDefaultProject(group) : undefined
+    if (project) handleSelectProject(project.contract.id)
   }
 
   if (useApi && isLoading) {
@@ -82,7 +98,7 @@ export default function BuyerMessagesPage() {
         description="Переписка по договорам с исполнителями"
       />
 
-      {conversations.length === 0 ? (
+      {groups.length === 0 ? (
         <PageSurface>
           <PageEmptyState
             icon={<MessageSquare size={32} />}
@@ -93,16 +109,22 @@ export default function BuyerMessagesPage() {
       ) : (
         <div className="grid md:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[420px]">
           <ConversationsSidebar
-            conversations={conversations}
-            selectedId={selectedId}
-            onSelect={handleSelect}
-            searchPlaceholder="Поиск по названию, исполнителю..."
+            groups={groups}
+            selectedId={selectedCounterpartId}
+            onSelect={handleSelectCounterpart}
+            searchPlaceholder="Поиск по исполнителю или проекту..."
           />
 
           <div className="min-h-0 flex flex-col gap-2">
-            {selected ? (
+            {selectedGroup && selected ? (
               <>
+                <ChatProjectSwitcher
+                  projects={selectedGroup.projects}
+                  selectedContractId={selected.contract.id}
+                  onSelect={handleSelectProject}
+                />
                 <ContractMessagesPanel
+                  key={selected.contract.id}
                   contract={selected.contract}
                   currentUserId={userId}
                   counterpartName={selected.counterpartName}

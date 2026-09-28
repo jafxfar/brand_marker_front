@@ -215,6 +215,21 @@ export const useSupplierSubmitWorkMutation = () => {
   })
 }
 
+export const useUploadContractFileMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ contractId, file }: { contractId: number; file: File }) =>
+      contractsApi.uploadFile(contractId, file),
+    onSuccess: (_d, { contractId }) => {
+      qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+    },
+    meta: {
+      successMessage: "Файл загружен",
+      errorMessage: "Не удалось загрузить файл",
+    },
+  })
+}
+
 export const useSupplierUploadContractFileMutation = () => {
   const qc = useQueryClient()
   return useMutation({

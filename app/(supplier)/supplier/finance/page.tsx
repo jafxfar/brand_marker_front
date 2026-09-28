@@ -195,7 +195,7 @@ export default function SupplierFinancePage() {
         <InvoicesTable invoices={invoiceList} getContractTitle={getContractTitle} />
       </PageSurface>
 
-      <PageSurface className="p-6">
+      <PageSurface id="reviews" className="p-6 scroll-mt-24">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <Star size={16} className="text-primary" />

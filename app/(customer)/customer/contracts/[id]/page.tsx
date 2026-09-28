@@ -4,6 +4,7 @@ import { use, useState } from "react"
 import Link from "next/link"
 import { AlertTriangle, FileCheck, MessageSquare, Paperclip, Clock, Package, Gavel } from "lucide-react"
 import { PageFrame, PageHeader } from "@/components/layout"
+import { statusPillClass } from "@/components/ui/status-badge"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -17,6 +18,7 @@ import {
   useOpenDisputeMutation,
   useRejectSubmissionMutation,
   useSendMessageMutation,
+  useUploadContractFileMutation,
 } from "@/hooks/api/use-contracts-query"
 import { useCreateReviewMutation, useBuyerReviewsQuery } from "@/hooks/api/use-reviews-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
@@ -25,7 +27,7 @@ import {
   useApproveMilestoneMutation,
   usePaymentHistoryQuery,
 } from "@/hooks/api/use-payments-query"
-import { contractStatusMeta } from "@/lib/contract-display"
+import { canUploadContractFiles, contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
 import { ContractSupplierCard } from "@/components/cabinet/contracts/contract-supplier-card"
@@ -67,10 +69,12 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const markConversationReadLocal = useContractsStore((s) => s.markConversationRead)
   const approveSubmissionLocal = useContractsStore((s) => s.approveSubmission)
   const rejectSubmissionLocal = useContractsStore((s) => s.rejectSubmission)
+  const addFileLocal = useContractsStore((s) => s.addFile)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const submitReview = useCompaniesStore((s) => s.submitReview)
   const hasReviewForContract = useCompaniesStore((s) => s.hasReviewForContract)
   const [disputeOpen, setDisputeOpen] = useState(false)
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false)
 
   const { data: apiContract, isLoading } = useContractQuery(contractId, hydrated && useApi)
   const { data: paymentHistoryApi = [] } = usePaymentHistoryQuery(hydrated && useApi)
@@ -83,6 +87,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const createReviewMutation = useCreateReviewMutation()
   const approveSubmissionMutation = useApproveSubmissionMutation()
   const rejectSubmissionMutation = useRejectSubmissionMutation()
+  const uploadFileMutation = useUploadContractFileMutation()
 
   const supplierActorId =
     (useApi ? apiContract?.supplier_actor_id : getContractLocal(contractId)?.supplier_actor_id) ?? 0
@@ -189,6 +194,35 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     rejectSubmissionLocal(contractId, submissionId)
   }
 
+  const handleUploadFiles = async (files: File[]) => {
+    if (!useApi) {
+      files.forEach((file) => {
+        addFileLocal(
+          contractId,
+          {
+            file_name: file.name,
+            file_url: URL.createObjectURL(file),
+            file_type: file.type || "application/octet-stream",
+          },
+          { id: userId, name: user?.name, side: "buyer" },
+        )
+      })
+      return
+    }
+    setIsUploadingFiles(true)
+    try {
+      for (const file of files) {
+        try {
+          await uploadFileMutation.mutateAsync({ contractId, file })
+        } catch {
+          // error toast comes from the mutation meta
+        }
+      }
+    } finally {
+      setIsUploadingFiles(false)
+    }
+  }
+
   const messageCount = contract.conversation?.messages?.length ?? 0
   const fileCount = contract.files?.length ?? 0
   const submissionCount = contract.submissions?.length ?? 0
@@ -220,7 +254,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
             variant="prominent"
             showAbsoluteDate
           />
-          <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${meta.className}`}>
+          <span className={`${statusPillClass} ${meta.className}`}>
             {meta.label}
           </span>
           <span className="text-xs text-muted-foreground">
@@ -263,7 +297,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
             )}
           </TabsTrigger>
           <TabsTrigger value="submission" className="gap-1.5">
-            <Package size={14} /> Demo
+            <Package size={14} /> Сдача работы
             {submissionCount > 0 && (
               <span className="ml-1 text-[10px] bg-muted text-muted-foreground font-semibold px-1.5 py-0.5 rounded-full">
                 {submissionCount}
@@ -356,7 +390,12 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         </TabsContent>
 
         <TabsContent value="files">
-          <ContractFilesPanel files={contract.files} />
+          <ContractFilesPanel
+            files={contract.files}
+            canUpload={canUploadContractFiles(contract.status)}
+            uploading={isUploadingFiles}
+            onUpload={handleUploadFiles}
+          />
         </TabsContent>
 
         <TabsContent value="history">

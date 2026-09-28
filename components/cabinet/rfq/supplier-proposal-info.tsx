@@ -32,7 +32,7 @@ export const SupplierProposalInfo = ({
       <div className="flex-1 min-w-0">
         <Link
           href={profileHref}
-          className="text-sm font-bold text-foreground hover:text-primary transition-colors"
+          className="block text-sm font-bold text-foreground hover:text-primary transition-colors wrap-anywhere"
         >
           {supplierName}
         </Link>
@@ -49,9 +49,11 @@ export const SupplierProposalInfo = ({
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-muted-foreground">
               {(supplier.city || supplier.country) && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 min-w-0">
                   <MapPin size={12} className="flex-shrink-0" />
-                  {[supplier.city, supplier.country].filter(Boolean).join(", ")}
+                  <span className="wrap-anywhere">
+                    {[supplier.city, supplier.country].filter(Boolean).join(", ")}
+                  </span>
                 </span>
               )}
               <span className="flex items-center gap-1">

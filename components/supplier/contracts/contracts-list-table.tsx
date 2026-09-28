@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
@@ -57,7 +58,7 @@ export const ContractsListTable = ({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+                  <span className={`${statusPillClass} ${meta.className}`}>
                     {meta.label}
                   </span>
                 </td>
@@ -114,7 +115,7 @@ export const ContractsListTable = ({
                 </div>
               </div>
             </div>
-            <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-3 ${meta.className}`}>
+            <span className={`${statusPillClass} mt-3 ${meta.className}`}>
               {meta.label}
             </span>
           </Link>

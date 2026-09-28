@@ -9,6 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { usePlatformSettingsQuery } from "@/hooks/api/use-public-query"
+import { exceedsContractLimit } from "@/lib/commission"
 import { formatCurrency } from "@/lib/format"
 import { PaymentTermsBuilder } from "@/components/cabinet/rfq/payment-terms-builder"
 import type { Currency, ProposalAcceptInput } from "@/types"
@@ -34,6 +36,9 @@ export const AcceptProposalDialog = ({
     payment_type: "full_postpayment",
   })
   const [isValid, setIsValid] = useState(true)
+  const { data: platformSettings } = usePlatformSettingsQuery(open)
+  const overLimit = platformSettings ? exceedsContractLimit(price, currency, platformSettings) : false
+  const canConfirm = isValid && !overLimit
 
   const handleTermsChange = useCallback(
     (value: ProposalAcceptInput, valid: boolean) => {
@@ -44,7 +49,7 @@ export const AcceptProposalDialog = ({
   )
 
   const handleConfirm = () => {
-    if (!isValid) return
+    if (!canConfirm) return
     onConfirm(terms)
     onOpenChange(false)
   }
@@ -60,6 +65,14 @@ export const AcceptProposalDialog = ({
             остальные предложения отклонены.
           </DialogDescription>
         </DialogHeader>
+
+        {overLimit && platformSettings?.max_contract_amount != null && (
+          <p role="alert" className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            Сумма превышает максимальную сумму договора на платформе
+            ({formatCurrency(platformSettings.max_contract_amount, currency)}).
+            Попросите исполнителя изменить цену предложения.
+          </p>
+        )}
 
         <div className="py-1">
           <PaymentTermsBuilder
@@ -80,7 +93,7 @@ export const AcceptProposalDialog = ({
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={!isValid}
+            disabled={!canConfirm}
             className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Принять и создать договор

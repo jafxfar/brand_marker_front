@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react"
 import {
   FileText,
@@ -248,7 +249,7 @@ export const ContractSubmissionPanel = ({
         <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
           <Package size={16} className="text-primary" />
         </div>
-        <h2 className="text-sm font-semibold text-foreground">{submissionLabel} / Demo</h2>
+        <h2 className="text-sm font-semibold text-foreground">Сдача работы · {submissionLabel}</h2>
       </div>
 
       {canSubmit && (
@@ -257,7 +258,7 @@ export const ContractSubmissionPanel = ({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            placeholder="Опишите выполненную работу или детали demo..."
+            placeholder="Опишите выполненную работу..."
             aria-label="Комментарий к отправке"
             className="w-full px-4 py-3 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
           />
@@ -294,7 +295,7 @@ export const ContractSubmissionPanel = ({
                 onChange={(e) => setLinkUrl(e.target.value)}
                 onKeyDown={handleLinkKeyDown}
                 placeholder="https://..."
-                aria-label="Ссылка на demo"
+                aria-label="Ссылка на результат работы"
                 className="w-full h-10 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
               <div className="flex gap-2">
@@ -400,7 +401,7 @@ export const ContractSubmissionPanel = ({
                     <p className="text-sm text-foreground mt-1">{submission.note}</p>
                   </div>
                   <span
-                    className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${meta.className}`}
+                    className={`${statusPillClass} flex-shrink-0 ${meta.className}`}
                   >
                     {meta.label}
                   </span>

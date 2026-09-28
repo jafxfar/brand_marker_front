@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import { Wallet } from "lucide-react"
 import { milestoneStatusMeta } from "@/lib/contract-display"
@@ -51,7 +52,7 @@ export const PendingPaymentsPanel = ({
                   {formatCurrency(item.amount, item.currency)}
                 </span>
                 {meta && (
-                  <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+                  <span className={`${statusPillClass} ${meta.className}`}>
                     {meta.label}
                   </span>
                 )}

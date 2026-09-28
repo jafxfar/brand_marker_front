@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import { Package, Briefcase, Pencil } from "lucide-react"
 import type { CatalogItemWithRelations } from "@/types"
@@ -62,7 +63,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{categoryName}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+                  <span className={`${statusPillClass} ${meta.className}`}>
                     {meta.label}
                   </span>
                 </td>
@@ -110,7 +111,7 @@ export const CatalogItemsTable = ({ items }: CatalogItemsTableProps) => (
                   {categoryName} · {catalogItemTypeLabel[item.type]}
                 </p>
               </div>
-              <span className={`text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${meta.className}`}>
+              <span className={`${statusPillClass} flex-shrink-0 ${meta.className}`}>
                 {meta.label}
               </span>
             </div>

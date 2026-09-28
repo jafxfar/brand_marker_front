@@ -1,4 +1,5 @@
 import type { ContractWithRelations } from "@/types"
+import { statusPillClass } from "@/components/ui/status-badge"
 import { getMilestoneProgress, milestoneStatusMeta } from "@/lib/contract-display"
 import { formatCurrency } from "@/lib/format"
 
@@ -60,7 +61,7 @@ export const ContractMilestonesPanel = ({ contract }: ContractMilestonesPanelPro
                     <p className="text-sm font-bold text-primary">
                       {formatCurrency(milestone.amount, contract.currency)}
                     </p>
-                    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
+                    <span className={`${statusPillClass} mt-1 ${meta.className}`}>
                       {meta.label}
                     </span>
                   </div>

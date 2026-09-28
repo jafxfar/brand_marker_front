@@ -155,12 +155,14 @@ export default function SupplierDashboard() {
           Icon={FileCheck}
           label="Активные договоры"
           value={!hydrated || isLoading ? "—" : String(activeContracts.length)}
+          href="/supplier/contracts?tab=active"
           accent="bg-primary/10 text-primary"
         />
         <StatCard
           Icon={Inbox}
           label="Новые заявки"
           value={!hydrated || isLoading ? "—" : String(newRfqs.length)}
+          href="/supplier/rfqs"
           accent="bg-info/10 text-info"
         />
         <StatCard
@@ -168,18 +170,21 @@ export default function SupplierDashboard() {
           label="Входящие сообщения"
           value={!hydrated || isLoading ? "—" : String(unreadCount)}
           subValue={unreadCount > 0 ? "непрочитанных" : undefined}
+          href="/supplier/messages"
           accent="bg-warning/10 text-warning"
         />
         <StatCard
           Icon={TrendingUp}
           label="Выручка"
           value={!hydrated || isLoading ? "—" : formatPrice(revenue)}
+          href="/supplier/finance"
           accent="bg-muted text-muted-foreground"
         />
         <StatCard
           Icon={Wallet}
           label="Ожидают выплаты"
           value={!hydrated || isLoading ? "—" : formatPrice(pendingAmount)}
+          href="/supplier/finance"
           accent="bg-secondary text-secondary-foreground"
         />
         <StatCard
@@ -187,6 +192,7 @@ export default function SupplierDashboard() {
           label="Рейтинг"
           value={!hydrated || isLoading ? "—" : formatRating(rating)}
           subValue={hydrated ? `${reviewCount} отзывов` : undefined}
+          href="/supplier/finance#reviews"
           accent="bg-warning/10 text-warning"
         />
       </div>

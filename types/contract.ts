@@ -138,6 +138,9 @@ export type Contract = {
   payment_type: PaymentType
   created_at: string
   status: ContractStatus
+  commission_amount?: number
+  commission_percent?: number | null
+  commission_min?: number | null
 }
 
 export type ContractWithRelations = Contract & {

@@ -13,8 +13,20 @@ export type CategoryTree = {
   children?: CategoryTree[]
 }
 
+export type PlatformSettingsInput = {
+  commission_percent: number
+  commission_min: number
+  max_contract_amount: number | null
+}
+
+export type PlatformSettings = PlatformSettingsInput & {
+  currency: string
+}
+
 export const publicApi = {
   categories: () => apiFetch<CategoryTree[]>("/public/categories"),
+
+  platformSettings: () => apiFetch<PlatformSettings>("/public/platform-settings"),
 
   suppliers: (q?: string, category?: string) => {
     const params = new URLSearchParams()

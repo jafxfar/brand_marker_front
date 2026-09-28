@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import type { OutgoingPaymentRow } from "@/lib/buyer-payments-display"
 import { paymentHistoryTypeLabel } from "@/lib/buyer-payments-display"
@@ -93,7 +94,7 @@ export const OutgoingPaymentsTable = ({
               </p>
             </div>
             <p className="text-xs text-muted-foreground mt-2">{payment.title}</p>
-            <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-2 ${typeClassName[payment.type]}`}>
+            <span className={`${statusPillClass} mt-2 ${typeClassName[payment.type]}`}>
               {paymentHistoryTypeLabel[payment.type]}
             </span>
           </Link>

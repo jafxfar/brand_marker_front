@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense } from "react"
 import { FileCheck } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import {
   BUYER_CONTRACT_LIST_TABS,
@@ -25,12 +26,14 @@ import {
 } from "@/components/layout"
 import type { ContractWithRelations } from "@/types"
 
-export default function BuyerContractsPage() {
+const BUYER_CONTRACT_TAB_VALUES = BUYER_CONTRACT_LIST_TABS.map((option) => option.value)
+
+const BuyerContractsContent = () => {
   const hydrated = useHydrated()
   const actorId = getActorId(useAuthStore((s) => s.user))
   const getContractsByTabForBuyer = useContractsStore((s) => s.getContractsByTabForBuyer)
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [tab, setTab] = useState<BuyerContractListTab>("active")
+  const [tab, setTab] = useUrlTab<BuyerContractListTab>("tab", BUYER_CONTRACT_TAB_VALUES, "active")
   const useApi = isApiEnabled()
   const { data: apiContracts } = useContractsQuery(hydrated && useApi)
 
@@ -70,5 +73,13 @@ export default function BuyerContractsPage() {
         </PageSurface>
       )}
     </PageFrame>
+  )
+}
+
+export default function BuyerContractsPage() {
+  return (
+    <Suspense fallback={null}>
+      <BuyerContractsContent />
+    </Suspense>
   )
 }

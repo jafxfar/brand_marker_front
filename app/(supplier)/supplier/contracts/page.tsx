@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense } from "react"
 import { FileCheck } from "lucide-react"
 import {
   PageEmptyState,
@@ -13,6 +13,7 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
@@ -32,13 +33,15 @@ const emptyMessages: Record<ContractListTab, string> = {
   cancelled: "Отменённых договоров нет",
 }
 
-export default function SupplierContractsPage() {
+const CONTRACT_TAB_VALUES = CONTRACT_LIST_TABS.map((option) => option.value)
+
+const SupplierContractsContent = () => {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getContractsByTab = useContractsStore((s) => s.getContractsByTab)
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [tab, setTab] = useState<ContractListTab>("all")
+  const [tab, setTab] = useUrlTab<ContractListTab>("tab", CONTRACT_TAB_VALUES, "all")
   const useApi = isApiEnabled()
   const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi)
 
@@ -80,5 +83,13 @@ export default function SupplierContractsPage() {
         </PageSurface>
       )}
     </PageFrame>
+  )
+}
+
+export default function SupplierContractsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SupplierContractsContent />
+    </Suspense>
   )
 }

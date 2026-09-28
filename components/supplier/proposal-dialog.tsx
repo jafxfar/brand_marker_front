@@ -6,8 +6,10 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
+import { usePlatformSettingsQuery } from "@/hooks/api/use-public-query"
+import { calculateCommission, exceedsContractLimit } from "@/lib/commission"
 import { cn } from "@/lib/utils"
-import { formatRfqBudget } from "@/lib/format"
+import { formatCurrency, formatRfqBudget } from "@/lib/format"
 import type { Currency } from "@/types"
 import type { BudgetType } from "@/types"
 
@@ -44,6 +46,12 @@ export const ProposalDialog = ({
   const [deliveryTime, setDeliveryTime] = useState("")
   const [message, setMessage] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { data: platformSettings } = usePlatformSettingsQuery(open)
+  const priceValue = Number(price)
+  const hasValidPrice = Boolean(price) && Number.isFinite(priceValue) && priceValue > 0
+  const commission = platformSettings && hasValidPrice
+    ? calculateCommission(priceValue, currency, platformSettings)
+    : null
 
   useEffect(() => {
     if (!open) return
@@ -62,6 +70,8 @@ export const ProposalDialog = ({
       e.price = "Укажите цену"
     } else if (priceNum > 1_000_000_000_000) {
       e.price = "Цена не больше 1 трлн"
+    } else if (platformSettings && exceedsContractLimit(priceNum, currency, platformSettings)) {
+      e.price = `Сумма договора не может превышать ${formatCurrency(platformSettings.max_contract_amount ?? 0, currency)}`
     }
     if (!deliveryTime.trim() || Number.isNaN(daysNum) || daysNum <= 0) {
       e.delivery_time = "Срок должен быть больше 0"
@@ -127,6 +137,12 @@ export const ProposalDialog = ({
               className="w-full h-11 px-4 rounded-xl border border-input bg-secondary text-sm text-muted-foreground"
             />
           </div>
+          {commission !== null && (
+            <p className="col-span-2 text-xs text-muted-foreground" aria-live="polite">
+              Комиссия платформы: {formatCurrency(commission, currency)} · Вы получите:{" "}
+              <strong className="text-foreground">{formatCurrency(priceValue - commission, currency)}</strong>
+            </p>
+          )}
         </div>
 
         <div>

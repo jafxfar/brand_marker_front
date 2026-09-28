@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { FileCheck, Pencil } from "lucide-react"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { statusPillClass } from "@/components/ui/status-badge"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
@@ -164,7 +165,7 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <RfqStatusBadge status={rfq.status} />
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-foreground">
+            <span className={`${statusPillClass} bg-secondary text-foreground`}>
               {rfqTypeLabel[rfq.type]}
             </span>
           </div>

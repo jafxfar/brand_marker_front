@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import { useState } from "react"
 import type { Proposal, PublicSupplier } from "@/types"
 import { proposalStatusMeta } from "@/lib/proposal-display"
@@ -46,9 +47,9 @@ export const ProposalReviewCard = ({
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
             <Banknote size={16} className="text-primary" />
           </div>
-          <div className="min-w-0">
+          <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground">Цена</p>
-            <p className="text-sm font-bold text-primary mt-0.5 truncate" title={formatMoneyDisplay(proposal.price, proposal.currency)}>
+            <p className="text-sm font-bold text-primary mt-0.5 wrap-anywhere" title={formatMoneyDisplay(proposal.price, proposal.currency)}>
               {formatMoneyDisplay(proposal.price, proposal.currency)}
             </p>
           </div>
@@ -57,15 +58,15 @@ export const ProposalReviewCard = ({
           <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
             <Clock size={16} className="text-primary" />
           </div>
-          <div className="min-w-0">
+          <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground">Срок поставки / работ</p>
-            <p className="text-sm font-semibold text-foreground mt-0.5 truncate" title={formatDeliveryTime(proposal.delivery_time)}>
+            <p className="text-sm font-semibold text-foreground mt-0.5 wrap-anywhere" title={formatDeliveryTime(proposal.delivery_time)}>
               {formatDeliveryTime(proposal.delivery_time)}
             </p>
           </div>
         </div>
         <div className="flex items-center sm:justify-end">
-          <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+          <span className={`${statusPillClass} ${meta.className}`}>
             {meta.label}
           </span>
         </div>
@@ -74,7 +75,7 @@ export const ProposalReviewCard = ({
       {proposal.message && (
         <div className="mt-5 pt-5 border-t border-border">
           <p className="text-xs font-semibold text-muted-foreground mb-2">Сообщение</p>
-          <p className="text-sm text-foreground leading-relaxed">{proposal.message}</p>
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-line wrap-anywhere">{proposal.message}</p>
         </div>
       )}
 

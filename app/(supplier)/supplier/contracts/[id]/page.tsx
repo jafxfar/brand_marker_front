@@ -4,6 +4,7 @@ import { use, useState } from "react"
 import Link from "next/link"
 import { AlertTriangle, FileCheck, MessageSquare, Paperclip, Upload, Gavel } from "lucide-react"
 import { PageFrame, PageHeader } from "@/components/layout"
+import { statusPillClass } from "@/components/ui/status-badge"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -16,8 +17,9 @@ import {
   useSupplierOpenDisputeMutation,
   useSupplierSendMessageMutation,
   useSupplierSubmitWorkMutation,
+  useSupplierUploadContractFileMutation,
 } from "@/hooks/api/use-contracts-query"
-import { contractStatusMeta } from "@/lib/contract-display"
+import { canUploadContractFiles, contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
 import { ContractBuyerCard } from "@/components/supplier/contracts/contract-buyer-card"
@@ -50,8 +52,10 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const submitWorkLocal = useContractsStore((s) => s.submitWork)
   const openDisputeLocal = useContractsStore((s) => s.openDispute)
   const addMessageLocal = useContractsStore((s) => s.addMessage)
+  const addFileLocal = useContractsStore((s) => s.addFile)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [disputeOpen, setDisputeOpen] = useState(false)
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false)
 
   const { data: apiContract, isLoading } = useSupplierContractQuery(
     contractId,
@@ -61,6 +65,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const markMessagesReadMutation = useMarkMessagesReadMutation("supplier")
   const openDisputeMutation = useSupplierOpenDisputeMutation()
   const submitWorkMutation = useSupplierSubmitWorkMutation()
+  const uploadFileMutation = useSupplierUploadContractFileMutation()
 
   const localContract = hydrated ? getContractLocal(contractId) : undefined
   const contract: ContractWithRelations | undefined = useApi
@@ -123,6 +128,35 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
     submitWorkLocal(contractId, input)
   }
 
+  const handleUploadFiles = async (files: File[]) => {
+    if (!useApi) {
+      files.forEach((file) => {
+        addFileLocal(
+          contractId,
+          {
+            file_name: file.name,
+            file_url: URL.createObjectURL(file),
+            file_type: file.type || "application/octet-stream",
+          },
+          { id: userId, name: user?.name, side: "supplier" },
+        )
+      })
+      return
+    }
+    setIsUploadingFiles(true)
+    try {
+      for (const file of files) {
+        try {
+          await uploadFileMutation.mutateAsync({ contractId, file })
+        } catch {
+          // error toast comes from the mutation meta
+        }
+      }
+    } finally {
+      setIsUploadingFiles(false)
+    }
+  }
+
   return (
     <PageFrame>
       <PageHeader
@@ -145,7 +179,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             variant="prominent"
             showAbsoluteDate
           />
-          <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${meta.className}`}>
+          <span className={`${statusPillClass} ${meta.className}`}>
             {meta.label}
           </span>
           <span className="text-xs text-muted-foreground">
@@ -196,7 +230,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             )}
           </TabsTrigger>
           <TabsTrigger value="submission" className="gap-1.5">
-            <Upload size={14} /> Demo
+            <Upload size={14} /> Сдача работы
           </TabsTrigger>
         </TabsList>
 
@@ -213,7 +247,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             </div>
             <div className="space-y-5 lg:sticky lg:top-24">
               <ContractBuyerCard buyer={buyer} />
-              <ContractEscrowCard contract={contract} />
+              <ContractEscrowCard contract={contract} showPayout />
             </div>
           </div>
         </TabsContent>
@@ -246,7 +280,12 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
         </TabsContent>
 
         <TabsContent value="files">
-          <ContractFilesPanel files={contract.files} />
+          <ContractFilesPanel
+            files={contract.files}
+            canUpload={canUploadContractFiles(contract.status)}
+            uploading={isUploadingFiles}
+            onUpload={handleUploadFiles}
+          />
         </TabsContent>
 
         <TabsContent value="submission">

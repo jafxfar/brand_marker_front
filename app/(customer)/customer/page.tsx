@@ -206,30 +206,35 @@ export default function CustomerDashboard() {
           Icon={FileText}
           label="Активные заявки"
           value={hydrated ? String(activeRfqs.length) : "—"}
+          href="/customer/rfqs?status=active"
           accent="bg-info/10 text-info"
         />
         <StatCard
           Icon={Inbox}
           label="Входящие предложения"
           value={hydrated ? String(newProposalsCount) : "—"}
+          href="/customer/rfqs?status=receiving_proposals"
           accent="bg-primary/10 text-primary"
         />
         <StatCard
           Icon={FileCheck}
           label="Активные договоры"
           value={hydrated ? String(activeContracts.length) : "—"}
+          href="/customer/contracts?tab=active"
           accent="bg-muted text-muted-foreground"
         />
         <StatCard
           Icon={Wallet}
           label="Ожидают оплаты"
           value={hydrated ? formatPrice(pendingAmount) : "—"}
+          href="/customer/payments?tab=escrow"
           accent="bg-secondary text-secondary-foreground"
         />
         <StatCard
           Icon={AlertTriangle}
           label="Споры"
           value={hydrated ? String(disputes.length) : "—"}
+          href="/customer/contracts?tab=disputed"
           accent="bg-destructive/10 text-destructive"
         />
         <StatCard
@@ -237,6 +242,7 @@ export default function CustomerDashboard() {
           label="Сообщения"
           value={hydrated ? String(unreadCount) : "—"}
           subValue={hydrated && unreadCount > 0 ? "непрочитанных" : undefined}
+          href="/customer/messages"
           accent="bg-warning/10 text-warning"
         />
       </div>

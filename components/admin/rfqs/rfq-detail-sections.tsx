@@ -14,6 +14,7 @@ import {
 import { budgetTypeMeta, rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import { resolveFileUrl } from "@/lib/file-url"
+import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 import type { BudgetType, ProposalStatus, RfqStatus, RfqType } from "@/types"
 
 const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
@@ -26,11 +27,7 @@ const formatDate = (value: string) =>
 
 const formatMoney = (value: number | null | undefined, currency: string) => {
   if (value == null) return "—"
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: currency || "TJS",
-    maximumFractionDigits: 0,
-  }).format(value)
+  return formatMoneyDisplay(value, currency || "TJS")
 }
 
 const EmptyState = ({ children }: { children: string }) => (
@@ -198,15 +195,15 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
                   className="flex flex-col gap-3 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="font-bold">
+                    <p className="font-bold wrap-anywhere">
                       {partyLabel(proposal.supplier)} · #{proposal.id}
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground wrap-anywhere">
                       {formatMoney(proposal.price, proposal.currency)}
-                      {proposal.delivery_time ? ` · ${proposal.delivery_time}` : ""}
+                      {proposal.delivery_time ? ` · ${formatDeliveryTime(proposal.delivery_time)}` : ""}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <Badge variant="outline" className={meta.className}>
                       {meta.label}
                     </Badge>

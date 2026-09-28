@@ -37,6 +37,11 @@ export const filterContractsByTab = (
   return contracts.filter((c) => c.status === "cancelled")
 }
 
+const FILE_UPLOAD_CLOSED_STATUSES: ContractStatus[] = ["completed", "cancelled"]
+
+export const canUploadContractFiles = (status: ContractStatus): boolean =>
+  !FILE_UPLOAD_CLOSED_STATUSES.includes(status)
+
 export type EscrowSummary = {
   held: number
   released: number

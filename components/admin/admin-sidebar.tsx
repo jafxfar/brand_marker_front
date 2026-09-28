@@ -67,9 +67,9 @@ const adminNavSections: AdminNavSection[] = [
       { label: "Пользователи", href: "/admin/users", Icon: Users, available: true },
       { label: "Модерация", href: "/admin/moderation", Icon: ShieldCheck, available: true },
       { label: "Компании", href: "/admin/companies", Icon: Building2, available: true },
-      { label: "Верификация", href: "/admin/verification", Icon: FileCheck2 },
+      { label: "Верификация", href: "/admin/verification", Icon: FileCheck2, available: true },
       { label: "Каталог", href: "/admin/catalog", Icon: Boxes, available: true },
-      { label: "Категории", href: "/admin/categories", Icon: FolderTree },
+      { label: "Категории", href: "/admin/categories", Icon: FolderTree, available: true },
     ],
   },
   {
@@ -79,15 +79,15 @@ const adminNavSections: AdminNavSection[] = [
       { label: "Предложения", href: "/admin/proposals", Icon: FileInput, available: true },
       { label: "Контракты", href: "/admin/contracts", Icon: BookOpen, available: true },
       { label: "Финансы", href: "/admin/finance", Icon: CircleDollarSign, available: true },
-      { label: "Escrow", href: "/admin/escrow", Icon: WalletCards },
+      { label: "Escrow", href: "/admin/escrow", Icon: WalletCards, available: true },
       { label: "Споры", href: "/admin/disputes", Icon: Gavel, available: true },
     ],
   },
   {
     title: "Система",
     items: [
-      { label: "Аналитика", href: "/admin/analytics", Icon: BarChart3 },
-      { label: "Настройки", href: "/admin/settings", Icon: Settings },
+      { label: "Аналитика", href: "/admin/analytics", Icon: BarChart3, available: true },
+      { label: "Настройки", href: "/admin/settings", Icon: Settings, available: true },
     ],
   },
 ]

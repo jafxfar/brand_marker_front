@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type {
+  ContractFile,
   ContractWithRelations,
   Currency,
   Message,
@@ -137,6 +138,11 @@ interface ContractsState {
     senderId: number,
     text: string,
     senderName?: string,
+  ) => void
+  addFile: (
+    contractId: number,
+    file: Pick<ContractFile, "file_name" | "file_url" | "file_type">,
+    uploader: { id: number; name?: string; side: "buyer" | "supplier" },
   ) => void
 }
 
@@ -794,6 +800,28 @@ export const useContractsStore = create<ContractsState>()(
             }
           }),
         })),
+
+      addFile: (contractId, file, uploader) =>
+        set((state) => {
+          const fileId = nextFileId(state.contracts)
+          return {
+            contracts: state.contracts.map((contract) => {
+              if (contract.id !== contractId) return contract
+              const contractFile: ContractFile = {
+                id: fileId,
+                contract_id: contractId,
+                file_name: file.file_name,
+                file_url: file.file_url,
+                file_type: file.file_type,
+                uploaded_by: uploader.id,
+                uploaded_by_name: uploader.name?.trim() || null,
+                uploaded_by_side: uploader.side,
+                created_at: new Date().toISOString(),
+              }
+              return { ...contract, files: [...(contract.files ?? []), contractFile] }
+            }),
+          }
+        }),
     }),
     {
       name: "bm-contracts",

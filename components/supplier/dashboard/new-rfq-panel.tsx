@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import { Inbox, ShoppingCart, FileText, ArrowRight } from "lucide-react"
 import type { Rfq } from "@/types"
@@ -68,7 +69,7 @@ export const NewRfqPanel = ({ rfqs, hydrated }: NewRfqPanelProps) => (
                 <div className="text-xs text-muted-foreground">
                   до {formatRelativeIso(rfq.deadline)}
                 </div>
-                <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
+                <span className={`${statusPillClass} mt-1 ${meta.className}`}>
                   {meta.label}
                 </span>
               </div>
