@@ -49,7 +49,7 @@ const TodoRow = ({ item }: { item: TodoItem }) => {
       >
         <Icon size={20} />
       </span>
-      <div className="min-w-[200px] flex-1">
+      <div className="min-w-50 flex-1">
         <p className="text-[15.5px] font-bold text-foreground">{item.title}</p>
         <p className="mt-0.5 text-sm text-muted-foreground">{item.text}</p>
       </div>

@@ -80,7 +80,7 @@ export const ActiveRfqsPanel = ({
                   >
                     <Icon size={20} />
                   </span>
-                  <span className="min-w-[180px] flex-1">
+                  <span className="min-w-45 flex-1">
                     <b className="block">{rfq.title}</b>
                     <span className="text-sm text-muted-foreground">
                       {getRfqCategoryLabel(rfq.category_id)} ·{" "}

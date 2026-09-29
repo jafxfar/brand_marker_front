@@ -21,7 +21,7 @@ export const ProcessTimeline = ({ steps, label = "Как идёт процесс
           {!isLast ? (
             <span
               className={cn(
-                "absolute left-[13px] top-7 bottom-0 w-0.5",
+                "absolute left-3.25 top-7 bottom-0 w-0.5",
                 step.state === "done" ? "bg-primary" : "bg-border",
               )}
               aria-hidden="true"

@@ -62,7 +62,7 @@ export const ProposalReviewCard = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-border">
         <div className="flex items-start gap-2 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
             <Banknote size={16} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
@@ -73,7 +73,7 @@ export const ProposalReviewCard = ({
           </div>
         </div>
         <div className="flex items-start gap-2 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
             <Clock size={16} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
