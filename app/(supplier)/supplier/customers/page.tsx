@@ -9,7 +9,7 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
 import { getActorId } from "@/lib/auth-display"
-import { formatPrice } from "@/lib/format"
+import { formatCount, formatPrice } from "@/lib/format"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import type { ContractWithRelations } from "@/types"
 
@@ -83,7 +83,7 @@ export default function SupplierCustomersPage() {
     <PageFrame>
       <PageHeader
         title="Заказчики"
-        description="Клиенты по договорам и сделкам"
+        description="Заказчики, с которыми у вас были сделки"
       />
 
       {customers.length === 0 ? (
@@ -91,7 +91,7 @@ export default function SupplierCustomersPage() {
           <PageEmptyState
             icon={<Users size={32} />}
             title="Заказчиков пока нет"
-            description="Заказчики появятся после принятых предложений и договоров"
+            description="Заказчики появятся, когда выберут ваши предложения"
           />
         </PageSurface>
       ) : (
@@ -107,15 +107,14 @@ export default function SupplierCustomersPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground">{customer.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {customer.contractCount}{" "}
-                  {customer.contractCount === 1 ? "договор" : "договоров"} ·{" "}
+                  {formatCount(customer.contractCount, "сделка", "сделки", "сделок")} ·{" "}
                   {formatPrice(customer.totalAmount)}
                 </p>
               </div>
               <Link
                 href={`/supplier/contracts/${customer.latestContractId}`}
                 className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                aria-label={`Открыть договоры с ${customer.name}`}
+                aria-label={`Открыть сделки с ${customer.name}`}
               >
                 Сделки <ChevronRight size={14} />
               </Link>

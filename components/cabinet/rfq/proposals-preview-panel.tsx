@@ -1,9 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Inbox } from "lucide-react"
+import { ArrowRight, Clock, Users } from "lucide-react"
 import type { Proposal, PublicSupplier } from "@/types"
 import { ProposalReviewCard } from "@/components/cabinet/rfq/proposal-review-card"
+import { PageEmptyState } from "@/components/layout"
+import { Button } from "@/components/ui/button"
+import { getProposalMarks } from "@/lib/proposals-review"
 
 type ProposalsPreviewPanelProps = {
   rfqId: string
@@ -14,6 +17,7 @@ type ProposalsPreviewPanelProps = {
   onShortlist: (proposalId: number) => void
   onReject: (proposalId: number) => void
   onAccept: (proposalId: number) => void
+  limit?: number
 }
 
 export const ProposalsPreviewPanel = ({
@@ -25,59 +29,69 @@ export const ProposalsPreviewPanel = ({
   onShortlist,
   onReject,
   onAccept,
-}: ProposalsPreviewPanelProps) => (
-  <section className="bg-card border border-border rounded-xl p-6">
-    <div className="flex items-center justify-between gap-3 mb-4">
-      <h2 className="text-sm font-semibold text-foreground">
-        Предложения
-        {proposals.length > 0 && (
-          <span className="ml-2 text-sm font-normal text-muted-foreground">
-            ({proposals.length})
-          </span>
-        )}
-      </h2>
-      {proposals.length > 0 && (
-        <Link
-          href={`/customer/rfqs/${rfqId}/proposals`}
-          className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
-        >
-          Все предложения <ArrowRight size={14} />
-        </Link>
-      )}
-    </div>
+  limit = 3,
+}: ProposalsPreviewPanelProps) => {
+  const marks = getProposalMarks(proposals)
+  const sorted = [...proposals].sort((a, b) => a.price - b.price)
 
-    {proposals.length === 0 ? (
-      <div className="py-8 text-center">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-3">
-          <Inbox size={18} className="text-primary" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Пока нет предложений. Опубликуйте заявку и дождитесь предложений.
-        </p>
-      </div>
-    ) : (
-      <div className="space-y-4">
-        {proposals.slice(0, 2).map((proposal) => (
-          <ProposalReviewCard
-            key={proposal.id}
-            proposal={proposal}
-            supplier={getSupplier(proposal.supplier_actor_id)}
-            supplierName={getSupplierName(proposal.supplier_actor_id)}
-            canManage={canManage}
-            onShortlist={() => onShortlist(proposal.id)}
-            onReject={() => onReject(proposal.id)}
-            onAccept={() => onAccept(proposal.id)}
-          />
-        ))}
-        {proposals.length > 2 && (
+  return (
+    <section className="grid gap-3" aria-label="Предложения">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold">
+          Предложения
+          {proposals.length > 0 && (
+            <span className="ml-2 font-normal text-muted-foreground">· {proposals.length}</span>
+          )}
+        </h2>
+        {proposals.length > 0 && (
           <Link
             href={`/customer/rfqs/${rfqId}/proposals`}
-            className="block text-center text-sm font-semibold text-primary hover:underline py-2"
+            className="flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
           >
-            Ещё {proposals.length - 2} предложений
+            Сравнить все <ArrowRight size={14} />
           </Link>
         )}
       </div>
-    )}
-  </section>
-)
+
+      {proposals.length === 0 ? (
+        <PageEmptyState
+          variant="card"
+          icon={<Clock />}
+          title="Предложений пока нет"
+          description="Мы уведомим вас, когда исполнители ответят. Можно пригласить исполнителей самим."
+          action={
+            <Button asChild variant="outline">
+              <Link href="/customer/suppliers">
+                <Users /> Найти исполнителей
+              </Link>
+            </Button>
+          }
+        />
+      ) : (
+        <div className="grid gap-3">
+          {sorted.slice(0, limit).map((proposal) => (
+            <ProposalReviewCard
+              key={proposal.id}
+              proposal={proposal}
+              marks={marks.get(proposal.id)}
+              supplier={getSupplier(proposal.supplier_actor_id)}
+              supplierName={getSupplierName(proposal.supplier_actor_id)}
+              canManage={canManage}
+              onShortlist={() => onShortlist(proposal.id)}
+              onReject={() => onReject(proposal.id)}
+              onAccept={() => onAccept(proposal.id)}
+            />
+          ))}
+          {proposals.length > limit && (
+            <Link
+              href={`/customer/rfqs/${rfqId}/proposals`}
+              className="block py-2 text-center text-sm font-semibold text-brand-700 hover:underline"
+            >
+              Ещё {proposals.length - limit} — сравнить все предложения
+            </Link>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}

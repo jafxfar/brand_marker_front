@@ -37,9 +37,9 @@ export default function BuyerReviewsPage() {
       const contract = (apiContracts as ContractWithRelations[]).find(
         (c) => c.id === contractId,
       )
-      return contract?.title ?? `Договор #${contractId}`
+      return contract?.title ?? `Сделка #${contractId}`
     }
-    return getContractLocal(contractId)?.title ?? `Договор #${contractId}`
+    return getContractLocal(contractId)?.title ?? `Сделка #${contractId}`
   }
 
   const getSupplierName = (supplierActorId: number) => {

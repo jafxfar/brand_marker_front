@@ -6,7 +6,6 @@ import {
   PageEmptyState,
   PageFrame,
   PageHeader,
-  PageSurface,
   SegmentedControl,
 } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -17,20 +16,17 @@ import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
-import {
-  CONTRACT_LIST_TABS,
-  filterContractsByTab,
-  type ContractListTab,
-} from "@/lib/contract-display"
-import { ContractsListTable } from "@/components/supplier/contracts/contracts-list-table"
+import { CONTRACT_LIST_TABS, type ContractListTab } from "@/lib/contract-display"
+import { filterDealsByTab } from "@/lib/process/deal-stages"
+import { DealList } from "@/components/contracts/deal-list"
 import type { ContractWithRelations } from "@/types"
 
 const emptyMessages: Record<ContractListTab, string> = {
-  all: "Договоров нет",
-  active: "Активные договоры появятся после принятия предложений",
-  completed: "Завершённые договоры отобразятся здесь",
-  disputed: "Спорных договоров нет",
-  cancelled: "Отменённых договоров нет",
+  all: "Сделка начнётся, когда заказчик выберет ваше предложение",
+  active: "Сделка начнётся, когда заказчик выберет ваше предложение",
+  completed: "Здесь будут сделки, по которым вы получили оплату",
+  disputed: "Споров нет — и хорошо",
+  cancelled: "Отменённых сделок нет",
 }
 
 const CONTRACT_TAB_VALUES = CONTRACT_LIST_TABS.map((option) => option.value)
@@ -40,47 +36,48 @@ const SupplierContractsContent = () => {
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getContractsByTab = useContractsStore((s) => s.getContractsByTab)
+
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [tab, setTab] = useUrlTab<ContractListTab>("tab", CONTRACT_TAB_VALUES, "all")
   const useApi = isApiEnabled()
   const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi)
 
-  const localContracts = hydrated ? getContractsByTab(actorId, tab) : []
-  const contracts: ContractWithRelations[] = useApi
-    ? filterContractsByTab((apiContracts ?? []) as ContractWithRelations[], tab)
-    : localContracts
+  const allContracts: ContractWithRelations[] = useApi
+    ? ((apiContracts ?? []) as ContractWithRelations[])
+    : hydrated
+      ? getContractsByTab(actorId, "all")
+      : []
+  const contracts = filterDealsByTab(allContracts, tab, "supplier")
 
   const isEmpty = !hydrated || isLoading || contracts.length === 0
 
   return (
     <PageFrame>
       <PageHeader
-        title="Договоры"
-        description="Управление сделками как исполнитель"
+        title="Мои сделки"
+        description="Этап каждой сделки и что нужно сделать дальше"
       />
 
       <SegmentedControl
         value={tab}
         options={CONTRACT_LIST_TABS}
         onChange={setTab}
-        ariaLabel="Статус договора"
+        ariaLabel="Фильтр сделок"
       />
 
       {isEmpty ? (
-        <PageSurface>
-          <PageEmptyState
-            icon={<FileCheck size={32} />}
-            title={isLoading ? "Загрузка договоров..." : "Договоров нет"}
-            description={!isLoading ? emptyMessages[tab] : undefined}
-          />
-        </PageSurface>
+        <PageEmptyState
+          variant="card"
+          icon={<FileCheck />}
+          title={isLoading ? "Загружаем сделки..." : "Сделок пока нет"}
+          description={!isLoading ? emptyMessages[tab] : undefined}
+        />
       ) : (
-        <PageSurface>
-          <ContractsListTable
-            contracts={contracts}
-            getBuyerName={(id) => getCompany(id)?.title ?? "Заказчик"}
-          />
-        </PageSurface>
+        <DealList
+          contracts={contracts}
+          role="supplier"
+          getCounterpartName={(c) => getCompany(c.buyer_actor_id)?.title ?? "Заказчик"}
+        />
       )}
     </PageFrame>
   )

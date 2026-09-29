@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 
 export const statusPillClass =
-  "inline-block text-sm font-semibold px-3.5 py-1.5 rounded-full whitespace-nowrap"
+  "inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
 
 type StatusBadgeProps = {
   label: string

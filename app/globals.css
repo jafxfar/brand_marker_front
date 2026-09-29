@@ -4,46 +4,58 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* B2B Services Marketplace — green primary + neutral secondary */
-  --background: oklch(0.975 0.002 240);
-  --foreground: oklch(0.13 0.015 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.015 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.015 255);
-  --primary: #16A34A;
+  /* БрендМаркет: brand / ink / mute / line / canvas */
+  --brand-50: #EEF8F1;
+  --brand-100: #D6F0DE;
+  --brand-300: #7ED29B;
+  --brand-500: #1BA34F;
+  --brand-600: #15893F;
+  --brand-700: #0F6E32;
+  --brand-900: #0B3A1E;
+  --ink: #141A16;
+  --mute: #667069;
+  --line: #E3E8E4;
+  --canvas: #F5F7F5;
+
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--brand-500);
   --primary-foreground: #ffffff;
-  --secondary: oklch(0.96 0.005 240);
-  --secondary-foreground: oklch(0.40 0.02 255);
-  --muted: oklch(0.96 0.004 240);
-  --muted-foreground: oklch(0.48 0.02 255);
-  --accent: oklch(0.96 0.005 240);
-  --accent-foreground: oklch(0.40 0.02 255);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.915 0.006 240);
-  --input: oklch(0.915 0.006 240);
-  --ring: #16A34A;
-  --success: #16A34A;
+  --secondary: var(--brand-50);
+  --secondary-foreground: var(--brand-700);
+  --muted: var(--canvas);
+  --muted-foreground: var(--mute);
+  --accent: var(--brand-50);
+  --accent-foreground: var(--brand-700);
+  --destructive: #DC2626;
+  --destructive-foreground: #ffffff;
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand-500);
+  --success: var(--brand-500);
   --success-foreground: #ffffff;
-  --warning: #F59E0B;
+  --warning: #D97706;
   --warning-foreground: #ffffff;
-  --info: #3B82F6;
+  --info: #0369A1;
   --info-foreground: #ffffff;
-  --chart-1: #16A34A;
+  --chart-1: var(--brand-500);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.35 0.03 255);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #16A34A;
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--brand-500);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: oklch(0.96 0.005 240);
-  --sidebar-accent-foreground: oklch(0.40 0.02 255);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: #16A34A;
+  --sidebar-accent: var(--brand-50);
+  --sidebar-accent-foreground: var(--brand-700);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--brand-500);
 }
 
 .dark {
@@ -88,8 +100,19 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback', system-ui, 'Segoe UI', Arial, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-300: var(--brand-300);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-900: var(--brand-900);
+  --color-ink: var(--ink);
+  --color-mute: var(--mute);
+  --color-line: var(--line);
+  --color-canvas: var(--canvas);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -140,5 +163,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }

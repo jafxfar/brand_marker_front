@@ -1,6 +1,12 @@
 "use client"
 
-import { ArrowDownToLine, FileText, Star } from "lucide-react"
+import { useState } from "react"
+import { ArrowDownToLine, FileText, Plus, Star } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { InlineHint } from "@/components/process"
+import { AddPayoutDestinationDialog } from "@/components/supplier/finance/add-payout-destination-dialog"
+import { milestoneStatusMeta } from "@/lib/contract-display"
+import { formatCurrency } from "@/lib/format"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useFinanceStore } from "@/lib/store/finance-store"
@@ -18,6 +24,7 @@ import {
   useSupplierInvoicesQuery,
   useSupplierWithdrawalsQuery,
   useRequestWithdrawalMutation,
+  useCreateDestinationMutation,
 } from "@/hooks/api/use-supplier-finance-query"
 import { useSupplierCompaniesQuery } from "@/hooks/api/use-supplier-companies-query"
 import { publicApi } from "@/lib/api/public"
@@ -28,7 +35,7 @@ import { WithdrawalForm } from "@/components/supplier/finance/withdrawal-form"
 import { WithdrawalsHistoryTable } from "@/components/supplier/finance/withdrawals-history-table"
 import { InvoicesTable } from "@/components/supplier/finance/invoices-table"
 import { ReviewsReceivedTable } from "@/components/supplier/finance/reviews-received-table"
-import type { Currency, Review } from "@/types"
+import type { Currency, PaymentMilestoneStatus, Review, WithdrawalDestinationType } from "@/types"
 
 export default function SupplierFinancePage() {
   const hydrated = useHydrated()
@@ -40,6 +47,8 @@ export default function SupplierFinancePage() {
   const getWithdrawals = useFinanceStore((s) => s.getWithdrawals)
   const getInvoices = useFinanceStore((s) => s.getInvoices)
   const requestWithdrawal = useFinanceStore((s) => s.requestWithdrawal)
+  const addDestinationLocal = useFinanceStore((s) => s.addDestination)
+  const [addDestinationOpen, setAddDestinationOpen] = useState(false)
   const destinations = useFinanceStore((s) => s.destinations)
   const contracts = useContractsStore((s) => s.contracts)
   const getContract = useContractsStore((s) => s.getContract)
@@ -53,6 +62,7 @@ export default function SupplierFinancePage() {
   const { data: apiWithdrawals } = useSupplierWithdrawalsQuery(hydrated && useApi)
   const { data: apiInvoices } = useSupplierInvoicesQuery(hydrated && useApi)
   const withdrawalMutation = useRequestWithdrawalMutation()
+  const createDestinationMutation = useCreateDestinationMutation()
 
   const activeCompanyId = user?.activeCompanyId ?? apiCompanies?.[0]?.id
   const { data: apiReviews } = useQuery({
@@ -114,38 +124,78 @@ export default function SupplierFinancePage() {
 
   const getContractTitle = (contractId: number | null) => {
     if (!contractId) return "—"
-    return getContract(contractId)?.title ?? `Договор #${contractId}`
+    return getContract(contractId)?.title ?? `Сделка #${contractId}`
   }
 
   const getReviewerName = (reviewerActorId: number) =>
     getCompany(reviewerActorId)?.title ?? `Заказчик #${reviewerActorId}`
 
-  const handleWithdrawal = async (input: { destinationId: number; amount: number }) => {
+  const handleAddDestination = async (input: {
+    type: WithdrawalDestinationType
+    label: string
+    details: string
+  }) => {
     if (useApi) {
+      await createDestinationMutation.mutateAsync({
+        ...input,
+        is_default: destinationList.length === 0,
+      })
+      return
+    }
+    addDestinationLocal(actorId, input)
+  }
+
+  const handleWithdrawal = async (input: { destinationId: number; amount: number }) => {
+    if (!useApi) return requestWithdrawal(actorId, input)
+    try {
       await withdrawalMutation.mutateAsync({
         destination_id: input.destinationId,
         amount: input.amount,
       })
-      return
+      return { ok: true as const }
+    } catch {
+      return { ok: false as const, error: "Не удалось создать заявку на вывод" }
     }
-    requestWithdrawal(actorId, input)
   }
 
   return (
     <PageFrame>
       <PageHeader
         title="Финансы"
-        description="Баланс, выводы и документы"
+        description="Сколько можно вывести, что поступит после приёмки, и документы"
       />
+
+      {hydrated && destinationList.length === 0 && (
+        <InlineHint variant="warning" className="items-center">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>
+              <b>Добавьте счёт для выплат.</b> Без него деньги за принятые работы нельзя вывести.
+            </span>
+            <Button size="sm" onClick={() => setAddDestinationOpen(true)}>
+              <Plus /> Добавить счёт
+            </Button>
+          </div>
+        </InlineHint>
+      )}
 
       <BalanceCards balances={balances} hydrated={hydrated} />
 
-      <PageSurface className="p-6">
+      <PageSurface id="payout" className="p-6 scroll-mt-24">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
             <ArrowDownToLine size={16} className="text-primary" />
           </div>
           <h2 className="text-base font-bold text-foreground">Выводы</h2>
+          {destinationList.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              onClick={() => setAddDestinationOpen(true)}
+            >
+              <Plus /> Добавить счёт
+            </Button>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -168,7 +218,7 @@ export default function SupplierFinancePage() {
 
       {useApi && paymentHistory && paymentHistory.length > 0 && (
         <PageSurface className="p-6">
-          <h2 className="text-base font-bold text-foreground mb-4">История безопасных выплат</h2>
+          <h2 className="text-base font-bold text-foreground mb-4">История выплат по сделкам</h2>
           <div className="space-y-2 text-sm">
             {paymentHistory.map((p) => (
               <div
@@ -177,7 +227,8 @@ export default function SupplierFinancePage() {
               >
                 <span className="font-medium">{p.title}</span>
                 <span className="text-muted-foreground">
-                  {p.amount.toLocaleString("ru-RU")} {p.currency} · {p.status}
+                  {formatCurrency(p.amount, p.currency)} ·{" "}
+                  {milestoneStatusMeta[p.status as PaymentMilestoneStatus]?.label ?? "—"}
                 </span>
               </div>
             ))}
@@ -208,6 +259,13 @@ export default function SupplierFinancePage() {
           getContractTitle={(id) => getContractTitle(id)}
         />
       </PageSurface>
+
+      <AddPayoutDestinationDialog
+        open={addDestinationOpen}
+        onOpenChange={setAddDestinationOpen}
+        busy={createDestinationMutation.isPending}
+        onSubmit={handleAddDestination}
+      />
     </PageFrame>
   )
 }

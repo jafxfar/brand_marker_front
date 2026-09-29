@@ -1,19 +1,14 @@
 import Link from "next/link"
-import { Building2, MapPin, ShieldCheck, User } from "lucide-react"
+import { Building2, MapPin, User } from "lucide-react"
 import type { PublicSupplier } from "@/types"
-import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
+import { formatCount } from "@/lib/format"
+import { SupplierRatingLine, SupplierVerifiedBadge } from "@/components/cabinet/suppliers/supplier-trust-badges"
 
 type SupplierDirectoryCardProps = {
   supplier: PublicSupplier
   summary: string
   categoryNames: string[]
 }
-
-const verificationLabel = {
-  verified: "Верифицирован",
-  pending: "На проверке",
-  rejected: "Отклонён",
-} as const
 
 export const SupplierDirectoryCard = ({
   supplier,
@@ -26,7 +21,7 @@ export const SupplierDirectoryCard = ({
   return (
     <Link
       href={`/customer/suppliers/${supplier.actor_id}`}
-      className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 hover:shadow-lg transition-all group block"
+      className="bg-card border border-border rounded-2xl p-5 hover:border-primary transition-colors group block"
     >
       <div className="flex items-start gap-3">
         <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
@@ -37,19 +32,14 @@ export const SupplierDirectoryCard = ({
             <span className="font-bold text-sm text-foreground truncate group-hover:text-primary transition-colors">
               {supplier.display_name}
             </span>
-            {supplier.verification_status === "verified" && (
-              <ShieldCheck size={14} className="text-primary flex-shrink-0" />
-            )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <BuyerRating rating={supplier.rating} compact />
-            <span className="text-xs text-muted-foreground">
-              ({supplier.reviews_count})
-            </span>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <SupplierRatingLine supplier={supplier} compact />
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
               {isIndividual ? "Физлицо" : "Компания"}
             </span>
           </div>
+          <SupplierVerifiedBadge supplier={supplier} className="mt-1.5" />
           {supplier.city && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1.5">
               <MapPin size={11} /> {supplier.city}
@@ -63,7 +53,7 @@ export const SupplierDirectoryCard = ({
       <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border">
         {supplier.completed_contracts != null && supplier.completed_contracts > 0 && (
           <span className="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-lg font-semibold">
-            {supplier.completed_contracts} завершённых
+            {formatCount(supplier.completed_contracts, "сделка", "сделки", "сделок")} завершено
           </span>
         )}
         {supplier.active_catalog_count > 0 && (
@@ -79,9 +69,6 @@ export const SupplierDirectoryCard = ({
             {name}
           </span>
         ))}
-        <span className="text-[10px] text-muted-foreground px-1 py-1">
-          {verificationLabel[supplier.verification_status]}
-        </span>
       </div>
     </Link>
   )

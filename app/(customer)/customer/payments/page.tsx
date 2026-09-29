@@ -68,7 +68,7 @@ const BuyerPaymentsContent = () => {
         const contract = contractById.get(event.contractId)
         return {
           ...event,
-          contractTitle: contract?.title ?? `Договор #${event.contractId}`,
+          contractTitle: contract?.title ?? `Сделка #${event.contractId}`,
           supplierActorId: contract?.supplier_actor_id ?? 0,
         }
       })
@@ -80,7 +80,7 @@ const BuyerPaymentsContent = () => {
       const contract = contractById.get(p.contract_id)
       return {
         contractId: p.contract_id,
-        contractTitle: contract?.title ?? `Договор #${p.contract_id}`,
+        contractTitle: contract?.title ?? `Сделка #${p.contract_id}`,
         milestoneId: p.milestone_id,
         title: p.title,
         amount: p.amount,
@@ -106,7 +106,7 @@ const BuyerPaymentsContent = () => {
 
   const getContractTitle = (contractId: number | null) => {
     if (!contractId) return "—"
-    return getContract(contractId)?.title ?? `Договор #${contractId}`
+    return getContract(contractId)?.title ?? `Сделка #${contractId}`
   }
 
   const handleFund = (contractId: number, milestoneId: number) => {

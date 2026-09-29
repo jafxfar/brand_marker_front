@@ -10,12 +10,13 @@ import { cn } from "@/lib/utils"
 import { useCartStore } from "@/lib/store/cart-store"
 import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useDealActionCount } from "@/hooks/use-deal-action-count"
 
 interface NavItem {
   href: string
   label: string
   Icon: LucideIcon
-  badge?: "cart" | "notifications"
+  badge?: "cart" | "notifications" | "deals"
 }
 
 interface NavSection {
@@ -30,7 +31,7 @@ const navSections: NavSection[] = [
       { href: "/customer", label: "Главная", Icon: LayoutDashboard },
       { href: "/customer/catalog", label: "Товары и услуги", Icon: Package },
       { href: "/customer/rfqs", label: "Мои заявки", Icon: FileText },
-      { href: "/customer/contracts", label: "Договоры", Icon: FileCheck },
+      { href: "/customer/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
     ],
   },
   {
@@ -55,9 +56,11 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
   const hydrated = useHydrated()
   const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0))
   const unread = useUnreadNotificationsCount("buyer")
+  const dealActions = useDealActionCount("buyer")
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
+    if (item.badge === "deals") return dealActions
     return item.badge === "cart" ? cartCount : unread
   }
 
@@ -88,7 +91,7 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
           className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors shadow-sm"
         >
           <Plus size={17} />
-          Создать заявку
+          Новая заявка
         </Link>
       </div>
 
@@ -116,7 +119,10 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
                   <item.Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
                   <span>{item.label}</span>
                   {badge > 0 && (
-                    <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                    <span
+                      className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center"
+                      aria-label={item.badge === "deals" ? `нужно действие: ${badge}` : String(badge)}
+                    >
                       {badge}
                     </span>
                   )}

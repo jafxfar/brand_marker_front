@@ -1,14 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import {
-  FileCheck, Inbox, MessageSquare, TrendingUp, Wallet, Star, ArrowRight,
-} from "lucide-react"
+import { ArrowRight, Clock, Star, Wallet } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
+import { useItemsStore } from "@/lib/store/items-store"
+import { useFinanceStore } from "@/lib/store/finance-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId, getUserDisplayName } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
@@ -17,30 +17,29 @@ import {
   useSupplierRfqBoardQuery,
   useSupplierProposalsQuery,
 } from "@/hooks/api/use-supplier-rfqs-query"
-import { useSupplierPendingPayoutsQuery } from "@/hooks/api/use-supplier-payments-query"
+import { useSupplierBalanceQuery } from "@/hooks/api/use-supplier-payments-query"
+import { useSupplierFinanceDestinationsQuery } from "@/hooks/api/use-supplier-finance-query"
+import { useSupplierCatalogQuery } from "@/hooks/api/use-supplier-catalog-query"
 import { useSupplierCompaniesQuery } from "@/hooks/api/use-supplier-companies-query"
-import { formatPrice, formatRating } from "@/lib/format"
-import {
-  getActiveSupplierContracts,
-  getNewRfqsWithoutProposal,
-  getSupplierIncomingMessages,
-  getSupplierPendingAmount,
-  getSupplierPendingMilestonesFromApi,
-  getSupplierPendingMilestonesFromContracts,
-  getSupplierRevenue,
-  getSupplierUnreadMessageCount,
-} from "@/lib/supplier-dashboard"
+import { formatCount, formatPrice, formatRating } from "@/lib/format"
+import { getNewRfqsWithoutProposal, getSupplierUnreadMessageCount } from "@/lib/supplier-dashboard"
+import { dealNeedsAction, getDealPhase, isDealOpen } from "@/lib/process/deal-stages"
+import { buildSupplierTodo } from "@/lib/process/todo"
 import { Button } from "@/components/ui/button"
 import { PageFrame, PageHeader } from "@/components/layout"
-import { StatCard } from "@/components/supplier/dashboard/stat-card"
+import { MetricTile, ProfileChecklist, TodoList, type ChecklistItem } from "@/components/process"
 import { ActiveContractsPanel } from "@/components/supplier/dashboard/active-contracts-panel"
-import { NewRfqPanel } from "@/components/supplier/dashboard/new-rfq-panel"
-import { IncomingMessagesPanel } from "@/components/supplier/dashboard/incoming-messages-panel"
-import { RatingSummaryCard } from "@/components/supplier/dashboard/rating-summary-card"
-import { PendingPaymentsPanel } from "@/components/supplier/dashboard/pending-payments-panel"
-import { HowItWorks } from "@/components/onboarding/how-it-works"
 import { ActivateRoleBanner } from "@/components/company/activate-role-banner"
 import type { ContractWithRelations } from "@/types"
+
+/** Net amount the supplier still expects from a deal (unreleased milestones minus commission). */
+const getExpectedPayout = (contract: ContractWithRelations): number => {
+  const milestones = contract.payment_plan?.milestones ?? []
+  if (milestones.length === 0) return contract.agreed_amount
+  return milestones
+    .filter((m) => m.status !== "released")
+    .reduce((sum, m) => sum + m.amount - (m.commission_amount ?? 0), 0)
+}
 
 export default function SupplierDashboard() {
   const hydrated = useHydrated()
@@ -49,33 +48,32 @@ export default function SupplierDashboard() {
   const userId = user?.userId ?? 0
   const useApi = isApiEnabled()
 
-  const getActiveContracts = useContractsStore((s) => s.getActiveContracts)
-  const getRevenue = useContractsStore((s) => s.getRevenue)
-  const getPendingPaymentsAmount = useContractsStore((s) => s.getPendingPaymentsAmount)
-  const getPendingMilestones = useContractsStore((s) => s.getPendingMilestones)
-  const getIncomingMessages = useContractsStore((s) => s.getIncomingMessages)
+  const getContractsByTab = useContractsStore((s) => s.getContractsByTab)
   const getUnreadMessageCount = useContractsStore((s) => s.getUnreadMessageCount)
   const getNewRfqsForSupplier = useRfqsStore((s) => s.getNewRfqsForSupplier)
   const hasProposal = useProposalsStore((s) => s.hasProposal)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const getMyCompany = useCompaniesStore((s) => s.getMyCompany)
+  const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
+  const getDestinations = useFinanceStore((s) => s.getDestinations)
+  const getBalanceSummary = useFinanceStore((s) => s.getBalanceSummary)
 
-  const { data: apiContracts, isLoading: contractsLoading } = useSupplierContractsQuery(
-    hydrated && useApi,
-  )
-  const { data: apiRfqs, isLoading: rfqsLoading } = useSupplierRfqBoardQuery(hydrated && useApi)
-  const { data: apiProposals } = useSupplierProposalsQuery(hydrated && useApi)
-  const { data: pendingPayouts } = useSupplierPendingPayoutsQuery(hydrated && useApi)
-  const { data: apiCompanies } = useSupplierCompaniesQuery(hydrated && useApi)
+  const apiEnabled = hydrated && useApi
+  const { data: apiContracts, isLoading: contractsLoading } = useSupplierContractsQuery(apiEnabled)
+  const { data: apiRfqs, isLoading: rfqsLoading } = useSupplierRfqBoardQuery(apiEnabled)
+  const { data: apiProposals } = useSupplierProposalsQuery(apiEnabled)
+  const { data: apiBalance } = useSupplierBalanceQuery(apiEnabled)
+  const { data: apiDestinations } = useSupplierFinanceDestinationsQuery(apiEnabled)
+  const { data: apiItems } = useSupplierCatalogQuery(undefined, apiEnabled)
+  const { data: apiCompanies } = useSupplierCompaniesQuery(apiEnabled)
 
   const getBuyerName = (buyerId: number) =>
     getCompany(buyerId)?.title ?? `Заказчик #${buyerId}`
 
-  const apiContractsList = (apiContracts ?? []) as ContractWithRelations[]
-  const activeContracts = useApi
-    ? getActiveSupplierContracts(apiContractsList)
+  const contracts: ContractWithRelations[] = useApi
+    ? ((apiContracts ?? []) as ContractWithRelations[])
     : hydrated
-      ? getActiveContracts(actorId)
+      ? getContractsByTab(actorId, "all")
       : []
 
   const newRfqs = useApi
@@ -84,35 +82,8 @@ export default function SupplierDashboard() {
       ? getNewRfqsForSupplier(actorId, (rfqId) => hasProposal(rfqId, actorId))
       : []
 
-  const revenue = useApi
-    ? getSupplierRevenue(apiContractsList)
-    : hydrated
-      ? getRevenue(actorId)
-      : 0
-
-  const pendingMilestones = useApi
-    ? getSupplierPendingMilestonesFromApi(
-        pendingPayouts?.items ?? [],
-        apiContractsList,
-      )
-    : hydrated
-      ? getPendingMilestones(actorId)
-      : []
-
-  const pendingAmount = useApi
-    ? getSupplierPendingAmount(pendingMilestones)
-    : hydrated
-      ? getPendingPaymentsAmount(actorId)
-      : 0
-
-  const incomingMessages = useApi
-    ? getSupplierIncomingMessages(apiContractsList, actorId, getBuyerName)
-    : hydrated
-      ? getIncomingMessages(actorId, actorId, getBuyerName)
-      : []
-
   const unreadCount = useApi
-    ? getSupplierUnreadMessageCount(apiContractsList, userId)
+    ? getSupplierUnreadMessageCount(contracts, userId)
     : hydrated
       ? getUnreadMessageCount(actorId, actorId)
       : 0
@@ -123,11 +94,77 @@ export default function SupplierDashboard() {
       ? getMyCompany(actorId)
       : undefined
 
+  const items = useApi ? apiItems : hydrated ? getItemsBySupplier(actorId) : undefined
+  const destinations = useApi ? apiDestinations : hydrated ? getDestinations(actorId) : undefined
+  const balance = useApi
+    ? apiBalance
+      ? { available: apiBalance.available, currency: apiBalance.currency }
+      : undefined
+    : hydrated
+      ? getBalanceSummary(actorId)
+      : undefined
+
   const rating = myCompany?.rating ?? myCompany?.stats?.average_rating ?? 0
   const reviewCount = myCompany?.reviews?.length ?? 0
-  const completedContracts = myCompany?.stats?.completed_contracts ?? 0
 
-  const isLoading = useApi && (contractsLoading || rfqsLoading)
+  const openDeals = contracts
+    .filter(isDealOpen)
+    .sort((a, b) => Number(dealNeedsAction("supplier", b)) - Number(dealNeedsAction("supplier", a)))
+  const expectedDeals = openDeals.filter((c) => getDealPhase(c) !== "disputed")
+  const expectedAmount = expectedDeals.reduce((sum, c) => sum + getExpectedPayout(c), 0)
+
+  const todo = buildSupplierTodo({
+    contracts,
+    newRfqs: newRfqs.map((r) => ({ id: r.id, title: r.title })),
+    unreadMessages: unreadCount,
+  })
+
+  const checklist: ChecklistItem[] = []
+  if (hydrated && (!useApi || apiCompanies)) {
+    checklist.push({
+      id: "company",
+      label: "Расскажите о компании: описание и город",
+      done: Boolean(myCompany?.description && myCompany?.city),
+      href: "/supplier/company",
+      cta: "Заполнить",
+    })
+    if (myCompany) {
+      const verified = myCompany.verification_status === "verified"
+      const rejected = myCompany.verification_status === "rejected"
+      checklist.push({
+        id: "verification",
+        label: verified
+          ? "Компания проверена"
+          : rejected
+            ? "Проверка не пройдена — исправьте данные компании"
+            : "Компания на проверке у администратора",
+        done: verified,
+        href: rejected ? "/supplier/company" : undefined,
+        cta: rejected ? "Исправить" : undefined,
+      })
+    }
+  }
+  if (items) {
+    checklist.push({
+      id: "catalog",
+      label: "Опубликуйте товар или услугу в каталоге",
+      done: items.some((item) => item.status === "active"),
+      href: "/supplier/catalog/new",
+      cta: "Добавить",
+    })
+  }
+  if (destinations) {
+    checklist.push({
+      id: "payout",
+      label: "Добавьте счёт для выплат",
+      done: destinations.length > 0,
+      href: "/supplier/finance#payout",
+      cta: "Добавить",
+    })
+  }
+
+  const loading = !hydrated || (useApi && (contractsLoading || rfqsLoading))
+  const noPayoutAccount = destinations?.length === 0
 
   return (
     <PageFrame>
@@ -138,88 +175,63 @@ export default function SupplierDashboard() {
       />
       <PageHeader
         title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
-        description="Ваши договоры, заявки заказчиков и финансы"
+        description="Здесь видно, что нужно сделать по сделкам и новым заявкам"
         actions={
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="lg:hidden">
             <Link href="/supplier/rfqs">
-              Ответить на заявку <ArrowRight size={17} />
+              Найти заявки <ArrowRight size={17} />
             </Link>
           </Button>
         }
       />
 
-      <HowItWorks variant="supplier" />
+      <div className="grid gap-8">
+        <ProfileChecklist items={checklist} />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard
-          Icon={FileCheck}
-          label="Активные договоры"
-          value={!hydrated || isLoading ? "—" : String(activeContracts.length)}
-          href="/supplier/contracts?tab=active"
-          accent="bg-primary/10 text-primary"
+        <TodoList
+          items={todo}
+          loading={loading}
+          emptyText="Новых дел нет. Загляните в заявки — там могут быть новые заказы."
         />
-        <StatCard
-          Icon={Inbox}
-          label="Новые заявки"
-          value={!hydrated || isLoading ? "—" : String(newRfqs.length)}
-          href="/supplier/rfqs"
-          accent="bg-info/10 text-info"
-        />
-        <StatCard
-          Icon={MessageSquare}
-          label="Входящие сообщения"
-          value={!hydrated || isLoading ? "—" : String(unreadCount)}
-          subValue={unreadCount > 0 ? "непрочитанных" : undefined}
-          href="/supplier/messages"
-          accent="bg-warning/10 text-warning"
-        />
-        <StatCard
-          Icon={TrendingUp}
-          label="Выручка"
-          value={!hydrated || isLoading ? "—" : formatPrice(revenue)}
-          href="/supplier/finance"
-          accent="bg-muted text-muted-foreground"
-        />
-        <StatCard
-          Icon={Wallet}
-          label="Ожидают выплаты"
-          value={!hydrated || isLoading ? "—" : formatPrice(pendingAmount)}
-          href="/supplier/finance"
-          accent="bg-secondary text-secondary-foreground"
-        />
-        <StatCard
-          Icon={Star}
-          label="Рейтинг"
-          value={!hydrated || isLoading ? "—" : formatRating(rating)}
-          subValue={hydrated ? `${reviewCount} отзывов` : undefined}
-          href="/supplier/finance#reviews"
-          accent="bg-warning/10 text-warning"
-        />
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <ActiveContractsPanel
-            contracts={activeContracts}
-            hydrated={hydrated && !isLoading}
-            getBuyerName={getBuyerName}
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Сводка">
+          <MetricTile
+            Icon={Wallet}
+            label="Можно вывести"
+            value={loading || !balance ? "—" : formatPrice(balance.available)}
+            hint={noPayoutAccount ? "сначала добавьте счёт для выплат" : "за принятые работы"}
+            href="/supplier/finance"
+            valueClassName="text-primary"
           />
-          <NewRfqPanel rfqs={newRfqs} hydrated={hydrated && !isLoading} />
-        </div>
+          <MetricTile
+            Icon={Clock}
+            label="Поступит после приёмки"
+            value={loading ? "—" : formatPrice(expectedAmount)}
+            hint={
+              expectedDeals.length > 0
+                ? `по ${formatCount(expectedDeals.length, "сделке", "сделкам", "сделкам")}`
+                : "нет сделок в работе"
+            }
+            href="/supplier/contracts"
+          />
+          <MetricTile
+            Icon={Star}
+            label="Отзывы"
+            value={loading ? "—" : reviewCount > 0 ? formatRating(rating) : "—"}
+            hint={
+              reviewCount > 0
+                ? formatCount(reviewCount, "отзыв", "отзыва", "отзывов")
+                : "первый отзыв появится после сделки"
+            }
+            href="/supplier/finance#reviews"
+          />
+        </section>
 
-        <div className="space-y-4">
-          <IncomingMessagesPanel messages={incomingMessages} hydrated={hydrated && !isLoading} />
-          <RatingSummaryCard
-            rating={rating}
-            reviewCount={reviewCount}
-            completedContracts={completedContracts}
-            hydrated={hydrated && !isLoading}
-          />
-          <PendingPaymentsPanel
-            milestones={pendingMilestones}
-            hydrated={hydrated && !isLoading}
-          />
-        </div>
+        <ActiveContractsPanel
+          contracts={openDeals}
+          hydrated={!loading}
+          getBuyerName={getBuyerName}
+        />
       </div>
     </PageFrame>
   )

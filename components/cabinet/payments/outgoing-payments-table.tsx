@@ -36,7 +36,7 @@ export const OutgoingPaymentsTable = ({
           <thead>
             <tr className="border-b border-border bg-secondary/40">
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дата</th>
-              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Договор</th>
+              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Сделка</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Исполнитель</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Этап</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Тип</th>

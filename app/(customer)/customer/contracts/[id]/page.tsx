@@ -3,6 +3,9 @@
 import { use, useState } from "react"
 import Link from "next/link"
 import { AlertTriangle, FileCheck, MessageSquare, Paperclip, Clock, Package, Gavel } from "lucide-react"
+import { ConfirmActionDialog, DealStepper } from "@/components/process"
+import { BuyerDealNextAction } from "@/components/cabinet/contracts/buyer-deal-next-action"
+import { isPostpaymentDeal } from "@/lib/process/deal-stages"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { statusPillClass } from "@/components/ui/status-badge"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -34,7 +37,6 @@ import { ContractSupplierCard } from "@/components/cabinet/contracts/contract-su
 import { BuyerContractMilestonesPanel } from "@/components/cabinet/contracts/buyer-contract-milestones-panel"
 import { BuyerContractSubmissionsPanel } from "@/components/cabinet/contracts/buyer-contract-submissions-panel"
 import { ContractPaymentHistoryPanel } from "@/components/cabinet/contracts/contract-payment-history-panel"
-import { ContractReviewSection } from "@/components/cabinet/contracts/contract-review-section"
 import { ContractEscrowCard } from "@/components/supplier/contracts/contract-escrow-card"
 import { ContractFilesPanel } from "@/components/supplier/contracts/contract-files-panel"
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
@@ -50,6 +52,8 @@ type PageProps = {
 }
 
 const DISPUTE_DISABLED_STATUSES = ["disputed", "cancelled", "completed"] as const
+
+type PendingAction = { kind: "fund" | "release" | "accept"; id: number }
 
 export default function BuyerContractDetailPage({ params }: PageProps) {
   const { id } = use(params)
@@ -75,6 +79,8 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const hasReviewForContract = useCompaniesStore((s) => s.hasReviewForContract)
   const [disputeOpen, setDisputeOpen] = useState(false)
   const [isUploadingFiles, setIsUploadingFiles] = useState(false)
+  const [tab, setTab] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
 
   const { data: apiContract, isLoading } = useContractQuery(contractId, hydrated && useApi)
   const { data: paymentHistoryApi = [] } = usePaymentHistoryQuery(hydrated && useApi)
@@ -112,7 +118,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   if (!contract || contract.buyer_actor_id !== actorId) {
     return (
       <PageFrame>
-        <PageHeader title="Договор не найден" backHref="/customer/contracts" backLabel="Вернуться к списку" />
+        <PageHeader title="Сделка не найдена" backHref="/customer/contracts" backLabel="Вернуться к сделкам" />
       </PageFrame>
     )
   }
@@ -231,6 +237,53 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     Boolean(activeDispute) || contract.status === "disputed"
   const defaultTab =
     activeDispute?.status === "under_review" ? "dispute" : "overview"
+  const activeTab = tab ?? defaultTab
+  const paymentBusy = fundAndConfirmMutation.isPending || approveMilestoneMutation.isPending
+  const submissionBusy =
+    approveSubmissionMutation.isPending || rejectSubmissionMutation.isPending
+
+  const handleRequestChanges = (submissionId: number) => {
+    handleRejectSubmission(submissionId)
+    setTab("messages")
+  }
+
+  const handleConfirmPendingAction = () => {
+    if (!pendingAction) return
+    if (pendingAction.kind === "fund") handleFund(pendingAction.id)
+    if (pendingAction.kind === "release") handleApprove(pendingAction.id)
+    if (pendingAction.kind === "accept") handleApproveSubmission(pendingAction.id)
+    setPendingAction(null)
+  }
+
+  const pendingMilestone = pendingAction && pendingAction.kind !== "accept"
+    ? contract.payment_plan?.milestones.find((m) => m.id === pendingAction.id)
+    : undefined
+  const pendingAmount = formatCurrency(
+    pendingMilestone?.amount ?? contract.agreed_amount,
+    contract.currency,
+  )
+  const postpayment = isPostpaymentDeal(contract)
+  const confirmCopy: Record<PendingAction["kind"], { title: string; description: string; confirmLabel: string }> = {
+    fund: {
+      title: `Оплатить ${pendingAmount}?`,
+      description: postpayment
+        ? "Деньги поступят на гарантию площадки. Затем вы подтвердите выплату исполнителю."
+        : "Деньги поступят на гарантию площадки. Исполнитель получит их только после того, как вы примете работу.",
+      confirmLabel: "Оплатить",
+    },
+    release: {
+      title: "Перевести деньги исполнителю?",
+      description: `${supplierName} получит ${pendingAmount}. Отменить выплату будет нельзя.`,
+      confirmLabel: "Да, перевести",
+    },
+    accept: {
+      title: "Принять работу?",
+      description: postpayment
+        ? `Следующим шагом нужно будет оплатить работу — ${pendingAmount}. Отправить работу на доработку после приёмки будет нельзя.`
+        : `${supplierName} получит ${pendingAmount} с гарантии площадки. Отправить работу на доработку после приёмки будет нельзя.`,
+      confirmLabel: "Да, принять",
+    },
+  }
 
   return (
     <PageFrame>
@@ -238,15 +291,16 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         title={contract.title}
         description={supplierName}
         backHref="/customer/contracts"
-        backLabel="Назад к договорам"
+        backLabel="Мои сделки"
         actions={
-          <p className="text-lg font-bold text-primary">
+          <p className="text-lg font-bold text-primary tnum">
             {formatCurrency(contract.agreed_amount, contract.currency)}
           </p>
         }
       />
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="grid gap-4 rounded-2xl border border-border bg-card p-5">
+        <DealStepper contract={contract} />
         <div className="flex flex-wrap items-center gap-3">
           <DeadlineCountdown
             dueDate={contract.due_date}
@@ -265,10 +319,9 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
               type="button"
               onClick={() => setDisputeOpen(true)}
               className="ml-auto inline-flex items-center gap-1 text-xs text-destructive transition-colors hover:text-destructive/80"
-              aria-label="Открыть спор"
             >
               <AlertTriangle size={12} />
-              Спор
+              Открыть спор
             </button>
           )}
           {showDisputeTab && (
@@ -278,7 +331,21 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
       </div>
 
-      <Tabs defaultValue={defaultTab} className="space-y-4">
+      <BuyerDealNextAction
+        contract={contract}
+        supplierName={supplierName}
+        hasReview={hasReview}
+        busy={paymentBusy || submissionBusy}
+        onFund={(milestoneId) => setPendingAction({ kind: "fund", id: milestoneId })}
+        onRelease={(milestoneId) => setPendingAction({ kind: "release", id: milestoneId })}
+        onAcceptSubmission={(submissionId) => setPendingAction({ kind: "accept", id: submissionId })}
+        onRequestChanges={handleRequestChanges}
+        onOpenDispute={() => setDisputeOpen(true)}
+        onOpenTab={setTab}
+        onSubmitReview={handleSubmitReview}
+      />
+
+      <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview" className="gap-1.5">
             <FileCheck size={14} /> Обзор
@@ -328,19 +395,13 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
               )}
               <BuyerContractMilestonesPanel
                 contract={contract}
-                onFund={handleFund}
-                onApprove={handleApprove}
+                onFund={(milestoneId) => setPendingAction({ kind: "fund", id: milestoneId })}
+                onApprove={(milestoneId) => setPendingAction({ kind: "release", id: milestoneId })}
               />
             </div>
             <div className="space-y-5 lg:sticky lg:top-24">
               <ContractSupplierCard supplier={supplier} supplierTitle={supplierName} />
               <ContractEscrowCard contract={contract} />
-              <ContractReviewSection
-                supplierName={supplierName}
-                canReview={contract.status === "completed"}
-                hasReview={hasReview}
-                onSubmit={handleSubmitReview}
-              />
               <Link
                 href={`/customer/rfqs/${contract.rfq_id}`}
                 className="block text-center text-sm font-semibold text-primary hover:underline"
@@ -381,11 +442,9 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         <TabsContent value="submission">
           <BuyerContractSubmissionsPanel
             contract={contract}
-            onApprove={handleApproveSubmission}
-            onReject={handleRejectSubmission}
-            busy={
-              approveSubmissionMutation.isPending || rejectSubmissionMutation.isPending
-            }
+            onApprove={(submissionId) => setPendingAction({ kind: "accept", id: submissionId })}
+            onReject={handleRequestChanges}
+            busy={submissionBusy}
           />
         </TabsContent>
 
@@ -414,6 +473,17 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
           openDisputeLocal(contractId, reason, actorId)
         }}
       />
+
+      {pendingAction && (
+        <ConfirmActionDialog
+          open
+          onOpenChange={(open) => !open && setPendingAction(null)}
+          title={confirmCopy[pendingAction.kind].title}
+          description={confirmCopy[pendingAction.kind].description}
+          confirmLabel={confirmCopy[pendingAction.kind].confirmLabel}
+          onConfirm={handleConfirmPendingAction}
+        />
+      )}
     </PageFrame>
   )
 }

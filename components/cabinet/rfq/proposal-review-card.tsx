@@ -17,6 +17,8 @@ type ProposalReviewCardProps = {
   onShortlist: () => void
   onReject: () => void
   onAccept: () => void
+  /** Comparison badges like «Самая низкая цена». */
+  marks?: string[]
 }
 
 export const ProposalReviewCard = ({
@@ -27,6 +29,7 @@ export const ProposalReviewCard = ({
   onShortlist,
   onReject,
   onAccept,
+  marks = [],
 }: ProposalReviewCardProps) => {
   const meta = proposalStatusMeta[proposal.status]
   const isFinal = ["accepted", "rejected", "withdrawn", "archived"].includes(proposal.status)
@@ -35,12 +38,27 @@ export const ProposalReviewCard = ({
   const handleOpenChat = () => setChatOpen(true)
 
   return (
-    <article className="bg-card border border-border rounded-xl p-5 sm:p-6">
+    <article
+      className={`bg-card border rounded-2xl p-5 sm:p-6 ${proposal.status === "accepted" ? "border-primary" : "border-border"}`}
+    >
       <SupplierProposalInfo
         supplier={supplier}
         supplierId={proposal.supplier_actor_id}
         supplierName={supplierName}
       />
+
+      {marks.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {marks.map((mark) => (
+            <span
+              key={mark}
+              className="text-xs font-semibold rounded-full px-2 py-0.5 bg-brand-50 text-brand-700"
+            >
+              {mark}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-border">
         <div className="flex items-start gap-2 min-w-0">
@@ -111,7 +129,7 @@ export const ProposalReviewCard = ({
               onClick={onAccept}
               className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
             >
-              Принять
+              Выбрать исполнителя
             </button>
           </>
         )}

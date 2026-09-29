@@ -89,7 +89,7 @@ export default function SupplierMessagesPage() {
     <PageFrame>
       <PageHeader
         title="Сообщения"
-        description="Переписка по договорам с заказчиками"
+        description="Переписка по сделкам с заказчиками"
       />
 
       {groups.length === 0 ? (
@@ -97,7 +97,7 @@ export default function SupplierMessagesPage() {
           <PageEmptyState
             icon={<MessageSquare size={32} />}
             title="Сообщений пока нет"
-            description="Сообщения появятся в активных договорах"
+            description="Чат появится, когда начнётся сделка"
           />
         </PageSurface>
       ) : (
@@ -140,7 +140,7 @@ export default function SupplierMessagesPage() {
                   href={`/supplier/contracts/${selected.contract.id}`}
                   className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 px-1"
                 >
-                  Открыть договор <ChevronRight size={14} />
+                  Открыть сделку <ChevronRight size={14} />
                 </Link>
               </>
             ) : (

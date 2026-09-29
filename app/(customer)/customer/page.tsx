@@ -2,9 +2,8 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
-import {
-  FileText, Inbox, FileCheck, Wallet, AlertTriangle, MessageSquare, Plus, ArrowRight,
-} from "lucide-react"
+import { Briefcase, FileText, Lock, Plus } from "lucide-react"
+import { useQueries } from "@tanstack/react-query"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
@@ -14,32 +13,24 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId, getUserDisplayName } from "@/lib/auth-display"
 import { formatPrice } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
-import { useActiveRfqsQuery } from "@/hooks/api/use-rfqs-query"
+import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
-import { usePendingPaymentsQuery } from "@/hooks/api/use-payments-query"
-import { useQueries } from "@tanstack/react-query"
 import { proposalsApi } from "@/lib/api/proposals"
 import { proposalKeys } from "@/hooks/api/use-proposals-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
-import {
-  getActiveBuyerContracts,
-  getBuyerIncomingMessages,
-  getBuyerIncomingProposals,
-  getBuyerNewProposalsCount,
-  getBuyerUnreadMessageCount,
-} from "@/lib/buyer-dashboard"
+import { getBuyerUnreadMessageCount } from "@/lib/buyer-dashboard"
+import { getEscrowSummary } from "@/lib/contract-display"
+import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
+import { isDealOpen } from "@/lib/process/deal-stages"
+import { buildBuyerTodo, type BuyerRfqProposalsSummary } from "@/lib/process/todo"
 import { Button } from "@/components/ui/button"
 import { PageFrame, PageHeader } from "@/components/layout"
-import { StatCard } from "@/components/supplier/dashboard/stat-card"
 import { ActiveRfqsPanel } from "@/components/cabinet/dashboard/active-rfqs-panel"
-import { IncomingProposalsPanel } from "@/components/cabinet/dashboard/incoming-proposals-panel"
-import { BuyerActiveContractsPanel } from "@/components/cabinet/dashboard/buyer-active-contracts-panel"
-import { BuyerPendingPaymentsPanel } from "@/components/cabinet/dashboard/buyer-pending-payments-panel"
-import { BuyerDisputesPanel } from "@/components/cabinet/dashboard/buyer-disputes-panel"
-import { BuyerMessagesPanel } from "@/components/cabinet/dashboard/buyer-messages-panel"
 import { ActivateRoleBanner } from "@/components/company/activate-role-banner"
-import { HowItWorks } from "@/components/onboarding/how-it-works"
-import type { ContractWithRelations, RfqWithRelations } from "@/types"
+import { EscrowExplainer, MetricTile, TodoList } from "@/components/process"
+import type { ContractWithRelations, Proposal, RfqWithRelations } from "@/types"
+
+const VISIBLE_PROPOSAL_STATUSES: Proposal["status"][] = ["submitted", "viewed", "shortlisted"]
 
 export default function CustomerDashboard() {
   const hydrated = useHydrated()
@@ -48,24 +39,26 @@ export default function CustomerDashboard() {
   const userId = user?.userId ?? 0
   const useApi = isApiEnabled()
 
-  const getActiveRfqsByBuyer = useRfqsStore((s) => s.getActiveRfqsByBuyer)
-  const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
-  const getIncomingProposalsForBuyer = useProposalsStore((s) => s.getIncomingProposalsForBuyer)
-  const getNewProposalsCountForBuyer = useProposalsStore((s) => s.getNewProposalsCountForBuyer)
-  const getActiveContractsForBuyer = useContractsStore((s) => s.getActiveContractsForBuyer)
-  const getPendingPaymentsForBuyer = useContractsStore((s) => s.getPendingPaymentsForBuyer)
-  const getPendingMilestonesForBuyer = useContractsStore((s) => s.getPendingMilestonesForBuyer)
-  const getDisputesForBuyer = useContractsStore((s) => s.getDisputesForBuyer)
-  const getIncomingMessagesForBuyer = useContractsStore((s) => s.getIncomingMessagesForBuyer)
+  const getRfqsByBuyer = useRfqsStore((s) => s.getRfqsByBuyer)
+  const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
+  const getContractsForBuyer = useContractsStore((s) => s.getContractsForBuyer)
   const getUnreadMessageCountForBuyer = useContractsStore((s) => s.getUnreadMessageCountForBuyer)
   const getCompany = useCompaniesStore((s) => s.getCompany)
 
-  const { data: apiActiveRfqs = [] } = useActiveRfqsQuery(hydrated && useApi)
-  const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
-  const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
+  const { data: apiRfqs = [], isLoading: rfqsLoading } = useRfqsQuery("all", hydrated && useApi)
+  const { data: apiContracts = [], isLoading: contractsLoading } = useContractsQuery(hydrated && useApi)
+
+  const rfqs: RfqWithRelations[] = useApi ? apiRfqs : hydrated ? getRfqsByBuyer(actorId) : []
+  const contracts: ContractWithRelations[] = useApi
+    ? (apiContracts as ContractWithRelations[])
+    : hydrated
+      ? getContractsForBuyer(actorId)
+      : []
+
+  const openRfqs = rfqs.filter((r) => OPEN_RFQ_STATUSES.includes(r.status))
 
   const proposalQueries = useQueries({
-    queries: (useApi ? apiActiveRfqs : []).map((rfq) => ({
+    queries: (useApi ? openRfqs : []).map((rfq) => ({
       queryKey: proposalKeys.forRfq(rfq.id),
       queryFn: () => proposalsApi.listForRfq(rfq.id),
       enabled: hydrated && useApi,
@@ -73,112 +66,52 @@ export default function CustomerDashboard() {
   })
 
   const proposalsByRfq = useMemo(() => {
-    const map = new Map<string, import("@/types").Proposal[]>()
-    if (!useApi) return map
-    apiActiveRfqs.forEach((rfq, index) => {
-      const data = proposalQueries[index]?.data
-      if (data) map.set(rfq.id, data)
+    const map = new Map<string, Proposal[]>()
+    openRfqs.forEach((rfq, index) => {
+      const list = useApi ? proposalQueries[index]?.data : getProposalsForRfq(rfq.id)
+      if (list) map.set(rfq.id, list)
     })
     return map
-  }, [useApi, apiActiveRfqs, proposalQueries])
+  }, [useApi, openRfqs, proposalQueries, getProposalsForRfq])
 
-  const getRfqTitle = (rfqId: string) => {
-    if (useApi) {
-      return apiActiveRfqs.find((r) => r.id === rfqId)?.title ?? "Заявка"
-    }
-    return getRfqWithRelations(rfqId)?.title ?? "Заявка"
-  }
+  const proposalsCount = useMemo(() => {
+    const map = new Map<string, number>()
+    proposalsByRfq.forEach((list, rfqId) => {
+      map.set(rfqId, list.filter((p) => VISIBLE_PROPOSAL_STATUSES.includes(p.status)).length)
+    })
+    return map
+  }, [proposalsByRfq])
 
-  const getRfqActorId = (rfqId: string) => {
-    if (useApi) {
-      return apiActiveRfqs.find((r) => r.id === rfqId)?.actor_id
-    }
-    return getRfqWithRelations(rfqId)?.actor_id
-  }
-
-  const getSupplierNameLocal = (supplierId: number) =>
-    getCompany(supplierId)?.title ?? `Исполнитель #${supplierId}`
-
-  const supplierIds = useApi
-    ? (apiContracts as ContractWithRelations[]).map((c) => c.supplier_actor_id)
-    : []
+  const supplierIds = useApi ? contracts.map((c) => c.supplier_actor_id) : []
   const resolveSupplierName = useSupplierActorName(supplierIds)
-
   const getSupplierName = (supplierId: number) =>
-    useApi ? resolveSupplierName(supplierId) : getSupplierNameLocal(supplierId)
+    useApi
+      ? resolveSupplierName(supplierId)
+      : (getCompany(supplierId)?.title ?? "Исполнитель")
 
-  const localActiveRfqs = hydrated ? getActiveRfqsByBuyer(actorId) : []
-  const activeRfqs: RfqWithRelations[] = useApi ? apiActiveRfqs : localActiveRfqs
-
-  const incomingProposals = hydrated
+  const unreadMessages = hydrated
     ? useApi
-      ? getBuyerIncomingProposals(apiActiveRfqs, proposalsByRfq, actorId)
-      : getIncomingProposalsForBuyer(actorId, getRfqTitle, getRfqActorId)
-    : []
-
-  const newProposalsCount = hydrated
-    ? useApi
-      ? getBuyerNewProposalsCount(apiActiveRfqs, proposalsByRfq, actorId)
-      : getNewProposalsCountForBuyer(actorId, getRfqActorId)
-    : 0
-
-  const localActiveContracts = hydrated ? getActiveContractsForBuyer(actorId) : []
-  const apiActiveContracts = getActiveBuyerContracts(
-    apiContracts as ContractWithRelations[],
-  )
-  const activeContracts = useApi ? apiActiveContracts : localActiveContracts
-
-  const pendingAmount = useApi
-    ? (pendingPayments?.items.reduce((sum, p) => sum + p.amount, 0) ?? 0)
-    : hydrated
-      ? getPendingPaymentsForBuyer(actorId)
-      : 0
-
-  const pendingMilestones = useApi
-    ? (pendingPayments?.items.map((p) => {
-        const contract = (apiContracts as ContractWithRelations[]).find(
-          (c) => c.id === p.contract_id,
-        )
-        return {
-          contract: {
-            id: p.contract_id,
-            title: contract?.title ?? `Договор #${p.contract_id}`,
-          },
-          title: p.title,
-          amount: p.amount,
-          currency: p.currency,
-        }
-      }) ?? [])
-    : hydrated
-      ? getPendingMilestonesForBuyer(actorId).map((m) => ({
-          contract: { id: m.contract.id, title: m.contract.title },
-          title: m.title,
-          amount: m.amount,
-          currency: m.currency,
-        }))
-      : []
-
-  const disputes = useApi
-    ? (apiContracts as ContractWithRelations[]).filter((c) => c.status === "disputed")
-    : hydrated
-      ? getDisputesForBuyer(actorId)
-      : []
-
-  const messages = hydrated
-    ? useApi
-      ? getBuyerIncomingMessages(
-          apiContracts as ContractWithRelations[],
-          actorId,
-          getSupplierName,
-        )
-      : getIncomingMessagesForBuyer(actorId, getSupplierNameLocal)
-    : []
-
-  const unreadCount = hydrated
-    ? useApi
-      ? getBuyerUnreadMessageCount(apiContracts as ContractWithRelations[], userId)
+      ? getBuyerUnreadMessageCount(contracts, userId)
       : getUnreadMessageCountForBuyer(actorId)
     : 0
+
+  const rfqsWithNewProposals: BuyerRfqProposalsSummary[] = openRfqs.map((rfq) => ({
+    rfqId: rfq.id,
+    rfqTitle: rfq.title,
+    count: (proposalsByRfq.get(rfq.id) ?? []).filter((p) => p.status === "submitted").length,
+  }))
+
+  const todo = buildBuyerTodo({
+    contracts,
+    getSupplierName,
+    rfqsWithNewProposals,
+    drafts: rfqs.filter((r) => r.status === "draft").map((r) => ({ id: r.id, title: r.title })),
+    unreadMessages,
+  })
+
+  const openDeals = contracts.filter(isDealOpen)
+  const heldAmount = contracts.reduce((sum, c) => sum + getEscrowSummary(c).held, 0)
+  const loading = !hydrated || (useApi && (rfqsLoading || contractsLoading))
 
   return (
     <PageFrame>
@@ -189,86 +122,50 @@ export default function CustomerDashboard() {
       />
       <PageHeader
         title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
-        description="Ваши заявки, предложения и договоры"
+        description="Здесь видно, что нужно сделать по вашим заявкам и сделкам"
         actions={
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="lg:hidden">
             <Link href="/customer/rfqs/new">
-              <Plus size={17} /> Создать заявку
+              <Plus size={17} /> Новая заявка
             </Link>
           </Button>
         }
       />
 
-      <HowItWorks variant="buyer" />
+      <div className="grid gap-8">
+        <TodoList
+          items={todo}
+          loading={loading}
+          emptyText="Новых дел нет. Создайте заявку, когда понадобится товар или услуга."
+        />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard
-          Icon={FileText}
-          label="Активные заявки"
-          value={hydrated ? String(activeRfqs.length) : "—"}
-          href="/customer/rfqs?status=active"
-          accent="bg-info/10 text-info"
-        />
-        <StatCard
-          Icon={Inbox}
-          label="Входящие предложения"
-          value={hydrated ? String(newProposalsCount) : "—"}
-          href="/customer/rfqs?status=receiving_proposals"
-          accent="bg-primary/10 text-primary"
-        />
-        <StatCard
-          Icon={FileCheck}
-          label="Активные договоры"
-          value={hydrated ? String(activeContracts.length) : "—"}
-          href="/customer/contracts?tab=active"
-          accent="bg-muted text-muted-foreground"
-        />
-        <StatCard
-          Icon={Wallet}
-          label="Ожидают оплаты"
-          value={hydrated ? formatPrice(pendingAmount) : "—"}
-          href="/customer/payments?tab=escrow"
-          accent="bg-secondary text-secondary-foreground"
-        />
-        <StatCard
-          Icon={AlertTriangle}
-          label="Споры"
-          value={hydrated ? String(disputes.length) : "—"}
-          href="/customer/contracts?tab=disputed"
-          accent="bg-destructive/10 text-destructive"
-        />
-        <StatCard
-          Icon={MessageSquare}
-          label="Сообщения"
-          value={hydrated ? String(unreadCount) : "—"}
-          subValue={hydrated && unreadCount > 0 ? "непрочитанных" : undefined}
-          href="/customer/messages"
-          accent="bg-warning/10 text-warning"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <ActiveRfqsPanel rfqs={activeRfqs} hydrated={hydrated} />
-          <IncomingProposalsPanel items={incomingProposals} hydrated={hydrated} />
-          <BuyerActiveContractsPanel
-            contracts={activeContracts}
-            hydrated={hydrated}
-            getSupplierName={getSupplierName}
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Сводка">
+          <MetricTile
+            Icon={FileText}
+            label="Открытые заявки"
+            value={loading ? "—" : String(openRfqs.length)}
+            hint="принимают предложения"
+            href="/customer/rfqs?status=receiving_proposals"
           />
-        </div>
+          <MetricTile
+            Icon={Briefcase}
+            label="Идут сделки"
+            value={loading ? "—" : String(openDeals.length)}
+            hint="от договора до приёмки и оплаты"
+            href="/customer/contracts?tab=active"
+          />
+          <MetricTile
+            Icon={Lock}
+            label="На гарантии площадки"
+            value={loading ? "—" : formatPrice(heldAmount)}
+            hint="уйдут исполнителям после приёмки"
+            href="/customer/payments?tab=escrow"
+          />
+        </section>
 
-        <div className="space-y-4">
-          <BuyerPendingPaymentsPanel milestones={pendingMilestones} hydrated={hydrated} />
-          <BuyerDisputesPanel contracts={disputes} hydrated={hydrated} />
-          <BuyerMessagesPanel messages={messages} hydrated={hydrated} />
-          <Link
-            href="/customer/suppliers"
-            className="block bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-all text-sm font-bold text-foreground hover:text-primary"
-          >
-            Каталог исполнителей <ArrowRight size={14} className="inline ml-1" />
-          </Link>
-        </div>
+        <EscrowExplainer />
+
+        <ActiveRfqsPanel rfqs={rfqs} hydrated={!loading} proposalsCount={proposalsCount} />
       </div>
     </PageFrame>
   )

@@ -36,6 +36,10 @@ interface FinanceState {
     actorId: number,
     input: RequestWithdrawalInput,
   ) => RequestWithdrawalResult
+  addDestination: (
+    actorId: number,
+    input: Pick<WithdrawalDestination, "type" | "label" | "details">,
+  ) => WithdrawalDestination
 }
 
 const nextWithdrawalId = (withdrawals: Withdrawal[]): number => {
@@ -52,6 +56,18 @@ export const useFinanceStore = create<FinanceState>()(
 
       getDestinations: (actorId) =>
         get().destinations.filter((d) => d.actor_id === actorId),
+
+      addDestination: (actorId, input) => {
+        const { destinations } = get()
+        const destination: WithdrawalDestination = {
+          id: destinations.reduce((max, d) => Math.max(max, d.id), 0) + 1,
+          actor_id: actorId,
+          ...input,
+          is_default: !destinations.some((d) => d.actor_id === actorId),
+        }
+        set({ destinations: [...destinations, destination] })
+        return destination
+      },
 
       getWithdrawals: (actorId) =>
         get()

@@ -1,9 +1,11 @@
 "use client"
 
 import { use, useState } from "react"
-import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { AlertTriangle, FileCheck, MessageSquare, Paperclip, Upload, Gavel } from "lucide-react"
 import { PageFrame, PageHeader } from "@/components/layout"
+import { DealStepper } from "@/components/process"
+import { SupplierDealNextAction } from "@/components/supplier/contracts/supplier-deal-next-action"
 import { statusPillClass } from "@/components/ui/status-badge"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
@@ -38,6 +40,7 @@ type PageProps = {
 }
 
 const DISPUTE_DISABLED_STATUSES = ["disputed", "cancelled", "completed"] as const
+const LINKABLE_TABS = ["overview", "messages", "files", "submission", "dispute"]
 
 export default function SupplierContractDetailPage({ params }: PageProps) {
   const { id } = use(params)
@@ -56,6 +59,11 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [disputeOpen, setDisputeOpen] = useState(false)
   const [isUploadingFiles, setIsUploadingFiles] = useState(false)
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const [tab, setTab] = useState<string | null>(
+    tabParam && LINKABLE_TABS.includes(tabParam) ? tabParam : null,
+  )
 
   const { data: apiContract, isLoading } = useSupplierContractQuery(
     contractId,
@@ -84,7 +92,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   if (!contract || contract.supplier_actor_id !== actorId) {
     return (
       <PageFrame>
-        <PageHeader title="Договор не найден" backHref="/supplier/contracts" backLabel="Вернуться к списку" />
+        <PageHeader title="Сделка не найдена" backHref="/supplier/contracts" backLabel="Вернуться к сделкам" />
       </PageFrame>
     )
   }
@@ -102,6 +110,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
     Boolean(activeDispute) || contract.status === "disputed"
   const defaultTab =
     activeDispute?.status === "under_review" ? "dispute" : "overview"
+  const activeTab = tab === "dispute" && !showDisputeTab ? defaultTab : (tab ?? defaultTab)
 
   const handleSendMessage = (text: string) => {
     if (useApi) {
@@ -163,15 +172,16 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
         title={contract.title}
         description={buyerName}
         backHref="/supplier/contracts"
-        backLabel="Назад к договорам"
+        backLabel="Мои сделки"
         actions={
-          <p className="text-lg font-bold text-primary">
+          <p className="text-lg font-bold text-primary tnum">
             {formatCurrency(contract.agreed_amount, contract.currency)}
           </p>
         }
       />
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="grid gap-4 rounded-2xl border border-border bg-card p-5">
+        <DealStepper contract={contract} />
         <div className="flex flex-wrap items-center gap-3">
           <DeadlineCountdown
             dueDate={contract.due_date}
@@ -190,10 +200,9 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
               type="button"
               onClick={() => setDisputeOpen(true)}
               className="ml-auto inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors"
-              aria-label="Открыть спор"
             >
               <AlertTriangle size={12} />
-              Спор
+              Открыть спор
             </button>
           )}
           {showDisputeTab && (
@@ -203,7 +212,9 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
         <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
       </div>
 
-      <Tabs defaultValue={defaultTab} className="space-y-4">
+      <SupplierDealNextAction contract={contract} onOpenTab={setTab} />
+
+      <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="overview" className="gap-1.5">
             <FileCheck size={14} /> Обзор

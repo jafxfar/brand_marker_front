@@ -54,9 +54,8 @@ export const BuyerContractMilestonesPanel = ({
           const meta = milestoneStatusMeta[milestone.status]
           const isLast = index === milestones.length - 1
           const canFund = ["awaiting_payment", "pending"].includes(milestone.status)
-          const canApprove = ["submitted", "approved", "in_progress"].includes(
-            milestone.status,
-          )
+          const canApprove =
+            milestone.status === "funded" && contract.status === "completed"
 
           return (
             <div key={milestone.id} className="flex gap-3">

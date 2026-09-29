@@ -4,7 +4,7 @@ import { Suspense } from "react"
 import { FileCheck } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
-import { useCompaniesStore } from "@/lib/store/companies-store"
+import { usePublicSuppliersByActor } from "@/hooks/api/use-supplier-name"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
@@ -13,15 +13,14 @@ import {
   buyerContractEmptyMessages,
   type BuyerContractListTab,
 } from "@/lib/buyer-contract-display"
-import { BuyerContractsListTable } from "@/components/cabinet/contracts/buyer-contracts-list-table"
+import { DealList } from "@/components/contracts/deal-list"
+import { filterDealsByTab } from "@/lib/process/deal-stages"
 import { isApiEnabled } from "@/lib/api/config"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
-import { filterContractsByTab } from "@/lib/contract-display"
 import {
   PageEmptyState,
   PageFrame,
   PageHeader,
-  PageSurface,
   SegmentedControl,
 } from "@/components/layout"
 import type { ContractWithRelations } from "@/types"
@@ -31,46 +30,48 @@ const BUYER_CONTRACT_TAB_VALUES = BUYER_CONTRACT_LIST_TABS.map((option) => optio
 const BuyerContractsContent = () => {
   const hydrated = useHydrated()
   const actorId = getActorId(useAuthStore((s) => s.user))
-  const getContractsByTabForBuyer = useContractsStore((s) => s.getContractsByTabForBuyer)
-  const getCompany = useCompaniesStore((s) => s.getCompany)
+  const getContractsForBuyer = useContractsStore((s) => s.getContractsForBuyer)
   const [tab, setTab] = useUrlTab<BuyerContractListTab>("tab", BUYER_CONTRACT_TAB_VALUES, "active")
   const useApi = isApiEnabled()
   const { data: apiContracts } = useContractsQuery(hydrated && useApi)
 
-  const localContracts = hydrated ? getContractsByTabForBuyer(actorId, tab) : []
-  const contracts: ContractWithRelations[] = useApi
-    ? filterContractsByTab((apiContracts ?? []) as ContractWithRelations[], tab)
-    : localContracts
+  const allContracts: ContractWithRelations[] = useApi
+    ? ((apiContracts ?? []) as ContractWithRelations[])
+    : hydrated
+      ? getContractsForBuyer(actorId)
+      : []
+  const contracts = filterDealsByTab(allContracts, tab, "buyer")
+  const { getName: getSupplierName } = usePublicSuppliersByActor(
+    contracts.map((c) => c.supplier_actor_id),
+  )
 
   return (
     <PageFrame>
       <PageHeader
-        title="Договоры"
-        description="Управление сделками как заказчик"
+        title="Мои сделки"
+        description="Этап каждой сделки и что нужно сделать дальше"
       />
 
       <SegmentedControl
         value={tab}
         options={BUYER_CONTRACT_LIST_TABS}
         onChange={setTab}
-        ariaLabel="Фильтр договоров"
+        ariaLabel="Фильтр сделок"
       />
 
       {!hydrated || contracts.length === 0 ? (
-        <PageSurface>
-          <PageEmptyState
-            icon={<FileCheck size={32} />}
-            title="Договоров нет"
-            description={buyerContractEmptyMessages[tab]}
-          />
-        </PageSurface>
+        <PageEmptyState
+          variant="card"
+          icon={<FileCheck />}
+          title="Сделок пока нет"
+          description={buyerContractEmptyMessages[tab]}
+        />
       ) : (
-        <PageSurface>
-          <BuyerContractsListTable
-            contracts={contracts}
-            getSupplierName={(id) => getCompany(id)?.title ?? "Исполнитель"}
-          />
-        </PageSurface>
+        <DealList
+          contracts={contracts}
+          role="buyer"
+          getCounterpartName={(c) => getSupplierName(c.supplier_actor_id)}
+        />
       )}
     </PageFrame>
   )

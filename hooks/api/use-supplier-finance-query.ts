@@ -31,6 +31,21 @@ export const useSupplierInvoicesQuery = (enabled = true) =>
     enabled: enabled && isApiEnabled(),
   })
 
+export const useCreateDestinationMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { type: string; label: string; details: string; is_default?: boolean }) =>
+      supplierFinanceApi.createDestination(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: supplierFinanceKeys.destinations() })
+    },
+    meta: {
+      successMessage: "Счёт для выплат добавлен",
+      errorMessage: "Не удалось добавить счёт",
+    },
+  })
+}
+
 export const useRequestWithdrawalMutation = () => {
   const qc = useQueryClient()
   return useMutation({

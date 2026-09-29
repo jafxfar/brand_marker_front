@@ -6,9 +6,9 @@ export type ContractListTab = "all" | "active" | "completed" | "disputed" | "can
 
 export const CONTRACT_LIST_TABS: { value: ContractListTab; label: string }[] = [
   { value: "all", label: "Все" },
-  { value: "active", label: "Активные" },
+  { value: "active", label: "Идут" },
   { value: "completed", label: "Завершённые" },
-  { value: "disputed", label: "Спорные" },
+  { value: "disputed", label: "Споры" },
   { value: "cancelled", label: "Отменённые" },
 ]
 
@@ -81,9 +81,9 @@ export const getEscrowSummary = (
 }
 
 export const escrowSummaryMeta = {
-  held: { label: "Под защитой", className: "bg-info/10 text-info" },
+  held: { label: "На гарантии площадки", className: "bg-info/10 text-info" },
   released: { label: "Выплачено", className: "bg-primary/10 text-primary" },
-  disputed: { label: "Заморожено", className: "bg-destructive/10 text-destructive" },
+  disputed: { label: "Спор — деньги на гарантии", className: "bg-destructive/10 text-destructive" },
 } as const
 
 export const contractStatusMeta: Record<
@@ -95,19 +95,19 @@ export const contractStatusMeta: Record<
     className: "bg-warning/10 text-warning",
   },
   active: {
-    label: "Активен",
+    label: "В работе",
     className: "bg-primary/10 text-primary",
   },
   delivered: {
-    label: "Доставлен",
+    label: "Ждёт приёмки",
     className: "bg-info/10 text-info",
   },
   completed: {
-    label: "Завершён",
+    label: "Завершена",
     className: "bg-muted text-muted-foreground",
   },
   cancelled: {
-    label: "Отменён",
+    label: "Отменена",
     className: "bg-muted text-muted-foreground",
   },
   disputed: {

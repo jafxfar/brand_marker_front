@@ -69,7 +69,7 @@ export const ContractFilesPanel = ({
               accept={ACCEPTED_FILE_TYPES}
               className="hidden"
               onChange={handleFileChange}
-              aria-label="Выбрать файлы для договора"
+              aria-label="Выбрать файлы для сделки"
             />
             <Button
               type="button"

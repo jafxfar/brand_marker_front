@@ -1,81 +1,110 @@
 "use client"
 
 import Link from "next/link"
-import { FileText, ArrowRight, ShoppingCart } from "lucide-react"
+import { ChevronRight, FileText, Plus, ShoppingCart } from "lucide-react"
 import type { RfqWithRelations } from "@/types"
 import { RfqStatusBadge } from "@/components/rfq/rfq-status-badge"
+import { PageEmptyState } from "@/components/layout"
+import { Button } from "@/components/ui/button"
 import { useCategoryOptions } from "@/hooks/use-category-options"
-import { formatRfqBudget } from "@/lib/format"
+import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
+import { formatCount, formatIsoDate, formatRfqBudget } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
 type ActiveRfqsPanelProps = {
   rfqs: RfqWithRelations[]
   hydrated: boolean
+  /** Proposals count per RFQ id, shown for RFQs that accept proposals. */
+  proposalsCount?: Map<string, number>
+  title?: string
+  limit?: number
 }
 
-export const ActiveRfqsPanel = ({ rfqs, hydrated }: ActiveRfqsPanelProps) => {
+const rfqHref = (rfq: RfqWithRelations) =>
+  rfq.status === "draft" ? `/customer/rfqs/${rfq.id}/edit` : `/customer/rfqs/${rfq.id}`
+
+export const ActiveRfqsPanel = ({
+  rfqs,
+  hydrated,
+  proposalsCount,
+  title = "Мои заявки",
+  limit = 3,
+}: ActiveRfqsPanelProps) => {
   const { getRfqCategoryLabel } = useCategoryOptions()
 
   return (
-    <div className="bg-card border border-border rounded-xl">
-      <div className="flex items-center justify-between p-5 border-b border-border">
-        <h2 className="text-sm font-semibold text-foreground">Активные заявки</h2>
-        <Link
-          href="/customer/rfqs"
-          className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
-        >
-          Все заявки <ArrowRight size={14} />
+    <section className="grid gap-3" aria-label={title}>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold">{title}</h2>
+        <Link href="/customer/rfqs" className="text-sm font-semibold text-brand-700 hover:underline">
+          Все заявки →
         </Link>
       </div>
 
-      {!hydrated || rfqs.length === 0 ? (
-        <div className="p-10 text-center">
-          <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-            <FileText size={22} className="text-primary" />
-          </div>
-          <p className="text-sm font-semibold text-foreground">Активных заявок нет</p>
-          <p className="text-xs text-muted-foreground mt-1 mb-4">
-            Создайте заявку, и исполнители пришлют вам предложения
-          </p>
-          <Link
-            href="/customer/rfqs/new"
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            Создать заявку
-          </Link>
-        </div>
+      {!hydrated ? (
+        <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+      ) : rfqs.length === 0 ? (
+        <PageEmptyState
+          variant="card"
+          icon={<FileText />}
+          title="Здесь пока пусто"
+          description="Опишите, что нужно, — исполнители пришлют цены. Это займёт 3 минуты."
+          action={
+            <Button asChild>
+              <Link href="/customer/rfqs/new">
+                <Plus /> Новая заявка
+              </Link>
+            </Button>
+          }
+        />
       ) : (
-        <div className="divide-y divide-border">
-          {rfqs.slice(0, 5).map((rfq) => (
-            <Link
-              key={rfq.id}
-              href={`/customer/rfqs/${rfq.id}`}
-              className="flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors"
-            >
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                {rfq.type === "product" ? (
-                  <ShoppingCart size={17} className="text-primary" />
-                ) : (
-                  <FileText size={17} className="text-primary" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{rfq.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {getRfqCategoryLabel(rfq.category_id)}
-                </p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-sm font-bold text-primary">
-                  {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
-                </div>
-                <div className="mt-1">
+        <ul className="grid gap-3">
+          {rfqs.slice(0, limit).map((rfq) => {
+            const isOpen = OPEN_RFQ_STATUSES.includes(rfq.status)
+            const count = proposalsCount?.get(rfq.id) ?? 0
+            const when = rfq.deadline
+              ? isOpen
+                ? `приём до ${formatIsoDate(rfq.deadline)}`
+                : formatIsoDate(rfq.deadline)
+              : "срок не указан"
+            const Icon = rfq.type === "product" ? ShoppingCart : FileText
+            return (
+              <li key={rfq.id}>
+                <Link
+                  href={rfqHref(rfq)}
+                  className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-border bg-card p-4 text-left transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-nowrap"
+                >
+                  <span
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"
+                    aria-hidden="true"
+                  >
+                    <Icon size={20} />
+                  </span>
+                  <span className="min-w-[180px] flex-1">
+                    <b className="block">{rfq.title}</b>
+                    <span className="text-sm text-muted-foreground">
+                      {getRfqCategoryLabel(rfq.category_id)} ·{" "}
+                      {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)} · {when}
+                    </span>
+                  </span>
+                  {isOpen && proposalsCount ? (
+                    <span
+                      className={cn(
+                        "whitespace-nowrap text-sm font-semibold",
+                        count > 0 ? "text-brand-700" : "text-muted-foreground",
+                      )}
+                    >
+                      {formatCount(count, "предложение", "предложения", "предложений")}
+                    </span>
+                  ) : null}
                   <RfqStatusBadge status={rfq.status} />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+                  <ChevronRight size={20} className="hidden text-muted-foreground sm:block" aria-hidden="true" />
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
       )}
-    </div>
+    </section>
   )
 }

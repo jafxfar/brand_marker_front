@@ -1,26 +1,33 @@
 "use client"
 
-import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
-import { Send } from "lucide-react"
+import { Check, Clock, Send } from "lucide-react"
 import type { RfqWithRelations } from "@/types"
+import { cn } from "@/lib/utils"
 import { useCategoryOptions } from "@/hooks/use-category-options"
-import { formatIsoDate, formatRfqBudget } from "@/lib/format"
+import { formatCurrency, formatDaysLeft, formatRfqBudget, getDaysLeft } from "@/lib/format"
+import { Button } from "@/components/ui/button"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
+
+type MyProposalSummary = { price: number; currency: string }
 
 type RfqBoardTableProps = {
   rfqs: RfqWithRelations[]
   actorId: number
   hasProposal: (rfqId: string, actorId: number) => boolean
+  getMyProposal?: (rfqId: string) => MyProposalSummary | undefined
   getBuyerName: (rfq: RfqWithRelations) => string
   getBuyerRating: (rfq: RfqWithRelations) => number
   onSubmitProposal: (rfqId: string) => void
 }
 
+const URGENT_DAYS = 3
+
 export const RfqBoardTable = ({
   rfqs,
   actorId,
   hasProposal,
+  getMyProposal,
   getBuyerName,
   getBuyerRating,
   onSubmitProposal,
@@ -28,130 +35,81 @@ export const RfqBoardTable = ({
   const { getRfqCategoryLabel } = useCategoryOptions()
 
   return (
-  <>
-    <div className="hidden md:block bg-card border border-border rounded-xl overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border bg-secondary/40">
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Заявка</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Заказчик</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Категория</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Бюджет</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Срок</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Рейтинг заказчика</th>
-            <th className="text-right px-4 py-3 text-xs font-bold text-muted-foreground">Действия</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {rfqs.map((rfq) => {
-            const responded = hasProposal(rfq.id, actorId)
-            const buyerName = getBuyerName(rfq)
-            const buyerRating = getBuyerRating(rfq)
-            return (
-              <tr key={rfq.id} className="hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/supplier/rfqs/${rfq.id}`}
-                    className="font-semibold text-foreground hover:text-primary line-clamp-2"
-                  >
-                    {rfq.title}
-                  </Link>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-foreground line-clamp-1">{buyerName}</p>
-                  {rfq.buyer?.kind === "individual" && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Физлицо</p>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {getRfqCategoryLabel(rfq.category_id)}
-                </td>
-                <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                  {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                  {formatIsoDate(rfq.deadline)}
-                </td>
-                <td className="px-4 py-3">
-                  <BuyerRating rating={buyerRating} />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {responded ? (
-                    <span className={`${statusPillClass} bg-primary/10 text-primary`}>
-                      Предложение отправлено
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onSubmitProposal(rfq.id)
-                      }}
-                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors"
-                    >
-                      <Send size={13} /> Отправить предложение
-                    </button>
-                  )}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-
-    <div className="md:hidden space-y-3">
+    <ul className="grid gap-3">
       {rfqs.map((rfq) => {
         const responded = hasProposal(rfq.id, actorId)
-        const buyerName = getBuyerName(rfq)
+        const myProposal = responded ? getMyProposal?.(rfq.id) : undefined
         const buyerRating = getBuyerRating(rfq)
+        const daysLeft = getDaysLeft(rfq.deadline)
+        const urgent = daysLeft <= URGENT_DAYS
+
         return (
-          <div key={rfq.id} className="bg-card border border-border rounded-xl p-4 space-y-3">
-            <Link href={`/supplier/rfqs/${rfq.id}`} className="block">
-              <p className="text-sm font-bold text-foreground">{rfq.title}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {buyerName}
-                {rfq.buyer?.kind === "individual" ? " · Физлицо" : ""}
+          <li
+            key={rfq.id}
+            className={cn(
+              "grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5",
+              responded ? "border-border" : "border-border hover:border-primary transition-colors",
+            )}
+          >
+            <div className="min-w-0 grid gap-1.5">
+              <Link
+                href={`/supplier/rfqs/${rfq.id}`}
+                className="font-bold text-foreground hover:text-primary line-clamp-2"
+              >
+                {rfq.title}
+              </Link>
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                <span>
+                  {getBuyerName(rfq)}
+                  {rfq.buyer?.kind === "individual" ? " · частное лицо" : ""}
+                </span>
+                {buyerRating > 0 ? <BuyerRating rating={buyerRating} compact /> : null}
+                <span aria-hidden="true">·</span>
+                <span>{getRfqCategoryLabel(rfq.category_id)}</span>
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {getRfqCategoryLabel(rfq.category_id)}
-              </p>
-            </Link>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <p className="text-muted-foreground">Бюджет</p>
-                <p className="font-semibold text-foreground mt-0.5">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                <span className="font-semibold tnum">
                   {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Срок</p>
-                <p className="font-semibold text-foreground mt-0.5">{formatIsoDate(rfq.deadline)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Рейтинг заказчика</p>
-                <div className="mt-0.5">
-                  <BuyerRating rating={buyerRating} compact />
-                </div>
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1",
+                    urgent ? "font-semibold text-amber-600" : "text-muted-foreground",
+                  )}
+                >
+                  <Clock size={14} aria-hidden="true" />
+                  {formatDaysLeft(daysLeft)}
+                </span>
               </div>
             </div>
+
             {responded ? (
-              <span className={`${statusPillClass} bg-primary/10 text-primary`}>
-                Предложение отправлено
-              </span>
+              <div className="grid gap-1 sm:justify-items-end">
+                <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                  <Check size={16} aria-hidden="true" /> Предложение отправлено
+                </span>
+                {myProposal ? (
+                  <span className="text-sm text-muted-foreground">
+                    Ваша цена:{" "}
+                    <b className="text-foreground tnum">
+                      {formatCurrency(myProposal.price, myProposal.currency)}
+                    </b>
+                  </span>
+                ) : null}
+              </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => onSubmitProposal(rfq.id)}
-                className="w-full inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold"
-              >
-                <Send size={14} /> Отправить предложение
-              </button>
+              <div className="flex flex-wrap gap-2 sm:justify-end">
+                <Button asChild variant="outline">
+                  <Link href={`/supplier/rfqs/${rfq.id}`}>Подробнее</Link>
+                </Button>
+                <Button onClick={() => onSubmitProposal(rfq.id)}>
+                  <Send /> Предложить цену
+                </Button>
+              </div>
             )}
-          </div>
+          </li>
         )
       })}
-    </div>
-  </>
+    </ul>
   )
 }

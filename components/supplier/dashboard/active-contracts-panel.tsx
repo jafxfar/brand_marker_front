@@ -1,82 +1,58 @@
 "use client"
 
-import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
-import { FileCheck, ArrowRight } from "lucide-react"
+import { ArrowRight, Briefcase } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
-import { contractStatusMeta } from "@/lib/contract-display"
-import { formatCurrency } from "@/lib/format"
-import { DeadlineCountdown } from "@/components/contracts/deadline-countdown"
+import { PageEmptyState } from "@/components/layout"
+import { Button } from "@/components/ui/button"
+import { DealList } from "@/components/contracts/deal-list"
 
 type ActiveContractsPanelProps = {
   contracts: ContractWithRelations[]
   hydrated: boolean
   getBuyerName: (buyerId: number) => string
+  limit?: number
 }
 
 export const ActiveContractsPanel = ({
   contracts,
   hydrated,
   getBuyerName,
+  limit = 4,
 }: ActiveContractsPanelProps) => (
-  <div className="bg-card border border-border rounded-xl">
-    <div className="flex items-center justify-between p-5 border-b border-border">
-      <h2 className="text-sm font-semibold text-foreground">Активные договоры</h2>
+  <section className="grid gap-3" aria-labelledby="supplier-deals-title">
+    <div className="flex items-center justify-between gap-3">
+      <h2 id="supplier-deals-title" className="text-lg font-bold">
+        Мои сделки
+      </h2>
       <Link
         href="/supplier/contracts"
-        className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
+        className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
       >
-        Все договоры <ArrowRight size={14} />
+        Все сделки <ArrowRight size={14} />
       </Link>
     </div>
 
-    {!hydrated || contracts.length === 0 ? (
-      <div className="p-10 text-center">
-        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-          <FileCheck size={22} className="text-primary" />
-        </div>
-        <p className="text-sm font-semibold text-foreground">Активных договоров нет</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Примите предложение по заявке, чтобы начать сделку
-        </p>
-      </div>
+    {!hydrated ? (
+      <div className="h-24 animate-pulse rounded-2xl bg-secondary" />
+    ) : contracts.length === 0 ? (
+      <PageEmptyState
+        variant="card"
+        icon={<Briefcase />}
+        title="Сделок пока нет"
+        description="Сделка начнётся, когда заказчик выберет ваше предложение"
+        action={
+          <Button asChild variant="outline">
+            <Link href="/supplier/rfqs">Смотреть заявки</Link>
+          </Button>
+        }
+      />
     ) : (
-      <div className="divide-y divide-border">
-        {contracts.slice(0, 5).map((contract) => {
-          const meta = contractStatusMeta[contract.status]
-          return (
-            <Link
-              key={contract.id}
-              href={`/supplier/contracts/${contract.id}`}
-              className="flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors"
-            >
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <FileCheck size={17} className="text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{contract.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {getBuyerName(contract.buyer_actor_id)}
-                </p>
-                <DeadlineCountdown
-                  dueDate={contract.due_date}
-                  status={contract.status}
-                  variant="compact"
-                  className="mt-1"
-                />
-              </div>
-              <div className="text-right flex-shrink-0">
-                <div className="text-sm font-bold text-primary">
-                  {formatCurrency(contract.agreed_amount, contract.currency)}
-                </div>
-                <span className={`${statusPillClass} mt-1 ${meta.className}`}>
-                  {meta.label}
-                </span>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      <DealList
+        contracts={contracts.slice(0, limit)}
+        role="supplier"
+        getCounterpartName={(c) => getBuyerName(c.buyer_actor_id)}
+      />
     )}
-  </div>
+  </section>
 )

@@ -415,7 +415,7 @@ export const useContractsStore = create<ContractsState>()(
                 id: nextMessageId(contracts),
                 conversation_id: contractId,
                 sender_id: input.buyer_actor_id,
-                text: "Договор создан. Готовы обсудить детали.",
+                text: "Сделка создана. Готовы обсудить детали.",
                 attachment: null,
               },
             ],
@@ -598,7 +598,7 @@ export const useContractsStore = create<ContractsState>()(
         )
         if (
           !milestone ||
-          !["submitted", "approved", "in_progress"].includes(milestone.status)
+          !["funded", "submitted", "approved", "in_progress"].includes(milestone.status)
         ) {
           return false
         }
@@ -683,9 +683,19 @@ export const useContractsStore = create<ContractsState>()(
           contracts: state.contracts.map((contract) => {
             if (contract.id !== contractId) return contract
             if (contract.status === "disputed" || contract.dispute) return contract
+            const milestones = contract.payment_plan?.milestones.map((m) => {
+              if (m.status === "funded" || m.status === "submitted") {
+                return { ...m, status: "released" as const }
+              }
+              if (m.status === "pending") return { ...m, status: "awaiting_payment" as const }
+              return m
+            })
             return {
               ...contract,
               status: "completed" as const,
+              payment_plan: contract.payment_plan
+                ? { ...contract.payment_plan, milestones: milestones ?? [] }
+                : null,
               submissions: contract.submissions.map((submission) =>
                 submission.id === submissionId
                   ? { ...submission, status: "accepted" as const }
@@ -698,7 +708,7 @@ export const useContractsStore = create<ContractsState>()(
           useNotificationsStore.getState().add({
             type: "contract",
             title: "Проект закрыт",
-            body: `Договор «${current.title}» завершён`,
+            body: `Сделка «${current.title}» завершена`,
             href: `/supplier/contracts/${contractId}`,
           })
         }
