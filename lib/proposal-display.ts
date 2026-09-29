@@ -50,4 +50,8 @@ export const proposalStatusMeta: Record<
     label: "Отозвано",
     className: "bg-muted text-muted-foreground",
   },
+  archived: {
+    label: "В архиве",
+    className: "bg-muted text-muted-foreground",
+  },
 }

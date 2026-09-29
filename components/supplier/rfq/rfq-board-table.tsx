@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Send } from "lucide-react"
 import type { RfqWithRelations } from "@/types"
-import { getRfqCategoryLabel } from "@/lib/mock/rfq-categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 
@@ -23,7 +23,10 @@ export const RfqBoardTable = ({
   getBuyerName,
   getBuyerRating,
   onSubmitProposal,
-}: RfqBoardTableProps) => (
+}: RfqBoardTableProps) => {
+  const { getRfqCategoryLabel } = useCategoryOptions()
+
+  return (
   <>
     <div className="hidden md:block bg-card border border-border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
@@ -149,4 +152,5 @@ export const RfqBoardTable = ({
       })}
     </div>
   </>
-)
+  )
+}

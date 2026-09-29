@@ -209,8 +209,8 @@ export const useProposalsStore = create<ProposalsState>()(
             .filter((p) => p.id !== proposalId)
             .map((p) => {
               if (p.rfq_id !== rfqId) return p
-              if (!["rejected", "withdrawn"].includes(p.status)) {
-                return { ...p, status: "rejected" as ProposalStatus }
+              if (!["rejected", "withdrawn", "archived"].includes(p.status)) {
+                return { ...p, status: "archived" as ProposalStatus }
               }
               return p
             }),

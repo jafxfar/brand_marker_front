@@ -49,23 +49,36 @@ const getCabinetHref = (
   return `${getCabinetBase(role)}/${path}`
 }
 
-const getNavTabs = (pathname: string, scope: string | null) => [
-  {
-    label: "Услуги",
-    href: "/services",
-    isActive: pathname === "/" || pathname.startsWith("/services") || pathname.startsWith("/categories"),
-  },
-  {
-    label: "Исполнители",
-    href: "/performers",
-    isActive: pathname.startsWith("/performers") && scope !== "worldwide",
-  },
-  {
-    label: "По всему миру",
-    href: performersUrl({ scope: "worldwide" }),
-    isActive: pathname.startsWith("/performers") && scope === "worldwide",
-  },
-]
+const getNavTabs = (pathname: string, scope: string | null) => {
+  if (pathname === "/") {
+    return [
+      { label: "Как это работает", href: "#how-it-works", isActive: false },
+      { label: "О нас", href: "#about", isActive: false },
+      { label: "Тарифы", href: "#pricing", isActive: false },
+      { label: "Услуги", href: "/services", isActive: false },
+      { label: "Исполнители", href: performersUrl(), isActive: false },
+    ]
+  }
+
+  return [
+    {
+      label: "Услуги",
+      href: "/services",
+      isActive:
+        pathname.startsWith("/services") || pathname.startsWith("/categories"),
+    },
+    {
+      label: "Исполнители",
+      href: "/performers",
+      isActive: pathname.startsWith("/performers") && scope !== "worldwide",
+    },
+    {
+      label: "По всему миру",
+      href: performersUrl({ scope: "worldwide" }),
+      isActive: pathname.startsWith("/performers") && scope === "worldwide",
+    },
+  ]
+}
 
 export default function Header() {
   const pathname = usePathname()
@@ -146,11 +159,10 @@ export default function Header() {
             </Link>
             <Link
               href={messagesHref}
-              className="hidden lg:flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg text-foreground hover:bg-secondary hover:text-primary transition-all group relative"
+              className="hidden lg:flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg text-foreground hover:bg-secondary hover:text-primary transition-all group"
             >
               <MessageSquare size={20} className="group-hover:text-primary transition-colors" />
               <span className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">Сообщения</span>
-              <span className="absolute top-1.5 right-2.5 w-4 h-4 bg-primary rounded-full text-[9px] text-primary-foreground flex items-center justify-center font-bold">3</span>
             </Link>
             <Link
               href={rfqsHref}
@@ -321,6 +333,34 @@ export default function Header() {
             >
               <ShoppingBag size={17} /> Мои запросы
             </Link>
+            {pathname === "/" && (
+              <div className="border-t border-border pt-3 mt-3 space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-3 mb-2">
+                  О платформе
+                </p>
+                <a
+                  href="#how-it-works"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-3 py-3 px-3 rounded-xl text-sm hover:bg-secondary hover:text-primary transition-colors"
+                >
+                  Как это работает
+                </a>
+                <a
+                  href="#about"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-3 py-3 px-3 rounded-xl text-sm hover:bg-secondary hover:text-primary transition-colors"
+                >
+                  О нас
+                </a>
+                <a
+                  href="#pricing"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-3 py-3 px-3 rounded-xl text-sm hover:bg-secondary hover:text-primary transition-colors"
+                >
+                  Тарифы
+                </a>
+              </div>
+            )}
             <div className="border-t border-border pt-3 mt-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-3 mb-2">Категории услуг</p>
               <MobileCategoryAccordion onNavigate={closeMobileMenu} />

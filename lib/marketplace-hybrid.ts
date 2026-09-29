@@ -29,21 +29,6 @@ const defaultCategoryStyle = {
   iconColor: "text-primary",
 }
 
-export const mergeByKey = <T extends Record<string, unknown>>(
-  mockItems: T[],
-  apiItems: T[],
-  key: keyof T,
-): T[] => {
-  const map = new Map<string, T>()
-  for (const item of mockItems) {
-    map.set(String(item[key]), item)
-  }
-  for (const item of apiItems) {
-    map.set(String(item[key]), item)
-  }
-  return [...map.values()]
-}
-
 export const mapCategoryTreeToMarketplace = (
   tree: CategoryTree[],
 ): MarketplaceCategory[] =>

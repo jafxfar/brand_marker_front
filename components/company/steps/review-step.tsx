@@ -1,6 +1,6 @@
 "use client"
 
-import { getCatalogCategory } from "@/lib/mock/catalog-categories"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import type { CompanyWizardInput } from "@/types"
 
 const ROLE_LABELS: Record<string, string> = {
@@ -32,8 +32,9 @@ const ReviewRow = ({
 }
 
 export const ReviewStep = ({ data, actorTypeLabel }: ReviewStepProps) => {
+  const { getCatalogCategoryName } = useCategoryOptions()
   const categoryNames = data.category_ids
-    .map((id) => getCatalogCategory(id)?.name)
+    .map((id) => getCatalogCategoryName(id))
     .filter(Boolean)
     .join(", ")
 

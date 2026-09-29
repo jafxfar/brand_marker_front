@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, type ChangeEvent } from "react"
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react"
 import {
   FileText,
   ImageIcon,
@@ -101,6 +101,9 @@ export const ContractSubmissionPanel = ({
     !["completed", "cancelled", "disputed"].includes(contract.status)
 
   const selectedKind = KIND_OPTIONS.find((option) => option.value === kind)!
+  const pendingLinkUrl = linkUrl.trim()
+  const hasPendingLink = kind === "link" && isValidUrl(pendingLinkUrl)
+  const hasAttachments = assets.length > 0 || hasPendingLink
 
   const handlePickFile = () => {
     fileInputRef.current?.click()
@@ -184,6 +187,12 @@ export const ContractSubmissionPanel = ({
     setLinkName("")
   }
 
+  const handleLinkKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return
+    event.preventDefault()
+    handleAddLink()
+  }
+
   const handleRemoveAsset = (index: number) => {
     setAssets((prev) => prev.filter((_, i) => i !== index))
   }
@@ -191,17 +200,38 @@ export const ContractSubmissionPanel = ({
   const handleSubmit = () => {
     const trimmedNote = note.trim()
     if (!trimmedNote) return
-    if (assets.length === 0) {
+
+    let nextAssets = assets
+    if (kind === "link") {
+      const trimmedUrl = linkUrl.trim()
+      if (isValidUrl(trimmedUrl) && !assets.some((a) => a.url === trimmedUrl)) {
+        const name = linkName.trim() || trimmedUrl
+        nextAssets = [
+          ...assets,
+          {
+            kind: "link",
+            name,
+            url: trimmedUrl,
+            file_type: null,
+          },
+        ]
+      }
+    }
+
+    if (nextAssets.length === 0) {
       setError("Добавьте хотя бы одно вложение: изображение, файл, видео или ссылку")
       return
     }
+
     onSubmit({
       note: trimmedNote,
-      fileNames: assets.map((a) => a.name),
-      assets,
+      fileNames: nextAssets.map((a) => a.name),
+      assets: nextAssets,
     })
     setNote("")
     setAssets([])
+    setLinkUrl("")
+    setLinkName("")
     setError(null)
   }
 
@@ -262,6 +292,7 @@ export const ContractSubmissionPanel = ({
                 type="url"
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={handleLinkKeyDown}
                 placeholder="https://..."
                 aria-label="Ссылка на demo"
                 className="w-full h-10 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
@@ -271,6 +302,7 @@ export const ContractSubmissionPanel = ({
                   type="text"
                   value={linkName}
                   onChange={(e) => setLinkName(e.target.value)}
+                  onKeyDown={handleLinkKeyDown}
                   placeholder="Название ссылки (необязательно)"
                   aria-label="Название ссылки"
                   className="flex-1 h-10 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
@@ -340,7 +372,7 @@ export const ContractSubmissionPanel = ({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!note.trim() || assets.length === 0 || uploading}
+            disabled={!note.trim() || !hasAttachments || uploading}
             className="h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             Отправить на проверку

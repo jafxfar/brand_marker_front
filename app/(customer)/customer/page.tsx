@@ -45,6 +45,7 @@ export default function CustomerDashboard() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const userId = user?.userId ?? 0
   const useApi = isApiEnabled()
 
   const getActiveRfqsByBuyer = useRfqsStore((s) => s.getActiveRfqsByBuyer)
@@ -175,7 +176,7 @@ export default function CustomerDashboard() {
 
   const unreadCount = hydrated
     ? useApi
-      ? getBuyerUnreadMessageCount(apiContracts as ContractWithRelations[], actorId)
+      ? getBuyerUnreadMessageCount(apiContracts as ContractWithRelations[], userId)
       : getUnreadMessageCountForBuyer(actorId)
     : 0
 

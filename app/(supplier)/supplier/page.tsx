@@ -46,6 +46,7 @@ export default function SupplierDashboard() {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const userId = user?.userId ?? 0
   const useApi = isApiEnabled()
 
   const getActiveContracts = useContractsStore((s) => s.getActiveContracts)
@@ -111,7 +112,7 @@ export default function SupplierDashboard() {
       : []
 
   const unreadCount = useApi
-    ? getSupplierUnreadMessageCount(apiContractsList, actorId)
+    ? getSupplierUnreadMessageCount(apiContractsList, userId)
     : hydrated
       ? getUnreadMessageCount(actorId, actorId)
       : 0
