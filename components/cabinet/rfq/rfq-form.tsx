@@ -480,7 +480,7 @@ export const RfqForm = ({
         </div>
 
         {values.type === "product" && (
-          <div className="max-w-[240px]">
+          <div className="max-w-60">
             <label htmlFor="quantity" className={labelClass}>
               Количество
             </label>
@@ -786,7 +786,7 @@ export const RfqForm = ({
             <div key={row.label} className="flex items-start justify-between gap-4 py-3 first:pt-0">
               <div className="min-w-0">
                 <dt className="text-xs text-muted-foreground">{row.label}</dt>
-                <dd className="text-sm font-semibold text-foreground mt-0.5 break-words">{row.value}</dd>
+                <dd className="text-sm font-semibold text-foreground mt-0.5 wrap-break-word">{row.value}</dd>
               </div>
               <button
                 type="button"

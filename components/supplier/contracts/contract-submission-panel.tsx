@@ -401,7 +401,7 @@ export const ContractSubmissionPanel = ({
                     <p className="text-sm text-foreground mt-1">{submission.note}</p>
                   </div>
                   <span
-                    className={`${statusPillClass} flex-shrink-0 ${meta.className}`}
+                    className={`${statusPillClass} shrink-0 ${meta.className}`}
                   >
                     {meta.label}
                   </span>
