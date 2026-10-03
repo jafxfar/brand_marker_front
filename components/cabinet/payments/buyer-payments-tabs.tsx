@@ -15,6 +15,8 @@ export const BUYER_PAYMENTS_TABS: { value: BuyerPaymentsTab; label: string }[] =
   { value: "refunds", label: "Возвраты" },
 ]
 
+export const BUYER_PAYMENTS_TAB_VALUES = BUYER_PAYMENTS_TABS.map((option) => option.value)
+
 type BuyerPaymentsTabsProps = {
   tab: BuyerPaymentsTab
   onTabChange: (tab: BuyerPaymentsTab) => void

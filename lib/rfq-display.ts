@@ -5,23 +5,23 @@ export const rfqStatusMeta: Record<
   { label: string; className: string }
 > = {
   draft: { label: "Черновик", className: "bg-muted text-muted-foreground" },
-  published: { label: "Опубликован", className: "bg-info/10 text-info" },
+  published: { label: "Опубликована", className: "bg-info/10 text-info" },
   receiving_proposals: {
     label: "Приём предложений",
     className: "bg-primary/10 text-primary",
   },
   supplier_selected: {
     label: "Исполнитель выбран",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-info/10 text-info",
   },
   contract_created: {
-    label: "Договор создан",
+    label: "Идёт сделка",
     className: "bg-muted text-muted-foreground",
   },
-  in_progress: { label: "В работе", className: "bg-warning/10 text-warning" },
-  completed: { label: "Завершён", className: "bg-muted text-muted-foreground" },
-  cancelled: { label: "Отменён", className: "bg-muted text-muted-foreground" },
-  expired: { label: "Истёк", className: "bg-destructive/10 text-destructive" },
+  in_progress: { label: "Идёт сделка", className: "bg-info/10 text-info" },
+  completed: { label: "Завершена", className: "bg-muted text-muted-foreground" },
+  cancelled: { label: "Закрыта", className: "bg-muted text-muted-foreground" },
+  expired: { label: "Срок истёк", className: "bg-warning/10 text-warning" },
   disputed: { label: "Спор", className: "bg-destructive/10 text-destructive" },
   archived: { label: "Архив", className: "bg-muted text-muted-foreground" },
 }

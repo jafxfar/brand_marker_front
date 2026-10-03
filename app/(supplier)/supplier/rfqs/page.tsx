@@ -38,6 +38,7 @@ export default function SupplierRfqsPage() {
   const getRfq = useRfqsStore((s) => s.getRfq)
   const hasProposalLocal = useProposalsStore((s) => s.hasProposal)
   const submitProposalLocal = useProposalsStore((s) => s.submitProposal)
+  const localProposals = useProposalsStore((s) => s.proposals)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null)
@@ -61,6 +62,15 @@ export default function SupplierRfqsPage() {
   const hasProposal = (rfqId: string, supplierActorId: number) => {
     if (useApi) return hasSupplierProposalForRfq(apiProposals, rfqId)
     return hasProposalLocal(rfqId, supplierActorId)
+  }
+
+  const getMyProposal = (rfqId: string) => {
+    const proposal = useApi
+      ? apiProposals?.find((p) => p.rfq_id === rfqId && p.status !== "withdrawn")
+      : localProposals.find(
+          (p) => p.rfq_id === rfqId && p.supplier_actor_id === actorId && p.status !== "withdrawn",
+        )
+    return proposal ? { price: proposal.price, currency: proposal.currency } : undefined
   }
 
   const handleOpenProposal = (rfqId: string) => {
@@ -103,7 +113,7 @@ export default function SupplierRfqsPage() {
     <PageFrame>
       <PageHeader
         title="Заявки заказчиков"
-        description="Открытые заявки, на которые можно ответить"
+        description="Выберите подходящую заявку и предложите цену — заказчик сравнит предложения и выберет исполнителя"
       />
 
       <SegmentedControl
@@ -120,22 +130,21 @@ export default function SupplierRfqsPage() {
       {isEmpty ? (
         <PageSurface>
           <PageEmptyState
-            icon={<Inbox size={32} />}
+            icon={<Inbox />}
             title={isLoading ? "Загрузка заявок..." : "Открытых заявок нет"}
             description={!isLoading ? "Новые заявки заказчиков появятся здесь" : undefined}
           />
         </PageSurface>
       ) : (
-        <PageSurface>
-          <RfqBoardTable
+        <RfqBoardTable
             rfqs={filtered}
             actorId={actorId}
             hasProposal={hasProposal}
+            getMyProposal={getMyProposal}
             getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
             getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}
             onSubmitProposal={handleOpenProposal}
           />
-        </PageSurface>
       )}
 
       {selectedRfq && (

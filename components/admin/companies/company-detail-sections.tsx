@@ -29,6 +29,17 @@ const formatMoney = (value: number, currency = "TJS") =>
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" }).format(new Date(value))
 
+export const VERIFICATION_CHECKLIST_LABELS: Record<
+  keyof AdminCompanyDetail["verification_checklist"],
+  string
+> = {
+  legal_name: "Юридическое наименование",
+  tax_number: "ИНН / налоговый номер",
+  address: "Юридический адрес",
+  website: "Сайт компании",
+  certificates: "Подтверждающие документы",
+}
+
 const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const Section = ({
@@ -127,14 +138,6 @@ export const AdminCompanyDetailSections = ({
 }: {
   company: AdminCompanyDetail
 }) => {
-  const checklistLabels: Record<keyof AdminCompanyDetail["verification_checklist"], string> = {
-    legal_name: "Юридическое наименование",
-    tax_number: "ИНН / налоговый номер",
-    address: "Юридический адрес",
-    website: "Сайт компании",
-    certificates: "Подтверждающие документы",
-  }
-
   return (
     <div className="space-y-5">
       <Section id="overview" title="Обзор" description="Публичная информация и профиль компании">
@@ -200,7 +203,7 @@ export const AdminCompanyDetailSections = ({
                 {complete ? <Check size={18} aria-hidden="true" /> : <X size={18} aria-hidden="true" />}
               </span>
               <span className="text-sm font-medium">
-                {checklistLabels[key as keyof typeof checklistLabels]}
+                {VERIFICATION_CHECKLIST_LABELS[key as keyof typeof VERIFICATION_CHECKLIST_LABELS]}
               </span>
             </div>
           ))}

@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import { Check, Package, X } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
 import {
@@ -35,12 +36,12 @@ export const BuyerContractSubmissionsPanel = ({
         <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
           <Package size={16} className="text-primary" />
         </div>
-        <h2 className="text-sm font-semibold text-foreground">Сдача / Demo</h2>
+        <h2 className="text-sm font-semibold text-foreground">Сдача работы</h2>
       </div>
 
       {submissions.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Исполнитель ещё не отправил demo или результат работы
+          Исполнитель ещё не сдал работу
         </p>
       ) : (
         <div className="space-y-3">
@@ -62,7 +63,7 @@ export const BuyerContractSubmissionsPanel = ({
                     <p className="text-sm text-foreground mt-1">{submission.note}</p>
                   </div>
                   <span
-                    className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0 ${meta.className}`}
+                    className={`${statusPillClass} flex-shrink-0 ${meta.className}`}
                   >
                     {meta.label}
                   </span>

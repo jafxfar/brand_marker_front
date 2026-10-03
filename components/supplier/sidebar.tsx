@@ -7,11 +7,13 @@ import {
   Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDealActionCount } from "@/hooks/use-deal-action-count"
 
 interface NavItem {
   href: string
   label: string
   Icon: LucideIcon
+  badge?: "deals"
 }
 
 interface NavSection {
@@ -26,7 +28,7 @@ const navSections: NavSection[] = [
       { href: "/supplier", label: "Главная", Icon: LayoutDashboard },
       { href: "/supplier/rfqs", label: "Заявки заказчиков", Icon: Inbox },
       { href: "/supplier/proposals", label: "Мои предложения", Icon: Send },
-      { href: "/supplier/contracts", label: "Договоры", Icon: FileCheck },
+      { href: "/supplier/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
     ],
   },
   {
@@ -53,6 +55,9 @@ const navSections: NavSection[] = [
 
 export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
+  const dealActions = useDealActionCount("supplier")
+
+  const getBadge = (item: NavItem): number => (item.badge === "deals" ? dealActions : 0)
 
   const isActive = (href: string): boolean =>
     href === "/supplier" ? pathname === href : pathname.startsWith(href)
@@ -67,7 +72,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
           <Briefcase size={16} className="text-primary-foreground" />
         </div>
         <div className="flex items-baseline gap-0.5">
-          <span className="text-lg font-bold text-primary tracking-tight">Бизнес</span>
+          <span className="text-lg font-bold text-primary tracking-tight">Бренд</span>
           <span className="text-lg font-bold tracking-tight text-foreground">
             Маркет
           </span>
@@ -93,13 +98,14 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
             </p>
             {section.items.map((item) => {
               const active = isActive(item.href)
+              const badge = getBadge(item)
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative",
                     active
                       ? "bg-secondary text-primary"
                       : "text-foreground hover:bg-secondary hover:text-primary",
@@ -107,6 +113,14 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
                 >
                   <item.Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
                   <span>{item.label}</span>
+                  {badge > 0 && (
+                    <span
+                      className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center"
+                      aria-label={`нужно действие: ${badge}`}
+                    >
+                      {badge}
+                    </span>
+                  )}
                 </Link>
               )
             })}

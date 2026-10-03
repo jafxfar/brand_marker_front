@@ -1,8 +1,8 @@
 "use client"
 
-import { Building2, MapPin, ShieldCheck, Globe, MessageSquare, User, UserPlus } from "lucide-react"
+import { Building2, MapPin, Globe, MessageSquare, User, UserPlus } from "lucide-react"
 import type { Category, PublicSupplier } from "@/types"
-import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
+import { SupplierRatingLine, SupplierVerifiedBadge } from "@/components/cabinet/suppliers/supplier-trust-badges"
 
 type SupplierProfileHeaderProps = {
   supplier: PublicSupplier
@@ -10,12 +10,6 @@ type SupplierProfileHeaderProps = {
   onContact: () => void
   onInvite: () => void
 }
-
-const verificationLabel = {
-  verified: "Верифицирован",
-  pending: "На проверке",
-  rejected: "Отклонён",
-} as const
 
 export const SupplierProfileHeader = ({
   supplier,
@@ -35,27 +29,19 @@ export const SupplierProfileHeader = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-foreground">{supplier.display_name}</h1>
-            {supplier.verification_status === "verified" && (
-              <ShieldCheck size={18} className="text-primary" />
-            )}
+            <SupplierVerifiedBadge supplier={supplier} />
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
               {isIndividual ? "Физлицо" : "Компания"}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-            <BuyerRating rating={supplier.rating} />
-            <span className="text-xs text-muted-foreground">
-              {supplier.reviews_count} отзывов
-            </span>
+            <SupplierRatingLine supplier={supplier} />
             {(supplier.city || supplier.country) && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <MapPin size={12} />
                 {[supplier.city, supplier.country].filter(Boolean).join(", ")}
               </span>
             )}
-            <span className="text-xs text-muted-foreground">
-              {verificationLabel[supplier.verification_status]}
-            </span>
           </div>
         </div>
       </div>

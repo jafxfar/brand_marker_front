@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react"
-import { Check, CheckCheck, MessageSquare, Send } from "lucide-react"
+import { Check, CheckCheck, MessageSquare, Send, ShieldAlert } from "lucide-react"
 import { formatIsoDate } from "@/lib/format"
 import type { ContractWithRelations, MessageDeliveryStatus } from "@/types"
 
@@ -85,7 +85,7 @@ export const ContractMessagesPanel = ({
   const [text, setText] = useState("")
   const listRef = useRef<HTMLDivElement>(null)
   const messages = contract.conversation?.messages ?? []
-  const markedReadRef = useRef<number | null>(null)
+  const markedReadRef = useRef<string | null>(null)
 
   useEffect(() => {
     const el = listRef.current
@@ -127,7 +127,7 @@ export const ContractMessagesPanel = ({
   }
 
   return (
-    <section className="bg-card border border-border rounded-xl overflow-hidden flex flex-col h-[min(70vh,640px)] min-h-[420px]">
+    <section className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col h-[min(70vh,640px)] min-h-[420px]">
       <header className="flex items-center gap-3 px-5 py-4 border-b border-border bg-secondary/40">
         <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
           <MessageSquare size={16} className="text-primary" />
@@ -144,7 +144,7 @@ export const ContractMessagesPanel = ({
             <MessageSquare size={28} className="text-muted-foreground mb-2" />
             <p className="text-sm font-semibold text-foreground">Сообщений пока нет</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Напишите первое сообщение по договору
+              Обсудите детали сделки — переписка сохраняется и поможет, если возникнет спор
             </p>
           </div>
         ) : (
@@ -185,6 +185,11 @@ export const ContractMessagesPanel = ({
       </div>
 
       <div className="border-t border-border p-4 bg-card">
+        <p className="mb-3 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <ShieldAlert size={14} className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" />
+          Не переводите деньги напрямую и не уходите в другие мессенджеры — гарантия площадки
+          действует только для оплат и переписки здесь.
+        </p>
         <div className="flex gap-2 items-end">
           <textarea
             value={text}

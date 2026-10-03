@@ -29,7 +29,7 @@ export const BalanceCards = ({ balances, hydrated }: BalanceCardsProps) => (
       label="Под защитой"
       value={hydrated ? formatCurrency(balances.escrowLocked, balances.currency) : "—"}
       accent="bg-info/10 text-info"
-      subValue="Заморожено по договорам до приёмки"
+      subValue="На гарантии площадки до приёмки"
     />
   </div>
 )

@@ -5,6 +5,7 @@ import { isApiEnabled } from "@/lib/api/config"
 export const publicKeys = {
   all: ["public"] as const,
   categories: () => [...publicKeys.all, "categories"] as const,
+  platformSettings: () => [...publicKeys.all, "platform-settings"] as const,
   suppliers: (q?: string, category?: string) =>
     [...publicKeys.all, "suppliers", q ?? "", category ?? ""] as const,
   supplier: (id: number) => [...publicKeys.all, "supplier", id] as const,
@@ -25,6 +26,14 @@ export const usePublicCategoriesQuery = (enabled = true) =>
     queryFn: () => publicApi.categories(),
     enabled: enabled && isApiEnabled(),
     staleTime: 5 * 60 * 1000,
+  })
+
+export const usePlatformSettingsQuery = (enabled = true) =>
+  useQuery({
+    queryKey: publicKeys.platformSettings(),
+    queryFn: () => publicApi.platformSettings(),
+    enabled: enabled && isApiEnabled(),
+    staleTime: 60 * 1000,
   })
 
 export const usePublicSuppliersQuery = (

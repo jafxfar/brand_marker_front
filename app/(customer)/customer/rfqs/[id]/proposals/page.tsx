@@ -26,7 +26,12 @@ import {
   type ProposalSortMode,
 } from "@/components/cabinet/rfq/proposals-review-toolbar"
 import { AcceptProposalDialog } from "@/components/cabinet/rfq/accept-proposal-dialog"
-import { filterProposalsByStatus, sortProposalsForReview } from "@/lib/proposals-review"
+import {
+  filterProposalsByStatus,
+  getProposalMarks,
+  sortProposalsForReview,
+} from "@/lib/proposals-review"
+import { InlineHint } from "@/components/process"
 import type { Proposal, ProposalAcceptInput, ProposalStatus, RfqWithRelations } from "@/types"
 
 type PageProps = {
@@ -73,6 +78,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
       ),
     [allProposals, statusFilter, sortMode],
   )
+  const proposalMarks = useMemo(() => getProposalMarks(allProposals), [allProposals])
   const { getSupplier, getName: getSupplierName } = usePublicSuppliersByActor(
     allProposals.map((p) => p.supplier_actor_id),
   )
@@ -113,7 +119,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
   return (
     <PageFrame>
       <PageHeader
-        title="Обзор предложений"
+        title="Сравните предложения"
         description={rfq.title}
         backHref={`/customer/rfqs/${rfq.id}`}
         backLabel="Назад к заявке"
@@ -132,6 +138,13 @@ export default function ProposalsReviewPage({ params }: PageProps) {
         </div>
       </PageSurface>
 
+      {canManage && allProposals.length > 0 && (
+        <InlineHint>
+          Сравните цену, срок и отзывы. Нажмите «Выбрать исполнителя» — мы создадим сделку, а
+          остальные предложения по этой заявке будут закрыты.
+        </InlineHint>
+      )}
+
       <ProposalsReviewToolbar
         total={proposals.length}
         sortMode={sortMode}
@@ -147,7 +160,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
             description={
               statusFilter !== "all"
                 ? "Попробуйте сменить фильтр"
-                : "Дождитесь предложений исполнителей"
+                : "Мы уведомим вас, когда исполнители ответят"
             }
           />
         </PageSurface>
@@ -157,6 +170,7 @@ export default function ProposalsReviewPage({ params }: PageProps) {
             <ProposalReviewCard
               key={proposal.id}
               proposal={proposal}
+              marks={proposalMarks.get(proposal.id)}
               supplier={getSupplier(proposal.supplier_actor_id)}
               supplierName={getSupplierName(proposal.supplier_actor_id)}
               canManage={canManage}

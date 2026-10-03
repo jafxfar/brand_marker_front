@@ -1,15 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense } from "react"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useBuyerPaymentsStore } from "@/lib/store/buyer-payments-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import { getEscrowSummary } from "@/lib/contract-display"
 import {
+  BUYER_PAYMENTS_TAB_VALUES,
   BuyerPaymentsTabs,
   type BuyerPaymentsTab,
 } from "@/components/cabinet/payments/buyer-payments-tabs"
@@ -31,10 +33,10 @@ import {
 } from "@/hooks/api/use-payments-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 
-export default function BuyerPaymentsPage() {
+const BuyerPaymentsContent = () => {
   const hydrated = useHydrated()
   const actorId = getActorId(useAuthStore((s) => s.user))
-  const [tab, setTab] = useState<BuyerPaymentsTab>("outgoing")
+  const [tab, setTab] = useUrlTab<BuyerPaymentsTab>("tab", BUYER_PAYMENTS_TAB_VALUES, "outgoing")
 
   const getOutgoingPayments = useBuyerPaymentsStore((s) => s.getOutgoingPayments)
   const getEscrowFundingQueue = useBuyerPaymentsStore((s) => s.getEscrowFundingQueue)
@@ -66,7 +68,7 @@ export default function BuyerPaymentsPage() {
         const contract = contractById.get(event.contractId)
         return {
           ...event,
-          contractTitle: contract?.title ?? `Договор #${event.contractId}`,
+          contractTitle: contract?.title ?? `Сделка #${event.contractId}`,
           supplierActorId: contract?.supplier_actor_id ?? 0,
         }
       })
@@ -78,7 +80,7 @@ export default function BuyerPaymentsPage() {
       const contract = contractById.get(p.contract_id)
       return {
         contractId: p.contract_id,
-        contractTitle: contract?.title ?? `Договор #${p.contract_id}`,
+        contractTitle: contract?.title ?? `Сделка #${p.contract_id}`,
         milestoneId: p.milestone_id,
         title: p.title,
         amount: p.amount,
@@ -104,7 +106,7 @@ export default function BuyerPaymentsPage() {
 
   const getContractTitle = (contractId: number | null) => {
     if (!contractId) return "—"
-    return getContract(contractId)?.title ?? `Договор #${contractId}`
+    return getContract(contractId)?.title ?? `Сделка #${contractId}`
   }
 
   const handleFund = (contractId: number, milestoneId: number) => {
@@ -160,5 +162,13 @@ export default function BuyerPaymentsPage() {
         )}
       </PageSurface>
     </PageFrame>
+  )
+}
+
+export default function BuyerPaymentsPage() {
+  return (
+    <Suspense fallback={null}>
+      <BuyerPaymentsContent />
+    </Suspense>
   )
 }

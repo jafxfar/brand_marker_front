@@ -9,13 +9,13 @@ export const BUYER_CONTRACT_LIST_TABS: {
   value: BuyerContractListTab
   label: string
 }[] = [
-  { value: "active", label: "Активные" },
+  { value: "active", label: "Идут" },
   { value: "completed", label: "Завершённые" },
-  { value: "disputed", label: "Спорные" },
+  { value: "disputed", label: "Споры" },
 ]
 
 export const buyerContractEmptyMessages: Record<BuyerContractListTab, string> = {
-  active: "Активные договоры появятся после принятия предложения по заявке",
-  completed: "Завершённые договоры отобразятся здесь",
-  disputed: "Спорных договоров нет",
+  active: "Сделка появится, когда вы выберете исполнителя по заявке",
+  completed: "Здесь будут сделки, по которым исполнитель получил оплату",
+  disputed: "Споров нет — и хорошо",
 }

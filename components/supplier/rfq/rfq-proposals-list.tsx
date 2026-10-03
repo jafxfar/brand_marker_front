@@ -1,6 +1,7 @@
 import type { Proposal } from "@/types"
+import { statusPillClass } from "@/components/ui/status-badge"
 import { proposalStatusMeta } from "@/lib/proposal-display"
-import { formatCurrency } from "@/lib/format"
+import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 
 type RfqProposalsListProps = {
   proposals: Proposal[]
@@ -36,27 +37,29 @@ export const RfqProposalsList = ({
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground wrap-anywhere">
                     {getSupplierName(proposal.supplier_actor_id)}
                     {isMine && (
-                      <span className="ml-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary/10 text-primary">
+                      <span className={`${statusPillClass} ml-2 bg-primary/10 text-primary`}>
                         Ваше
                       </span>
                     )}
                   </p>
                   {proposal.message && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{proposal.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2 wrap-anywhere">{proposal.message}</p>
                   )}
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-primary">
-                    {formatCurrency(proposal.price, proposal.currency)}
+                <div className="text-right flex-shrink-0 min-w-0 max-w-[45%]">
+                  <p className="text-sm font-bold text-primary wrap-anywhere">
+                    {formatMoneyDisplay(proposal.price, proposal.currency)}
                   </p>
                   {proposal.delivery_time && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{proposal.delivery_time}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 wrap-anywhere">
+                      {formatDeliveryTime(proposal.delivery_time)}
+                    </p>
                   )}
-                  <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
+                  <span className={`${statusPillClass} mt-1 ${meta.className}`}>
                     {meta.label}
                   </span>
                 </div>

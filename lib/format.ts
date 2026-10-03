@@ -78,6 +78,34 @@ export const formatIsoDate = (iso: string): string =>
 export const formatRating = (value: number): string =>
   value.toFixed(1)
 
+/** Russian plural form: pluralRu(3, "заявка", "заявки", "заявок") → "заявки". */
+export const pluralRu = (count: number, one: string, few: string, many: string): string => {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few
+  return many
+}
+
+export const formatCount = (count: number, one: string, few: string, many: string): string =>
+  `${count} ${pluralRu(count, one, few, many)}`
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** Whole days left until the end of the given ISO date (0 = today is the last day, negative = passed). */
+export const getDaysLeft = (isoDate: string, now: Date = new Date()): number => {
+  const end = new Date(`${isoDate.slice(0, 10)}T23:59:59`)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+  return Math.round((endDay.getTime() - today.getTime()) / DAY_MS)
+}
+
+export const formatDaysLeft = (daysLeft: number): string => {
+  if (daysLeft < 0) return "срок истёк"
+  if (daysLeft === 0) return "последний день"
+  return `${pluralRu(daysLeft, "остался", "осталось", "осталось")} ${formatCount(daysLeft, "день", "дня", "дней")}`
+}
+
 export const formatRelativeTime = (timestamp: number): string => {
   const diffMs = Date.now() - timestamp
   const minutes = Math.floor(diffMs / 60000)

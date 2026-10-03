@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/client"
+import type { PlatformSettings, PlatformSettingsInput } from "@/lib/api/public"
 
 export type AdminDashboardMetrics = {
   total_users: number
@@ -989,6 +990,132 @@ export const adminApi = {
         body: JSON.stringify({ action, reason: reason?.trim() || null }),
       },
     ),
+  getSettings: () => apiFetch<AdminPlatformSettings>("/admin/settings"),
+  updateSettings: (data: PlatformSettingsInput) =>
+    apiFetch<AdminPlatformSettings>("/admin/settings", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  getCategories: () => apiFetch<AdminCategoryListResponse>("/admin/categories"),
+  createCategory: (data: AdminCategoryInput) =>
+    apiFetch<AdminCategory>("/admin/categories", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateCategory: (categoryId: number, data: Partial<AdminCategoryInput>) =>
+    apiFetch<AdminCategory>(`/admin/categories/${categoryId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  deleteCategory: (categoryId: number) =>
+    apiFetch<{ id: number; deleted: boolean }>(`/admin/categories/${categoryId}`, {
+      method: "DELETE",
+    }),
+  getEscrow: ({ page, pageSize, view, query }: AdminEscrowParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      view,
+    })
+    if (query.trim()) {
+      searchParams.set("query", query.trim())
+    }
+    return apiFetch<AdminEscrowResponse>(`/admin/escrow?${searchParams.toString()}`)
+  },
+  getAnalytics: (period: AdminAnalyticsPeriod) =>
+    apiFetch<AdminAnalyticsResponse>(`/admin/analytics?period=${period}`),
+}
+
+export type AdminPlatformSettings = PlatformSettings & {
+  updated_at: string | null
+  updated_by_name: string | null
+  can_update: boolean
+}
+
+export type AdminCategory = {
+  id: number
+  parent_id: number | null
+  name: string
+  slug: string
+  catalog_items_count: number
+  companies_count: number
+  children_count: number
+}
+
+export type AdminCategoryListResponse = {
+  items: AdminCategory[]
+}
+
+export type AdminCategoryInput = {
+  name: string
+  slug: string
+  parent_id: number | null
+}
+
+export type AdminEscrowView = "held" | "disputed" | "awaiting"
+
+export type AdminEscrowParams = {
+  page: number
+  pageSize: number
+  view: AdminEscrowView
+  query: string
+}
+
+export type AdminEscrowCurrencySummary = {
+  currency: string
+  held: number
+  disputed: number
+  awaiting: number
+  expected_commission: number
+}
+
+export type AdminEscrowContract = {
+  id: number
+  title: string
+  status: string
+  currency: string
+  agreed_amount: number
+  amount: number
+  commission: number
+  milestones_count: number
+  buyer_name: string | null
+  supplier_name: string | null
+  created_at: string
+}
+
+export type AdminEscrowResponse = {
+  summary: AdminEscrowCurrencySummary[]
+  view_counts: Record<AdminEscrowView, number>
+  items: AdminEscrowContract[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
+export type AdminAnalyticsPeriod = "30d" | "90d" | "12m"
+
+export type AdminAnalyticsMetrics = {
+  users: number
+  companies: number
+  rfqs: number
+  contracts: number
+  contract_volume: number
+  released: number
+  commission: number
+}
+
+export type AdminAnalyticsPoint = AdminAnalyticsMetrics & {
+  bucket: string
+}
+
+export type AdminAnalyticsResponse = {
+  period: AdminAnalyticsPeriod
+  bucket: "day" | "week" | "month"
+  currency: string
+  totals: AdminAnalyticsMetrics
+  previous_totals: AdminAnalyticsMetrics
+  series: AdminAnalyticsPoint[]
 }
 
 export type AdminFinanceView =

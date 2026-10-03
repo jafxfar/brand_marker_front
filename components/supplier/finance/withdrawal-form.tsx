@@ -9,7 +9,10 @@ import { formatCurrency } from "@/lib/format"
 type WithdrawalFormProps = {
   destinations: WithdrawalDestination[]
   balances: SupplierBalanceSummary
-  onSubmit: (input: { destinationId: number; amount: number }) => RequestWithdrawalResult
+  onSubmit: (input: {
+    destinationId: number
+    amount: number
+  }) => RequestWithdrawalResult | Promise<RequestWithdrawalResult>
 }
 
 type RequestWithdrawalResult =
@@ -26,15 +29,16 @@ export const WithdrawalForm = ({
   const [destinationId, setDestinationId] = useState(
     defaultDestination?.id ?? 0,
   )
+  const selectedDestinationId = destinationId || defaultDestination?.id || 0
   const [amount, setAmount] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("")
     setSuccess("")
     const parsed = Number(amount.replace(/\s/g, "").replace(",", "."))
-    const result = onSubmit({ destinationId, amount: parsed })
+    const result = await onSubmit({ destinationId: selectedDestinationId, amount: parsed })
     if (!result.ok) {
       setError(result.error)
       return
@@ -45,7 +49,7 @@ export const WithdrawalForm = ({
 
   if (destinations.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">Нет привязанных счетов или кошельков</p>
+      <p className="text-sm text-muted-foreground">Добавьте счёт для выплат, чтобы выводить деньги</p>
     )
   }
 
@@ -57,7 +61,7 @@ export const WithdrawalForm = ({
         </label>
         <div className="mt-2 space-y-2">
           {destinations.map((destination) => {
-            const isSelected = destinationId === destination.id
+            const isSelected = selectedDestinationId === destination.id
             const Icon = destination.type === "bank" ? Building2 : Wallet
             return (
               <button

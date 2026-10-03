@@ -1,10 +1,16 @@
 import Link from "next/link"
 import { Check } from "lucide-react"
 
-const BENEFITS = [
+const BUYER_BENEFITS = [
   "Без комиссий со сделок",
   "Без абонентской платы",
-  "Без лимита на заявки и отклики",
+  "Без лимита на заявки",
+]
+
+const SUPPLIER_BENEFITS = [
+  "Без абонентской платы",
+  "Без лимита на отклики",
+  "Комиссия только с полученных выплат",
 ]
 
 export const LandingPricing = () => (
@@ -18,11 +24,11 @@ export const LandingPricing = () => (
         id="pricing-heading"
         className="text-2xl sm:text-3xl font-black text-foreground"
       >
-        Всё бесплатно — для заказчиков и исполнителей
+        Бесплатно для заказчиков, прозрачно для исполнителей
       </h2>
       <p className="mt-2 max-w-2xl text-sm sm:text-base text-muted-foreground">
-        Никакой абонентской платы и комиссий со сделок: пользуйтесь площадкой
-        без ограничений по количеству.
+        Никакой абонентской платы и ограничений по количеству. Исполнитель платит
+        комиссию платформы только с денег, полученных по договору.
       </p>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
@@ -37,7 +43,7 @@ export const LandingPricing = () => (
             Безлимитное количество запросов на товары и услуги.
           </p>
           <ul className="mt-6 space-y-3">
-            {BENEFITS.map((item) => (
+            {BUYER_BENEFITS.map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm text-foreground">
                 <Check size={16} className="shrink-0 text-primary" aria-hidden />
                 {item}
@@ -57,13 +63,13 @@ export const LandingPricing = () => (
             Для исполнителей
           </p>
           <h3 className="mt-2 text-xl font-black text-foreground">
-            Абсолютно бесплатно
+            Бесплатное размещение
           </h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Безлимитное количество откликов на заявки заказчиков.
+            Безлимитное количество откликов. Размер комиссии виден до отправки предложения.
           </p>
           <ul className="mt-6 space-y-3">
-            {BENEFITS.map((item) => (
+            {SUPPLIER_BENEFITS.map((item) => (
               <li key={`s-${item}`} className="flex items-center gap-2 text-sm text-foreground">
                 <Check size={16} className="shrink-0 text-primary" aria-hidden />
                 {item}

@@ -3,6 +3,7 @@
 import { use, useState } from "react"
 import Link from "next/link"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { statusPillClass } from "@/components/ui/status-badge"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -121,10 +122,10 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
 
       <PageSurface className="p-6">
         <div className="mb-6 flex flex-wrap gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${meta.className}`}>
+          <span className={`${statusPillClass} ${meta.className}`}>
             {meta.label}
           </span>
-          <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-foreground">
+          <span className={`${statusPillClass} bg-secondary text-foreground`}>
             {rfqTypeLabel[rfq.type]}
           </span>
         </div>

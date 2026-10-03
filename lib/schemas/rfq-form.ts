@@ -46,36 +46,39 @@ export const rfqFormSchema = z.discriminatedUnion("type", [productSchema, servic
 
 export type RfqFormValues = z.infer<typeof rfqFormSchema>
 
-export const validateRfqForm = (values: RfqFormValues): Record<string, string> => {
-  const result = rfqFormSchema.safeParse(values)
-  if (result.success) {
-    const errors: Record<string, string> = {}
-    if (values.budget_type === "fixed") {
-      const from = Number(values.budget_from)
-      if (!values.budget_from || Number.isNaN(from) || from <= 0) {
-        errors.budget_from = "Укажите бюджет"
-      }
-    }
-    if (values.budget_type === "range") {
-      const from = Number(values.budget_from)
-      const to = Number(values.budget_to)
-      if (!values.budget_from || Number.isNaN(from) || from <= 0) {
-        errors.budget_from = "Укажите минимум"
-      }
-      if (!values.budget_to || Number.isNaN(to) || to <= from) {
-        errors.budget_to = "Максимум должен быть больше минимума"
-      }
-    }
-    if (values.type === "product") {
-      const qty = Number(values.quantity)
-      if (Number.isNaN(qty) || qty < 1) errors.quantity = "Количество от 1"
-    }
-    return errors
-  }
+const validateAmounts = (values: RfqFormValues): Record<string, string> => {
   const errors: Record<string, string> = {}
-  for (const issue of result.error.issues) {
-    const key = String(issue.path[0] ?? "form")
-    if (!errors[key]) errors[key] = issue.message
+  if (values.budget_type === "fixed") {
+    const from = Number(values.budget_from)
+    if (!values.budget_from || Number.isNaN(from) || from <= 0) {
+      errors.budget_from = "Укажите бюджет"
+    }
+  }
+  if (values.budget_type === "range") {
+    const from = Number(values.budget_from)
+    const to = Number(values.budget_to)
+    if (!values.budget_from || Number.isNaN(from) || from <= 0) {
+      errors.budget_from = "Укажите минимум"
+    }
+    if (!values.budget_to || Number.isNaN(to) || to <= from) {
+      errors.budget_to = "Максимум должен быть больше минимума"
+    }
+  }
+  if (values.type === "product") {
+    const qty = Number(values.quantity)
+    if (Number.isNaN(qty) || qty < 1) errors.quantity = "Количество от 1"
   }
   return errors
+}
+
+export const validateRfqForm = (values: RfqFormValues): Record<string, string> => {
+  const result = rfqFormSchema.safeParse(values)
+  const errors: Record<string, string> = {}
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      const key = String(issue.path[0] ?? "form")
+      if (!errors[key]) errors[key] = issue.message
+    }
+  }
+  return { ...validateAmounts(values), ...errors }
 }

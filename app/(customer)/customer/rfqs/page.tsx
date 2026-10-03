@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense } from "react"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,9 +10,11 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import {
   BUYER_RFQ_STATUS_FILTER_OPTIONS,
+  BUYER_RFQ_STATUS_FILTER_VALUES,
   type BuyerRfqStatusFilter,
 } from "@/lib/buyer-rfq-display"
 import { RfqListTable } from "@/components/cabinet/rfq/rfq-list-table"
@@ -28,11 +30,15 @@ import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { proposalsApi } from "@/lib/api/proposals"
 import { proposalKeys } from "@/hooks/api/use-proposals-query"
 
-export default function MyRfqsPage() {
+const MyRfqsContent = () => {
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
-  const [statusFilter, setStatusFilter] = useState<BuyerRfqStatusFilter>("all")
+  const [statusFilter, setStatusFilter] = useUrlTab<BuyerRfqStatusFilter>(
+    "status",
+    BUYER_RFQ_STATUS_FILTER_VALUES,
+    "all",
+  )
   const getRfqsByBuyerTab = useRfqsStore((s) => s.getRfqsByBuyerTab)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const useApi = isApiEnabled()
@@ -104,5 +110,13 @@ export default function MyRfqsPage() {
         )}
       </PageSurface>
     </PageFrame>
+  )
+}
+
+export default function MyRfqsPage() {
+  return (
+    <Suspense fallback={null}>
+      <MyRfqsContent />
+    </Suspense>
   )
 }

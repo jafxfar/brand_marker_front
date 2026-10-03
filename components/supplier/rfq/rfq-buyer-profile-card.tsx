@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Building2, MapPin, ShieldCheck, User } from "lucide-react"
 import type { RfqBuyerSummary } from "@/types/rfq"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
+import { formatCount } from "@/lib/format"
 
 type RfqBuyerProfileCardProps = {
   buyer: RfqBuyerSummary | undefined
@@ -63,7 +64,7 @@ export const RfqBuyerProfileCard = ({ buyer }: RfqBuyerProfileCardProps) => {
         )}
         {buyer.completed_contracts != null && buyer.completed_contracts > 0 && (
           <p className="text-xs text-muted-foreground pt-1">
-            {buyer.completed_contracts} завершённых договоров на платформе
+            {formatCount(buyer.completed_contracts, "завершённая сделка", "завершённые сделки", "завершённых сделок")} на платформе
           </p>
         )}
       </div>

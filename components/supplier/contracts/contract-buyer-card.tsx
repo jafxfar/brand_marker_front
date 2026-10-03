@@ -1,6 +1,7 @@
 import { Building2, MapPin, ShieldCheck } from "lucide-react"
 import type { CompanyWithRelations } from "@/types"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
+import { formatCount } from "@/lib/format"
 
 type ContractBuyerCardProps = {
   buyer: CompanyWithRelations | undefined
@@ -54,7 +55,7 @@ export const ContractBuyerCard = ({ buyer }: ContractBuyerCardProps) => {
         </div>
         {buyer.stats && (
           <p className="text-xs text-muted-foreground pt-1">
-            {buyer.stats.completed_contracts} завершённых договоров на платформе
+            {formatCount(buyer.stats.completed_contracts, "завершённая сделка", "завершённые сделки", "завершённых сделок")} на платформе
           </p>
         )}
       </div>

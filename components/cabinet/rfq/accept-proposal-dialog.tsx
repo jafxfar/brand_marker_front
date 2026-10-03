@@ -9,6 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { usePlatformSettingsQuery } from "@/hooks/api/use-public-query"
+import { exceedsContractLimit } from "@/lib/commission"
 import { formatCurrency } from "@/lib/format"
 import { PaymentTermsBuilder } from "@/components/cabinet/rfq/payment-terms-builder"
 import type { Currency, ProposalAcceptInput } from "@/types"
@@ -34,6 +36,9 @@ export const AcceptProposalDialog = ({
     payment_type: "full_postpayment",
   })
   const [isValid, setIsValid] = useState(true)
+  const { data: platformSettings } = usePlatformSettingsQuery(open)
+  const overLimit = platformSettings ? exceedsContractLimit(price, currency, platformSettings) : false
+  const canConfirm = isValid && !overLimit
 
   const handleTermsChange = useCallback(
     (value: ProposalAcceptInput, valid: boolean) => {
@@ -44,7 +49,7 @@ export const AcceptProposalDialog = ({
   )
 
   const handleConfirm = () => {
-    if (!isValid) return
+    if (!canConfirm) return
     onConfirm(terms)
     onOpenChange(false)
   }
@@ -53,13 +58,33 @@ export const AcceptProposalDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg rounded-xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Принять предложение?</DialogTitle>
+          <DialogTitle>Выбрать {supplierName}?</DialogTitle>
           <DialogDescription>
-            Вы выбираете исполнителя {supplierName} на сумму{" "}
-            {formatCurrency(price, currency)}. Будет создан договор с постоплатой,
-            остальные предложения отклонены.
+            Сумма сделки — {formatCurrency(price, currency)}.
           </DialogDescription>
         </DialogHeader>
+
+        <div>
+          <p className="text-sm font-bold">Что будет дальше</p>
+          <ol className="mt-2 grid list-decimal gap-2 pl-5 text-[15px]">
+            <li>Создадим сделку и договор на {formatCurrency(price, currency)}.</li>
+            <li>Исполнитель выполнит работу, а вы проверите результат.</li>
+            <li>
+              {terms.payment_type === "full_postpayment"
+                ? "Оплата — после того, как вы примете работу."
+                : "Вы оплатите сделку на гарантию площадки — исполнитель получит деньги только после приёмки."}
+            </li>
+            <li>Остальные предложения по заявке будут закрыты.</li>
+          </ol>
+        </div>
+
+        {overLimit && platformSettings?.max_contract_amount != null && (
+          <p role="alert" className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            Сумма превышает максимальную сумму сделки на платформе
+            ({formatCurrency(platformSettings.max_contract_amount, currency)}).
+            Попросите исполнителя изменить цену предложения.
+          </p>
+        )}
 
         <div className="py-1">
           <PaymentTermsBuilder
@@ -80,10 +105,10 @@ export const AcceptProposalDialog = ({
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={!isValid}
+            disabled={!canConfirm}
             className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Принять и создать договор
+            Да, выбрать за {formatCurrency(price, currency)}
           </button>
         </DialogFooter>
       </DialogContent>

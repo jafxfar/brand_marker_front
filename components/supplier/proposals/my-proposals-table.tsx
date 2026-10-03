@@ -1,9 +1,10 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import type { Proposal } from "@/types"
 import { proposalStatusMeta } from "@/lib/proposal-display"
-import { formatCurrency } from "@/lib/format"
+import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 
 type MyProposalsTableProps = {
   proposals: Proposal[]
@@ -45,19 +46,19 @@ export const MyProposalsTable = ({
                 <td className="px-4 py-3">
                   <Link
                     href={`/supplier/rfqs/${proposal.rfq_id}`}
-                    className="font-semibold text-foreground hover:text-primary line-clamp-2"
+                    className="font-semibold text-foreground hover:text-primary line-clamp-2 wrap-anywhere"
                   >
                     {rfqTitle}
                   </Link>
                 </td>
                 <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                  {formatCurrency(proposal.price, proposal.currency)}
+                  {formatMoneyDisplay(proposal.price, proposal.currency)}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {proposal.delivery_time ?? "—"}
+                <td className="px-4 py-3 text-muted-foreground max-w-48 wrap-anywhere">
+                  {formatDeliveryTime(proposal.delivery_time)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+                  <span className={`${statusPillClass} ${meta.className}`}>
                     {meta.label}
                   </span>
                 </td>
@@ -97,24 +98,24 @@ export const MyProposalsTable = ({
               href={`/supplier/rfqs/${proposal.rfq_id}`}
               className="block hover:text-primary transition-colors"
             >
-              <p className="text-sm font-bold text-foreground">{rfqTitle}</p>
+              <p className="text-sm font-bold text-foreground wrap-anywhere">{rfqTitle}</p>
             </Link>
             <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-              <div>
+              <div className="min-w-0">
                 <p className="text-muted-foreground">Цена</p>
-                <p className="font-semibold text-foreground mt-0.5">
-                  {formatCurrency(proposal.price, proposal.currency)}
+                <p className="font-semibold text-foreground mt-0.5 wrap-anywhere">
+                  {formatMoneyDisplay(proposal.price, proposal.currency)}
                 </p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-muted-foreground">Срок</p>
-                <p className="font-semibold text-foreground mt-0.5">
-                  {proposal.delivery_time ?? "—"}
+                <p className="font-semibold text-foreground mt-0.5 wrap-anywhere">
+                  {formatDeliveryTime(proposal.delivery_time)}
                 </p>
               </div>
             </div>
             <div className="flex items-center justify-between mt-3">
-              <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full ${meta.className}`}>
+              <span className={`${statusPillClass} ${meta.className}`}>
                 {meta.label}
               </span>
               {showWithdraw && (

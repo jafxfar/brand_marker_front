@@ -6,8 +6,12 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { InlineHint } from "@/components/process"
+import { usePlatformSettingsQuery } from "@/hooks/api/use-public-query"
+import { calculateCommission, exceedsContractLimit } from "@/lib/commission"
 import { cn } from "@/lib/utils"
-import { formatRfqBudget } from "@/lib/format"
+import { formatCurrency, formatRfqBudget } from "@/lib/format"
 import type { Currency } from "@/types"
 import type { BudgetType } from "@/types"
 
@@ -44,6 +48,12 @@ export const ProposalDialog = ({
   const [deliveryTime, setDeliveryTime] = useState("")
   const [message, setMessage] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { data: platformSettings } = usePlatformSettingsQuery(open)
+  const priceValue = Number(price)
+  const hasValidPrice = Boolean(price) && Number.isFinite(priceValue) && priceValue > 0
+  const commission = platformSettings && hasValidPrice
+    ? calculateCommission(priceValue, currency, platformSettings)
+    : null
 
   useEffect(() => {
     if (!open) return
@@ -62,6 +72,8 @@ export const ProposalDialog = ({
       e.price = "Укажите цену"
     } else if (priceNum > 1_000_000_000_000) {
       e.price = "Цена не больше 1 трлн"
+    } else if (platformSettings && exceedsContractLimit(priceNum, currency, platformSettings)) {
+      e.price = `Сумма сделки не может превышать ${formatCurrency(platformSettings.max_contract_amount ?? 0, currency)}`
     }
     if (!deliveryTime.trim() || Number.isNaN(daysNum) || daysNum <= 0) {
       e.delivery_time = "Срок должен быть больше 0"
@@ -90,9 +102,9 @@ export const ProposalDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-xl sm:max-w-md">
+      <DialogContent className="rounded-2xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Отправить предложение</DialogTitle>
+          <DialogTitle>Предложить цену</DialogTitle>
           <DialogDescription>
             Заявка: {rfqTitle}. Бюджет:{" "}
             {formatRfqBudget(budgetType, budgetFrom, budgetTo, currency)}.
@@ -127,6 +139,23 @@ export const ProposalDialog = ({
               className="w-full h-11 px-4 rounded-xl border border-input bg-secondary text-sm text-muted-foreground"
             />
           </div>
+          {commission !== null && platformSettings && (
+            <div
+              className="col-span-2 flex items-baseline justify-between gap-3 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900"
+              aria-live="polite"
+            >
+              <span>
+                Вы получите
+                <span className="block text-xs text-brand-700">
+                  комиссия площадки {platformSettings.commission_percent}% ·{" "}
+                  {formatCurrency(commission, currency)}
+                </span>
+              </span>
+              <strong className="text-lg tnum">
+                {formatCurrency(priceValue - commission, currency)}
+              </strong>
+            </div>
+          )}
         </div>
 
         <div>
@@ -157,7 +186,7 @@ export const ProposalDialog = ({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            placeholder="Расскажите, почему стоит выбрать вас"
+            placeholder="Как будете выполнять, что входит в цену, похожий опыт"
             className={cn(
               "w-full px-4 py-3 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20 resize-none",
               errors.message ? "border-destructive" : "border-input focus:border-primary",
@@ -166,21 +195,18 @@ export const ProposalDialog = ({
           {errors.message && <p className="text-xs text-destructive mt-1">{errors.message}</p>}
         </div>
 
+        <InlineHint variant="warning" className="p-3 text-xs">
+          Не указывайте телефоны и ссылки на мессенджеры. Детали обсудите в чате сделки — так
+          оплата остаётся под гарантией площадки.
+        </InlineHint>
+
         <DialogFooter>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="h-10 px-4 rounded-xl border border-border text-sm font-semibold hover:bg-secondary transition-colors"
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Отмена
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors flex items-center gap-2"
-          >
-            <Send size={15} /> Отправить предложение
-          </button>
+          </Button>
+          <Button onClick={handleConfirm}>
+            <Send /> Отправить предложение
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

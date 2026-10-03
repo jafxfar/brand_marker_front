@@ -66,7 +66,7 @@ export const SupplierStatsPanel = ({ supplier }: SupplierStatsPanelProps) => {
               {formatSuccessRate(successRate)}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
-              Доля успешно закрытых договоров
+              Доля успешно завершённых сделок
             </p>
           </div>
         )}

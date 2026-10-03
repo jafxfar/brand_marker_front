@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import type { PaymentHistoryEvent } from "@/lib/buyer-payments-display"
 import { paymentHistoryTypeLabel } from "@/lib/buyer-payments-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
@@ -21,7 +22,7 @@ export const ContractPaymentHistoryPanel = ({
     <h2 className="text-sm font-semibold text-foreground mb-4">История платежей</h2>
 
     {events.length === 0 ? (
-      <p className="text-sm text-muted-foreground">Платежей по договору пока нет</p>
+      <p className="text-sm text-muted-foreground">Платежей по сделке пока нет</p>
     ) : (
       <div className="space-y-3">
         {events.map((event) => (
@@ -40,7 +41,7 @@ export const ContractPaymentHistoryPanel = ({
                 {formatCurrency(event.amount, event.currency)}
               </p>
               <span
-                className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${typeClassName[event.type]}`}
+                className={`${statusPillClass} mt-1 ${typeClassName[event.type]}`}
               >
                 {paymentHistoryTypeLabel[event.type]}
               </span>

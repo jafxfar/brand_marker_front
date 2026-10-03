@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import type { Proposal } from "@/types"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
@@ -27,10 +28,10 @@ export const ProposalActionCard = ({
   return (
     <div className="rounded-xl border border-border p-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground">{supplierName}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground wrap-anywhere">{supplierName}</p>
           {proposal.message && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{proposal.message}</p>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-3 wrap-anywhere">{proposal.message}</p>
           )}
         </div>
         <div className="text-right flex-shrink-0 min-w-0 max-w-[45%]">
@@ -42,7 +43,7 @@ export const ProposalActionCard = ({
               {formatDeliveryTime(proposal.delivery_time)}
             </p>
           )}
-          <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
+          <span className={`${statusPillClass} mt-1 ${meta.className}`}>
             {meta.label}
           </span>
         </div>

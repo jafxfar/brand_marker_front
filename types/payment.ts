@@ -40,6 +40,7 @@ export type PaymentMilestone = {
   amount: number
   trigger: PaymentMilestoneTrigger | string
   status: PaymentMilestoneStatus
+  commission_amount?: number
 }
 
 export type PaymentPlan = {

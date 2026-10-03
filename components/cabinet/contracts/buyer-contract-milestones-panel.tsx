@@ -1,5 +1,6 @@
 "use client"
 
+import { statusPillClass } from "@/components/ui/status-badge"
 import type { ContractWithRelations } from "@/types"
 import { getMilestoneProgress, milestoneStatusMeta } from "@/lib/contract-display"
 import { formatCurrency } from "@/lib/format"
@@ -53,14 +54,13 @@ export const BuyerContractMilestonesPanel = ({
           const meta = milestoneStatusMeta[milestone.status]
           const isLast = index === milestones.length - 1
           const canFund = ["awaiting_payment", "pending"].includes(milestone.status)
-          const canApprove = ["submitted", "approved", "in_progress"].includes(
-            milestone.status,
-          )
+          const canApprove =
+            milestone.status === "funded" && contract.status === "completed"
 
           return (
             <div key={milestone.id} className="flex gap-3">
               <div className="flex flex-col items-center">
-                <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-1.5 ${meta.className.split(" ")[0]}`} />
+                <div className={`w-3 h-3 rounded-full shrink-0 mt-1.5 ${meta.className.split(" ")[0]}`} />
                 {!isLast && <div className="w-px flex-1 bg-border mt-1" />}
               </div>
               <div className="flex-1 rounded-xl border border-border p-3 mb-1">
@@ -73,7 +73,7 @@ export const BuyerContractMilestonesPanel = ({
                     <p className="text-sm font-bold text-primary">
                       {formatCurrency(milestone.amount, contract.currency)}
                     </p>
-                    <span className={`inline-block text-xs font-semibold px-3 py-1.5 rounded-full mt-1 ${meta.className}`}>
+                    <span className={`${statusPillClass} mt-1 ${meta.className}`}>
                       {meta.label}
                     </span>
                   </div>
