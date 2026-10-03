@@ -38,7 +38,7 @@ export default function AdminTopbar() {
   const roleLabel = getStaffRoleLabel(user?.staffRoleName ?? user?.platformRole ?? "admin")
 
   return (
-    <header className="sticky top-0 z-30 flex h-[68px] items-center gap-4 border-b border-border bg-card px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-17 items-center gap-4 border-b border-border bg-card px-4 sm:px-6">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
           <button
