@@ -35,6 +35,12 @@ export type MeResponse = {
     role: string | null
   }>
   active_company_id: number | null
+  permissions?: string[]
+  staff_role?: {
+    id: number
+    name: string
+    description: string | null
+  } | null
 }
 
 export const authApi = {

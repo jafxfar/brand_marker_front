@@ -43,6 +43,7 @@ import {
   useAdminUsersQuery,
   useUpdateAdminUserStatusMutation,
 } from "@/hooks/api/use-admin-users-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type {
   AdminUser,
   AdminUserRole,
@@ -189,6 +190,7 @@ const AdminUsersContent = () => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const currentUser = useAuthStore((state) => state.user)
+  const canUpdateUsers = useAdminPermission("admin_users.update")
   const statusParam = searchParams.get("status")
   const status = isStatusFilter(statusParam) ? statusParam : "all"
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
@@ -244,6 +246,7 @@ const AdminUsersContent = () => {
     staffRoleRank[currentUser?.platformRole as AdminUserRole] ?? 0
 
   const canManageUser = (user: AdminUser) => {
+    if (!canUpdateUsers) return false
     if (user.id === currentUser?.userId) return false
     const targetRoleRank = staffRoleRank[user.role] ?? 0
     return targetRoleRank === 0 || targetRoleRank < currentRoleRank

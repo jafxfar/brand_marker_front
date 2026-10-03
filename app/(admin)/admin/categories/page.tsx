@@ -22,6 +22,7 @@ import {
   useAdminCategoriesQuery,
   useDeleteCategoryMutation,
 } from "@/hooks/api/use-admin-categories-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminCategory } from "@/lib/api/admin"
 import { cn } from "@/lib/utils"
 
@@ -82,16 +83,21 @@ const CountPill = ({ label, value }: { label: string; value: number }) => (
 
 const CategoryRow = ({
   category,
+  canUpdate,
+  canDelete,
   onAddChild,
   onEdit,
   onDelete,
 }: {
   category: CategoryNode
+  canUpdate: boolean
+  canDelete: boolean
   onAddChild: (category: AdminCategory) => void
   onEdit: (category: AdminCategory) => void
   onDelete: (category: AdminCategory) => void
 }) => {
   const inUse = isCategoryInUse(category)
+  const hasActions = canUpdate || canDelete
 
   return (
     <li className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -105,40 +111,48 @@ const CategoryRow = ({
           <CountPill label="Компании" value={category.companies_count} />
         </div>
       </div>
-      <div className="flex shrink-0 gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onAddChild(category)}
-          aria-label={`Добавить подкатегорию в «${category.name}»`}
-        >
-          <Plus aria-hidden="true" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(category)}
-          aria-label={`Редактировать «${category.name}»`}
-        >
-          <Pencil aria-hidden="true" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete(category)}
-          disabled={inUse}
-          title={inUse ? `Нельзя удалить: ${usageLabel(category)}` : undefined}
-          aria-label={inUse
-            ? `Нельзя удалить «${category.name}»: ${usageLabel(category)}`
-            : `Удалить «${category.name}»`}
-          className="text-destructive hover:text-destructive"
-        >
-          <Trash2 aria-hidden="true" />
-        </Button>
-      </div>
+      {hasActions && (
+        <div className="flex shrink-0 gap-1">
+          {canUpdate && (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onAddChild(category)}
+                aria-label={`Добавить подкатегорию в «${category.name}»`}
+              >
+                <Plus aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(category)}
+                aria-label={`Редактировать «${category.name}»`}
+              >
+                <Pencil aria-hidden="true" />
+              </Button>
+            </>
+          )}
+          {canDelete && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(category)}
+              disabled={inUse}
+              title={inUse ? `Нельзя удалить: ${usageLabel(category)}` : undefined}
+              aria-label={inUse
+                ? `Нельзя удалить «${category.name}»: ${usageLabel(category)}`
+                : `Удалить «${category.name}»`}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 aria-hidden="true" />
+            </Button>
+          )}
+        </div>
+      )}
     </li>
   )
 }
@@ -149,6 +163,8 @@ export default function AdminCategoriesPage() {
   const [search, setSearch] = useState("")
   const [dialogState, setDialogState] = useState<CategoryDialogState>(null)
   const [deleting, setDeleting] = useState<AdminCategory | null>(null)
+  const canUpdate = useAdminPermission("admin_catalog.update")
+  const canDelete = useAdminPermission("admin_catalog.delete")
 
   const categories = useMemo(() => categoriesQuery.data?.items ?? [], [categoriesQuery.data])
   const rows = useMemo(() => {
@@ -190,10 +206,12 @@ export default function AdminCategoriesPage() {
         title="Категории"
         description="Дерево категорий каталога и профилей компаний"
         actions={
-          <Button type="button" onClick={() => setDialogState({ mode: "create", parentId: null })}>
-            <Plus aria-hidden="true" />
-            Добавить категорию
-          </Button>
+          canUpdate ? (
+            <Button type="button" onClick={() => setDialogState({ mode: "create", parentId: null })}>
+              <Plus aria-hidden="true" />
+              Добавить категорию
+            </Button>
+          ) : undefined
         }
       />
 
@@ -222,6 +240,8 @@ export default function AdminCategoriesPage() {
               <CategoryRow
                 key={category.id}
                 category={category}
+                canUpdate={canUpdate}
+                canDelete={canDelete}
                 onAddChild={(parent) => setDialogState({ mode: "create", parentId: parent.id })}
                 onEdit={(target) => setDialogState({ mode: "edit", category: target })}
                 onDelete={setDeleting}

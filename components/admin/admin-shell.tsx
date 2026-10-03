@@ -1,12 +1,15 @@
 "use client"
 
-import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { useEffect, useRef } from "react"
+import { Loader2, ShieldOff } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import AdminTopbar from "@/components/admin/admin-topbar"
 import { CabinetShell } from "@/components/layout/cabinet-shell"
+import { PageEmptyState } from "@/components/layout"
+import { Button } from "@/components/ui/button"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { canAccessAdminPath, getFirstAllowedAdminPath } from "@/lib/admin-permissions"
 import { useAuthStore } from "@/lib/store/auth-store"
 
 const adminRoles = new Set(["admin", "superadmin", "moderator"])
@@ -17,16 +20,37 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const hydrated = useHydrated()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const user = useAuthStore((state) => state.user)
+  const restoreSession = useAuthStore((state) => state.restoreSession)
+  const logout = useAuthStore((state) => state.logout)
+  const sessionRefreshed = useRef(false)
   const isAllowed =
     isAuthenticated &&
     user?.role === "admin" &&
     adminRoles.has(user.platformRole)
+  const canAccessPath = isAllowed && canAccessAdminPath(user, pathname)
+  const fallbackPath = isAllowed ? getFirstAllowedAdminPath(user) : null
+
+  useEffect(() => {
+    if (!hydrated || !isAllowed || sessionRefreshed.current) return
+    sessionRefreshed.current = true
+    void restoreSession()
+  }, [hydrated, isAllowed, restoreSession])
 
   useEffect(() => {
     if (hydrated && !isAllowed) {
       router.replace(`/admin/login?redirect=${encodeURIComponent(pathname)}`)
     }
   }, [hydrated, isAllowed, pathname, router])
+
+  useEffect(() => {
+    if (!isAllowed || canAccessPath || !fallbackPath) return
+    router.replace(fallbackPath)
+  }, [canAccessPath, fallbackPath, isAllowed, router])
+
+  const handleLogout = async () => {
+    await logout()
+    router.replace("/admin/login")
+  }
 
   if (!hydrated || !isAllowed) {
     return (
@@ -36,9 +60,33 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     )
   }
 
+  if (!fallbackPath) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background p-6">
+        <PageEmptyState
+          variant="card"
+          icon={<ShieldOff />}
+          title="Нет доступа"
+          description="Вашей роли не назначен ни один раздел панели управления. Обратитесь к администратору платформы."
+          action={
+            <Button type="button" variant="outline" onClick={handleLogout}>
+              Выйти
+            </Button>
+          }
+        />
+      </div>
+    )
+  }
+
   return (
     <CabinetShell sidebar={<AdminSidebar />} topbar={<AdminTopbar />}>
-      {children}
+      {canAccessPath ? (
+        children
+      ) : (
+        <div className="flex min-h-[55dvh] items-center justify-center">
+          <Loader2 className="animate-spin text-primary" size={28} aria-label="Перенаправление" />
+        </div>
+      )}
     </CabinetShell>
   )
 }

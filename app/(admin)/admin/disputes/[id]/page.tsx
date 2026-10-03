@@ -16,6 +16,7 @@ import { AdminDisputeDetailSections } from "@/components/admin/disputes/dispute-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminDisputeQuery } from "@/hooks/api/use-admin-disputes-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminDisputeAction } from "@/lib/api/admin"
 import { adminDisputeStatusMeta } from "@/lib/admin-display"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
@@ -56,6 +57,7 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
   const disputeId = Number(id)
   const disputeQuery = useAdminDisputeQuery(disputeId)
   const [selectedAction, setSelectedAction] = useState<AdminDisputeAction | null>(null)
+  const canManage = useAdminPermission("admin_disputes.update")
 
   if (!Number.isInteger(disputeId) || disputeId <= 0) {
     return (
@@ -144,7 +146,7 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {!isResolved && (
+          {!isResolved && canManage && (
             <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
               <Button
                 type="button"

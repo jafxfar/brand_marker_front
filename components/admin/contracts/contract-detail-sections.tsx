@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { AdminLink } from "@/components/admin/admin-link"
 import { FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { AdminContractDetail, AdminParty } from "@/lib/api/admin"
@@ -101,12 +101,12 @@ const PartySection = ({
               Компания
             </dt>
             <dd className="mt-1 text-sm font-medium">
-              <Link
+              <AdminLink
                 href={`/admin/companies/${party.company_id}`}
                 className="text-primary hover:underline"
               >
                 {party.company_title || `ID ${party.company_id}`}
-              </Link>
+              </AdminLink>
             </dd>
           </div>
         )}
@@ -174,12 +174,12 @@ export const AdminContractDetailSections = ({
             </dt>
             <dd className="mt-1 text-sm font-medium">
               {contract.rfq ? (
-                <Link
+                <AdminLink
                   href={`/admin/rfqs/${contract.rfq.id}`}
                   className="text-primary hover:underline"
                 >
                   {contract.rfq.title}
-                </Link>
+                </AdminLink>
               ) : (
                 contract.rfq_id
               )}
@@ -191,13 +191,13 @@ export const AdminContractDetailSections = ({
             </dt>
             <dd className="mt-1 text-sm font-medium">
               {contract.proposal ? (
-                <Link
+                <AdminLink
                   href={`/admin/proposals/${contract.proposal.id}`}
                   className="text-primary hover:underline"
                 >
                   #{contract.proposal.id} ·{" "}
                   {formatMoney(contract.proposal.price, contract.currency)}
-                </Link>
+                </AdminLink>
               ) : (
                 `#${contract.proposal_id}`
               )}

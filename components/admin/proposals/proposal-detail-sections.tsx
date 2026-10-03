@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { AdminLink } from "@/components/admin/admin-link"
 import { FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { AdminProposalDetail } from "@/lib/api/admin"
@@ -73,12 +73,12 @@ export const AdminProposalDetailSections = ({
                   Компания
                 </dt>
                 <dd className="mt-1 text-sm font-medium">
-                  <Link
+                  <AdminLink
                     href={`/admin/companies/${proposal.supplier.company_id}`}
                     className="text-primary hover:underline"
                   >
                     {proposal.supplier.company_title || `ID ${proposal.supplier.company_id}`}
-                  </Link>
+                  </AdminLink>
                 </dd>
               </div>
             )}
@@ -110,12 +110,12 @@ export const AdminProposalDetailSections = ({
                   Заявка
                 </dt>
                 <dd className="mt-1 text-sm font-medium">
-                  <Link
+                  <AdminLink
                     href={`/admin/rfqs/${proposal.rfq.id}`}
                     className="text-primary hover:underline"
                   >
                     {proposal.rfq.title}
-                  </Link>
+                  </AdminLink>
                 </dd>
               </div>
             )}

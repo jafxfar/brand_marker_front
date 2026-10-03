@@ -14,13 +14,18 @@ import {
   FileInput,
   FolderTree,
   Gavel,
+  KeyRound,
   LayoutDashboard,
+  ScrollText,
   Settings,
   ShieldCheck,
+  UserCog,
   Users,
   WalletCards,
   type LucideIcon,
 } from "lucide-react"
+import { getAdminRoutePermission, hasPermission } from "@/lib/admin-permissions"
+import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
 
 type AdminNavItem = {
@@ -87,6 +92,9 @@ const adminNavSections: AdminNavSection[] = [
     title: "Система",
     items: [
       { label: "Аналитика", href: "/admin/analytics", Icon: BarChart3, available: true },
+      { label: "Сотрудники", href: "/admin/staff", Icon: UserCog, available: true },
+      { label: "Роли и доступы", href: "/admin/roles", Icon: KeyRound, available: true },
+      { label: "Журнал действий", href: "/admin/logs", Icon: ScrollText, available: true },
       { label: "Настройки", href: "/admin/settings", Icon: Settings, available: true },
     ],
   },
@@ -101,6 +109,17 @@ type AdminSidebarProps = {
 
 export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const pathname = usePathname()
+  const user = useAuthStore((state) => state.user)
+
+  const visibleSections = adminNavSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        const permission = getAdminRoutePermission(item.href)
+        return !permission || hasPermission(user, permission)
+      }),
+    }))
+    .filter((section) => section.items.length > 0)
 
   return (
     <div className="flex h-full flex-col bg-card">
@@ -124,7 +143,7 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
       </Link>
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-5" aria-label="Админ-навигация">
-        {adminNavSections.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.title} className="space-y-1">
             <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
               {section.title}

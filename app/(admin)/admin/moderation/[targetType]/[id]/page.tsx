@@ -16,6 +16,7 @@ import { AdminReportDetailSections } from "@/components/admin/moderation/report-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminReportQuery } from "@/hooks/api/use-admin-reports-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminReportAction, AdminReportTargetType } from "@/lib/api/admin"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import {
@@ -56,6 +57,9 @@ export default function AdminReportDetailPage({ params }: PageProps) {
   const [selectedAction, setSelectedAction] = useState<AdminReportAction | null>(
     null,
   )
+  const canUpdate = useAdminPermission("admin_reports.update")
+  const canSuspend = useAdminPermission("admin_reports.suspend")
+  const canDelete = useAdminPermission("admin_reports.delete")
 
   if (!isTargetType(rawTargetType) || !Number.isInteger(reportId) || reportId <= 0) {
     return (
@@ -128,44 +132,52 @@ export default function AdminReportDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {isOpen && (
+          {isOpen && (canUpdate || canSuspend || canDelete) && (
             <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedAction("dismiss")}
-              >
-                <CheckCircle2 aria-hidden="true" />
-                Отклонить
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedAction("warn")}
-              >
-                <AlertTriangle aria-hidden="true" />
-                Предупредить
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedAction("suspend")}
-              >
-                <Ban aria-hidden="true" />
-                Заблокировать
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedAction("delete")}
-              >
-                <Trash2 aria-hidden="true" />
-                Удалить
-              </Button>
+              {canUpdate && (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedAction("dismiss")}
+                  >
+                    <CheckCircle2 aria-hidden="true" />
+                    Отклонить
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedAction("warn")}
+                  >
+                    <AlertTriangle aria-hidden="true" />
+                    Предупредить
+                  </Button>
+                </>
+              )}
+              {canSuspend && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedAction("suspend")}
+                >
+                  <Ban aria-hidden="true" />
+                  Заблокировать
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedAction("delete")}
+                >
+                  <Trash2 aria-hidden="true" />
+                  Удалить
+                </Button>
+              )}
             </div>
           )}
         </div>

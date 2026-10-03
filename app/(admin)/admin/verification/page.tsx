@@ -25,6 +25,7 @@ import {
   useAdminCompaniesQuery,
   useAdminCompanyQuery,
 } from "@/hooks/api/use-admin-companies-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminCompany, AdminCompanyAction, AdminCompanyDetail } from "@/lib/api/admin"
 import { resolveFileUrl } from "@/lib/file-url"
 import { cn } from "@/lib/utils"
@@ -106,6 +107,7 @@ const CompanyReview = ({
     [keyof AdminCompanyDetail["verification_checklist"], boolean]
   >
   const completed = checklist.filter(([, complete]) => complete).length
+  const canVerify = useAdminPermission("admin_companies.update")
 
   return (
     <div className="space-y-6 p-6">
@@ -177,20 +179,22 @@ const CompanyReview = ({
         )}
       </section>
 
-      <div className="flex flex-wrap gap-2 border-t border-border pt-5">
-        <Button type="button" onClick={() => onAction("approve")}>
-          <Check aria-hidden="true" />
-          Подтвердить
-        </Button>
-        <Button type="button" variant="outline" onClick={() => onAction("request_documents")}>
-          <FileCheck2 aria-hidden="true" />
-          Запросить документы
-        </Button>
-        <Button type="button" variant="destructive" onClick={() => onAction("reject")}>
-          <X aria-hidden="true" />
-          Отклонить
-        </Button>
-      </div>
+      {canVerify && (
+        <div className="flex flex-wrap gap-2 border-t border-border pt-5">
+          <Button type="button" onClick={() => onAction("approve")}>
+            <Check aria-hidden="true" />
+            Подтвердить
+          </Button>
+          <Button type="button" variant="outline" onClick={() => onAction("request_documents")}>
+            <FileCheck2 aria-hidden="true" />
+            Запросить документы
+          </Button>
+          <Button type="button" variant="destructive" onClick={() => onAction("reject")}>
+            <X aria-hidden="true" />
+            Отклонить
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
