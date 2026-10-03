@@ -8,7 +8,7 @@ const PREFIX = "/buyer/rfqs"
 export const rfqsApi = {
   list: (filter: BuyerRfqStatusFilter = "all") =>
     apiFetch<RfqWithRelations[]>(
-      `${PREFIX}${filter !== "all" ? `?tab=${encodeURIComponent(filter)}` : ""}`,
+      `${PREFIX}/${filter !== "all" ? `?tab=${encodeURIComponent(filter)}` : ""}`,
     ),
 
   get: (id: string) => apiFetch<RfqWithRelations>(`${PREFIX}/${id}`),
