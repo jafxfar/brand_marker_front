@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useCallback, useEffect, useState } from "react"
-import Link from "next/link"
+import { AdminLink } from "@/components/admin/admin-link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { ChevronLeft, ChevronRight, RefreshCcw, Search, WalletCards } from "lucide-react"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
@@ -214,15 +214,16 @@ const AdminEscrowContent = () => {
               {items.map((contract) => (
                 <TableRow key={contract.id}>
                   <TableCell>
-                    <Link
+                    <AdminLink
                       href={`/admin/contracts/${contract.id}`}
                       className="block max-w-72 hover:opacity-75"
+                      fallbackClassName="block max-w-72"
                     >
                       <p className="truncate font-bold text-foreground">{contract.title}</p>
                       <p className="text-xs text-muted-foreground">
                         #{contract.id} · {formatCurrency(contract.agreed_amount, contract.currency)}
                       </p>
-                    </Link>
+                    </AdminLink>
                   </TableCell>
                   <TableCell>
                     <p className="text-sm">{contract.buyer_name || "—"}</p>

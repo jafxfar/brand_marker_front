@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { AdminLink } from "@/components/admin/admin-link"
 import { FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { AdminRfqDetail } from "@/lib/api/admin"
@@ -165,12 +165,12 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
                   Компания
                 </dt>
                 <dd className="mt-1 text-sm font-medium">
-                  <Link
+                  <AdminLink
                     href={`/admin/companies/${rfq.buyer.company_id}`}
                     className="text-primary hover:underline"
                   >
                     {rfq.buyer.company_title || `ID ${rfq.buyer.company_id}`}
-                  </Link>
+                  </AdminLink>
                 </dd>
               </div>
             )}
@@ -207,12 +207,13 @@ export const AdminRfqDetailSections = ({ rfq }: { rfq: AdminRfqDetail }) => {
                     <Badge variant="outline" className={meta.className}>
                       {meta.label}
                     </Badge>
-                    <Link
+                    <AdminLink
                       href={`/admin/proposals/${proposal.id}`}
+                      hideWhenDenied
                       className="rounded-xl border border-border px-3 py-1.5 text-sm font-semibold hover:bg-secondary"
                     >
                       Открыть
-                    </Link>
+                    </AdminLink>
                   </div>
                 </div>
               )

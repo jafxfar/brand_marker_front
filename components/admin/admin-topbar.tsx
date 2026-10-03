@@ -19,13 +19,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { getStaffRoleLabel } from "@/lib/admin-permissions"
 import { useAuthStore } from "@/lib/store/auth-store"
-
-const roleLabels: Record<string, string> = {
-  admin: "Администратор",
-  superadmin: "Суперадминистратор",
-  moderator: "Модератор",
-}
 
 export default function AdminTopbar() {
   const router = useRouter()
@@ -40,7 +35,7 @@ export default function AdminTopbar() {
   }
 
   const displayName = hydrated && user ? user.name : "Администратор"
-  const roleLabel = roleLabels[user?.platformRole ?? "admin"] ?? "Администратор"
+  const roleLabel = getStaffRoleLabel(user?.staffRoleName ?? user?.platformRole ?? "admin")
 
   return (
     <header className="sticky top-0 z-30 flex h-[68px] items-center gap-4 border-b border-border bg-card px-4 sm:px-6">

@@ -15,9 +15,9 @@ import { AdminContractDetailSections } from "@/components/admin/contracts/contra
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminContractQuery } from "@/hooks/api/use-admin-contracts-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminContractAction } from "@/lib/api/admin"
 import { contractStatusMeta } from "@/lib/contract-display"
-import { useAuthStore } from "@/lib/store/auth-store"
 import type { ContractStatus } from "@/types"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
@@ -57,8 +57,9 @@ export default function AdminContractDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const contractId = Number(id)
   const contractQuery = useAdminContractQuery(contractId)
-  const currentUser = useAuthStore((state) => state.user)
   const [selectedAction, setSelectedAction] = useState<AdminContractAction | null>(null)
+  const canUpdate = useAdminPermission("admin_contracts.update")
+  const canForceComplete = useAdminPermission("admin_contracts.force_complete")
 
   if (!Number.isInteger(contractId) || contractId <= 0) {
     return (
@@ -97,7 +98,6 @@ export default function AdminContractDetailPage({ params }: PageProps) {
   }
 
   const contract = contractQuery.data
-  const isModerator = currentUser?.platformRole === "moderator"
   const statusMeta = contractStatusMeta[contract.status as ContractStatus] || {
     label: contract.status,
     className: "bg-muted text-muted-foreground",
@@ -147,16 +147,18 @@ export default function AdminContractDetailPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedAction("freeze")}
-            >
-              <Snowflake aria-hidden="true" />
-              Заморозить
-            </Button>
-            {!isClosed && (
+            {canUpdate && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("freeze")}
+              >
+                <Snowflake aria-hidden="true" />
+                Заморозить
+              </Button>
+            )}
+            {canUpdate && !isClosed && (
               <Button
                 type="button"
                 size="sm"
@@ -167,7 +169,7 @@ export default function AdminContractDetailPage({ params }: PageProps) {
                 Отменить
               </Button>
             )}
-            {!isModerator && contract.status !== "completed" && (
+            {canForceComplete && contract.status !== "completed" && (
               <Button
                 type="button"
                 size="sm"
@@ -178,7 +180,7 @@ export default function AdminContractDetailPage({ params }: PageProps) {
                 Принудительно завершить
               </Button>
             )}
-            {!isClosed && (
+            {canUpdate && !isClosed && (
               <Button
                 type="button"
                 size="sm"

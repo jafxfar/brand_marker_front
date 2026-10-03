@@ -19,6 +19,9 @@ export type SessionUser = {
   name: string
   role: SessionRole
   platformRole: string
+  permissions: string[]
+  staffRoleId?: number
+  staffRoleName?: string
   actorId: number
   activeActorId: number | null
   actors: ActorSummary[]
@@ -109,6 +112,9 @@ const sessionFromMe = (
       name: `${me.user.first_name} ${me.user.last_name}`.trim() || me.user.email,
       role,
       platformRole: me.user.role,
+      permissions: me.permissions ?? [],
+      staffRoleId: me.staff_role?.id,
+      staffRoleName: me.staff_role?.name,
       actorId: 0,
       activeActorId: null,
       actors: me.actors,
@@ -136,6 +142,7 @@ const sessionFromMe = (
     name,
     role,
     platformRole: me.user.role,
+    permissions: me.permissions ?? [],
     actorId,
     activeActorId: active?.id ?? null,
     actors: me.actors,
@@ -166,6 +173,7 @@ const migrateUser = (user: SessionUser): SessionUser => {
     userId: user.userId ?? 1,
     platformRole:
       user.platformRole ?? (user.role === "customer" ? "buyer" : user.role),
+    permissions: user.permissions ?? [],
     companyIds,
     activeCompanyId,
     actorId,
@@ -210,6 +218,7 @@ export const useAuthStore = create<AuthState>()(
             name: name?.trim() || nameFromEmail(email),
             role,
             platformRole: isSupplier ? "supplier" : "buyer",
+            permissions: [],
             actorId: activeId,
             activeActorId: activeId,
             actors: [],

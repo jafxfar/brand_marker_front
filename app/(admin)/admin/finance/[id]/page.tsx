@@ -16,6 +16,7 @@ import { AdminFinanceDetailSections } from "@/components/admin/finance/finance-d
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminFinancePaymentQuery } from "@/hooks/api/use-admin-finance-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import { adminApi } from "@/lib/api/admin"
 import type { AdminFinanceAction } from "@/lib/api/admin"
 import { getApiErrorMessage } from "@/lib/api/client"
@@ -70,6 +71,7 @@ export default function AdminFinanceDetailPage({ params }: PageProps) {
   const paymentQuery = useAdminFinancePaymentQuery(paymentId)
   const [selectedAction, setSelectedAction] = useState<AdminFinanceAction | null>(null)
   const [exporting, setExporting] = useState(false)
+  const canManage = useAdminPermission("admin_finance.update")
 
   if (!Number.isInteger(paymentId) || paymentId <= 0) {
     return (
@@ -112,9 +114,9 @@ export default function AdminFinanceDetailPage({ params }: PageProps) {
     label: payment.status,
     className: "bg-muted text-muted-foreground",
   }
-  const canMarkPaid = ["pending", "processing"].includes(payment.status)
-  const canRetry = payment.status === "failed"
-  const canRefund = payment.status === "paid" && payment.type !== "refund"
+  const canMarkPaid = canManage && ["pending", "processing"].includes(payment.status)
+  const canRetry = canManage && payment.status === "failed"
+  const canRefund = canManage && payment.status === "paid" && payment.type !== "refund"
 
   const handleExport = async () => {
     setExporting(true)

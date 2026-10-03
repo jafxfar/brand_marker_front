@@ -23,8 +23,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAdminCompanyQuery } from "@/hooks/api/use-admin-companies-query"
 import type { AdminCompanyAction } from "@/lib/api/admin"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import { resolveFileUrl } from "@/lib/file-url"
-import { useAuthStore } from "@/lib/store/auth-store"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
 const sections = [
@@ -56,8 +56,9 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const companyId = Number(id)
   const companyQuery = useAdminCompanyQuery(companyId)
-  const currentUser = useAuthStore((state) => state.user)
   const [selectedAction, setSelectedAction] = useState<AdminCompanyAction | null>(null)
+  const canVerify = useAdminPermission("admin_companies.update")
+  const canBlock = useAdminPermission("admin_companies.block")
 
   if (!Number.isInteger(companyId) || companyId <= 0) {
     return (
@@ -96,7 +97,6 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
   }
 
   const company = companyQuery.data
-  const isModerator = currentUser?.platformRole === "moderator"
   const initials = company.title
     .split(/\s+/)
     .slice(0, 2)
@@ -167,13 +167,13 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
-            {company.verification_status !== "verified" && (
+            {canVerify && company.verification_status !== "verified" && (
               <Button type="button" size="sm" onClick={() => setSelectedAction("approve")}>
                 <CheckCircle2 aria-hidden="true" />
                 Одобрить
               </Button>
             )}
-            {company.verification_status !== "rejected" && (
+            {canVerify && company.verification_status !== "rejected" && (
               <Button
                 type="button"
                 size="sm"
@@ -185,16 +185,18 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
                 Отклонить
               </Button>
             )}
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedAction("request_documents")}
-            >
-              <FileQuestion aria-hidden="true" />
-              Запросить документы
-            </Button>
-            {!isModerator && company.operational_status === "active" && (
+            {canVerify && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("request_documents")}
+              >
+                <FileQuestion aria-hidden="true" />
+                Запросить документы
+              </Button>
+            )}
+            {canBlock && company.operational_status === "active" && (
               <>
                 <Button
                   type="button"
@@ -217,7 +219,7 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
                 </Button>
               </>
             )}
-            {!isModerator && company.operational_status !== "active" && (
+            {canBlock && company.operational_status !== "active" && (
               <Button
                 type="button"
                 size="sm"

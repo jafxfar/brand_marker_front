@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { AdminLink } from "@/components/admin/admin-link"
 import { Badge } from "@/components/ui/badge"
 import type { AdminFinanceDetail, AdminParty } from "@/lib/api/admin"
 import {
@@ -104,12 +104,12 @@ export const AdminFinanceDetailSections = ({
                 Контракт
               </dt>
               <dd className="mt-1 text-sm font-medium">
-                <Link
+                <AdminLink
                   href={`/admin/contracts/${payment.contract.id}`}
                   className="text-primary hover:underline"
                 >
                   {payment.contract.title}
-                </Link>
+                </AdminLink>
               </dd>
             </div>
           )}

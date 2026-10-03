@@ -14,9 +14,9 @@ import { AdminProposalDetailSections } from "@/components/admin/proposals/propos
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminProposalQuery } from "@/hooks/api/use-admin-proposals-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminProposalAction } from "@/lib/api/admin"
 import { proposalStatusMeta } from "@/lib/proposal-display"
-import { useAuthStore } from "@/lib/store/auth-store"
 import type { ProposalStatus } from "@/types"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
@@ -53,8 +53,9 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const proposalId = Number(id)
   const proposalQuery = useAdminProposalQuery(proposalId)
-  const currentUser = useAuthStore((state) => state.user)
   const [selectedAction, setSelectedAction] = useState<AdminProposalAction | null>(null)
+  const canUpdate = useAdminPermission("admin_proposals.update")
+  const canDelete = useAdminPermission("admin_proposals.delete")
 
   if (!Number.isInteger(proposalId) || proposalId <= 0) {
     return (
@@ -93,7 +94,6 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
   }
 
   const proposal = proposalQuery.data
-  const isModerator = currentUser?.platformRole === "moderator"
   const statusMeta = proposalStatusMeta[proposal.status as ProposalStatus] || {
     label: proposal.status,
     className: "bg-muted text-muted-foreground",
@@ -131,16 +131,18 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedAction("investigate")}
-            >
-              <Search aria-hidden="true" />
-              Расследовать
-            </Button>
-            {!isModerator && proposal.supplier?.company_id && (
+            {canUpdate && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("investigate")}
+              >
+                <Search aria-hidden="true" />
+                Расследовать
+              </Button>
+            )}
+            {canDelete && proposal.supplier?.company_id && (
               <Button
                 type="button"
                 size="sm"
@@ -151,7 +153,7 @@ export default function AdminProposalDetailPage({ params }: PageProps) {
                 Заблокировать исполнителя
               </Button>
             )}
-            {!isModerator && !proposal.has_contract && (
+            {canDelete && !proposal.has_contract && (
               <Button
                 type="button"
                 size="sm"

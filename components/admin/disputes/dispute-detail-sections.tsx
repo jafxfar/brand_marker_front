@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { AdminLink } from "@/components/admin/admin-link"
 import { FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { AdminDisputeDetail, AdminParty } from "@/lib/api/admin"
@@ -80,12 +80,12 @@ const PartySection = ({
               Компания
             </dt>
             <dd className="mt-1 text-sm font-medium">
-              <Link
+              <AdminLink
                 href={`/admin/companies/${party.company_id}`}
                 className="text-primary hover:underline"
               >
                 {party.company_title || `ID ${party.company_id}`}
-              </Link>
+              </AdminLink>
             </dd>
           </div>
         )}
@@ -132,12 +132,12 @@ export const AdminDisputeDetailSections = ({
               Контракт
             </dt>
             <dd className="mt-1 text-sm font-medium">
-              <Link
+              <AdminLink
                 href={`/admin/contracts/${dispute.contract.id}`}
                 className="text-primary hover:underline"
               >
                 {dispute.contract.title}
-              </Link>
+              </AdminLink>
             </dd>
           </div>
           <div>

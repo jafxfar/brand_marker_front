@@ -1024,7 +1024,207 @@ export const adminApi = {
   },
   getAnalytics: (period: AdminAnalyticsPeriod) =>
     apiFetch<AdminAnalyticsResponse>(`/admin/analytics?period=${period}`),
+  getRoles: () => apiFetch<AdminRole[]>("/admin/roles"),
+  createRole: (data: AdminRoleInput) =>
+    apiFetch<AdminRole>("/admin/roles", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateRole: (roleId: number, data: Partial<AdminRoleInput>) =>
+    apiFetch<AdminRole>(`/admin/roles/${roleId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteRole: (roleId: number) =>
+    apiFetch<void>(`/admin/roles/${roleId}`, {
+      method: "DELETE",
+    }),
+  getRoleMatrix: (roleId: number) =>
+    apiFetch<AdminRoleMatrix>(`/admin/roles/${roleId}/matrix`),
+  updateRoleMatrix: (roleId: number, permissionIds: number[]) =>
+    apiFetch<AdminRoleMatrix>(`/admin/roles/${roleId}/matrix`, {
+      method: "PUT",
+      body: JSON.stringify({ permission_ids: permissionIds }),
+    }),
+  getStaff: (query: string) => {
+    const searchParams = new URLSearchParams()
+    if (query.trim()) {
+      searchParams.set("query", query.trim())
+    }
+    const suffix = searchParams.toString()
+    return apiFetch<AdminStaffListResponse>(`/admin/staff${suffix ? `?${suffix}` : ""}`)
+  },
+  createStaff: (data: AdminStaffCreateInput) =>
+    apiFetch<AdminStaffMember>("/admin/staff", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateStaff: (userId: number, data: AdminStaffUpdateInput) =>
+    apiFetch<AdminStaffMember>(`/admin/staff/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  getLogs: ({ page, pageSize, audience, kind, section, status, period, query }: AdminLogParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      audience,
+      period,
+    })
+    if (kind) searchParams.set("kind", kind)
+    if (section) searchParams.set("section", section)
+    if (status) searchParams.set("status", status)
+    if (query.trim()) searchParams.set("query", query.trim())
+    return apiFetch<AdminLogListResponse>(`/admin/logs?${searchParams.toString()}`)
+  },
+  getLog: (logId: number) => apiFetch<AdminLogDetail>(`/admin/logs/${logId}`),
 }
+
+export type AdminLogAudience = "users" | "staff"
+
+export type AdminLogKind = "login" | "register" | "create" | "update" | "delete" | "view"
+
+export type AdminLogStatus =
+  | "success"
+  | "invalid"
+  | "unauthorized"
+  | "forbidden"
+  | "not_found"
+  | "conflict"
+  | "rate_limited"
+  | "rejected"
+  | "server_error"
+
+export type AdminLogSection =
+  | "auth"
+  | "rfqs"
+  | "proposals"
+  | "contracts"
+  | "finance"
+  | "catalog"
+  | "companies"
+  | "staff"
+  | "roles"
+  | "disputes"
+  | "reports"
+  | "reviews"
+  | "notifications"
+  | "subscription"
+  | "users"
+  | "settings"
+  | "other"
+
+export type AdminLogPeriod = "24h" | "7d" | "30d" | "all"
+
+export type AdminLogParams = {
+  page: number
+  pageSize: number
+  audience: AdminLogAudience
+  kind: AdminLogKind | null
+  section: AdminLogSection | null
+  status: AdminLogStatus | null
+  period: AdminLogPeriod
+  query: string
+}
+
+export type AdminLogItem = {
+  id: number
+  created_at: string
+  audience: AdminLogAudience
+  user: { id: number; email: string; name: string; role: string } | null
+  guest_email: string | null
+  kind: AdminLogKind
+  section: AdminLogSection
+  status: AdminLogStatus
+  object_id: string | null
+  ip_address: string | null
+}
+
+export type AdminLogDetail = AdminLogItem & {
+  fields: Array<{ key: string; value: string; hidden: boolean }>
+}
+
+export type AdminLogListResponse = {
+  items: AdminLogItem[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+  audience_counts: Record<AdminLogAudience, number>
+}
+
+export type AdminRole = {
+  id: number
+  name: string
+  description: string | null
+  is_system: boolean
+  is_active: boolean
+  users_count: number
+}
+
+export type AdminRoleInput = {
+  name: string
+  description: string | null
+}
+
+export type AdminPermissionBucket = "read" | "write" | "delete"
+
+export type AdminPermissionCell = {
+  permission_id: number | null
+  code: string | null
+  enabled: boolean
+}
+
+export type AdminRoleMatrixRow = {
+  resource: string
+  alias_ru: string
+} & Record<AdminPermissionBucket, AdminPermissionCell>
+
+export type AdminRoleMatrix = {
+  role_id: number
+  role_name: string
+  rows: AdminRoleMatrixRow[]
+}
+
+export type AdminStaffStatus = "active" | "blocked" | "pending"
+
+export type AdminStaffMember = {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  phone: string | null
+  platform_role: string
+  status: AdminStaffStatus
+  role_id: number | null
+  role_name: string | null
+  role_description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type AdminStaffListResponse = {
+  items: AdminStaffMember[]
+  total: number
+}
+
+export type AdminStaffCreateInput = {
+  email: string
+  first_name: string
+  last_name: string
+  phone?: string | null
+  password: string
+  role_id: number
+}
+
+export type AdminStaffUpdateInput = Partial<{
+  first_name: string
+  last_name: string
+  phone: string | null
+  role_id: number
+  status: Exclude<AdminStaffStatus, "pending">
+  password: string
+}>
 
 export type AdminPlatformSettings = PlatformSettings & {
   updated_at: string | null

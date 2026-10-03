@@ -17,10 +17,10 @@ import { AdminCatalogDetailSections } from "@/components/admin/catalog/catalog-d
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminCatalogItemQuery } from "@/hooks/api/use-admin-catalog-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminCatalogAction } from "@/lib/api/admin"
 import { catalogItemTypeLabel, itemStatusMeta } from "@/lib/item-display"
 import { resolveFileUrl } from "@/lib/file-url"
-import { useAuthStore } from "@/lib/store/auth-store"
 import type { ItemStatus } from "@/types"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
@@ -50,8 +50,9 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const itemId = Number(id)
   const itemQuery = useAdminCatalogItemQuery(itemId)
-  const currentUser = useAuthStore((state) => state.user)
   const [selectedAction, setSelectedAction] = useState<AdminCatalogAction | null>(null)
+  const canUpdate = useAdminPermission("admin_catalog.update")
+  const canDelete = useAdminPermission("admin_catalog.delete")
 
   if (!Number.isInteger(itemId) || itemId <= 0) {
     return (
@@ -90,7 +91,6 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
   }
 
   const item = itemQuery.data
-  const isModerator = currentUser?.platformRole === "moderator"
   const statusMeta = itemStatusMeta[item.status as ItemStatus] || {
     label: item.status,
     className: "bg-muted text-muted-foreground",
@@ -142,13 +142,13 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
-            {item.status !== "active" && (
+            {canUpdate && item.status !== "active" && (
               <Button type="button" size="sm" onClick={() => setSelectedAction("approve")}>
                 <CheckCircle2 aria-hidden="true" />
                 Одобрить
               </Button>
             )}
-            {item.status !== "hidden" && (
+            {canUpdate && item.status !== "hidden" && (
               <Button
                 type="button"
                 size="sm"
@@ -159,16 +159,18 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
                 Скрыть
               </Button>
             )}
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedAction("request_changes")}
-            >
-              <FilePenLine aria-hidden="true" />
-              Запросить правки
-            </Button>
-            {!isModerator && (
+            {canUpdate && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("request_changes")}
+              >
+                <FilePenLine aria-hidden="true" />
+                Запросить правки
+              </Button>
+            )}
+            {canDelete && (
               <Button
                 type="button"
                 size="sm"

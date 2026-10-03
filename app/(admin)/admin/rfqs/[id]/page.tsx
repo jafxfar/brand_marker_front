@@ -15,9 +15,9 @@ import { AdminRfqDetailSections } from "@/components/admin/rfqs/rfq-detail-secti
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminRfqQuery } from "@/hooks/api/use-admin-rfqs-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminRfqAction } from "@/lib/api/admin"
 import { rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
-import { useAuthStore } from "@/lib/store/auth-store"
 import type { RfqStatus, RfqType } from "@/types"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
@@ -45,8 +45,9 @@ type PageProps = {
 export default function AdminRfqDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const rfqQuery = useAdminRfqQuery(id)
-  const currentUser = useAuthStore((state) => state.user)
   const [selectedAction, setSelectedAction] = useState<AdminRfqAction | null>(null)
+  const canUpdate = useAdminPermission("admin_rfqs.update")
+  const canDelete = useAdminPermission("admin_rfqs.delete")
 
   if (!id) {
     return (
@@ -85,7 +86,6 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
   }
 
   const rfq = rfqQuery.data
-  const isModerator = currentUser?.platformRole === "moderator"
   const statusMeta = rfqStatusMeta[rfq.status as RfqStatus] || {
     label: rfq.status,
     className: "bg-muted text-muted-foreground",
@@ -122,7 +122,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
-            {rfq.status !== "archived" && (
+            {canUpdate && rfq.status !== "archived" && (
               <Button
                 type="button"
                 size="sm"
@@ -133,7 +133,7 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
                 Скрыть
               </Button>
             )}
-            {canClose && (
+            {canUpdate && canClose && (
               <Button
                 type="button"
                 size="sm"
@@ -144,16 +144,18 @@ export default function AdminRfqDetailPage({ params }: PageProps) {
                 Закрыть
               </Button>
             )}
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedAction("warn_buyer")}
-            >
-              <AlertTriangle aria-hidden="true" />
-              Предупредить покупателя
-            </Button>
-            {!isModerator && (
+            {canUpdate && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedAction("warn_buyer")}
+              >
+                <AlertTriangle aria-hidden="true" />
+                Предупредить покупателя
+              </Button>
+            )}
+            {canDelete && (
               <Button
                 type="button"
                 size="sm"

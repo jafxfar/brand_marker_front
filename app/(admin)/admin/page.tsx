@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { AdminLink } from "@/components/admin/admin-link"
 import {
   Activity,
   AlertTriangle,
@@ -291,8 +292,9 @@ export default function AdminDashboardPage() {
               <ShieldCheck size={19} className="text-primary" aria-hidden="true" />
             </div>
             <div className="mt-4 space-y-3">
-              <Link
+              <AdminLink
                 href="/admin/companies?status=pending"
+                hideWhenDenied
                 className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 aria-label="Открыть компании на верификации"
               >
@@ -303,7 +305,7 @@ export default function AdminDashboardPage() {
                     {formatNumber(data.metrics.pending_verifications)}
                   </p>
                 </div>
-              </Link>
+              </AdminLink>
               <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
                 <Gavel size={18} className="text-primary" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
@@ -313,8 +315,9 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
               </div>
-              <Link
+              <AdminLink
                 href="/admin/rfqs?view=reported"
+                hideWhenDenied
                 className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 aria-label="Открыть заявки с жалобами"
               >
@@ -323,9 +326,10 @@ export default function AdminDashboardPage() {
                   <p className="text-xs text-muted-foreground">Заявки RFQ</p>
                   <p className="text-sm font-bold text-foreground">Перейти к модерации</p>
                 </div>
-              </Link>
-              <Link
+              </AdminLink>
+              <AdminLink
                 href="/admin/proposals?view=reported"
+                hideWhenDenied
                 className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 aria-label="Открыть предложения с жалобами"
               >
@@ -334,7 +338,7 @@ export default function AdminDashboardPage() {
                   <p className="text-xs text-muted-foreground">Предложения</p>
                   <p className="text-sm font-bold text-foreground">Перейти к модерации</p>
                 </div>
-              </Link>
+              </AdminLink>
             </div>
           </PageSurface>
 
