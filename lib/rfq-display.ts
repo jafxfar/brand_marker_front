@@ -1,4 +1,4 @@
-import type { BudgetType, RfqStatus, RfqType } from "@/types"
+import type { BudgetType, RfqStatus, RfqType, RfqWithRelations } from "@/types"
 
 export const rfqStatusMeta: Record<
   RfqStatus,
@@ -37,4 +37,12 @@ export const OPEN_RFQ_STATUSES: RfqStatus[] = ["published", "receiving_proposals
 export const rfqTypeLabel: Record<RfqType, string> = {
   product: "Товар",
   service: "Услуга",
+}
+
+export const isRfqInvitedFor = (rfq: RfqWithRelations, supplierActorId: number): boolean => {
+  if (rfq.is_invited !== undefined) return rfq.is_invited
+  return (
+    rfq.visibility === "invited_only"
+    && (rfq.invited_supplier_ids ?? []).includes(supplierActorId)
+  )
 }

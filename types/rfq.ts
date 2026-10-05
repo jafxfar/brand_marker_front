@@ -89,6 +89,7 @@ export type Rfq = ProductRfq | ServiceRfq
 export type RfqWithRelations = Rfq & {
   attachments: RfqAttachment[]
   buyer?: RfqBuyerSummary
+  is_invited?: boolean
 }
 
 type RfqBaseCreate = Omit<

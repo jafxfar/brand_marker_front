@@ -13,7 +13,7 @@ import { getActorId } from "@/lib/auth-display"
 import { getRfqBuyerName, getRfqBuyerSummary } from "@/lib/buyer-display"
 import { useCategoryOptions } from "@/hooks/use-category-options"
 import { getRfqRequirements } from "@/lib/rfq-requirements"
-import { rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
+import { isRfqInvitedFor, rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import {
@@ -27,6 +27,7 @@ import { RfqAttachmentsSection } from "@/components/rfq/rfq-attachments-section"
 import { RfqBuyerProfileCard } from "@/components/supplier/rfq/rfq-buyer-profile-card"
 import { RfqProposalsList } from "@/components/supplier/rfq/rfq-proposals-list"
 import { RfqSubmitProposalCard } from "@/components/supplier/rfq/rfq-submit-proposal-card"
+import { InvitedRfqBadge } from "@/components/supplier/rfq/invited-rfq-badge"
 import { ProposalDialog } from "@/components/supplier/proposal-dialog"
 import type { Currency } from "@/types"
 
@@ -128,6 +129,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           <span className={`${statusPillClass} bg-secondary text-foreground`}>
             {rfqTypeLabel[rfq.type]}
           </span>
+          {isRfqInvitedFor(rfq, actorId) ? <InvitedRfqBadge /> : null}
         </div>
         <div className="grid grid-cols-2 gap-4 border-t border-border pt-6">
           <div>

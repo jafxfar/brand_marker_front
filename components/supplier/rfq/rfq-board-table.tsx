@@ -6,8 +6,10 @@ import type { RfqWithRelations } from "@/types"
 import { cn } from "@/lib/utils"
 import { useCategoryOptions } from "@/hooks/use-category-options"
 import { formatCurrency, formatDaysLeft, formatRfqBudget, getDaysLeft } from "@/lib/format"
+import { isRfqInvitedFor } from "@/lib/rfq-display"
 import { Button } from "@/components/ui/button"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
+import { InvitedRfqBadge } from "@/components/supplier/rfq/invited-rfq-badge"
 
 type MyProposalSummary = { price: number; currency: string }
 
@@ -52,6 +54,9 @@ export const RfqBoardTable = ({
             )}
           >
             <div className="min-w-0 grid gap-1.5">
+              {isRfqInvitedFor(rfq, actorId) ? (
+                <InvitedRfqBadge className="justify-self-start" />
+              ) : null}
               <Link
                 href={`/supplier/rfqs/${rfq.id}`}
                 className="font-bold text-foreground hover:text-primary line-clamp-2"
