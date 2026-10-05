@@ -134,14 +134,21 @@ export default function SupplierProfilePage({ params }: PageProps) {
     if (useApi) {
       inviteMutation.mutate(
         { id: rfqId, supplierIds: [supplier.actor_id] },
-        { onSuccess: () => toast.success("Поставщик приглашён") },
+        {
+          onSuccess: () => {
+            toast.success("Поставщик приглашён")
+            notify({
+              type: "order",
+              title: "Приглашение отправлено",
+              body: `Исполнитель «${supplier.display_name}» приглашён к участию в заявке.`,
+              href: `/customer/rfqs/${rfqId}`,
+            })
+          },
+          onError: (err) => {
+            toast.error(err instanceof Error ? err.message : "Не удалось пригласить исполнителя")
+          },
+        },
       )
-      notify({
-        type: "order",
-        title: "Приглашение отправлено",
-        body: `Исполнитель «${supplier.display_name}» приглашён к участию в заявке.`,
-        href: `/customer/rfqs/${rfqId}`,
-      })
       return
     }
     inviteSupplierToRfq(rfqId, supplier.actor_id)

@@ -12,7 +12,6 @@ import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import {
   useCreateRfqMutation,
-  useInviteSuppliersMutation,
   usePublishRfqMutation,
   useUploadRfqAttachmentMutation,
 } from "@/hooks/api/use-rfqs-query"
@@ -56,7 +55,6 @@ export default function NewRfqPage() {
   const useApi = isApiEnabled()
   const createMutation = useCreateRfqMutation()
   const publishMutation = usePublishRfqMutation()
-  const inviteMutation = useInviteSuppliersMutation()
   const uploadMutation = useUploadRfqAttachmentMutation()
 
   const { data: catalogItem, isLoading: itemLoading } = usePublicCatalogItemQuery(
@@ -156,13 +154,6 @@ export default function NewRfqPage() {
 
       for (const pending of pendingFiles) {
         rfq = await uploadMutation.mutateAsync({ id: rfq.id, file: pending.file })
-      }
-
-      if (invitedSupplierId) {
-        rfq = await inviteMutation.mutateAsync({
-          id: rfq.id,
-          supplierIds: [invitedSupplierId],
-        })
       }
 
       if (publish) {

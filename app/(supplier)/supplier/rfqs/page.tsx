@@ -10,6 +10,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { getRfqBuyerName, getRfqBuyerRating } from "@/lib/buyer-display"
 import { isApiEnabled } from "@/lib/api/config"
+import { isRfqInvitedFor } from "@/lib/rfq-display"
 import {
   hasSupplierProposalForRfq,
   useSubmitSupplierProposalMutation,
@@ -51,9 +52,12 @@ export default function SupplierRfqsPage() {
 
   const localRfqs = hydrated ? getOpenRfqs() : []
   const openRfqs: RfqWithRelations[] = useApi ? (apiRfqs ?? []) : localRfqs
-  const filtered = typeFilter === "all"
-    ? openRfqs
+  const filtered = (typeFilter === "all"
+    ? [...openRfqs]
     : openRfqs.filter((r) => r.type === typeFilter)
+  ).sort(
+    (a, b) => Number(isRfqInvitedFor(b, actorId)) - Number(isRfqInvitedFor(a, actorId)),
+  )
 
   const selectedRfq = selectedRfqId
     ? (useApi ? apiRfqs?.find((r) => r.id === selectedRfqId) : getRfq(selectedRfqId))
