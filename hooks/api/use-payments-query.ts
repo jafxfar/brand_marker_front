@@ -1,14 +1,45 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { paymentsApi } from "@/lib/api/payments"
+import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { paymentsApi, type FundMilestoneResponse } from "@/lib/api/payments"
 import { isApiEnabled } from "@/lib/api/config"
 import { contractKeys } from "./use-contracts-query"
 
+const invalidatePaymentQueries = (qc: QueryClient) => {
+  qc.invalidateQueries({ queryKey: paymentKeys.all })
+  qc.invalidateQueries({ queryKey: contractKeys.all })
+}
+
+const handleFundSuccess = (qc: QueryClient, data: FundMilestoneResponse, successMessage: string) => {
+  if (data.payment_url) {
+    toast.info("Переход к оплате…")
+    window.location.assign(data.payment_url)
+    return
+  }
+  toast.success(successMessage)
+  invalidatePaymentQueries(qc)
+}
+
 export const paymentKeys = {
   all: ["payments"] as const,
+  config: () => [...paymentKeys.all, "config"] as const,
   history: () => [...paymentKeys.all, "history"] as const,
   pending: () => [...paymentKeys.all, "pending"] as const,
   milestones: (contractId: number) =>
     [...paymentKeys.all, "milestones", contractId] as const,
+}
+
+export const usePaymentConfigQuery = (enabled = true) =>
+  useQuery({
+    queryKey: paymentKeys.config(),
+    queryFn: () => paymentsApi.config(),
+    enabled: enabled && isApiEnabled(),
+    staleTime: 5 * 60_000,
+  })
+
+export const useAlifPayment = (enabled = true) => {
+  const { data } = usePaymentConfigQuery(enabled)
+  const viaAlif = data?.provider === "alif"
+  return { viaAlif, currency: viaAlif ? (data?.currency ?? null) : null }
 }
 
 export const usePaymentHistoryQuery = (enabled = true) =>
@@ -36,12 +67,8 @@ export const useFundMilestoneMutation = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (milestoneId: number) => paymentsApi.fundMilestone(milestoneId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: paymentKeys.all })
-      qc.invalidateQueries({ queryKey: contractKeys.all })
-    },
+    onSuccess: (data) => handleFundSuccess(qc, data, "Оплата отправлена"),
     meta: {
-      successMessage: "Оплата отправлена",
       errorMessage: "Не удалось оплатить этап",
     },
   })
@@ -77,18 +104,28 @@ export const useMockConfirmMutation = () => {
   })
 }
 
-/** Fund escrow for a milestone. Mock confirm is already applied inside fund. */
+/** Fund escrow for a milestone: redirects to the Alif payment form, or confirms instantly in mock mode. */
 export const useFundAndConfirmMilestoneMutation = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (milestoneId: number) => paymentsApi.fundMilestone(milestoneId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: paymentKeys.all })
-      qc.invalidateQueries({ queryKey: contractKeys.all })
+    onSuccess: (data) => handleFundSuccess(qc, data, "Оплата подтверждена"),
+    meta: {
+      errorMessage: "Не удалось оплатить этап",
+    },
+  })
+}
+
+export const useSyncAlifOrderMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (orderId: string) => paymentsApi.syncAlifOrder(orderId),
+    onSuccess: (data) => {
+      if (data.payment_status === "pending") return
+      invalidatePaymentQueries(qc)
     },
     meta: {
-      successMessage: "Оплата подтверждена",
-      errorMessage: "Не удалось оплатить этап",
+      silent: true,
     },
   })
 }

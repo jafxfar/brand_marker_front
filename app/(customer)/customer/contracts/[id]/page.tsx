@@ -26,10 +26,15 @@ import {
 import { useCreateReviewMutation, useBuyerReviewsQuery } from "@/hooks/api/use-reviews-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
 import {
+  useAlifPayment,
   useFundAndConfirmMilestoneMutation,
   useApproveMilestoneMutation,
   usePaymentHistoryQuery,
 } from "@/hooks/api/use-payments-query"
+import {
+  ALIF_CONFIRM_LABEL,
+  AlifPaymentNote,
+} from "@/components/cabinet/payments/alif-payment-note"
 import { canUploadContractFiles, contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
@@ -84,6 +89,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
 
   const { data: apiContract, isLoading } = useContractQuery(contractId, hydrated && useApi)
   const { data: paymentHistoryApi = [] } = usePaymentHistoryQuery(hydrated && useApi)
+  const { viaAlif, currency: alifCurrency } = useAlifPayment(hydrated && useApi)
   const { data: buyerReviews = [] } = useBuyerReviewsQuery(hydrated && useApi)
   const sendMessageMutation = useSendMessageMutation()
   const markMessagesReadMutation = useMarkMessagesReadMutation("buyer")
@@ -263,13 +269,24 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     contract.currency,
   )
   const postpayment = isPostpaymentDeal(contract)
-  const confirmCopy: Record<PendingAction["kind"], { title: string; description: string; confirmLabel: string }> = {
+  const fundDescription = postpayment
+    ? "Деньги поступят на гарантию площадки. Затем вы подтвердите выплату исполнителю."
+    : "Деньги поступят на гарантию площадки. Исполнитель получит их только после того, как вы примете работу."
+  const confirmCopy: Record<
+    PendingAction["kind"],
+    { title: string; description: React.ReactNode; confirmLabel: string }
+  > = {
     fund: {
       title: `Оплатить ${pendingAmount}?`,
-      description: postpayment
-        ? "Деньги поступят на гарантию площадки. Затем вы подтвердите выплату исполнителю."
-        : "Деньги поступят на гарантию площадки. Исполнитель получит их только после того, как вы примете работу.",
-      confirmLabel: "Оплатить",
+      description: viaAlif ? (
+        <>
+          <p>{fundDescription}</p>
+          <AlifPaymentNote />
+        </>
+      ) : (
+        fundDescription
+      ),
+      confirmLabel: viaAlif ? ALIF_CONFIRM_LABEL : "Оплатить",
     },
     release: {
       title: "Перевести деньги исполнителю?",
@@ -336,6 +353,8 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         supplierName={supplierName}
         hasReview={hasReview}
         busy={paymentBusy || submissionBusy}
+        viaAlif={viaAlif}
+        alifCurrency={alifCurrency}
         onFund={(milestoneId) => setPendingAction({ kind: "fund", id: milestoneId })}
         onRelease={(milestoneId) => setPendingAction({ kind: "release", id: milestoneId })}
         onAcceptSubmission={(submissionId) => setPendingAction({ kind: "accept", id: submissionId })}
@@ -346,7 +365,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
       />
 
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview" className="gap-1.5">
             <FileCheck size={14} /> Обзор
           </TabsTrigger>
@@ -395,6 +414,8 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
               )}
               <BuyerContractMilestonesPanel
                 contract={contract}
+                viaAlif={viaAlif}
+                alifCurrency={alifCurrency}
                 onFund={(milestoneId) => setPendingAction({ kind: "fund", id: milestoneId })}
                 onApprove={(milestoneId) => setPendingAction({ kind: "release", id: milestoneId })}
               />

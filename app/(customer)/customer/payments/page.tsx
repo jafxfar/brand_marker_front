@@ -1,7 +1,13 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { ConfirmActionDialog } from "@/components/process"
+import {
+  ALIF_CONFIRM_LABEL,
+  AlifPaymentNote,
+} from "@/components/cabinet/payments/alif-payment-note"
+import { formatCurrency } from "@/lib/format"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -27,6 +33,7 @@ import {
   type OutgoingPaymentRow,
 } from "@/lib/buyer-payments-display"
 import {
+  useAlifPayment,
   usePaymentHistoryQuery,
   usePendingPaymentsQuery,
   useFundAndConfirmMilestoneMutation,
@@ -57,6 +64,8 @@ const BuyerPaymentsContent = () => {
   const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
   const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
   const fundMutation = useFundAndConfirmMilestoneMutation()
+  const { viaAlif, currency: alifCurrency } = useAlifPayment(hydrated && useApi)
+  const [pendingFund, setPendingFund] = useState<EscrowFundingRow | null>(null)
 
   const contractById = new Map(apiContracts.map((c) => [c.id, c]))
 
@@ -109,12 +118,22 @@ const BuyerPaymentsContent = () => {
     return getContract(contractId)?.title ?? `Сделка #${contractId}`
   }
 
-  const handleFund = (contractId: number, milestoneId: number) => {
-    if (useApi) {
-      fundMutation.mutate(milestoneId)
+  const handleFund = (row: EscrowFundingRow) => {
+    if (useApi && viaAlif) {
+      setPendingFund(row)
       return
     }
-    fundMilestone(contractId, milestoneId, actorId)
+    if (useApi) {
+      fundMutation.mutate(row.milestoneId)
+      return
+    }
+    fundMilestone(row.contractId, row.milestoneId, actorId)
+  }
+
+  const handleConfirmAlifFund = () => {
+    if (!pendingFund) return
+    fundMutation.mutate(pendingFund.milestoneId)
+    setPendingFund(null)
   }
 
   return (
@@ -145,6 +164,8 @@ const BuyerPaymentsContent = () => {
           <EscrowFundingTable
             rows={effectiveEscrowQueue}
             getSupplierName={(id) => getCompany(id)?.title ?? "Исполнитель"}
+            viaAlif={viaAlif}
+            alifCurrency={alifCurrency}
             onFund={handleFund}
           />
         )}
@@ -161,6 +182,25 @@ const BuyerPaymentsContent = () => {
           />
         )}
       </PageSurface>
+
+      {pendingFund && (
+        <ConfirmActionDialog
+          open
+          onOpenChange={(open) => !open && setPendingFund(null)}
+          title={`Оплатить ${formatCurrency(pendingFund.amount, pendingFund.currency)}?`}
+          description={
+            <>
+              <p>
+                Этап «{pendingFund.title}» по сделке «{pendingFund.contractTitle}». Деньги поступят
+                на гарантию площадки и уйдут исполнителю только после приёмки работы.
+              </p>
+              <AlifPaymentNote />
+            </>
+          }
+          confirmLabel={ALIF_CONFIRM_LABEL}
+          onConfirm={handleConfirmAlifFund}
+        />
+      )}
     </PageFrame>
   )
 }

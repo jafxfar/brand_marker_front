@@ -12,7 +12,7 @@ export type ProcessStep = {
 
 const SELECTING_STATUSES: Rfq["status"][] = ["published", "receiving_proposals", "expired"]
 
-type TimelineRfq = Pick<Rfq, "status" | "created_at" | "deadline">
+type TimelineRfq = Pick<Rfq, "status" | "created_at" | "deadline" | "visibility" | "invited_supplier_ids">
 
 export const getRfqTimeline = (
   rfq: TimelineRfq,
@@ -21,6 +21,8 @@ export const getRfqTimeline = (
 ): ProcessStep[] => {
   const isDraft = rfq.status === "draft"
   const isSelecting = SELECTING_STATUSES.includes(rfq.status)
+  const isPersonal = rfq.visibility === "invited_only" && (rfq.invited_supplier_ids?.length ?? 0) <= 1
+  const awaitingSupplier = isPersonal && isSelecting && proposalsCount === 0
   const phase = contract ? getDealPhase(contract) : null
   const postpay = contract ? isPostpaymentDeal(contract) : true
 
@@ -32,13 +34,20 @@ export const getRfqTimeline = (
       }
     : {
         title: "Заявка опубликована",
-        description: `${formatIsoDate(rfq.created_at.split("T")[0] ?? rfq.created_at)}. Её видят исполнители из выбранной категории.`,
+        description: `${formatIsoDate(rfq.created_at.split("T")[0] ?? rfq.created_at)}. ${
+          isPersonal ? "Её видит только приглашённый исполнитель." : "Её видят исполнители из выбранной категории."
+        }`,
         state: "done",
       }
 
   const selectDescription = (() => {
     if (rfq.status === "expired") return "Срок приёма предложений истёк."
     if (!isSelecting) return isDraft ? undefined : "Исполнитель выбран."
+    if (isPersonal) {
+      return proposalsCount === 0
+        ? "Заявка отправлена исполнителю. Ждём, когда он подтвердит и пришлёт предложение."
+        : "Исполнитель прислал предложение. Проверьте цену и сроки и подтвердите выбор."
+    }
     if (proposalsCount === 0) {
       return "Ждём первые предложения — мы сообщим, когда исполнители ответят."
     }
@@ -46,7 +55,11 @@ export const getRfqTimeline = (
   })()
 
   const select: ProcessStep = {
-    title: "Выберите исполнителя",
+    title: awaitingSupplier
+      ? "Ожидание подтверждения исполнителя"
+      : isPersonal
+        ? "Подтвердите исполнителя"
+        : "Выберите исполнителя",
     description: selectDescription,
     state: isDraft ? "todo" : isSelecting ? "now" : "done",
   }

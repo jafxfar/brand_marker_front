@@ -4,18 +4,27 @@ import { statusPillClass } from "@/components/ui/status-badge"
 import type { ContractWithRelations } from "@/types"
 import { getMilestoneProgress, milestoneStatusMeta } from "@/lib/contract-display"
 import { formatCurrency } from "@/lib/format"
+import {
+  ALIF_PAY_LABEL,
+  isAlifCurrencySupported,
+} from "@/components/cabinet/payments/alif-payment-note"
 
 type BuyerContractMilestonesPanelProps = {
   contract: ContractWithRelations
+  viaAlif?: boolean
+  alifCurrency?: string | null
   onFund: (milestoneId: number) => void
   onApprove: (milestoneId: number) => void
 }
 
 export const BuyerContractMilestonesPanel = ({
   contract,
+  viaAlif = false,
+  alifCurrency = null,
   onFund,
   onApprove,
 }: BuyerContractMilestonesPanelProps) => {
+  const currencySupported = isAlifCurrencySupported(viaAlif, alifCurrency, contract.currency)
   const milestones = contract.payment_plan?.milestones ?? []
   const progress = getMilestoneProgress(contract)
 
@@ -85,9 +94,10 @@ export const BuyerContractMilestonesPanel = ({
                       <button
                         type="button"
                         onClick={() => onFund(milestone.id)}
-                        className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors"
+                        disabled={!currencySupported}
+                        className="h-8 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors disabled:pointer-events-none disabled:opacity-50"
                       >
-                        Оплатить безопасно
+                        {viaAlif ? ALIF_PAY_LABEL : "Оплатить безопасно"}
                       </button>
                     )}
                     {canApprove && (

@@ -215,7 +215,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
       <SupplierDealNextAction contract={contract} onOpenTab={setTab} />
 
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview" className="gap-1.5">
             <FileCheck size={14} /> Обзор
           </TabsTrigger>

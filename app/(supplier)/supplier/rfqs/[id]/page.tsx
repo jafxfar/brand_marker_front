@@ -2,10 +2,14 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { NextActionCard } from "@/components/process"
+import { Button } from "@/components/ui/button"
 import { statusPillClass } from "@/components/ui/status-badge"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
+import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
@@ -13,7 +17,12 @@ import { getActorId } from "@/lib/auth-display"
 import { getRfqBuyerName, getRfqBuyerSummary } from "@/lib/buyer-display"
 import { useCategoryOptions } from "@/hooks/use-category-options"
 import { getRfqRequirements } from "@/lib/rfq-requirements"
-import { isRfqInvitedFor, rfqStatusMeta, rfqTypeLabel } from "@/lib/rfq-display"
+import {
+  isRfqInvitedFor,
+  OPEN_RFQ_STATUSES,
+  rfqStatusMeta,
+  rfqTypeLabel,
+} from "@/lib/rfq-display"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import {
@@ -45,6 +54,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   const getProposalForRfq = useProposalsStore((s) => s.getProposalForRfq)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const submitProposalLocal = useProposalsStore((s) => s.submitProposal)
+  const getContractByRfqId = useContractsStore((s) => s.getContractByRfqId)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -83,6 +93,13 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
 
   const meta = rfqStatusMeta[rfq.status]
   const requirements = getRfqRequirements(rfq)
+  const localContract = useApi ? undefined : getContractByRfqId(rfq.id)
+  const contractId = useApi
+    ? rfq.my_contract_id ?? null
+    : localContract?.supplier_actor_id === actorId
+      ? localContract.id
+      : null
+  const isRfqOpen = OPEN_RFQ_STATUSES.includes(rfq.status)
 
   const handleSubmitProposal = (values: {
     price: number
@@ -120,6 +137,21 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
         backHref="/supplier/rfqs"
         backLabel="Назад к маркетплейсу"
       />
+
+      {contractId ? (
+        <NextActionCard
+          hot
+          title="Ваше предложение приняли"
+          text={`${buyerName} выбрал вас исполнителем. Сделка создана — перейдите в неё, чтобы следить за оплатой и сдавать работу.`}
+          actions={
+            <Button asChild>
+              <Link href={`/supplier/contracts/${contractId}`}>
+                Перейти к сделке <ArrowRight />
+              </Link>
+            </Button>
+          }
+        />
+      ) : null}
 
       <PageSurface className="p-6">
         <div className="mb-6 flex flex-wrap gap-2">
@@ -167,6 +199,9 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           <RfqBuyerProfileCard buyer={buyer} />
           <RfqSubmitProposalCard
             myProposal={myProposal}
+            myProposalStatus={useApi ? rfq.my_proposal_status : myProposal?.status}
+            contractId={contractId}
+            isRfqOpen={isRfqOpen}
             buyerName={buyerName}
             onSubmit={() => setDialogOpen(true)}
           />
