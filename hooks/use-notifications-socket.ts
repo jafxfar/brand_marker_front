@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { createElement, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -17,11 +17,13 @@ import {
   contractKeys,
   supplierContractKeys,
 } from "@/hooks/api/use-contracts-query"
+import { supplierRfqKeys } from "@/hooks/api/use-supplier-rfqs-query"
 import {
   appendContractMessageToCache,
   updateContractMessageStatusInCache,
 } from "@/lib/contract-chat-cache"
 import { useAuthStore } from "@/lib/store/auth-store"
+import { NotificationToast } from "@/components/notifications/notification-toast"
 import type { ApiNotification } from "@/types/notification"
 import type { Message } from "@/types"
 
@@ -91,16 +93,15 @@ export const useNotificationsSocket = (
           if (payload.event === "notification.created" && payload.data) {
             const notification = payload.data as ApiNotification
             prependNotificationToCache(queryClient, role, notification)
-            toast(notification.title, {
-              description: notification.body,
-              duration: 5000,
-              action: notification.href
-                ? {
-                    label: "Открыть",
-                    onClick: () => router.push(notification.href!),
-                  }
-                : undefined,
-            })
+            toast.custom(
+              (id) =>
+                createElement(NotificationToast, {
+                  id,
+                  notification,
+                  onOpen: (href: string) => router.push(href),
+                }),
+              { duration: 6000 },
+            )
             if (notification.type === "proposal") {
               void queryClient.invalidateQueries({ queryKey: ["proposals"] })
               void queryClient.invalidateQueries({ queryKey: ["proposal-messages"] })
@@ -109,6 +110,8 @@ export const useNotificationsSocket = (
             if (notification.type === "contract") {
               void queryClient.invalidateQueries({ queryKey: contractKeys.all })
               void queryClient.invalidateQueries({ queryKey: supplierContractKeys.all })
+              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.all })
+              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
             }
             return
           }
