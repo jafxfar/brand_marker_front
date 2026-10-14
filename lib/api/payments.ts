@@ -40,7 +40,32 @@ export type PaymentMilestonesResponse = {
   }>
 } | null
 
+export type FundMilestoneResponse = {
+  id: number
+  status: string
+  payment_status?: string
+  order_id?: string
+  payment_url?: string
+}
+
+export type PaymentConfig = {
+  provider: "alif" | "mock"
+  currency: string | null
+}
+
+export type GatewayPaymentStatus = "pending" | "ok" | "failed" | "canceled"
+
+export type AlifOrderSyncResponse = {
+  order_id: string
+  payment_status: GatewayPaymentStatus
+  milestone_id: number
+  contract_id: number
+  milestone_status: string | null
+}
+
 export const paymentsApi = {
+  config: () => apiFetch<PaymentConfig>(`${PREFIX}/config`),
+
   history: () => apiFetch<PaymentHistoryItem[]>(`${PREFIX}/history`),
 
   pending: () => apiFetch<PendingPaymentsResponse>(`${PREFIX}/pending`),
@@ -49,9 +74,15 @@ export const paymentsApi = {
     apiFetch<PaymentMilestonesResponse>(`${PREFIX}/contracts/${contractId}/milestones`),
 
   fundMilestone: (milestoneId: number) =>
-    apiFetch<{ id: number; status: string }>(`${PREFIX}/milestones/${milestoneId}/fund`, {
+    apiFetch<FundMilestoneResponse>(`${PREFIX}/milestones/${milestoneId}/fund`, {
       method: "POST",
     }),
+
+  syncAlifOrder: (orderId: string) =>
+    apiFetch<AlifOrderSyncResponse>(
+      `${PREFIX}/alif/orders/${encodeURIComponent(orderId)}/sync`,
+      { method: "POST" },
+    ),
 
   approveMilestone: (milestoneId: number) =>
     apiFetch<{ id: number; status: string }>(`${PREFIX}/milestones/${milestoneId}/approve`, {

@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button"
 import { NextActionCard } from "@/components/process"
 import ReviewDialog from "@/components/cabinet/review-dialog"
 import {
+  AlifCurrencyWarning,
+  AlifPaymentNote,
+  isAlifCurrencySupported,
+} from "@/components/cabinet/payments/alif-payment-note"
+import {
   normalizeSubmissionAssets,
   SubmissionAssetsList,
 } from "@/components/contracts/submission-assets-list"
@@ -24,6 +29,8 @@ type BuyerDealNextActionProps = {
   supplierName: string
   hasReview: boolean
   busy?: boolean
+  viaAlif?: boolean
+  alifCurrency?: string | null
   onFund: (milestoneId: number) => void
   onRelease: (milestoneId: number) => void
   onAcceptSubmission: (submissionId: number) => void
@@ -43,6 +50,8 @@ export const BuyerDealNextAction = ({
   supplierName,
   hasReview,
   busy = false,
+  viaAlif = false,
+  alifCurrency = null,
   onFund,
   onRelease,
   onAcceptSubmission,
@@ -58,6 +67,7 @@ export const BuyerDealNextAction = ({
 
   if (phase === "prepay" || phase === "postpay") {
     const milestone = getUnpaidMilestone(contract)
+    const currencySupported = isAlifCurrencySupported(viaAlif, alifCurrency, contract.currency)
     return (
       <NextActionCard
         hot
@@ -69,12 +79,21 @@ export const BuyerDealNextAction = ({
         }
         actions={
           milestone ? (
-            <Button onClick={() => onFund(milestone.id)} disabled={busy}>
+            <Button onClick={() => onFund(milestone.id)} disabled={busy || !currencySupported}>
               Оплатить {money(milestone.amount)}
+              {viaAlif ? " через Alif" : ""}
             </Button>
           ) : null
         }
-      />
+      >
+        {viaAlif && milestone ? (
+          currencySupported ? (
+            <AlifPaymentNote />
+          ) : (
+            <AlifCurrencyWarning currency={alifCurrency ?? ""} />
+          )
+        ) : null}
+      </NextActionCard>
     )
   }
 

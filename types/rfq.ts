@@ -1,3 +1,5 @@
+import type { ProposalStatus } from "./proposal"
+
 export const RFQ_TYPES = ["product", "service"] as const
 
 export type RfqType = (typeof RFQ_TYPES)[number]
@@ -90,6 +92,8 @@ export type RfqWithRelations = Rfq & {
   attachments: RfqAttachment[]
   buyer?: RfqBuyerSummary
   is_invited?: boolean
+  my_proposal_status?: ProposalStatus | null
+  my_contract_id?: number | null
 }
 
 type RfqBaseCreate = Omit<

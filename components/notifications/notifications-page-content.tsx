@@ -1,15 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import {
-  Bell, FileText, Users, Wallet, Info, CheckCheck, Trash2,
-  FileCheck, ScrollText, type LucideIcon,
-} from "lucide-react"
+import { Bell, CheckCheck, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { formatRelativeTime } from "@/lib/format"
+import { getNotificationIcon } from "@/lib/notification-display"
 import type { NotificationRole } from "@/lib/api/notifications"
-import type { NotificationType } from "@/types/notification"
 import {
   useMarkAllNotificationsReadMutation,
   useMarkNotificationReadMutation,
@@ -18,16 +15,6 @@ import { useNotificationItems } from "@/hooks/use-notifications"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { Button } from "@/components/ui/button"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
-
-const typeIcon: Record<NotificationType, LucideIcon> = {
-  order: FileText,
-  offer: Users,
-  payment: Wallet,
-  system: Info,
-  rfq: ScrollText,
-  contract: FileCheck,
-  proposal: Users,
-}
 
 type NotificationsPageContentProps = {
   role: NotificationRole
@@ -90,7 +77,7 @@ export const NotificationsPageContent = ({ role }: NotificationsPageContentProps
       ) : (
         <div className="space-y-2.5">
           {items.map((n) => {
-            const Icon = typeIcon[n.type] ?? Info
+            const Icon = getNotificationIcon(n.type)
             const content = (
               <div
                 className={cn(
