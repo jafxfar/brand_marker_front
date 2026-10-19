@@ -26,8 +26,8 @@ import { proposalStatusMeta } from "@/lib/proposal-display"
 import type { ProposalStatus } from "@/types"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminProposalView; label: string }> = [
   { value: "all", label: "Все" },
   { value: "pending", label: "Ожидают" },
@@ -73,7 +73,7 @@ const AdminProposalsContent = () => {
   const [searchInput, setSearchInput] = useState(query)
   const proposalsQuery = useAdminProposalsQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     view,
     query,
   })

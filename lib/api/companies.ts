@@ -1,3 +1,4 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { CompanyWizardInput, CompanyWithRelations, Review } from "@/types"
 import { apiFetch } from "./client"
 
@@ -42,7 +43,8 @@ const wizardToUpdate = (data: CompanyWizardInput): CompanyUpdatePayload => ({
 })
 
 export const buyerCompaniesApi = {
-  mine: () => apiFetch<CompanyWithRelations[]>(`${PREFIX}/me`),
+  mine: (params: PageParams = {}) =>
+    apiFetch<Page<CompanyWithRelations>>(`${PREFIX}/me${buildPageQuery(params)}`),
 
   create: (data: CompanyWizardInput) =>
     apiFetch<CompanyWithRelations>(`${PREFIX}/`, {
@@ -58,23 +60,19 @@ export const buyerCompaniesApi = {
 }
 
 export const companiesApi = {
-  mine: () => buyerCompaniesApi.mine(),
+  mine: (params?: PageParams) => buyerCompaniesApi.mine(params),
 
   get: (id: number) => apiFetch<CompanyWithRelations>(`/public/companies/${id}`),
 
-  suppliers: (q?: string, category?: string) => {
-    const params = new URLSearchParams()
-    if (q) params.set("q", q)
-    if (category) params.set("category", category)
-    const qs = params.toString()
-    return apiFetch<CompanyWithRelations[]>(
-      `/public/suppliers${qs ? `?${qs}` : ""}`,
-    )
-  },
+  suppliers: (q?: string, category?: string, params: PageParams = {}) =>
+    apiFetch<Page<CompanyWithRelations>>(
+      `/public/suppliers${buildPageQuery({ ...params, q, category })}`,
+    ),
 }
 
 export const reviewsApi = {
-  listGiven: () => apiFetch<Review[]>("/buyer/reviews/"),
+  listGiven: (params: PageParams = {}) =>
+    apiFetch<Page<Review>>(`/buyer/reviews/${buildPageQuery(params)}`),
 
   create: (data: {
     contract_id: number

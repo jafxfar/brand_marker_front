@@ -3,15 +3,17 @@ import { reviewsApi } from "@/lib/api/companies"
 import { isApiEnabled } from "@/lib/api/config"
 import { contractKeys } from "./use-contracts-query"
 
+import type { PageParams } from "@/lib/pagination"
+
 export const reviewKeys = {
   all: ["buyer-reviews"] as const,
-  given: () => [...reviewKeys.all, "given"] as const,
+  given: (page = 1) => [...reviewKeys.all, "given", page] as const,
 }
 
-export const useBuyerReviewsQuery = (enabled = true) =>
+export const useBuyerReviewsQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: reviewKeys.given(),
-    queryFn: () => reviewsApi.listGiven(),
+    queryKey: reviewKeys.given(params.page ?? 1),
+    queryFn: () => reviewsApi.listGiven(params),
     enabled: enabled && isApiEnabled(),
   })
 

@@ -1,3 +1,4 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import { apiFetch } from "./client"
 
 const PREFIX = "/buyer/payments"
@@ -66,7 +67,8 @@ export type AlifOrderSyncResponse = {
 export const paymentsApi = {
   config: () => apiFetch<PaymentConfig>(`${PREFIX}/config`),
 
-  history: () => apiFetch<PaymentHistoryItem[]>(`${PREFIX}/history`),
+  history: (params: PageParams = {}) =>
+    apiFetch<Page<PaymentHistoryItem>>(`${PREFIX}/history${buildPageQuery(params)}`),
 
   pending: () => apiFetch<PendingPaymentsResponse>(`${PREFIX}/pending`),
 

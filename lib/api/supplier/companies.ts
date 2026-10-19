@@ -1,3 +1,4 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { CompanyWizardInput, CompanyWithRelations } from "@/types"
 import { apiFetch } from "../client"
 
@@ -42,7 +43,8 @@ const wizardToUpdate = (data: CompanyWizardInput): CompanyUpdatePayload => ({
 })
 
 export const supplierCompaniesApi = {
-  mine: () => apiFetch<CompanyWithRelations[]>(`${PREFIX}/me`),
+  mine: (params: PageParams = {}) =>
+    apiFetch<Page<CompanyWithRelations>>(`${PREFIX}/me${buildPageQuery(params)}`),
 
   create: (data: CompanyWizardInput) =>
     apiFetch<CompanyWithRelations>(`${PREFIX}/`, {

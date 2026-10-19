@@ -25,8 +25,8 @@ import type { AdminDisputeView } from "@/lib/api/admin"
 import { adminDisputeStatusMeta } from "@/lib/admin-display"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminDisputeView; label: string }> = [
   { value: "open", label: "Открытые" },
   { value: "under_review", label: "На рассмотрении" },
@@ -73,7 +73,7 @@ const AdminDisputesContent = () => {
   const [searchInput, setSearchInput] = useState(query)
   const disputesQuery = useAdminDisputesQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     view,
     query,
   })

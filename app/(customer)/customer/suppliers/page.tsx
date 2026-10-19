@@ -18,6 +18,7 @@ import {
   toPublicSupplierFromCompany,
 } from "@/lib/supplier-directory"
 import { SupplierDirectoryCard } from "@/components/cabinet/suppliers/supplier-directory-card"
+import { ListPagination } from "@/components/list-pagination"
 import { Input } from "@/components/ui/input"
 import {
   PageEmptyState,
@@ -30,6 +31,7 @@ import type { PublicSupplier } from "@/types"
 
 export default function SuppliersPage() {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const useApi = isApiEnabled()
   const [query, setQuery] = useState("")
   const [categorySlug, setCategorySlug] = useState("")
@@ -52,6 +54,7 @@ export default function SuppliersPage() {
     query.trim() || undefined,
     categorySlug || undefined,
     hydrated && useApi,
+    { page },
   )
 
   const getCategoriesForSupplier = (companyId: number) =>
@@ -92,8 +95,9 @@ export default function SuppliersPage() {
   ])
 
   const suppliers: PublicSupplier[] = useApi
-    ? (apiSuppliers ?? [])
+    ? (apiSuppliers?.items ?? [])
     : localSuppliers
+  const totalPages = useApi ? (apiSuppliers?.total_pages ?? 0) : 1
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value)
@@ -157,6 +161,12 @@ export default function SuppliersPage() {
           ))}
         </div>
       )}
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }

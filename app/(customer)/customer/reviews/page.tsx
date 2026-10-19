@@ -21,8 +21,10 @@ export default function BuyerReviewsPage() {
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const getContractLocal = useContractsStore((s) => s.getContract)
 
-  const { data: apiReviews = [], isLoading } = useBuyerReviewsQuery(hydrated && useApi)
-  const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
+  const { data: apiReviewsPage, isLoading } = useBuyerReviewsQuery(hydrated && useApi)
+  const apiReviews = apiReviewsPage?.items ?? []
+  const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
+  const apiContracts = apiContractsPage?.items ?? []
 
   const localReviews = hydrated ? getReviewsGivenByBuyer(actorId) : []
   const reviews = useApi ? apiReviews : localReviews

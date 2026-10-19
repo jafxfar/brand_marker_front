@@ -53,7 +53,8 @@ export default function ProposalsReviewPage({ params }: PageProps) {
   const acceptProposalLocal = useProposalsStore((s) => s.acceptProposal)
 
   const { data: apiRfq, isLoading: rfqLoading } = useRfqQuery(id, hydrated && useApi)
-  const { data: apiProposals = [] } = useProposalsForRfqQuery(id, hydrated && useApi)
+  const { data: apiProposalsPage } = useProposalsForRfqQuery(id, hydrated && useApi)
+  const apiProposals = apiProposalsPage?.items ?? []
   const shortlistMutation = useShortlistProposalMutation()
   const rejectMutation = useRejectProposalMutation()
   const acceptMutation = useAcceptProposalMutation()

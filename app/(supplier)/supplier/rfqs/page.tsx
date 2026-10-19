@@ -18,6 +18,7 @@ import {
   useSupplierRfqBoardQuery,
 } from "@/hooks/api/use-supplier-rfqs-query"
 import { RfqBoardTable } from "@/components/supplier/rfq/rfq-board-table"
+import { ListPagination } from "@/components/list-pagination"
 import { ProposalDialog } from "@/components/supplier/proposal-dialog"
 import {
   PageEmptyState,
@@ -33,6 +34,7 @@ type TypeFilter = "all" | RfqType
 
 export default function SupplierRfqsPage() {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getOpenRfqs = useRfqsStore((s) => s.getOpenRfqs)
@@ -46,12 +48,13 @@ export default function SupplierRfqsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const useApi = isApiEnabled()
-  const { data: apiRfqs, isLoading } = useSupplierRfqBoardQuery(hydrated && useApi)
+  const { data: apiRfqs, isLoading } = useSupplierRfqBoardQuery(hydrated && useApi, { page })
   const { data: apiProposals } = useSupplierProposalsQuery(hydrated && useApi)
   const submitProposalMutation = useSubmitSupplierProposalMutation()
 
   const localRfqs = hydrated ? getOpenRfqs() : []
-  const openRfqs: RfqWithRelations[] = useApi ? (apiRfqs ?? []) : localRfqs
+  const openRfqs: RfqWithRelations[] = useApi ? (apiRfqs?.items ?? []) : localRfqs
+  const totalPages = useApi ? (apiRfqs?.total_pages ?? 0) : 1
   const filtered = (typeFilter === "all"
     ? [...openRfqs]
     : openRfqs.filter((r) => r.type === typeFilter)
@@ -60,17 +63,19 @@ export default function SupplierRfqsPage() {
   )
 
   const selectedRfq = selectedRfqId
-    ? (useApi ? apiRfqs?.find((r) => r.id === selectedRfqId) : getRfq(selectedRfqId))
+    ? (useApi ? openRfqs.find((r) => r.id === selectedRfqId) : getRfq(selectedRfqId))
     : undefined
 
+  const proposalItems = apiProposals?.items ?? []
+
   const hasProposal = (rfqId: string, supplierActorId: number) => {
-    if (useApi) return hasSupplierProposalForRfq(apiProposals, rfqId)
+    if (useApi) return hasSupplierProposalForRfq(proposalItems, rfqId)
     return hasProposalLocal(rfqId, supplierActorId)
   }
 
   const getMyProposal = (rfqId: string) => {
     const proposal = useApi
-      ? apiProposals?.find((p) => p.rfq_id === rfqId && p.status !== "withdrawn")
+      ? proposalItems.find((p) => p.rfq_id === rfqId && p.status !== "withdrawn")
       : localProposals.find(
           (p) => p.rfq_id === rfqId && p.supplier_actor_id === actorId && p.status !== "withdrawn",
         )
@@ -164,6 +169,12 @@ export default function SupplierRfqsPage() {
           onSubmit={handleSubmitProposal}
         />
       )}
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }

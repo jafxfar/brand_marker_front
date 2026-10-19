@@ -1,10 +1,14 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { Invoice, Withdrawal, WithdrawalDestination } from "@/types"
 import { apiFetch } from "../client"
 
 const PREFIX = "/supplier/finance"
 
 export const supplierFinanceApi = {
-  destinations: () => apiFetch<WithdrawalDestination[]>(`${PREFIX}/destinations`),
+  destinations: (params: PageParams = {}) =>
+    apiFetch<Page<WithdrawalDestination>>(
+      `${PREFIX}/destinations${buildPageQuery(params)}`,
+    ),
 
   createDestination: (data: {
     type: string
@@ -17,7 +21,8 @@ export const supplierFinanceApi = {
       body: JSON.stringify(data),
     }),
 
-  withdrawals: () => apiFetch<Withdrawal[]>(`${PREFIX}/withdrawals`),
+  withdrawals: (params: PageParams = {}) =>
+    apiFetch<Page<Withdrawal>>(`${PREFIX}/withdrawals${buildPageQuery(params)}`),
 
   requestWithdrawal: (data: { destination_id: number; amount: number }) =>
     apiFetch<Withdrawal>(`${PREFIX}/withdrawals`, {
@@ -25,5 +30,6 @@ export const supplierFinanceApi = {
       body: JSON.stringify(data),
     }),
 
-  invoices: () => apiFetch<Invoice[]>(`${PREFIX}/invoices`),
+  invoices: (params: PageParams = {}) =>
+    apiFetch<Page<Invoice>>(`${PREFIX}/invoices${buildPageQuery(params)}`),
 }

@@ -244,7 +244,7 @@ export default function AdminRolesPage() {
   const [dialogState, setDialogState] = useState<RoleFormDialogState>(null)
   const [deleting, setDeleting] = useState<AdminRole | null>(null)
 
-  const roles = useMemo(() => rolesQuery.data ?? [], [rolesQuery.data])
+  const roles = useMemo(() => rolesQuery.data?.items ?? [], [rolesQuery.data])
   const selectedRole = roles.find((role) => role.id === selectedRoleId) ?? roles[0] ?? null
 
   const handleDeleteConfirm = async () => {

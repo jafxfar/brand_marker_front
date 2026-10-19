@@ -2,19 +2,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supplierRfqsApi, supplierProposalsApi } from "@/lib/api/supplier/proposals"
 import { isApiEnabled } from "@/lib/api/config"
 import { notificationKeys } from "@/hooks/api/use-notifications-query"
-import type { ProposalWithRelations, RfqWithRelations } from "@/types"
+import type { PageParams } from "@/lib/pagination"
+import type { ProposalWithRelations } from "@/types"
 
 export const supplierRfqKeys = {
   all: ["supplier-rfqs"] as const,
-  board: () => [...supplierRfqKeys.all, "board"] as const,
+  board: (page = 1) => [...supplierRfqKeys.all, "board", page] as const,
   detail: (id: string) => [...supplierRfqKeys.all, "detail", id] as const,
-  proposals: () => ["supplier-proposals"] as const,
+  proposals: (page = 1) => ["supplier-proposals", page] as const,
 }
 
-export const useSupplierRfqBoardQuery = (enabled = true) =>
+export const useSupplierRfqBoardQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: supplierRfqKeys.board(),
-    queryFn: () => supplierRfqsApi.board(),
+    queryKey: supplierRfqKeys.board(params.page ?? 1),
+    queryFn: () => supplierRfqsApi.board(params),
     enabled: enabled && isApiEnabled(),
   })
 
@@ -25,10 +26,10 @@ export const useSupplierRfqQuery = (id: string, enabled = true) =>
     enabled: enabled && isApiEnabled() && Boolean(id),
   })
 
-export const useSupplierProposalsQuery = (enabled = true) =>
+export const useSupplierProposalsQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: supplierRfqKeys.proposals(),
-    queryFn: () => supplierProposalsApi.list(),
+    queryKey: supplierRfqKeys.proposals(params.page ?? 1),
+    queryFn: () => supplierProposalsApi.list(params),
     enabled: enabled && isApiEnabled(),
   })
 

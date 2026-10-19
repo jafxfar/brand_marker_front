@@ -1024,7 +1024,18 @@ export const adminApi = {
   },
   getAnalytics: (period: AdminAnalyticsPeriod) =>
     apiFetch<AdminAnalyticsResponse>(`/admin/analytics?period=${period}`),
-  getRoles: () => apiFetch<AdminRole[]>("/admin/roles"),
+  getRoles: (params: { page?: number; pageSize?: number } = {}) => {
+    const search = new URLSearchParams()
+    search.set("page", String(params.page ?? 1))
+    search.set("page_size", String(params.pageSize ?? 20))
+    return apiFetch<{
+      items: AdminRole[]
+      total: number
+      page: number
+      page_size: number
+      total_pages: number
+    }>(`/admin/roles?${search.toString()}`)
+  },
   createRole: (data: AdminRoleInput) =>
     apiFetch<AdminRole>("/admin/roles", {
       method: "POST",

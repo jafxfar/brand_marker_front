@@ -43,8 +43,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   const services: MarketplaceService[] = useMemo(() => {
     if (useApi) {
-      if (!apiCatalog?.length) return []
-      return apiCatalog.map((item) => mapCatalogItemToService(item))
+      const items = apiCatalog?.items ?? []
+      if (!items.length) return []
+      return items.map((item) => mapCatalogItemToService(item))
     }
     const mockCategory = getCategoryBySlug(slug)
     return mockCategory ? getServicesByCategory(mockCategory.id) : []

@@ -1,20 +1,24 @@
 import { useQuery } from "@tanstack/react-query"
 import { supplierPaymentsApi } from "@/lib/api/supplier/payments"
 import { isApiEnabled } from "@/lib/api/config"
+import type { PageParams } from "@/lib/pagination"
 
 export const supplierPaymentKeys = {
   all: ["supplier-payments"] as const,
-  history: () => [...supplierPaymentKeys.all, "history"] as const,
+  history: (page = 1) => [...supplierPaymentKeys.all, "history", page] as const,
   pending: () => [...supplierPaymentKeys.all, "pending"] as const,
   balance: () => [...supplierPaymentKeys.all, "balance"] as const,
   milestones: (contractId: number) =>
     [...supplierPaymentKeys.all, "milestones", contractId] as const,
 }
 
-export const useSupplierPaymentHistoryQuery = (enabled = true) =>
+export const useSupplierPaymentHistoryQuery = (
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: supplierPaymentKeys.history(),
-    queryFn: () => supplierPaymentsApi.history(),
+    queryKey: supplierPaymentKeys.history(params.page ?? 1),
+    queryFn: () => supplierPaymentsApi.history(params),
     enabled: enabled && isApiEnabled(),
   })
 

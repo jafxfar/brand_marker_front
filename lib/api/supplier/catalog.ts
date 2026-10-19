@@ -1,12 +1,13 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { CatalogItemInput, CatalogItemWithRelations, ItemStatus } from "@/types"
 import { apiFetch } from "../client"
 
 const PREFIX = "/supplier/catalog/items"
 
 export const supplierCatalogApi = {
-  list: (status?: ItemStatus) =>
-    apiFetch<CatalogItemWithRelations[]>(
-      `${PREFIX}${status ? `?status=${status}` : ""}`,
+  list: (status?: ItemStatus, params: PageParams = {}) =>
+    apiFetch<Page<CatalogItemWithRelations>>(
+      `${PREFIX}${buildPageQuery({ ...params, status })}`,
     ),
 
   get: (id: number) => apiFetch<CatalogItemWithRelations>(`${PREFIX}/${id}`),

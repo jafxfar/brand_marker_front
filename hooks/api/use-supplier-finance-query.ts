@@ -1,33 +1,42 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supplierFinanceApi } from "@/lib/api/supplier/finance"
 import { isApiEnabled } from "@/lib/api/config"
+import type { PageParams } from "@/lib/pagination"
 import { supplierPaymentKeys } from "./use-supplier-payments-query"
 
 export const supplierFinanceKeys = {
   all: ["supplier-finance"] as const,
-  destinations: () => [...supplierFinanceKeys.all, "destinations"] as const,
-  withdrawals: () => [...supplierFinanceKeys.all, "withdrawals"] as const,
-  invoices: () => [...supplierFinanceKeys.all, "invoices"] as const,
+  destinations: (page = 1) =>
+    [...supplierFinanceKeys.all, "destinations", page] as const,
+  withdrawals: (page = 1) =>
+    [...supplierFinanceKeys.all, "withdrawals", page] as const,
+  invoices: (page = 1) => [...supplierFinanceKeys.all, "invoices", page] as const,
 }
 
-export const useSupplierFinanceDestinationsQuery = (enabled = true) =>
+export const useSupplierFinanceDestinationsQuery = (
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: supplierFinanceKeys.destinations(),
-    queryFn: () => supplierFinanceApi.destinations(),
+    queryKey: supplierFinanceKeys.destinations(params.page ?? 1),
+    queryFn: () => supplierFinanceApi.destinations(params),
     enabled: enabled && isApiEnabled(),
   })
 
-export const useSupplierWithdrawalsQuery = (enabled = true) =>
+export const useSupplierWithdrawalsQuery = (
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: supplierFinanceKeys.withdrawals(),
-    queryFn: () => supplierFinanceApi.withdrawals(),
+    queryKey: supplierFinanceKeys.withdrawals(params.page ?? 1),
+    queryFn: () => supplierFinanceApi.withdrawals(params),
     enabled: enabled && isApiEnabled(),
   })
 
-export const useSupplierInvoicesQuery = (enabled = true) =>
+export const useSupplierInvoicesQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: supplierFinanceKeys.invoices(),
-    queryFn: () => supplierFinanceApi.invoices(),
+    queryKey: supplierFinanceKeys.invoices(params.page ?? 1),
+    queryFn: () => supplierFinanceApi.invoices(params),
     enabled: enabled && isApiEnabled(),
   })
 

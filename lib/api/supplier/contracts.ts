@@ -1,10 +1,12 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { ContractWithRelations, Message } from "@/types"
 import { apiFetch } from "../client"
 
 const PREFIX = "/supplier/contracts"
 
 export const supplierContractsApi = {
-  list: () => apiFetch<ContractWithRelations[]>(`${PREFIX}/`),
+  list: (params: PageParams = {}) =>
+    apiFetch<Page<ContractWithRelations>>(`${PREFIX}/${buildPageQuery(params)}`),
 
   get: (id: number) => apiFetch<ContractWithRelations>(`${PREFIX}/${id}`),
 

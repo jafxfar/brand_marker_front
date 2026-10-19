@@ -1,9 +1,10 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ListPagination } from "@/components/list-pagination"
 import { PageFrame, PageHeader, PageToolbar, PageSurface, PageEmptyState } from "@/components/layout"
 import { useQueries } from "@tanstack/react-query"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -32,6 +33,7 @@ import { proposalKeys } from "@/hooks/api/use-proposals-query"
 
 const MyRfqsContent = () => {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const [statusFilter, setStatusFilter] = useUrlTab<BuyerRfqStatusFilter>(
@@ -42,10 +44,11 @@ const MyRfqsContent = () => {
   const getRfqsByBuyerTab = useRfqsStore((s) => s.getRfqsByBuyerTab)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const useApi = isApiEnabled()
-  const { data: apiRfqs, isLoading } = useRfqsQuery(statusFilter, hydrated && useApi)
+  const { data: apiRfqs, isLoading } = useRfqsQuery(statusFilter, hydrated && useApi, { page })
 
   const localRfqs = hydrated ? getRfqsByBuyerTab(actorId, statusFilter) : []
-  const rfqs = useApi ? (apiRfqs ?? []) : localRfqs
+  const rfqs = useApi ? (apiRfqs?.items ?? []) : localRfqs
+  const totalPages = useApi ? (apiRfqs?.total_pages ?? 0) : 1
 
   const proposalQueries = useQueries({
     queries: (useApi ? rfqs : []).map((rfq) => ({
@@ -58,7 +61,7 @@ const MyRfqsContent = () => {
   const getProposalCount = (rfqId: string) => {
     if (!useApi) return getProposalsForRfq(rfqId).length
     const index = rfqs.findIndex((r) => r.id === rfqId)
-    return proposalQueries[index]?.data?.length ?? 0
+    return proposalQueries[index]?.data?.items?.length ?? 0
   }
 
   const handleStatusFilterChange = (value: string) => {
@@ -109,7 +112,13 @@ const MyRfqsContent = () => {
           />
         )}
       </PageSurface>
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }
 

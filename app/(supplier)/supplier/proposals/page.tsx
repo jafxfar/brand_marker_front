@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Send, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ListPagination } from "@/components/list-pagination"
 import {
   PageEmptyState,
   PageFrame,
@@ -54,6 +55,7 @@ const emptyText: Record<Tab, string> = {
 
 export default function SupplierProposalsPage() {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getProposalsBySupplier = useProposalsStore((s) => s.getProposalsBySupplier)
@@ -61,13 +63,14 @@ export default function SupplierProposalsPage() {
   const [tab, setTab] = useState<Tab>("all")
 
   const useApi = isApiEnabled()
-  const { data: apiProposals, isLoading } = useSupplierProposalsQuery(hydrated && useApi)
+  const { data: apiProposals, isLoading } = useSupplierProposalsQuery(hydrated && useApi, { page })
   const withdrawMutation = useWithdrawProposalMutation()
 
   const localProposals = hydrated ? getProposalsBySupplier(actorId) : []
   const allProposals: ProposalWithRelations[] = useApi
-    ? (apiProposals ?? [])
+    ? (apiProposals?.items ?? [])
     : localProposals
+  const totalPages = useApi ? (apiProposals?.total_pages ?? 0) : 1
   const filtered = filterProposals(allProposals, tab)
 
   const getRfqTitle = (rfqId: string) => getRfq(rfqId)?.title ?? rfqId
@@ -120,6 +123,12 @@ export default function SupplierProposalsPage() {
           />
         </PageSurface>
       )}
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }

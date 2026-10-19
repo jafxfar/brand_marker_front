@@ -27,12 +27,13 @@ export const usePublicSuppliersByActor = (actorIds: number[]) => {
     .sort((a, b) => a - b)
     .join(",")
 
-  const { data: suppliers } = useQuery({
+  const { data: suppliersPage } = useQuery({
     queryKey: publicKeys.suppliers(),
     queryFn: () => publicApi.suppliers(),
     enabled: useApi && uniqueKey.length > 0,
     staleTime: 5 * 60 * 1000,
   })
+  const suppliers = suppliersPage?.items
 
   return useMemo(() => {
     const ids = uniqueKey ? uniqueKey.split(",").map(Number) : []

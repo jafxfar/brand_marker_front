@@ -89,8 +89,9 @@ export function FeaturedServices() {
   const { data: apiCatalog } = usePublicCatalogQuery(undefined, undefined, useApi)
   const featuredServices = useMemo(() => {
     if (!useApi) return getFeaturedServices(10)
-    if (!apiCatalog?.length) return []
-    return apiCatalog.map((item) => mapCatalogItemToService(item)).slice(0, 10)
+    const items = apiCatalog?.items ?? []
+    if (!items.length) return []
+    return items.map((item) => mapCatalogItemToService(item)).slice(0, 10)
   }, [useApi, apiCatalog])
 
   return (
@@ -126,8 +127,9 @@ export function ProviderShowcase() {
   const { data: apiSuppliers } = usePublicSuppliersQuery(undefined, undefined, useApi)
   const topProviders = useMemo(() => {
     if (!useApi) return getTopPerformers(6)
-    if (!apiSuppliers?.length) return []
-    return apiSuppliers.map(mapPublicSupplierToPerformer).slice(0, 6)
+    const items = apiSuppliers?.items ?? []
+    if (!items.length) return []
+    return items.map(mapPublicSupplierToPerformer).slice(0, 6)
   }, [useApi, apiSuppliers])
 
   return (
@@ -249,8 +251,9 @@ export function RecentRequests() {
   const { data: apiRfqs } = usePublicRfqsQuery(useApi)
   const recentRequests = useMemo(() => {
     if (!useApi) return getRecentRequests(6)
-    if (!apiRfqs?.length) return []
-    return apiRfqs.map(mapRfqToRequest).slice(0, 6)
+    const items = apiRfqs?.items ?? []
+    if (!items.length) return []
+    return items.map(mapRfqToRequest).slice(0, 6)
   }, [useApi, apiRfqs])
 
   return (

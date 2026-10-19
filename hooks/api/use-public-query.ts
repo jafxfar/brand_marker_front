@@ -1,23 +1,28 @@
 import { useQuery } from "@tanstack/react-query"
 import { publicApi } from "@/lib/api/public"
 import { isApiEnabled } from "@/lib/api/config"
+import type { PageParams } from "@/lib/pagination"
 
 export const publicKeys = {
   all: ["public"] as const,
   categories: () => [...publicKeys.all, "categories"] as const,
   platformSettings: () => [...publicKeys.all, "platform-settings"] as const,
-  suppliers: (q?: string, category?: string) =>
-    [...publicKeys.all, "suppliers", q ?? "", category ?? ""] as const,
+  suppliers: (q?: string, category?: string, page = 1) =>
+    [...publicKeys.all, "suppliers", q ?? "", category ?? "", page] as const,
   supplier: (id: number) => [...publicKeys.all, "supplier", id] as const,
-  supplierCatalog: (id: number) => [...publicKeys.all, "supplier-catalog", id] as const,
-  supplierReviews: (id: number) => [...publicKeys.all, "supplier-reviews", id] as const,
+  supplierCatalog: (id: number, page = 1) =>
+    [...publicKeys.all, "supplier-catalog", id, page] as const,
+  supplierReviews: (id: number, page = 1) =>
+    [...publicKeys.all, "supplier-reviews", id, page] as const,
   company: (id: number) => [...publicKeys.all, "company", id] as const,
-  companyCatalog: (id: number) => [...publicKeys.all, "company-catalog", id] as const,
-  companyReviews: (id: number) => [...publicKeys.all, "company-reviews", id] as const,
-  catalog: (q?: string, category?: string) =>
-    [...publicKeys.all, "catalog", q ?? "", category ?? ""] as const,
+  companyCatalog: (id: number, page = 1) =>
+    [...publicKeys.all, "company-catalog", id, page] as const,
+  companyReviews: (id: number, page = 1) =>
+    [...publicKeys.all, "company-reviews", id, page] as const,
+  catalog: (q?: string, category?: string, page = 1) =>
+    [...publicKeys.all, "catalog", q ?? "", category ?? "", page] as const,
   catalogItem: (id: number) => [...publicKeys.all, "catalog-item", id] as const,
-  rfqs: () => [...publicKeys.all, "rfqs"] as const,
+  rfqs: (page = 1) => [...publicKeys.all, "rfqs", page] as const,
 }
 
 export const usePublicCategoriesQuery = (enabled = true) =>
@@ -40,10 +45,11 @@ export const usePublicSuppliersQuery = (
   q?: string,
   category?: string,
   enabled = true,
+  params: PageParams = {},
 ) =>
   useQuery({
-    queryKey: publicKeys.suppliers(q, category),
-    queryFn: () => publicApi.suppliers(q, category),
+    queryKey: publicKeys.suppliers(q, category, params.page ?? 1),
+    queryFn: () => publicApi.suppliers(q, category, params),
     enabled: enabled && isApiEnabled(),
   })
 
@@ -54,17 +60,25 @@ export const usePublicSupplierQuery = (id: number, enabled = true) =>
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
-export const usePublicSupplierCatalogQuery = (id: number, enabled = true) =>
+export const usePublicSupplierCatalogQuery = (
+  id: number,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: publicKeys.supplierCatalog(id),
-    queryFn: () => publicApi.supplierCatalog(id),
+    queryKey: publicKeys.supplierCatalog(id, params.page ?? 1),
+    queryFn: () => publicApi.supplierCatalog(id, params),
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
-export const usePublicSupplierReviewsQuery = (id: number, enabled = true) =>
+export const usePublicSupplierReviewsQuery = (
+  id: number,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: publicKeys.supplierReviews(id),
-    queryFn: () => publicApi.supplierReviews(id),
+    queryKey: publicKeys.supplierReviews(id, params.page ?? 1),
+    queryFn: () => publicApi.supplierReviews(id, params),
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
@@ -75,17 +89,25 @@ export const usePublicCompanyQuery = (id: number, enabled = true) =>
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
-export const usePublicCompanyCatalogQuery = (id: number, enabled = true) =>
+export const usePublicCompanyCatalogQuery = (
+  id: number,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: publicKeys.companyCatalog(id),
-    queryFn: () => publicApi.companyCatalog(id),
+    queryKey: publicKeys.companyCatalog(id, params.page ?? 1),
+    queryFn: () => publicApi.companyCatalog(id, params),
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
-export const usePublicCompanyReviewsQuery = (id: number, enabled = true) =>
+export const usePublicCompanyReviewsQuery = (
+  id: number,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: publicKeys.companyReviews(id),
-    queryFn: () => publicApi.companyReviews(id),
+    queryKey: publicKeys.companyReviews(id, params.page ?? 1),
+    queryFn: () => publicApi.companyReviews(id, params),
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
@@ -93,10 +115,11 @@ export const usePublicCatalogQuery = (
   q?: string,
   category?: string,
   enabled = true,
+  params: PageParams = {},
 ) =>
   useQuery({
-    queryKey: publicKeys.catalog(q, category),
-    queryFn: () => publicApi.catalog(q, category),
+    queryKey: publicKeys.catalog(q, category, params.page ?? 1),
+    queryFn: () => publicApi.catalog(q, category, params),
     enabled: enabled && isApiEnabled(),
   })
 
@@ -107,9 +130,9 @@ export const usePublicCatalogItemQuery = (id: number, enabled = true) =>
     enabled: enabled && isApiEnabled() && id > 0,
   })
 
-export const usePublicRfqsQuery = (enabled = true) =>
+export const usePublicRfqsQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: publicKeys.rfqs(),
-    queryFn: () => publicApi.rfqs(),
+    queryKey: publicKeys.rfqs(params.page ?? 1),
+    queryFn: () => publicApi.rfqs(params),
     enabled: enabled && isApiEnabled(),
   })

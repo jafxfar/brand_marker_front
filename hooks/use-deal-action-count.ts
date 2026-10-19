@@ -26,7 +26,7 @@ export const useDealActionCount = (role: DealRole): number => {
   if (!hydrated) return 0
 
   const contracts: ContractWithRelations[] = useApi
-    ? (((role === "buyer" ? buyerContracts : supplierContracts) ?? []) as ContractWithRelations[])
+    ? (((role === "buyer" ? buyerContracts?.items : supplierContracts?.items) ?? []) as ContractWithRelations[])
     : role === "buyer"
       ? getContractsForBuyer(actorId)
       : getContractsByTab(actorId, "all")

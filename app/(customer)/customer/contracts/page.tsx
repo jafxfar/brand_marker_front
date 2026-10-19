@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense , useState} from "react"
 import { FileCheck } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
@@ -14,6 +14,7 @@ import {
   type BuyerContractListTab,
 } from "@/lib/buyer-contract-display"
 import { DealList } from "@/components/contracts/deal-list"
+import { ListPagination } from "@/components/list-pagination"
 import { filterDealsByTab } from "@/lib/process/deal-stages"
 import { isApiEnabled } from "@/lib/api/config"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
@@ -29,17 +30,19 @@ const BUYER_CONTRACT_TAB_VALUES = BUYER_CONTRACT_LIST_TABS.map((option) => optio
 
 const BuyerContractsContent = () => {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const actorId = getActorId(useAuthStore((s) => s.user))
   const getContractsForBuyer = useContractsStore((s) => s.getContractsForBuyer)
   const [tab, setTab] = useUrlTab<BuyerContractListTab>("tab", BUYER_CONTRACT_TAB_VALUES, "active")
   const useApi = isApiEnabled()
-  const { data: apiContracts } = useContractsQuery(hydrated && useApi)
+  const { data: apiContracts } = useContractsQuery(hydrated && useApi, { page })
 
   const allContracts: ContractWithRelations[] = useApi
-    ? ((apiContracts ?? []) as ContractWithRelations[])
+    ? ((apiContracts?.items ?? []) as ContractWithRelations[])
     : hydrated
       ? getContractsForBuyer(actorId)
       : []
+  const totalPages = useApi ? (apiContracts?.total_pages ?? 0) : 1
   const contracts = filterDealsByTab(allContracts, tab, "buyer")
   const { getName: getSupplierName } = usePublicSuppliersByActor(
     contracts.map((c) => c.supplier_actor_id),
@@ -73,7 +76,13 @@ const BuyerContractsContent = () => {
           getCounterpartName={(c) => getSupplierName(c.supplier_actor_id)}
         />
       )}
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }
 

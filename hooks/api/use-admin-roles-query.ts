@@ -3,9 +3,11 @@ import { toast } from "sonner"
 import { getAdminAccessErrorMessage } from "@/lib/admin-access-errors"
 import { adminApi, type AdminRoleInput } from "@/lib/api/admin"
 
+import { DEFAULT_PAGE_SIZE, type PageParams } from "@/lib/pagination"
+
 export const adminRoleKeys = {
   all: ["admin-roles"] as const,
-  list: () => [...adminRoleKeys.all, "list"] as const,
+  list: (page = 1) => [...adminRoleKeys.all, "list", page] as const,
   matrix: (roleId: number) => [...adminRoleKeys.all, "matrix", roleId] as const,
 }
 
@@ -13,10 +15,14 @@ const toastAccessError = (fallback: string) => (error: unknown) => {
   toast.error(getAdminAccessErrorMessage(error, fallback))
 }
 
-export const useAdminRolesQuery = (enabled = true) =>
+export const useAdminRolesQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: adminRoleKeys.list(),
-    queryFn: adminApi.getRoles,
+    queryKey: adminRoleKeys.list(params.page ?? 1),
+    queryFn: () =>
+      adminApi.getRoles({
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+      }),
     enabled,
   })
 

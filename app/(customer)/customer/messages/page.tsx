@@ -41,7 +41,7 @@ export default function BuyerMessagesPage() {
   const markMessagesReadMutation = useMarkMessagesReadMutation("buyer")
 
   const contracts = useApi
-    ? ((apiContracts ?? []) as ContractWithRelations[])
+    ? ((apiContracts?.items ?? []) as ContractWithRelations[])
     : hydrated
       ? getContractsForBuyer(actorId)
       : []

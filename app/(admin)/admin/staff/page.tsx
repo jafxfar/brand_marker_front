@@ -96,7 +96,7 @@ export default function AdminStaffPage() {
   }, [searchInput])
 
   const assignableRoles = useMemo(
-    () => (rolesQuery.data ?? []).filter((role) => role.is_active && canManageStaffRole(user, role.name)),
+    () => (rolesQuery.data?.items ?? []).filter((role) => role.is_active && canManageStaffRole(user, role.name)),
     [rolesQuery.data, user],
   )
 

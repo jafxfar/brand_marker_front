@@ -1,3 +1,4 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import { apiFetch } from "../client"
 import type { PaymentHistoryItem, PendingPaymentsResponse } from "../payments"
 
@@ -11,7 +12,8 @@ export type SupplierBalanceResponse = {
 }
 
 export const supplierPaymentsApi = {
-  history: () => apiFetch<PaymentHistoryItem[]>(`${PREFIX}/history`),
+  history: (params: PageParams = {}) =>
+    apiFetch<Page<PaymentHistoryItem>>(`${PREFIX}/history${buildPageQuery(params)}`),
 
   pending: () => apiFetch<PendingPaymentsResponse>(`${PREFIX}/pending`),
 

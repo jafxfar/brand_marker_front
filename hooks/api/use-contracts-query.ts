@@ -3,31 +3,32 @@ import { contractsApi } from "@/lib/api/contracts"
 import { supplierContractsApi } from "@/lib/api/supplier/contracts"
 import { isApiEnabled } from "@/lib/api/config"
 import { replaceContractInCache, updateContractMessageStatusInCache } from "@/lib/contract-chat-cache"
+import type { PageParams } from "@/lib/pagination"
 import type { ContractWithRelations } from "@/types"
 
 export const contractKeys = {
   all: ["contracts"] as const,
-  list: () => [...contractKeys.all, "list"] as const,
+  list: (page = 1) => [...contractKeys.all, "list", page] as const,
   detail: (id: number) => [...contractKeys.all, "detail", id] as const,
 }
 
 export const supplierContractKeys = {
   all: ["supplier-contracts"] as const,
-  list: () => [...supplierContractKeys.all, "list"] as const,
+  list: (page = 1) => [...supplierContractKeys.all, "list", page] as const,
   detail: (id: number) => [...supplierContractKeys.all, "detail", id] as const,
 }
 
-export const useContractsQuery = (enabled = true) =>
+export const useContractsQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: contractKeys.list(),
-    queryFn: () => contractsApi.list(),
+    queryKey: contractKeys.list(params.page ?? 1),
+    queryFn: () => contractsApi.list(params),
     enabled: enabled && isApiEnabled(),
   })
 
-export const useSupplierContractsQuery = (enabled = true) =>
+export const useSupplierContractsQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: supplierContractKeys.list(),
-    queryFn: () => supplierContractsApi.list(),
+    queryKey: supplierContractKeys.list(params.page ?? 1),
+    queryFn: () => supplierContractsApi.list(params),
     enabled: enabled && isApiEnabled(),
   })
 

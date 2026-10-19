@@ -63,7 +63,7 @@ export default function SupplierCustomersPage() {
     getCompany(buyerActorId)?.title ?? `Заказчик #${buyerActorId}`
 
   const contracts: ContractWithRelations[] = useApi
-    ? ((apiContracts ?? []) as ContractWithRelations[])
+    ? ((apiContracts?.items ?? []) as ContractWithRelations[])
     : hydrated
       ? getContractsForSupplier(actorId)
       : []

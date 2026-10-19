@@ -32,8 +32,9 @@ export const ServicesPageContent = () => {
 
   const services = useMemo(() => {
     if (!useApi) return searchServices(query, category || undefined)
-    if (!apiCatalog?.length) return []
-    return apiCatalog.map((item) => mapCatalogItemToService(item))
+    const items = apiCatalog?.items ?? []
+    if (!items.length) return []
+    return items.map((item) => mapCatalogItemToService(item))
   }, [query, category, useApi, apiCatalog])
 
   return (

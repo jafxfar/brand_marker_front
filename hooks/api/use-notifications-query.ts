@@ -4,17 +4,23 @@ import {
   type NotificationRole,
 } from "@/lib/api/notifications"
 import { isApiEnabled } from "@/lib/api/config"
+import { emptyPage, type Page, type PageParams } from "@/lib/pagination"
 import type { ApiNotification } from "@/types/notification"
 
 export const notificationKeys = {
   all: ["notifications"] as const,
-  list: (role: NotificationRole) => [...notificationKeys.all, role] as const,
+  list: (role: NotificationRole, page = 1) =>
+    [...notificationKeys.all, role, page] as const,
 }
 
-export const useNotificationsQuery = (role: NotificationRole, enabled = true) =>
+export const useNotificationsQuery = (
+  role: NotificationRole,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: notificationKeys.list(role),
-    queryFn: () => notificationsApi.list(role),
+    queryKey: notificationKeys.list(role, params.page ?? 1),
+    queryFn: () => notificationsApi.list(role, params),
     enabled: enabled && isApiEnabled(),
   })
 
@@ -23,8 +29,15 @@ export const useMarkNotificationReadMutation = (role: NotificationRole) => {
   return useMutation({
     mutationFn: (id: number) => notificationsApi.markRead(role, id),
     onSuccess: (_data, id) => {
-      qc.setQueryData<ApiNotification[]>(notificationKeys.list(role), (old) =>
-        old?.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      qc.setQueriesData<Page<ApiNotification>>(
+        { queryKey: notificationKeys.all },
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            items: old.items.map((n) => (n.id === id ? { ...n, read: true } : n)),
+          }
+        },
       )
     },
     meta: { silent: true },
@@ -36,8 +49,15 @@ export const useMarkAllNotificationsReadMutation = (role: NotificationRole) => {
   return useMutation({
     mutationFn: () => notificationsApi.markAllRead(role),
     onSuccess: () => {
-      qc.setQueryData<ApiNotification[]>(notificationKeys.list(role), (old) =>
-        old?.map((n) => ({ ...n, read: true })),
+      qc.setQueriesData<Page<ApiNotification>>(
+        { queryKey: notificationKeys.all },
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            items: old.items.map((n) => ({ ...n, read: true })),
+          }
+        },
       )
     },
     meta: {
@@ -52,9 +72,16 @@ export const prependNotificationToCache = (
   role: NotificationRole,
   notification: ApiNotification,
 ) => {
-  qc.setQueryData<ApiNotification[]>(notificationKeys.list(role), (old) => {
-    if (!old) return [notification]
-    if (old.some((n) => n.id === notification.id)) return old
-    return [notification, ...old]
-  })
+  qc.setQueriesData<Page<ApiNotification>>(
+    { queryKey: [...notificationKeys.all, role] },
+    (old) => {
+      const page = old ?? emptyPage<ApiNotification>()
+      if (page.items.some((n) => n.id === notification.id)) return page
+      return {
+        ...page,
+        items: [notification, ...page.items],
+        total: page.total + 1,
+      }
+    },
+  )
 }

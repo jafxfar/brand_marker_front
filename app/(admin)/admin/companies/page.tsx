@@ -33,8 +33,8 @@ import type {
 import { resolveFileUrl } from "@/lib/file-url"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 const statusFilters: Array<{ value: AdminCompanyStatusFilter; label: string }> = [
   { value: "all", label: "Все" },
   { value: "verified", label: "Верифицированные" },
@@ -107,7 +107,7 @@ const AdminCompaniesContent = () => {
   const [searchInput, setSearchInput] = useState(query)
   const companiesQuery = useAdminCompaniesQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     status,
     query,
   })

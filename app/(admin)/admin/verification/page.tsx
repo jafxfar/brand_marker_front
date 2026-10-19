@@ -29,8 +29,8 @@ import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminCompany, AdminCompanyAction, AdminCompanyDetail } from "@/lib/api/admin"
 import { resolveFileUrl } from "@/lib/file-url"
 import { cn } from "@/lib/utils"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "short", year: "numeric" }).format(
@@ -248,7 +248,7 @@ const AdminVerificationContent = () => {
   const query = searchParams.get("query") ?? ""
   const selectedParam = Number(searchParams.get("company")) || null
   const [searchInput, setSearchInput] = useState(query)
-  const queueQuery = useAdminCompaniesQuery({ page, pageSize: PAGE_SIZE, status: "pending", query })
+  const queueQuery = useAdminCompaniesQuery({ page, pageSize: DEFAULT_PAGE_SIZE, status: "pending", query })
 
   const replaceSearchParams = useCallback(
     (updates: Record<string, string | null>) => {

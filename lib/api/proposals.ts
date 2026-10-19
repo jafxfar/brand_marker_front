@@ -1,3 +1,4 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { ProposalAcceptInput, ProposalMessage, ProposalWithRelations } from "@/types"
 import { apiFetch } from "./client"
 
@@ -5,8 +6,10 @@ const RFQ_PREFIX = "/buyer/rfqs"
 const PROPOSAL_PREFIX = "/buyer/proposals"
 
 export const proposalsApi = {
-  listForRfq: (rfqId: string) =>
-    apiFetch<ProposalWithRelations[]>(`${RFQ_PREFIX}/${rfqId}/proposals`),
+  listForRfq: (rfqId: string, params: PageParams = {}) =>
+    apiFetch<Page<ProposalWithRelations>>(
+      `${RFQ_PREFIX}/${rfqId}/proposals${buildPageQuery(params)}`,
+    ),
 
   shortlist: (id: number) =>
     apiFetch<ProposalWithRelations>(`${PROPOSAL_PREFIX}/${id}/shortlist`, { method: "POST" }),
