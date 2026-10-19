@@ -2,25 +2,31 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { BuyerRfqStatusFilter } from "@/lib/buyer-rfq-display"
 import { rfqsApi } from "@/lib/api/rfqs"
 import { isApiEnabled } from "@/lib/api/config"
+import type { PageParams } from "@/lib/pagination"
 import type { RfqCreate, RfqUpdate } from "@/types"
 
 export const rfqKeys = {
   all: ["rfqs"] as const,
-  list: (tab?: string) => [...rfqKeys.all, "list", tab ?? "all"] as const,
+  list: (tab?: string, page = 1) =>
+    [...rfqKeys.all, "list", tab ?? "all", page] as const,
   detail: (id: string) => [...rfqKeys.all, "detail", id] as const,
 }
 
-export const useRfqsQuery = (filter: BuyerRfqStatusFilter, enabled = true) =>
+export const useRfqsQuery = (
+  filter: BuyerRfqStatusFilter,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: rfqKeys.list(filter),
-    queryFn: () => rfqsApi.list(filter),
+    queryKey: rfqKeys.list(filter, params.page ?? 1),
+    queryFn: () => rfqsApi.list(filter, params),
     enabled: enabled && isApiEnabled(),
   })
 
-export const useActiveRfqsQuery = (enabled = true) =>
+export const useActiveRfqsQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: rfqKeys.list("active"),
-    queryFn: () => rfqsApi.list("active"),
+    queryKey: rfqKeys.list("active", params.page ?? 1),
+    queryFn: () => rfqsApi.list("active", params),
     enabled: enabled && isApiEnabled(),
   })
 

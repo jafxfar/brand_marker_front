@@ -10,6 +10,7 @@ import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierCatalogQuery } from "@/hooks/api/use-supplier-catalog-query"
 import { CatalogItemsTable } from "@/components/supplier/catalog/catalog-items-table"
+import { ListPagination } from "@/components/list-pagination"
 import { Button } from "@/components/ui/button"
 import {
   PageEmptyState,
@@ -34,6 +35,7 @@ const tabs: { value: Tab; label: string }[] = [
 
 export default function SupplierCatalogPage() {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
@@ -45,6 +47,7 @@ export default function SupplierCatalogPage() {
   const { data: apiItems, isLoading } = useSupplierCatalogQuery(
     apiStatus,
     hydrated && useApi,
+    { page },
   )
 
   const localItems = !hydrated
@@ -53,7 +56,8 @@ export default function SupplierCatalogPage() {
       ? getItemsBySupplier(actorId)
       : getItemsByStatus(actorId, tab)
 
-  const items = useApi ? (apiItems ?? []) : localItems
+  const items = useApi ? (apiItems?.items ?? []) : localItems
+  const totalPages = useApi ? (apiItems?.total_pages ?? 0) : 1
 
   return (
     <PageFrame>
@@ -102,6 +106,12 @@ export default function SupplierCatalogPage() {
           <CatalogItemsTable items={items} />
         </PageSurface>
       )}
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }

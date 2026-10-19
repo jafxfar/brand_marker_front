@@ -70,8 +70,10 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
   const getContractByRfqId = useContractsStore((s) => s.getContractByRfqId)
 
   const { data: apiRfq, isLoading } = useRfqQuery(id, hydrated && useApi)
-  const { data: apiProposals = [] } = useProposalsForRfqQuery(id, hydrated && useApi)
-  const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
+  const { data: apiProposalsPage } = useProposalsForRfqQuery(id, hydrated && useApi)
+  const apiProposals = apiProposalsPage?.items ?? []
+  const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
+  const apiContracts = apiContractsPage?.items ?? []
 
   const publishMutation = usePublishRfqMutation()
   const closeMutation = useCloseRfqMutation()

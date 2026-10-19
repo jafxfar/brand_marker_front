@@ -43,7 +43,7 @@ export default function SupplierMessagesPage() {
     getCompany(buyerId)?.title ?? `Заказчик #${buyerId}`
 
   const contracts = useApi
-    ? ((apiContracts ?? []) as ContractWithRelations[])
+    ? ((apiContracts?.items ?? []) as ContractWithRelations[])
     : hydrated
       ? getContractsForSupplier(actorId)
       : []

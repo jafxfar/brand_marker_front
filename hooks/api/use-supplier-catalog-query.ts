@@ -1,18 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supplierCatalogApi } from "@/lib/api/supplier/catalog"
 import { isApiEnabled } from "@/lib/api/config"
+import type { PageParams } from "@/lib/pagination"
 import type { CatalogItemInput, ItemStatus } from "@/types"
 
 export const supplierCatalogKeys = {
   all: ["supplier-catalog"] as const,
-  list: (status?: ItemStatus) => [...supplierCatalogKeys.all, "list", status] as const,
+  list: (status?: ItemStatus, page = 1) =>
+    [...supplierCatalogKeys.all, "list", status, page] as const,
   detail: (id: number) => [...supplierCatalogKeys.all, "detail", id] as const,
 }
 
-export const useSupplierCatalogQuery = (status?: ItemStatus, enabled = true) =>
+export const useSupplierCatalogQuery = (
+  status?: ItemStatus,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: supplierCatalogKeys.list(status),
-    queryFn: () => supplierCatalogApi.list(status),
+    queryKey: supplierCatalogKeys.list(status, params.page ?? 1),
+    queryFn: () => supplierCatalogApi.list(status, params),
     enabled: enabled && isApiEnabled(),
   })
 

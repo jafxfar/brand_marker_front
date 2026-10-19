@@ -22,7 +22,7 @@ const handleFundSuccess = (qc: QueryClient, data: FundMilestoneResponse, success
 export const paymentKeys = {
   all: ["payments"] as const,
   config: () => [...paymentKeys.all, "config"] as const,
-  history: () => [...paymentKeys.all, "history"] as const,
+  history: (page = 1) => [...paymentKeys.all, "history", page] as const,
   pending: () => [...paymentKeys.all, "pending"] as const,
   milestones: (contractId: number) =>
     [...paymentKeys.all, "milestones", contractId] as const,
@@ -42,10 +42,13 @@ export const useAlifPayment = (enabled = true) => {
   return { viaAlif, currency: viaAlif ? (data?.currency ?? null) : null }
 }
 
-export const usePaymentHistoryQuery = (enabled = true) =>
+export const usePaymentHistoryQuery = (
+  enabled = true,
+  params: import("@/lib/pagination").PageParams = {},
+) =>
   useQuery({
-    queryKey: paymentKeys.history(),
-    queryFn: () => paymentsApi.history(),
+    queryKey: paymentKeys.history(params.page ?? 1),
+    queryFn: () => paymentsApi.history(params),
     enabled: enabled && isApiEnabled(),
   })
 

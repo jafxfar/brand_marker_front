@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense , useState} from "react"
 import { FileCheck } from "lucide-react"
 import {
   PageEmptyState,
@@ -19,6 +19,7 @@ import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
 import { CONTRACT_LIST_TABS, type ContractListTab } from "@/lib/contract-display"
 import { filterDealsByTab } from "@/lib/process/deal-stages"
 import { DealList } from "@/components/contracts/deal-list"
+import { ListPagination } from "@/components/list-pagination"
 import type { ContractWithRelations } from "@/types"
 
 const emptyMessages: Record<ContractListTab, string> = {
@@ -33,6 +34,7 @@ const CONTRACT_TAB_VALUES = CONTRACT_LIST_TABS.map((option) => option.value)
 
 const SupplierContractsContent = () => {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getContractsByTab = useContractsStore((s) => s.getContractsByTab)
@@ -40,14 +42,15 @@ const SupplierContractsContent = () => {
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [tab, setTab] = useUrlTab<ContractListTab>("tab", CONTRACT_TAB_VALUES, "all")
   const useApi = isApiEnabled()
-  const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi)
+  const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi, { page })
 
   const allContracts: ContractWithRelations[] = useApi
-    ? ((apiContracts ?? []) as ContractWithRelations[])
+    ? ((apiContracts?.items ?? []) as ContractWithRelations[])
     : hydrated
       ? getContractsByTab(actorId, "all")
       : []
   const contracts = filterDealsByTab(allContracts, tab, "supplier")
+  const totalPages = useApi ? (apiContracts?.total_pages ?? 0) : 1
 
   const isEmpty = !hydrated || isLoading || contracts.length === 0
 
@@ -79,7 +82,13 @@ const SupplierContractsContent = () => {
           getCounterpartName={(c) => getCompany(c.buyer_actor_id)?.title ?? "Заказчик"}
         />
       )}
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }
 

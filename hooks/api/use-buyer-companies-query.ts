@@ -1,17 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { buyerCompaniesApi } from "@/lib/api/companies"
 import { isApiEnabled } from "@/lib/api/config"
+import type { PageParams } from "@/lib/pagination"
 import type { CompanyWizardInput } from "@/types"
 
 export const buyerCompanyKeys = {
   all: ["buyer-companies"] as const,
-  mine: () => [...buyerCompanyKeys.all, "mine"] as const,
+  mine: (page = 1) => [...buyerCompanyKeys.all, "mine", page] as const,
 }
 
-export const useBuyerCompaniesQuery = (enabled = true) =>
+export const useBuyerCompaniesQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: buyerCompanyKeys.mine(),
-    queryFn: () => buyerCompaniesApi.mine(),
+    queryKey: buyerCompanyKeys.mine(params.page ?? 1),
+    queryFn: () => buyerCompaniesApi.mine(params),
     enabled: enabled && isApiEnabled(),
   })
 

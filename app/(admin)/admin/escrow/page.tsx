@@ -21,8 +21,8 @@ import type { AdminEscrowCurrencySummary, AdminEscrowView } from "@/lib/api/admi
 import { contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency } from "@/lib/format"
 import type { ContractStatus } from "@/types"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 
 const viewOptions: Array<{ value: AdminEscrowView; label: string }> = [
   { value: "held", label: "Удерживается" },
@@ -99,7 +99,7 @@ const AdminEscrowContent = () => {
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const query = searchParams.get("query") ?? ""
   const [searchInput, setSearchInput] = useState(query)
-  const escrowQuery = useAdminEscrowQuery({ page, pageSize: PAGE_SIZE, view, query })
+  const escrowQuery = useAdminEscrowQuery({ page, pageSize: DEFAULT_PAGE_SIZE, view, query })
 
   const replaceSearchParams = useCallback(
     (updates: Record<string, string | null>) => {

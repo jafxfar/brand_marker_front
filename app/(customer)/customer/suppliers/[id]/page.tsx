@@ -55,15 +55,18 @@ export default function SupplierProfilePage({ params }: PageProps) {
     supplierActorId,
     hydrated && useApi,
   )
-  const { data: apiCatalog = [] } = usePublicSupplierCatalogQuery(
+  const { data: apiCatalogPage } = usePublicSupplierCatalogQuery(
     supplierActorId,
     hydrated && useApi,
   )
-  const { data: apiReviews = [] } = usePublicSupplierReviewsQuery(
+  const apiCatalog = apiCatalogPage?.items ?? []
+  const { data: apiReviewsPage } = usePublicSupplierReviewsQuery(
     supplierActorId,
     hydrated && useApi,
   )
-  const { data: apiRfqs = [] } = useRfqsQuery("published", hydrated && useApi)
+  const apiReviews = apiReviewsPage?.items ?? []
+  const { data: apiRfqsPage } = useRfqsQuery("published", hydrated && useApi)
+  const apiRfqs = apiRfqsPage?.items ?? []
   const inviteMutation = useInviteSuppliersMutation()
 
   const localCompany = hydrated ? getCompany(supplierActorId) : undefined

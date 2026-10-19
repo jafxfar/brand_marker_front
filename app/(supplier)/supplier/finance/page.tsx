@@ -64,7 +64,7 @@ export default function SupplierFinancePage() {
   const withdrawalMutation = useRequestWithdrawalMutation()
   const createDestinationMutation = useCreateDestinationMutation()
 
-  const activeCompanyId = user?.activeCompanyId ?? apiCompanies?.[0]?.id
+  const activeCompanyId = user?.activeCompanyId ?? apiCompanies?.items?.[0]?.id
   const { data: apiReviews } = useQuery({
     queryKey: ["company-reviews", activeCompanyId],
     queryFn: () => publicApi.companyReviews(activeCompanyId!) as Promise<Review[]>,
@@ -85,19 +85,19 @@ export default function SupplierFinancePage() {
     : localBalances
 
   const destinationList = useApi
-    ? (apiDestinations ?? [])
+    ? (apiDestinations?.items ?? [])
     : hydrated
       ? getDestinations(actorId)
       : []
 
   const withdrawalList = useApi
-    ? (apiWithdrawals ?? [])
+    ? (apiWithdrawals?.items ?? [])
     : hydrated
       ? getWithdrawals(actorId)
       : []
 
   const invoiceList = useApi
-    ? (apiInvoices ?? [])
+    ? (apiInvoices?.items ?? [])
     : hydrated
       ? getInvoices(actorId)
       : paymentHistory
@@ -118,7 +118,7 @@ export default function SupplierFinancePage() {
             }))
         : []
 
-  const reviews = useApi ? (apiReviews ?? []) : hydrated ? (getMyCompany(actorId)?.reviews ?? []) : []
+  const reviews = useApi ? (apiReviews?.items ?? []) : hydrated ? (getMyCompany(actorId)?.reviews ?? []) : []
 
   const getDestination = (id: number) => destinationList.find((d) => d.id === id)
 

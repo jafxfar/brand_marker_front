@@ -112,13 +112,15 @@ export const MarketplaceSearch = ({ onNavigate, className }: MarketplaceSearchPr
   }, [useApi, debouncedQuery])
 
   const apiServices = useMemo(() => {
-    if (!useApi || !apiCatalog?.length) return []
-    return apiCatalog.map((item) => mapCatalogItemToService(item)).slice(0, 4)
+    const items = apiCatalog?.items ?? []
+    if (!useApi || !items.length) return []
+    return items.map((item) => mapCatalogItemToService(item)).slice(0, 4)
   }, [useApi, apiCatalog])
 
   const apiPerformers = useMemo(() => {
-    if (!useApi || !apiSuppliers?.length) return []
-    return apiSuppliers.map(mapPublicSupplierToPerformer).slice(0, 3)
+    const items = apiSuppliers?.items ?? []
+    if (!useApi || !items.length) return []
+    return items.map(mapPublicSupplierToPerformer).slice(0, 3)
   }, [useApi, apiSuppliers])
 
   const filteredCategories = useMemo(

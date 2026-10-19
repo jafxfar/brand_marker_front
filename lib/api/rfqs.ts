@@ -1,4 +1,5 @@
 import type { BuyerRfqStatusFilter } from "@/lib/buyer-rfq-display"
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { RfqCreate, RfqUpdate, RfqWithRelations } from "@/types"
 import { apiFetch } from "./client"
 import { toRfqPayload } from "./rfq-payload"
@@ -6,9 +7,12 @@ import { toRfqPayload } from "./rfq-payload"
 const PREFIX = "/buyer/rfqs"
 
 export const rfqsApi = {
-  list: (filter: BuyerRfqStatusFilter = "all") =>
-    apiFetch<RfqWithRelations[]>(
-      `${PREFIX}/${filter !== "all" ? `?tab=${encodeURIComponent(filter)}` : ""}`,
+  list: (filter: BuyerRfqStatusFilter = "all", params: PageParams = {}) =>
+    apiFetch<Page<RfqWithRelations>>(
+      `${PREFIX}/${buildPageQuery({
+        ...params,
+        tab: filter !== "all" ? filter : undefined,
+      })}`,
     ),
 
   get: (id: string) => apiFetch<RfqWithRelations>(`${PREFIX}/${id}`),
@@ -46,7 +50,7 @@ export const rfqsApi = {
     })
   },
 
-  deleteAttachment: (id: string, attachmentId: string) =>
+  deleteAttachment: (id: string, attachmentId: string | number) =>
     apiFetch<RfqWithRelations>(`${PREFIX}/${id}/attachments/${attachmentId}`, {
       method: "DELETE",
     }),

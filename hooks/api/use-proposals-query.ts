@@ -3,19 +3,24 @@ import type { ProposalAcceptInput } from "@/types"
 import { proposalsApi } from "@/lib/api/proposals"
 import { supplierProposalsApi } from "@/lib/api/supplier/proposals"
 import { isApiEnabled } from "@/lib/api/config"
+import type { PageParams } from "@/lib/pagination"
 import { rfqKeys } from "./use-rfqs-query"
 import { contractKeys, supplierContractKeys } from "./use-contracts-query"
 import { notificationKeys } from "./use-notifications-query"
 
 export const proposalKeys = {
-  forRfq: (rfqId: string) => ["proposals", rfqId] as const,
+  forRfq: (rfqId: string, page = 1) => ["proposals", rfqId, page] as const,
   messages: (id: number) => ["proposal-messages", id] as const,
 }
 
-export const useProposalsForRfqQuery = (rfqId: string, enabled = true) =>
+export const useProposalsForRfqQuery = (
+  rfqId: string,
+  enabled = true,
+  params: PageParams = {},
+) =>
   useQuery({
-    queryKey: proposalKeys.forRfq(rfqId),
-    queryFn: () => proposalsApi.listForRfq(rfqId),
+    queryKey: proposalKeys.forRfq(rfqId, params.page ?? 1),
+    queryFn: () => proposalsApi.listForRfq(rfqId, params),
     enabled: enabled && isApiEnabled() && Boolean(rfqId),
   })
 

@@ -34,8 +34,8 @@ import {
 } from "@/lib/admin-display"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminFinanceView; label: string }> = [
   { value: "platform_revenue", label: "Выручка" },
   { value: "subscriptions", label: "Подписки" },
@@ -91,7 +91,7 @@ const AdminFinanceContent = () => {
   const [exporting, setExporting] = useState(false)
   const financeQuery = useAdminFinanceQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     view,
     query,
   })

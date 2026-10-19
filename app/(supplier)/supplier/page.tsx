@@ -71,13 +71,18 @@ export default function SupplierDashboard() {
     getCompany(buyerId)?.title ?? `Заказчик #${buyerId}`
 
   const contracts: ContractWithRelations[] = useApi
-    ? ((apiContracts ?? []) as ContractWithRelations[])
+    ? ((apiContracts?.items ?? []) as ContractWithRelations[])
     : hydrated
       ? getContractsByTab(actorId, "all")
       : []
 
+  const proposalItems = apiProposals?.items ?? []
+  const companyItems = apiCompanies?.items ?? []
+  const catalogItems = apiItems?.items ?? []
+  const destinationItems = apiDestinations?.items ?? []
+
   const newRfqs = useApi
-    ? getNewRfqsWithoutProposal(apiRfqs ?? [], apiProposals)
+    ? getNewRfqsWithoutProposal(apiRfqs?.items ?? [], proposalItems)
     : hydrated
       ? getNewRfqsForSupplier(actorId, (rfqId) => hasProposal(rfqId, actorId))
       : []
@@ -89,13 +94,13 @@ export default function SupplierDashboard() {
       : 0
 
   const myCompany = useApi
-    ? apiCompanies?.find((c) => c.id === user?.activeCompanyId) ?? apiCompanies?.[0]
+    ? companyItems.find((c) => c.id === user?.activeCompanyId) ?? companyItems[0]
     : hydrated
       ? getMyCompany(actorId)
       : undefined
 
-  const items = useApi ? apiItems : hydrated ? getItemsBySupplier(actorId) : undefined
-  const destinations = useApi ? apiDestinations : hydrated ? getDestinations(actorId) : undefined
+  const items = useApi ? catalogItems : hydrated ? getItemsBySupplier(actorId) : undefined
+  const destinations = useApi ? destinationItems : hydrated ? getDestinations(actorId) : undefined
   const balance = useApi
     ? apiBalance
       ? { available: apiBalance.available, currency: apiBalance.currency }

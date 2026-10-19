@@ -26,8 +26,8 @@ import { contractStatusMeta } from "@/lib/contract-display"
 import type { ContractStatus } from "@/types"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminContractView; label: string }> = [
   { value: "active", label: "Активные" },
   { value: "completed", label: "Завершённые" },
@@ -72,7 +72,7 @@ const AdminContractsContent = () => {
   const [searchInput, setSearchInput] = useState(query)
   const contractsQuery = useAdminContractsQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     view,
     query,
   })

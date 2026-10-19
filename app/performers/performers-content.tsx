@@ -25,8 +25,9 @@ export const PerformersPageContent = () => {
 
   const performers = useMemo(() => {
     if (!useApi) return filterPerformers({ q: query, verified, featured, scope: scope ?? undefined })
-    if (!apiSuppliers?.length) return []
-    const apiPerformers = apiSuppliers.map(mapPublicSupplierToPerformer)
+    const supplierItems = apiSuppliers?.items ?? []
+    if (!supplierItems.length) return []
+    const apiPerformers = supplierItems.map(mapPublicSupplierToPerformer)
     const q = query.trim().toLowerCase()
     return apiPerformers.filter((p) => {
       if (verified && !p.verified) return false

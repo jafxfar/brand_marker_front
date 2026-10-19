@@ -1,7 +1,9 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type {
   CatalogItemWithRelations,
   CompanyWithRelations,
   PublicSupplier,
+  Review,
   RfqWithRelations,
 } from "@/types"
 import { apiFetch } from "./client"
@@ -28,45 +30,44 @@ export const publicApi = {
 
   platformSettings: () => apiFetch<PlatformSettings>("/public/platform-settings"),
 
-  suppliers: (q?: string, category?: string) => {
-    const params = new URLSearchParams()
-    if (q) params.set("q", q)
-    if (category) params.set("category", category)
-    const qs = params.toString()
-    return apiFetch<PublicSupplier[]>(
-      `/public/suppliers${qs ? `?${qs}` : ""}`,
-    )
-  },
+  suppliers: (q?: string, category?: string, params: PageParams = {}) =>
+    apiFetch<Page<PublicSupplier>>(
+      `/public/suppliers${buildPageQuery({ ...params, q, category })}`,
+    ),
 
   supplier: (actorId: number) =>
     apiFetch<PublicSupplier>(`/public/suppliers/${actorId}`),
 
-  supplierCatalog: (actorId: number) =>
-    apiFetch<CatalogItemWithRelations[]>(`/public/suppliers/${actorId}/catalog`),
+  supplierCatalog: (actorId: number, params: PageParams = {}) =>
+    apiFetch<Page<CatalogItemWithRelations>>(
+      `/public/suppliers/${actorId}/catalog${buildPageQuery(params)}`,
+    ),
 
-  supplierReviews: (actorId: number) =>
-    apiFetch<import("@/types").Review[]>(`/public/suppliers/${actorId}/reviews`),
+  supplierReviews: (actorId: number, params: PageParams = {}) =>
+    apiFetch<Page<Review>>(
+      `/public/suppliers/${actorId}/reviews${buildPageQuery(params)}`,
+    ),
 
   company: (id: number) => apiFetch<CompanyWithRelations>(`/public/companies/${id}`),
 
-  companyReviews: (id: number) =>
-    apiFetch<import("@/types").Review[]>(`/public/companies/${id}/reviews`),
+  companyReviews: (id: number, params: PageParams = {}) =>
+    apiFetch<Page<Review>>(
+      `/public/companies/${id}/reviews${buildPageQuery(params)}`,
+    ),
 
-  companyCatalog: (id: number) =>
-    apiFetch<CatalogItemWithRelations[]>(`/public/companies/${id}/catalog`),
+  companyCatalog: (id: number, params: PageParams = {}) =>
+    apiFetch<Page<CatalogItemWithRelations>>(
+      `/public/companies/${id}/catalog${buildPageQuery(params)}`,
+    ),
 
-  catalog: (q?: string, category?: string) => {
-    const params = new URLSearchParams()
-    if (q) params.set("q", q)
-    if (category) params.set("category", category)
-    const qs = params.toString()
-    return apiFetch<CatalogItemWithRelations[]>(
-      `/public/catalog${qs ? `?${qs}` : ""}`,
-    )
-  },
+  catalog: (q?: string, category?: string, params: PageParams = {}) =>
+    apiFetch<Page<CatalogItemWithRelations>>(
+      `/public/catalog${buildPageQuery({ ...params, q, category })}`,
+    ),
 
   catalogItem: (id: number) =>
     apiFetch<CatalogItemWithRelations>(`/public/catalog/items/${id}`),
 
-  rfqs: () => apiFetch<RfqWithRelations[]>("/public/rfqs"),
+  rfqs: (params: PageParams = {}) =>
+    apiFetch<Page<RfqWithRelations>>(`/public/rfqs${buildPageQuery(params)}`),
 }

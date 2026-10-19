@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query"
+import type { Page } from "@/lib/pagination"
 import type { ContractWithRelations, Message } from "@/types"
 
 const detailKeysFor = (contractId: number) => [
@@ -6,10 +7,22 @@ const detailKeysFor = (contractId: number) => [
   ["supplier-contracts", "detail", contractId] as const,
 ]
 
-const listKeys = [
-  ["contracts", "list"] as const,
-  ["supplier-contracts", "list"] as const,
+const listQueryFilters = [
+  { queryKey: ["contracts", "list"] as const },
+  { queryKey: ["supplier-contracts", "list"] as const },
 ]
+
+const mapListPage = (
+  queryClient: QueryClient,
+  updater: (items: ContractWithRelations[]) => ContractWithRelations[],
+) => {
+  for (const filter of listQueryFilters) {
+    queryClient.setQueriesData<Page<ContractWithRelations>>(filter, (page) => {
+      if (!page) return page
+      return { ...page, items: updater(page.items) }
+    })
+  }
+}
 
 const normalizeIncomingMessage = (
   contractId: number,
@@ -104,20 +117,17 @@ export const appendContractMessageToCache = (
       })
     })
   }
-  for (const key of listKeys) {
-    queryClient.setQueryData<ContractWithRelations[]>(key, (list) => {
-      if (!list) return list
-      return list.map((contract) => {
-        if (contract.id !== contractId) return contract
-        return patchContractMessages(contract, (messages) => {
-          if (messages.some((m) => m.id === message.id)) {
-            return messages.map((m) => (m.id === message.id ? { ...m, ...message } : m))
-          }
-          return [...messages, message]
-        })
+  mapListPage(queryClient, (list) =>
+    list.map((contract) => {
+      if (contract.id !== contractId) return contract
+      return patchContractMessages(contract, (messages) => {
+        if (messages.some((m) => m.id === message.id)) {
+          return messages.map((m) => (m.id === message.id ? { ...m, ...message } : m))
+        }
+        return [...messages, message]
       })
-    })
-  }
+    }),
+  )
 }
 
 export const updateContractMessageStatusInCache = (
@@ -140,20 +150,17 @@ export const updateContractMessageStatusInCache = (
     })
   }
 
-  for (const key of listKeys) {
-    queryClient.setQueryData<ContractWithRelations[]>(key, (list) => {
-      if (!list) return list
-      return list.map((contract) => {
-        if (contract.id !== contractId || !contract.conversation) return contract
-        return patchContractMessages(contract, (messages) =>
-          messages.map((message) => {
-            const patch = byId.get(message.id)
-            return patch ? { ...message, ...patch } : message
-          }),
-        )
-      })
-    })
-  }
+  mapListPage(queryClient, (list) =>
+    list.map((contract) => {
+      if (contract.id !== contractId || !contract.conversation) return contract
+      return patchContractMessages(contract, (messages) =>
+        messages.map((message) => {
+          const patch = byId.get(message.id)
+          return patch ? { ...message, ...patch } : message
+        }),
+      )
+    }),
+  )
 }
 
 export const replaceContractInCache = (
@@ -165,12 +172,9 @@ export const replaceContractInCache = (
       mergeContractMessages(current, contract),
     )
   }
-  for (const key of listKeys) {
-    queryClient.setQueryData<ContractWithRelations[]>(key, (list) => {
-      if (!list) return list
-      return list.map((item) =>
-        item.id === contract.id ? mergeContractMessages(item, contract) : item,
-      )
-    })
-  }
+  mapListPage(queryClient, (list) =>
+    list.map((item) =>
+      item.id === contract.id ? mergeContractMessages(item, contract) : item,
+    ),
+  )
 }

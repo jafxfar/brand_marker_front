@@ -1,3 +1,4 @@
+import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { ApiNotification } from "@/types/notification"
 import { apiFetch } from "./client"
 
@@ -7,8 +8,8 @@ const prefixFor = (role: NotificationRole) =>
   role === "buyer" ? "/buyer/notifications" : "/supplier/notifications"
 
 export const notificationsApi = {
-  list: (role: NotificationRole) =>
-    apiFetch<ApiNotification[]>(`${prefixFor(role)}/`),
+  list: (role: NotificationRole, params: PageParams = {}) =>
+    apiFetch<Page<ApiNotification>>(`${prefixFor(role)}/${buildPageQuery(params)}`),
 
   markRead: (role: NotificationRole, id: number) =>
     apiFetch<{ id: number; read: boolean }>(`${prefixFor(role)}/${id}/read`, {

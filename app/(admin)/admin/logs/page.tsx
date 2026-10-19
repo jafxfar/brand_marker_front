@@ -47,8 +47,8 @@ import type {
   AdminLogStatus,
 } from "@/lib/api/admin"
 import { cn } from "@/lib/utils"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 25
 const ALL_VALUE = "all"
 const DEFAULT_PERIOD: AdminLogPeriod = "7d"
 const SEARCH_DEBOUNCE_MS = 350
@@ -165,7 +165,7 @@ const AdminLogsContent = () => {
 
   const logsQuery = useAdminLogsQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     audience,
     kind,
     section,

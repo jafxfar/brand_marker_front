@@ -13,6 +13,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicSuppliersByActor } from "@/hooks/api/use-supplier-name"
 import { CustomerCatalogGrid } from "@/components/cabinet/catalog/customer-catalog-grid"
+import { ListPagination } from "@/components/list-pagination"
 import { Input } from "@/components/ui/input"
 import {
   PageEmptyState,
@@ -27,6 +28,7 @@ type TypeFilter = "" | CatalogItemType
 
 export default function CustomerCatalogPage() {
   const hydrated = useHydrated()
+  const [page, setPage] = useState(1)
   const useApi = isApiEnabled()
   const [query, setQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("")
@@ -50,6 +52,7 @@ export default function CustomerCatalogPage() {
     trimmedQuery || undefined,
     categorySlug || undefined,
     hydrated && useApi,
+    { page },
   )
 
   const localItems = useMemo(() => {
@@ -75,10 +78,11 @@ export default function CustomerCatalogPage() {
   }, [hydrated, useApi, items, trimmedQuery, typeFilter, categorySlug])
 
   const catalogItems = useMemo(() => {
-    const source = useApi ? (apiCatalog ?? []) : localItems
+    const source = useApi ? (apiCatalog?.items ?? []) : localItems
     if (!typeFilter) return source
     return source.filter((item) => item.type === typeFilter)
   }, [useApi, apiCatalog, localItems, typeFilter])
+  const totalPages = useApi ? (apiCatalog?.total_pages ?? 0) : 1
 
   const actorIds = useMemo(
     () => catalogItems.map((item) => item.actor_id),
@@ -153,6 +157,12 @@ export default function CustomerCatalogPage() {
           getSupplierName={getSupplierName}
         />
       )}
-    </PageFrame>
+    
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
+</PageFrame>
   )
 }

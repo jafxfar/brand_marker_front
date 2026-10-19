@@ -23,10 +23,11 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
     performerId,
     useApi,
   )
-  const { data: apiCatalog = [] } = usePublicSupplierCatalogQuery(
+  const { data: apiCatalogPage } = usePublicSupplierCatalogQuery(
     performerId,
     useApi && Boolean(apiSupplier),
   )
+  const apiCatalog = apiCatalogPage?.items ?? []
 
   const performer: MarketplacePerformer | null = useApi
     ? (apiSupplier ? mapPublicSupplierToPerformer(apiSupplier) : null)

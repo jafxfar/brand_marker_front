@@ -66,7 +66,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   const localRfq = hydrated ? getRfqWithRelations(id) : undefined
   const rfq = useApi ? apiRfq : localRfq
   const myProposal = useApi
-    ? apiProposals?.find((p) => p.rfq_id === id)
+    ? apiProposals?.items?.find((p) => p.rfq_id === id)
     : rfq
       ? getProposalForRfq(rfq.id, actorId)
       : undefined

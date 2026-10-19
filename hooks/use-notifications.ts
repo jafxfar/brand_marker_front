@@ -51,9 +51,11 @@ export const useNotificationItems = (role: NotificationRole) => {
 
   if (useApi) {
     return {
-      items: (apiItems ?? []).map(mapApiNotification),
+      items: (apiItems?.items ?? []).map(mapApiNotification),
       isLoading,
       useApi,
+      totalPages: apiItems?.total_pages ?? 0,
+      page: apiItems?.page ?? 1,
     }
   }
 

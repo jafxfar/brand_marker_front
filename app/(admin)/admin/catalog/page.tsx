@@ -29,8 +29,8 @@ import { resolveFileUrl } from "@/lib/file-url"
 import type { ItemStatus } from "@/types"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 const viewFilters: Array<{ value: AdminCatalogView; label: string }> = [
   { value: "all", label: "Все" },
   { value: "products", label: "Товары" },
@@ -95,7 +95,7 @@ const AdminCatalogContent = () => {
   const [searchInput, setSearchInput] = useState(query)
   const catalogQuery = useAdminCatalogQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     view,
     query,
   })

@@ -60,7 +60,7 @@ export const CompanyListPage = ({
     actorType,
   )
   const companies: CompanyWithRelations[] = useApi
-    ? filterCompaniesByActorType(apiCompanies ?? [], actorType)
+    ? filterCompaniesByActorType(apiCompanies?.items ?? [], actorType)
     : localCompanies
 
   const ownedCount = useApi

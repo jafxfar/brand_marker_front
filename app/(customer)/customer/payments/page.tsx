@@ -62,7 +62,8 @@ const BuyerPaymentsContent = () => {
   const useApi = isApiEnabled()
   const { data: paymentHistory } = usePaymentHistoryQuery(hydrated && useApi)
   const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
-  const { data: apiContracts = [] } = useContractsQuery(hydrated && useApi)
+  const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
+  const apiContracts = apiContractsPage?.items ?? []
   const fundMutation = useFundAndConfirmMilestoneMutation()
   const { viaAlif, currency: alifCurrency } = useAlifPayment(hydrated && useApi)
   const [pendingFund, setPendingFund] = useState<EscrowFundingRow | null>(null)

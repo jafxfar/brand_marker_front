@@ -54,8 +54,8 @@ import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
-const PAGE_SIZE = 20
 
 const statusFilters: Array<{
   value: AdminUserStatusFilter
@@ -200,7 +200,7 @@ const AdminUsersContent = () => {
 
   const usersQuery = useAdminUsersQuery({
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     status,
     query,
   })

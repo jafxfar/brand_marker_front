@@ -45,8 +45,10 @@ export default function CustomerDashboard() {
   const getUnreadMessageCountForBuyer = useContractsStore((s) => s.getUnreadMessageCountForBuyer)
   const getCompany = useCompaniesStore((s) => s.getCompany)
 
-  const { data: apiRfqs = [], isLoading: rfqsLoading } = useRfqsQuery("all", hydrated && useApi)
-  const { data: apiContracts = [], isLoading: contractsLoading } = useContractsQuery(hydrated && useApi)
+  const { data: apiRfqsPage, isLoading: rfqsLoading } = useRfqsQuery("all", hydrated && useApi)
+  const apiRfqs = apiRfqsPage?.items ?? []
+  const { data: apiContractsPage, isLoading: contractsLoading } = useContractsQuery(hydrated && useApi)
+  const apiContracts = apiContractsPage?.items ?? []
 
   const rfqs: RfqWithRelations[] = useApi ? apiRfqs : hydrated ? getRfqsByBuyer(actorId) : []
   const contracts: ContractWithRelations[] = useApi
@@ -68,7 +70,9 @@ export default function CustomerDashboard() {
   const proposalsByRfq = useMemo(() => {
     const map = new Map<string, Proposal[]>()
     openRfqs.forEach((rfq, index) => {
-      const list = useApi ? proposalQueries[index]?.data : getProposalsForRfq(rfq.id)
+      const list = useApi
+        ? (proposalQueries[index]?.data?.items ?? [])
+        : getProposalsForRfq(rfq.id)
       if (list) map.set(rfq.id, list)
     })
     return map
