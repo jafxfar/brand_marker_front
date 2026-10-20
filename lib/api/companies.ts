@@ -57,6 +57,15 @@ export const buyerCompaniesApi = {
       method: "PATCH",
       body: JSON.stringify(wizardToUpdate(data)),
     }),
+
+  uploadLogo: (file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<{ logo: string }>(`${PREFIX}/logo`, {
+      method: "POST",
+      body: form,
+    })
+  },
 }
 
 export const companiesApi = {

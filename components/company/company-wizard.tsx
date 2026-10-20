@@ -144,7 +144,12 @@ export const CompanyWizard = ({
 
       <div className="rounded-2xl border border-border bg-white p-6 mb-6">
         {currentStep === "basic" && (
-          <BasicInfoStep data={data} errors={errors} onChange={handleChange} />
+          <BasicInfoStep
+            data={data}
+            errors={errors}
+            onChange={handleChange}
+            actorType={actorType}
+          />
         )}
         {currentStep === "location" && (
           <LocationStep data={data} errors={errors} onChange={handleChange} />

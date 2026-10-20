@@ -37,29 +37,31 @@ const TodoRow = ({ item }: { item: TodoItem }) => {
     <li
       className={cn(
         "flex flex-wrap items-center gap-4 rounded-2xl border p-4 sm:flex-nowrap",
-        item.hot ? "border-brand-300 bg-brand-50/40" : "border-border bg-card",
+        item.hot
+          ? "border-brand-200 bg-brand-50/50"
+          : "border-line bg-white",
       )}
     >
       <span
         className={cn(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-          item.hot ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+          item.hot ? "bg-brand-600 text-white" : "bg-canvas text-mute",
         )}
         aria-hidden="true"
       >
         <Icon size={20} />
       </span>
-      <div className="min-w-50 flex-1">
-        <p className="text-[15.5px] font-bold text-foreground">{item.title}</p>
-        <p className="mt-0.5 text-sm text-muted-foreground">{item.text}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-[15.5px] font-bold text-ink">{item.title}</p>
+        <p className="mt-0.5 text-[14px] text-mute">{item.text}</p>
       </div>
       <Link
         href={item.href}
         className={cn(
-          "inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[10px] px-4 text-[15px] font-semibold transition-colors",
           item.hot
-            ? "bg-primary text-primary-foreground hover:bg-brand-600"
-            : "border border-border bg-card text-foreground hover:border-primary hover:text-brand-700",
+            ? "bg-brand-600 text-white hover:bg-brand-700"
+            : "border border-line bg-white text-ink hover:border-ink/40 hover:bg-canvas",
         )}
       >
         {item.cta}
@@ -73,14 +75,14 @@ export const TodoList = ({
   items,
   loading = false,
   emptyText = "Новых дел нет.",
-  title = "Что сделать сейчас",
+  title = "Требует вашего действия",
 }: TodoListProps) => (
   <section className="grid gap-3" aria-label={title}>
-    <h2 className="text-lg font-bold">{title}</h2>
+    <h2 className="text-[20px] font-extrabold tracking-[-0.02em] text-ink">{title}</h2>
     {loading ? (
-      <div className="h-20 animate-pulse rounded-2xl bg-muted" />
+      <div className="h-20 animate-pulse rounded-2xl bg-canvas" />
     ) : items.length === 0 ? (
-      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-border bg-card p-4">
+      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-[#D5DAE1] bg-white p-4">
         <span
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"
           aria-hidden="true"
@@ -88,8 +90,8 @@ export const TodoList = ({
           <Check size={20} />
         </span>
         <div>
-          <p className="font-bold">Всё сделано</p>
-          <p className="text-sm text-muted-foreground">{emptyText}</p>
+          <p className="font-bold text-ink">Всё сделано</p>
+          <p className="text-[14px] text-mute">{emptyText}</p>
         </div>
       </div>
     ) : (

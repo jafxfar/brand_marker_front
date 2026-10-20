@@ -63,3 +63,14 @@ export type ProposalMessage = {
   text: string
   created_at: string
 }
+
+export type ProposalMessageThread = {
+  proposal_id: number
+  rfq_id: string
+  rfq_title: string
+  status: ProposalStatus
+  counterpart_actor_id: number
+  counterpart_name: string
+  message_count: number
+  last_message: Omit<ProposalMessage, "proposal_id"> | null
+}

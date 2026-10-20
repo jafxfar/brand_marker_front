@@ -1,180 +1,108 @@
 import Link from "next/link"
-import { Phone, Mail, MapPin, Send, Briefcase, ArrowRight, CreditCard, Smartphone } from "lucide-react"
-import { FooterCategories } from "@/components/footer-categories"
+import { Smartphone } from "lucide-react"
+import { BrandLogo } from "@/components/bm"
 import {
   guaranteeUrl,
   helpUrl,
   newRfqRedirect,
   performersUrl,
   registerUrl,
-  servicesUrl,
 } from "@/lib/marketplace-routes"
-
-const footerLinkGroups: Record<string, { label: string; href: string }[]> = {
-  "О платформе": [
-    { label: "О нас", href: helpUrl() },
-    { label: "Как это работает", href: helpUrl() },
-    { label: "Пресс-центр", href: helpUrl() },
-    { label: "Карьера", href: helpUrl() },
-    { label: "Блог", href: helpUrl() },
-    { label: "Партнёрская программа", href: helpUrl() },
-  ],
-  "Для заказчиков": [
-    { label: "Разместить заказ", href: newRfqRedirect() },
-    { label: "Как найти исполнителя", href: performersUrl() },
-    { label: "Гарантии и безопасность", href: guaranteeUrl() },
-    { label: "Способы оплаты", href: guaranteeUrl() },
-    { label: "Урегулирование споров", href: guaranteeUrl() },
-    { label: "FAQ для заказчиков", href: helpUrl() },
-  ],
-  "Для исполнителей": [
-    { label: "Зарегистрироваться", href: registerUrl() },
-    { label: "Тарифы и комиссии", href: helpUrl() },
-    { label: "Продвижение профиля", href: performersUrl({ featured: true }) },
-    { label: "Правила работы", href: helpUrl() },
-    { label: "FAQ для исполнителей", href: helpUrl() },
-    { label: "Поддержка", href: helpUrl() },
-  ],
-}
-
-const cities = [
-  "Душанбе", "Худжанд", "Бохтар", "Куляб",
-  "Истаравшан", "Пенджикент", "Турсунзаде", "Вахдат",
-  "Гиссар", "Хорог", "Канибадам", "Исфара",
-]
-
-const payments = ["Visa", "MC", "Humo", "Корти Милли"]
 
 export default function Footer() {
   return (
-    <footer className="bg-foreground text-white">
-      <div className="bg-primary">
-        <div className="max-w-[1440px] mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="font-bold text-white text-sm">Подпишитесь на новые заказы в вашей категории</p>
-            <p className="text-white/75 text-xs mt-0.5">Получайте уведомления о подходящих проектах первыми</p>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <input
-              type="email"
-              placeholder="Ваш email"
-              className="flex-1 sm:w-64 px-4 py-2.5 text-sm rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/55 outline-none focus:bg-white/30 transition-colors"
-            />
-            <button
-              type="button"
-              className="bg-white/20 hover:bg-white/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 whitespace-nowrap"
-            >
-              <Send size={14} />
-              Подписаться
-            </button>
-          </div>
+    <footer className="mt-20 border-t border-line bg-white">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-8">
+        <div className="grid content-start gap-4">
+          <BrandLogo />
+          <p className="max-w-xs text-[14.5px] text-mute">
+            B2B‑площадка для закупок компаний Таджикистана. Платежи проводит банк‑партнёр,
+            площадка не хранит данные карт.
+          </p>
+          <span className="inline-flex h-10 items-center gap-2 justify-self-start rounded-[10px] border border-line px-4 text-[14px] font-semibold text-ink">
+            <Smartphone className="size-4" aria-hidden />
+            Мобильное приложение
+          </span>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-[14px] font-bold text-ink">Покупателям</h3>
+          <ul className="grid gap-2.5 text-[14px] text-mute">
+            <li>
+              <Link href="/services" className="hover:text-ink">
+                Каталог
+              </Link>
+            </li>
+            <li>
+              <Link href={newRfqRedirect()} className="hover:text-ink">
+                Разместить заявку
+              </Link>
+            </li>
+            <li>
+              <Link href={guaranteeUrl()} className="hover:text-ink">
+                Как работает гарантия
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-[14px] font-bold text-ink">Поставщикам</h3>
+          <ul className="grid gap-2.5 text-[14px] text-mute">
+            <li>
+              <Link href="/#for-suppliers" className="hover:text-ink">
+                Начать продавать
+              </Link>
+            </li>
+            <li>
+              <Link href="/#for-suppliers" className="hover:text-ink">
+                Стоимость
+              </Link>
+            </li>
+            <li>
+              <Link href={registerUrl()} className="hover:text-ink">
+                Кабинет продавца
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-[14px] font-bold text-ink">Помощь</h3>
+          <ul className="grid gap-2.5 text-[14px] text-mute">
+            <li>
+              <Link href={guaranteeUrl()} className="hover:text-ink">
+                Частые вопросы
+              </Link>
+            </li>
+            <li>
+              <a href="tel:+992446000000" className="hover:text-ink">
+                Связаться с поддержкой
+              </a>
+            </li>
+            <li>
+              <Link href={helpUrl()} className="hover:text-ink">
+                Правила площадки
+              </Link>
+            </li>
+            <li>
+              <Link href={performersUrl({ verified: true })} className="hover:text-ink">
+                Проверенные поставщики
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
 
-      <div className="max-w-[1440px] mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8">
-          <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-5">
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-                <Briefcase size={17} className="text-white" />
-              </div>
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-xl font-black text-primary">Бренд</span>
-                <span className="text-xl font-black text-white">Маркет</span>
-              </div>
-            </Link>
-            <p className="text-white/50 text-sm leading-relaxed mb-6 max-w-[260px]">
-              Крупнейшая таджикская B2B платформа для поиска и заказа профессиональных бизнес-услуг
-            </p>
-            <div className="space-y-3">
-              <a href="tel:+992928829955" className="flex items-center gap-3 text-sm text-white/60 hover:text-primary transition-colors">
-                <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0">
-                  <Phone size={13} />
-                </div>
-                +992 92 882 9955
-              </a>
-              <a href="mailto:info@brandmarket.tj" className="flex items-center gap-3 text-sm text-white/60 hover:text-primary transition-colors">
-                <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0">
-                  <Mail size={13} />
-                </div>
-                info@brandmarket.tj
-              </a>
-              <div className="flex items-start gap-3 text-sm text-white/60">
-                <div className="w-7 h-7 rounded-lg bg-white/8 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <MapPin size={13} />
-                </div>
-                <span>125009, Худжанд,<br />ул. И. Сомони, 22</span>
-              </div>
-            </div>
-
-            <div className="flex gap-2 mt-6">
-              <button type="button" className="flex items-center gap-2 border border-white/15 rounded-xl px-3 py-2 hover:border-primary/50 transition-colors group">
-                <Smartphone size={16} className="text-white/50 group-hover:text-primary transition-colors" />
-                <div>
-                  <div className="text-[9px] text-white/40 leading-none">Загрузить в</div>
-                  <div className="text-xs font-bold text-white/80 leading-tight mt-0.5">App Store</div>
-                </div>
-              </button>
-              <button type="button" className="flex items-center gap-2 border border-white/15 rounded-xl px-3 py-2 hover:border-primary/50 transition-colors group">
-                <Smartphone size={16} className="text-white/50 group-hover:text-primary transition-colors" />
-                <div>
-                  <div className="text-[9px] text-white/40 leading-none">Доступно в</div>
-                  <div className="text-xs font-bold text-white/80 leading-tight mt-0.5">Google Play</div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {Object.entries(footerLinkGroups).map(([heading, links]) => (
-            <div key={heading}>
-              <h3 className="text-sm font-bold text-white mb-4">{heading}</h3>
-              <ul className="space-y-2.5">
-                {links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-white/50 hover:text-primary transition-colors flex items-center gap-1 group"
-                    >
-                      <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 text-primary -ml-3 group-hover:ml-0 transition-all" />
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
-          <FooterCategories />
-        </div>
-
-        <div className="mt-10 pt-8 border-t border-white/8">
-          <p className="text-xs font-semibold text-white/30 uppercase tracking-wide mb-3">Услуги в городах Таджикистана:</p>
-          <div className="flex flex-wrap gap-x-5 gap-y-2">
-            {cities.map((city) => (
-              <Link key={city} href={servicesUrl({ q: city })} className="text-sm text-white/40 hover:text-primary transition-colors">
-                {city}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-white/8 flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="text-xs text-white/30">
-            © 2026 БрендМаркет. Все права защищены. ООО «БрендМаркет», ИНН 010012345
-          </div>
-          <div className="flex items-center gap-5 flex-wrap justify-center">
-            <Link href={helpUrl()} className="text-xs text-white/35 hover:text-primary transition-colors">Пользовательское соглашение</Link>
-            <Link href={helpUrl()} className="text-xs text-white/35 hover:text-primary transition-colors">Конфиденциальность</Link>
-            <Link href={helpUrl()} className="text-xs text-white/35 hover:text-primary transition-colors">Оферта</Link>
-          </div>
-          <div className="flex items-center gap-2">
-            <CreditCard size={13} className="text-white/30" />
-            {payments.map((pay) => (
-              <div key={pay} className="border border-white/15 rounded-lg px-2.5 py-1 text-[10px] text-white/45 font-bold hover:border-primary/40 hover:text-primary/70 transition-colors cursor-pointer">
-                {pay}
-              </div>
-            ))}
-          </div>
+      <div className="border-t border-line">
+        <div className="mx-auto flex max-w-[1200px] flex-wrap gap-x-6 gap-y-1 px-4 py-5 text-[13px] text-mute lg:px-8">
+          <span>© 2026 Brend Market</span>
+          <Link href={helpUrl()} className="hover:text-ink">
+            Конфиденциальность
+          </Link>
+          <Link href={helpUrl()} className="hover:text-ink">
+            Условия использования
+          </Link>
         </div>
       </div>
     </footer>

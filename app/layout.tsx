@@ -1,28 +1,36 @@
 import type { Metadata } from 'next'
+import { Manrope } from 'next/font/google'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
+const manrope = Manrope({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://brand-marker-front.vercel.app"),
-  title: "БрендМаркет — B2B Маркетплейс услуг",
+  title: "Brend Market — B2B маркетплейс для бизнеса",
   description:
-    "Крупнейшая таджикская B2B платформа для поиска и заказа бизнес-услуг. ИТ, маркетинг, юриспруденция, логистика, консалтинг и тысячи других услуг.",
+    "B2B-площадка для закупок компаний Таджикистана. Каталог, заявки, сделки с гарантией оплаты через банк-партнёр.",
   generator: "v0.app",
   openGraph: {
-    title: "БрендМаркет — B2B Маркетплейс услуг",
+    title: "Brend Market — B2B маркетплейс для бизнеса",
     description:
-      "Крупнейшая таджикская B2B платформа для поиска и заказа бизнес-услуг. ИТ, маркетинг, юриспруденция, логистика, консалтинг и тысячи других услуг.",
+      "B2B-площадка для закупок компаний Таджикистана. Каталог, заявки, сделки с гарантией оплаты через банк-партнёр.",
     url: "https://brand-marker-front.vercel.app",
-    siteName: "БрендМаркет",
+    siteName: "Brend Market",
     locale: "ru_TJ",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "БрендМаркет — B2B Маркетплейс услуг",
+    title: "Brend Market — B2B маркетплейс для бизнеса",
     description:
-      "Крупнейшая таджикская B2B платформа для поиска и заказа бизнес-услуг.",
+      "B2B-площадка для закупок компаний Таджикистана.",
   },
   icons: {
     icon: [
@@ -49,11 +57,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru" className="bg-background">
-      <body className="font-sans antialiased">
+    <html lang="ru" className={`bg-canvas ${manrope.variable}`}>
+      <body className="bg-canvas font-sans text-[15px] text-ink antialiased">
         <QueryProvider>
           {children}
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="bottom-right" />
         </QueryProvider>
       </body>
     </html>

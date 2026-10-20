@@ -5,12 +5,6 @@ import { getDealPhase, getDealStepIndex, getDealSteps } from "@/lib/process/deal
 
 type DealContract = Pick<ContractWithRelations, "status" | "payment_type" | "payment_plan" | "dispute">
 
-const segmentClass = (index: number, current: number, finished: boolean) => {
-  if (finished || index < current) return "bg-primary"
-  if (index === current) return "bg-brand-300"
-  return "bg-border"
-}
-
 export const DealStepper = ({ contract, className }: { contract: DealContract; className?: string }) => {
   const steps = getDealSteps(contract)
   const current = getDealStepIndex(contract)
@@ -24,24 +18,42 @@ export const DealStepper = ({ contract, className }: { contract: DealContract; c
       aria-label={`Этапы сделки. Сейчас: ${currentLabel}`}
     >
       {steps.map((step, index) => {
-        const passed = finished || index < current
-        const isCurrent = !finished && index === current
+        const done = finished || index < current || (finished && index <= current)
+        const now = !finished && index === current
         return (
           <li
             key={step.key}
-            className="grid gap-2"
-            aria-current={isCurrent ? "step" : undefined}
+            className="grid justify-items-start gap-2"
+            aria-current={now ? "step" : undefined}
           >
-            <span className={cn("h-2 rounded-full", segmentClass(index, current, finished))} />
+            <span className="flex w-full items-center">
+              <span
+                className={cn(
+                  "grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-bold",
+                  done
+                    ? "bg-brand-600 text-white"
+                    : now
+                      ? "border-2 border-brand-600 bg-white text-brand-700"
+                      : "bg-[#EEF0F3] text-mute",
+                )}
+              >
+                {done ? <Check className="size-3.5" aria-hidden /> : index + 1}
+              </span>
+              {index < steps.length - 1 ? (
+                <span
+                  className={cn(
+                    "ml-1.5 h-0.5 flex-1",
+                    done || finished ? "bg-brand-600" : "bg-line",
+                  )}
+                />
+              ) : null}
+            </span>
             <span
               className={cn(
-                "flex items-center gap-1 text-xs leading-tight sm:text-sm",
-                isCurrent ? "font-semibold text-foreground" : "text-muted-foreground",
+                "text-[12.5px] leading-tight sm:text-[13.5px]",
+                now ? "font-bold text-ink" : done ? "text-ink" : "text-mute",
               )}
             >
-              {passed ? (
-                <Check size={14} className="hidden shrink-0 text-primary sm:block" aria-hidden="true" />
-              ) : null}
               {step.label}
             </span>
           </li>
@@ -63,12 +75,19 @@ export const DealStageBar = ({ contract, className }: { contract: DealContract; 
       role="img"
       aria-label={`Этап сделки: ${currentLabel}`}
     >
-      {steps.map((step, index) => (
-        <span
-          key={step.key}
-          className={cn("h-1.5 flex-1 rounded-full", segmentClass(index, current, finished))}
-        />
-      ))}
+      {steps.map((step, index) => {
+        const done = finished || index < current
+        const now = !finished && index === current
+        return (
+          <span
+            key={step.key}
+            className={cn(
+              "h-1.5 flex-1 rounded-full",
+              done || finished ? "bg-brand-600" : now ? "bg-brand-300" : "bg-line",
+            )}
+          />
+        )
+      })}
     </div>
   )
 }

@@ -179,8 +179,8 @@ export default function SupplierDashboard() {
         label="Хотите размещать заказы? Активируйте роль заказчика на этом же аккаунте."
       />
       <PageHeader
-        title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
-        description="Здесь видно, что нужно сделать по сделкам и новым заявкам"
+        title="Обзор"
+        description={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""} — заявки покупателей и сделки, где нужно действие`}
         actions={
           <Button asChild size="lg" className="lg:hidden">
             <Link href="/supplier/rfqs">

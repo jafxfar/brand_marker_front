@@ -1,29 +1,27 @@
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { registerUrl } from "@/lib/marketplace-routes"
 
 export const LandingCta = () => (
-  <section
-    className="border-b border-border bg-foreground text-white"
-    aria-labelledby="final-cta-heading"
-  >
-    <div className="max-w-[1440px] mx-auto px-6 py-16 sm:py-20 text-center">
-      <h2
-        id="final-cta-heading"
-        className="text-2xl sm:text-3xl font-black tracking-tight"
-      >
-        Выгодный бизнес для всех
-      </h2>
-      <p className="mx-auto mt-3 max-w-lg text-sm sm:text-base text-white/70">
-        С БрендМаркет это удобно — присоединяйтесь и начните первую сделку уже
-        сегодня.
-      </p>
-      <Link
-        href="/register"
-        className="mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-ring outline-none"
-      >
-        Попробовать бесплатно
-        <ArrowRight size={16} aria-hidden />
-      </Link>
+  <section id="for-suppliers" className="mx-auto mt-16 mb-8 max-w-[1200px] px-4 lg:px-8">
+    <div className="grid gap-6 rounded-2xl border border-line bg-white p-6 md:grid-cols-[1.2fr_auto] md:items-center md:p-8">
+      <div className="grid gap-2">
+        <h2 className="text-[26px] font-extrabold tracking-[-0.02em] text-ink">
+          Продавцам: комиссия 4% только с оплаченных сделок
+        </h2>
+        <p className="max-w-2xl text-[15px] text-mute">
+          Размещение товаров и ответы на заявки бесплатны. Деньги приходят на ваш счёт после приёмки
+          покупателем — банк уже видит оплату до отгрузки.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild>
+          <Link href={registerUrl()}>Начать продавать</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/supplier">Кабинет продавца</Link>
+        </Button>
+      </div>
     </div>
   </section>
 )

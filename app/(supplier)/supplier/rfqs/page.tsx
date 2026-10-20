@@ -12,7 +12,6 @@ import { getRfqBuyerName, getRfqBuyerRating } from "@/lib/buyer-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { isRfqInvitedFor } from "@/lib/rfq-display"
 import {
-  hasSupplierProposalForRfq,
   useSubmitSupplierProposalMutation,
   useSupplierProposalsQuery,
   useSupplierRfqBoardQuery,
@@ -27,8 +26,7 @@ import {
   PageSurface,
   SegmentedControl,
 } from "@/components/layout"
-import type { Currency } from "@/types"
-import type { RfqType, RfqWithRelations } from "@/types"
+import type { Currency, ProposalStatus, RfqType, RfqWithRelations } from "@/types"
 
 type TypeFilter = "all" | RfqType
 
@@ -39,7 +37,6 @@ export default function SupplierRfqsPage() {
   const actorId = getActorId(user)
   const getOpenRfqs = useRfqsStore((s) => s.getOpenRfqs)
   const getRfq = useRfqsStore((s) => s.getRfq)
-  const hasProposalLocal = useProposalsStore((s) => s.hasProposal)
   const submitProposalLocal = useProposalsStore((s) => s.submitProposal)
   const localProposals = useProposalsStore((s) => s.proposals)
   const getCompany = useCompaniesStore((s) => s.getCompany)
@@ -68,18 +65,23 @@ export default function SupplierRfqsPage() {
 
   const proposalItems = apiProposals?.items ?? []
 
-  const hasProposal = (rfqId: string, supplierActorId: number) => {
-    if (useApi) return hasSupplierProposalForRfq(proposalItems, rfqId)
-    return hasProposalLocal(rfqId, supplierActorId)
-  }
-
   const getMyProposal = (rfqId: string) => {
+    const boardStatus = openRfqs.find((r) => r.id === rfqId)?.my_proposal_status
     const proposal = useApi
       ? proposalItems.find((p) => p.rfq_id === rfqId && p.status !== "withdrawn")
       : localProposals.find(
-          (p) => p.rfq_id === rfqId && p.supplier_actor_id === actorId && p.status !== "withdrawn",
+          (p) =>
+            p.rfq_id === rfqId &&
+            p.supplier_actor_id === actorId &&
+            p.status !== "withdrawn",
         )
-    return proposal ? { price: proposal.price, currency: proposal.currency } : undefined
+    const status = (proposal?.status ?? boardStatus) as ProposalStatus | null | undefined
+    if (!status || status === "withdrawn") return undefined
+    return {
+      price: proposal?.price ?? 0,
+      currency: proposal?.currency ?? "TJS",
+      status,
+    }
   }
 
   const handleOpenProposal = (rfqId: string) => {
@@ -148,7 +150,6 @@ export default function SupplierRfqsPage() {
         <RfqBoardTable
             rfqs={filtered}
             actorId={actorId}
-            hasProposal={hasProposal}
             getMyProposal={getMyProposal}
             getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
             getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}

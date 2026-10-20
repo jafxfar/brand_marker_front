@@ -1,12 +1,11 @@
 "use client"
 
+import Link from "next/link"
 import { statusPillClass } from "@/components/ui/status-badge"
-import { useState } from "react"
 import type { Proposal, PublicSupplier } from "@/types"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 import { SupplierProposalInfo } from "@/components/cabinet/rfq/supplier-proposal-info"
-import { ProposalChatDialog } from "@/components/cabinet/rfq/proposal-chat-dialog"
 import { Banknote, Clock, MessageSquare } from "lucide-react"
 
 type ProposalReviewCardProps = {
@@ -33,9 +32,6 @@ export const ProposalReviewCard = ({
 }: ProposalReviewCardProps) => {
   const meta = proposalStatusMeta[proposal.status]
   const isFinal = ["accepted", "rejected", "withdrawn", "archived"].includes(proposal.status)
-  const [chatOpen, setChatOpen] = useState(false)
-
-  const handleOpenChat = () => setChatOpen(true)
 
   return (
     <article
@@ -107,14 +103,13 @@ export const ProposalReviewCard = ({
             В избранное
           </button>
         )}
-        <button
-          type="button"
-          onClick={handleOpenChat}
+        <Link
+          href={`/customer/messages?proposal=${proposal.id}`}
           aria-label="Обсудить проект"
           className="h-10 px-4 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors inline-flex items-center gap-2"
         >
           <MessageSquare size={16} /> Обсудить проект
-        </button>
+        </Link>
         {canManage && !isFinal && (
           <>
             <button
@@ -134,15 +129,6 @@ export const ProposalReviewCard = ({
           </>
         )}
       </div>
-
-      <ProposalChatDialog
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-        proposalId={proposal.id}
-        proposalStatus={proposal.status}
-        side="buyer"
-        peerName={supplierName}
-      />
     </article>
   )
 }

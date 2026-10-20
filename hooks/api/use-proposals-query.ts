@@ -7,10 +7,16 @@ import type { PageParams } from "@/lib/pagination"
 import { rfqKeys } from "./use-rfqs-query"
 import { contractKeys, supplierContractKeys } from "./use-contracts-query"
 import { notificationKeys } from "./use-notifications-query"
+import { supplierRfqKeys } from "./use-supplier-rfqs-query"
+
+export type ProposalChatSide = "buyer" | "supplier"
 
 export const proposalKeys = {
   forRfq: (rfqId: string, page = 1) => ["proposals", rfqId, page] as const,
   messages: (id: number) => ["proposal-messages", id] as const,
+  threads: (side: ProposalChatSide) => ["proposal-message-threads", side] as const,
+  thread: (side: ProposalChatSide, id: number) =>
+    ["proposal-message-thread", side, id] as const,
 }
 
 export const useProposalsForRfqQuery = (
@@ -24,7 +30,33 @@ export const useProposalsForRfqQuery = (
     enabled: enabled && isApiEnabled() && Boolean(rfqId),
   })
 
-export type ProposalChatSide = "buyer" | "supplier"
+export const useProposalMessageThreadsQuery = (
+  side: ProposalChatSide,
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: proposalKeys.threads(side),
+    queryFn: () =>
+      side === "buyer"
+        ? proposalsApi.listMessageThreads()
+        : supplierProposalsApi.listMessageThreads(),
+    enabled: enabled && isApiEnabled(),
+    refetchInterval: enabled ? 8000 : false,
+  })
+
+export const useProposalMessageThreadQuery = (
+  proposalId: number,
+  side: ProposalChatSide,
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: proposalKeys.thread(side, proposalId),
+    queryFn: () =>
+      side === "buyer"
+        ? proposalsApi.getMessageThread(proposalId)
+        : supplierProposalsApi.getMessageThread(proposalId),
+    enabled: enabled && isApiEnabled() && proposalId > 0,
+  })
 
 export const useProposalMessagesQuery = (
   proposalId: number,
@@ -50,6 +82,8 @@ export const useSendProposalMessageMutation = (side: ProposalChatSide) => {
         : supplierProposalsApi.sendMessage(id, text),
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: proposalKeys.messages(id) })
+      qc.invalidateQueries({ queryKey: proposalKeys.threads(side) })
+      qc.invalidateQueries({ queryKey: proposalKeys.thread(side, id) })
       qc.invalidateQueries({ queryKey: notificationKeys.all })
     },
     meta: {
@@ -58,13 +92,20 @@ export const useSendProposalMessageMutation = (side: ProposalChatSide) => {
   })
 }
 
+const invalidateProposalViews = (qc: ReturnType<typeof useQueryClient>) => {
+  qc.invalidateQueries({ queryKey: ["proposals"] })
+  qc.invalidateQueries({ queryKey: rfqKeys.all })
+  qc.invalidateQueries({ queryKey: supplierRfqKeys.all })
+  qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+  qc.invalidateQueries({ queryKey: notificationKeys.all })
+}
+
 export const useShortlistProposalMutation = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => proposalsApi.shortlist(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["proposals"] })
-      qc.invalidateQueries({ queryKey: rfqKeys.all })
+      invalidateProposalViews(qc)
     },
     meta: {
       successMessage: "Предложение в шортлисте",
@@ -78,8 +119,7 @@ export const useRejectProposalMutation = () => {
   return useMutation({
     mutationFn: (id: number) => proposalsApi.reject(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["proposals"] })
-      qc.invalidateQueries({ queryKey: rfqKeys.all })
+      invalidateProposalViews(qc)
     },
     meta: {
       successMessage: "Предложение отклонено",
@@ -94,11 +134,9 @@ export const useAcceptProposalMutation = () => {
     mutationFn: ({ id, terms }: { id: number; terms: ProposalAcceptInput }) =>
       proposalsApi.accept(id, terms),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["proposals"] })
-      qc.invalidateQueries({ queryKey: rfqKeys.all })
+      invalidateProposalViews(qc)
       qc.invalidateQueries({ queryKey: contractKeys.all })
       qc.invalidateQueries({ queryKey: supplierContractKeys.all })
-      qc.invalidateQueries({ queryKey: notificationKeys.all })
     },
     meta: {
       successMessage: "Предложение принято",

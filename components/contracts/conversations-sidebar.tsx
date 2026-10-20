@@ -26,7 +26,7 @@ const formatProjectCount = (count: number): string => {
 
 const getProjectsLine = (group: CounterpartChatGroup): string =>
   group.projects.length === 1
-    ? group.projects[0]!.contract.title
+    ? group.projects[0]!.title
     : formatProjectCount(group.projects.length)
 
 export const ConversationsSidebar = ({

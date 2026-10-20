@@ -6,7 +6,6 @@ import {
   BarChart3,
   BookOpen,
   Boxes,
-  Briefcase,
   Building2,
   CircleDollarSign,
   ClipboardList,
@@ -122,30 +121,15 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
     .filter((section) => section.items.length > 0)
 
   return (
-    <div className="flex h-full flex-col bg-card">
-      <Link
-        href="/admin"
-        onClick={onNavigate}
-        className="flex h-17 shrink-0 items-center gap-2.5 border-b border-border px-5"
-        aria-label="Перейти на дашборд администратора"
-      >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-          <Briefcase size={16} className="text-primary-foreground" />
-        </div>
-        <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            БрендМаркет
-          </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-            Admin
-          </span>
-        </div>
-      </Link>
+    <div className="grid gap-1">
+      <div className="mb-3 px-1 text-[13px] font-semibold text-mute">
+        Панель администратора
+      </div>
 
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-5" aria-label="Админ-навигация">
+      <nav className="grid gap-4" aria-label="Админ-навигация">
         {visibleSections.map((section) => (
-          <div key={section.title} className="space-y-1">
-            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+          <div key={section.title} className="grid gap-1">
+            <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[.08em] text-mute">
               {section.title}
             </p>
             {section.items.map((item) => {
@@ -156,10 +140,10 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
                   ? pathname === item.href
                   : pathname.startsWith(item.href))
               const itemClasses = cn(
-                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
-                isActive && "bg-secondary text-primary",
-                !isActive && available && "text-foreground transition-colors hover:bg-secondary",
-                !available && "cursor-not-allowed text-muted-foreground/55",
+                "flex h-11 w-full items-center gap-3 rounded-[10px] px-3 text-[15px]",
+                isActive && "bg-white font-bold text-ink shadow-[0_1px_3px_rgba(16,24,40,.10)]",
+                !isActive && available && "font-semibold text-ink/75 hover:bg-white/70 hover:text-ink",
+                !available && "cursor-not-allowed font-semibold text-mute/55",
               )
 
               if (!available) {
@@ -172,9 +156,9 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
                     title="Раздел появится в следующем этапе"
                     className={itemClasses}
                   >
-                    <item.Icon size={18} aria-hidden="true" />
-                    <span>{item.label}</span>
-                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-wide">
+                    <item.Icon size={20} className={isActive ? "text-brand-600" : undefined} aria-hidden="true" />
+                    <span className="flex-1 text-left truncate">{item.label}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide">
                       Скоро
                     </span>
                   </button>
@@ -189,23 +173,14 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
                   className={itemClasses}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  <item.Icon size={18} aria-hidden="true" />
-                  <span>{item.label}</span>
+                  <item.Icon size={20} className={isActive ? "text-brand-600" : undefined} aria-hidden="true" />
+                  <span className="truncate">{item.label}</span>
                 </Link>
               )
             })}
           </div>
         ))}
       </nav>
-
-      <div className="shrink-0 border-t border-border p-4">
-        <div className="rounded-xl bg-secondary p-3.5">
-          <p className="text-xs font-bold text-foreground">Панель управления</p>
-          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Доступ ограничен сотрудниками платформы
-          </p>
-        </div>
-      </div>
     </div>
   )
 }

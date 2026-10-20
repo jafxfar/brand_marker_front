@@ -2,17 +2,17 @@
 
 import { useRef, type KeyboardEvent } from "react"
 import { cn } from "@/lib/utils"
-import type { ChatConversationItem } from "@/lib/chat-conversations"
+import type { InboxProject } from "@/lib/chat-conversations"
 
 type ChatProjectSwitcherProps = {
-  projects: ChatConversationItem[]
-  selectedContractId: number | null
-  onSelect: (contractId: number) => void
+  projects: InboxProject[]
+  selectedKey: string | null
+  onSelect: (projectKey: string) => void
 }
 
 export const ChatProjectSwitcher = ({
   projects,
-  selectedContractId,
+  selectedKey,
   onSelect,
 }: ChatProjectSwitcherProps) => {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -21,13 +21,13 @@ export const ChatProjectSwitcher = ({
 
   const selectedIndex = Math.max(
     0,
-    projects.findIndex((project) => project.contract.id === selectedContractId),
+    projects.findIndex((project) => project.key === selectedKey),
   )
 
   const focusProject = (index: number) => {
     const project = projects[index]
     if (!project) return
-    onSelect(project.contract.id)
+    onSelect(project.key)
     tabRefs.current[index]?.focus()
   }
 
@@ -66,7 +66,7 @@ export const ChatProjectSwitcher = ({
 
         return (
           <button
-            key={project.contract.id}
+            key={project.key}
             ref={(el) => {
               tabRefs.current[index] = el
             }}
@@ -74,8 +74,8 @@ export const ChatProjectSwitcher = ({
             role="tab"
             aria-selected={isSelected}
             tabIndex={isSelected ? 0 : -1}
-            onClick={() => onSelect(project.contract.id)}
-            title={project.contract.title}
+            onClick={() => onSelect(project.key)}
+            title={project.title}
             className={cn(
               "inline-flex items-center gap-2 shrink-0 max-w-65 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isSelected
@@ -83,7 +83,9 @@ export const ChatProjectSwitcher = ({
                 : "border-border bg-card text-foreground hover:bg-secondary",
             )}
           >
-            <span className="truncate">{project.contract.title}</span>
+            <span className="truncate">
+              {project.kind === "proposal" ? `Заявка: ${project.title}` : project.title}
+            </span>
             {hasUnread && (
               <span
                 className={cn(

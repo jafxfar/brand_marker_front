@@ -69,15 +69,15 @@ export const PerformerDetailContent = ({ performerId }: PerformerDetailContentPr
     <PageShell>
       <section className="bg-background py-9">
         <div className="max-w-[900px] mx-auto px-6">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
-            <Link href="/" className="hover:text-primary transition-colors">Главная</Link>
+          <div className="mb-6 flex items-center gap-2 text-[13px] text-mute">
+            <Link href="/" className="hover:text-ink">Главная</Link>
             <span>/</span>
-            <Link href={performersUrl()} className="hover:text-primary transition-colors">Исполнители</Link>
+            <Link href={performersUrl()} className="hover:text-ink">Поставщики</Link>
             <span>/</span>
-            <span className="text-foreground font-medium">{performer.name}</span>
+            <span className="font-medium text-ink">{performer.name}</span>
           </div>
 
-          <div className="bg-white border border-border rounded-2xl p-8">
+          <div className="rounded-2xl border border-line bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-8">
             <div className="flex items-start gap-5">
               <div className={`${performer.color} w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0`}>
                 {performer.initials}

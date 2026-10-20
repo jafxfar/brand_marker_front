@@ -1,22 +1,26 @@
 "use client"
 
 import Link from "next/link"
-import { Check, Clock, Send } from "lucide-react"
-import type { RfqWithRelations } from "@/types"
+import { Check, Clock, Send, XCircle } from "lucide-react"
+import type { ProposalStatus, RfqWithRelations } from "@/types"
 import { cn } from "@/lib/utils"
 import { useCategoryOptions } from "@/hooks/use-category-options"
 import { formatCurrency, formatDaysLeft, formatRfqBudget, getDaysLeft } from "@/lib/format"
+import { proposalStatusMeta } from "@/lib/proposal-display"
 import { isRfqInvitedFor } from "@/lib/rfq-display"
 import { Button } from "@/components/ui/button"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 import { InvitedRfqBadge } from "@/components/supplier/rfq/invited-rfq-badge"
 
-type MyProposalSummary = { price: number; currency: string }
+type MyProposalSummary = {
+  price: number
+  currency: string
+  status: ProposalStatus
+}
 
 type RfqBoardTableProps = {
   rfqs: RfqWithRelations[]
   actorId: number
-  hasProposal: (rfqId: string, actorId: number) => boolean
   getMyProposal?: (rfqId: string) => MyProposalSummary | undefined
   getBuyerName: (rfq: RfqWithRelations) => string
   getBuyerRating: (rfq: RfqWithRelations) => number
@@ -25,10 +29,25 @@ type RfqBoardTableProps = {
 
 const URGENT_DAYS = 3
 
+const statusIcon = (status: ProposalStatus) => {
+  if (status === "rejected" || status === "withdrawn" || status === "archived") {
+    return <XCircle size={16} aria-hidden="true" />
+  }
+  return <Check size={16} aria-hidden="true" />
+}
+
+const statusToneClass = (status: ProposalStatus) => {
+  if (status === "rejected") return "text-destructive"
+  if (status === "accepted" || status === "submitted" || status === "viewed") {
+    return "text-primary"
+  }
+  if (status === "shortlisted") return "text-amber-600"
+  return "text-muted-foreground"
+}
+
 export const RfqBoardTable = ({
   rfqs,
   actorId,
-  hasProposal,
   getMyProposal,
   getBuyerName,
   getBuyerRating,
@@ -39,11 +58,22 @@ export const RfqBoardTable = ({
   return (
     <ul className="grid gap-3">
       {rfqs.map((rfq) => {
-        const responded = hasProposal(rfq.id, actorId)
-        const myProposal = responded ? getMyProposal?.(rfq.id) : undefined
+        const myProposal =
+          getMyProposal?.(rfq.id) ??
+          (rfq.my_proposal_status
+            ? {
+                price: 0,
+                currency: rfq.currency,
+                status: rfq.my_proposal_status,
+              }
+            : undefined)
+        const responded = Boolean(myProposal)
         const buyerRating = getBuyerRating(rfq)
         const daysLeft = getDaysLeft(rfq.deadline)
         const urgent = daysLeft <= URGENT_DAYS
+        const statusMeta = myProposal
+          ? proposalStatusMeta[myProposal.status]
+          : null
 
         return (
           <li
@@ -88,12 +118,26 @@ export const RfqBoardTable = ({
               </div>
             </div>
 
-            {responded ? (
+            {responded && myProposal && statusMeta ? (
               <div className="grid gap-1 sm:justify-items-end">
-                <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                  <Check size={16} aria-hidden="true" /> Предложение отправлено
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 text-sm font-semibold",
+                    statusToneClass(myProposal.status),
+                  )}
+                >
+                  {statusIcon(myProposal.status)}
+                  {myProposal.status === "submitted" || myProposal.status === "viewed"
+                    ? "Предложение отправлено"
+                    : myProposal.status === "rejected"
+                      ? "Предложение отклонено"
+                      : myProposal.status === "accepted"
+                        ? "Предложение принято"
+                        : myProposal.status === "archived"
+                          ? "Выбран другой исполнитель"
+                          : statusMeta.label}
                 </span>
-                {myProposal ? (
+                {myProposal.price > 0 ? (
                   <span className="text-sm text-muted-foreground">
                     Ваша цена:{" "}
                     <b className="text-foreground tnum">
@@ -101,6 +145,9 @@ export const RfqBoardTable = ({
                     </b>
                   </span>
                 ) : null}
+                <Button asChild variant="outline" size="sm" className="mt-1">
+                  <Link href={`/supplier/rfqs/${rfq.id}`}>Подробнее</Link>
+                </Button>
               </div>
             ) : (
               <div className="flex flex-wrap gap-2 sm:justify-end">

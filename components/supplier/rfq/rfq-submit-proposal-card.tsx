@@ -1,11 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, Lock, MessageSquare, Send, XCircle } from "lucide-react"
 import type { Proposal, ProposalStatus } from "@/types"
 import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
-import { ProposalChatDialog } from "@/components/cabinet/rfq/proposal-chat-dialog"
 import { Button } from "@/components/ui/button"
 
 type RfqSubmitProposalCardProps = {
@@ -44,10 +42,6 @@ export const RfqSubmitProposalCard = ({
   buyerName,
   onSubmit,
 }: RfqSubmitProposalCardProps) => {
-  const [chatOpen, setChatOpen] = useState(false)
-
-  const handleOpenChat = () => setChatOpen(true)
-
   if (contractId) {
     return (
       <section className={cardClassName}>
@@ -113,22 +107,13 @@ export const RfqSubmitProposalCard = ({
             </div>
           )}
         </div>
-        <button
-          type="button"
-          onClick={handleOpenChat}
+        <Link
+          href={`/supplier/messages?proposal=${myProposal.id}`}
           aria-label="Обсудить проект"
           className="mt-4 w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors"
         >
           <MessageSquare size={16} /> Обсудить проект
-        </button>
-        <ProposalChatDialog
-          open={chatOpen}
-          onOpenChange={setChatOpen}
-          proposalId={myProposal.id}
-          proposalStatus={myProposal.status}
-          side="supplier"
-          peerName={buyerName}
-        />
+        </Link>
       </section>
     )
   }

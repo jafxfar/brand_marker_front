@@ -1,60 +1,67 @@
 "use client"
 
 import Link from "next/link"
-import { CircleDollarSign, ShieldCheck } from "lucide-react"
+import { CreditCard, Lock, Truck, CircleCheck, ShieldCheck } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
+import { PageHead } from "@/components/bm"
+import { Button } from "@/components/ui/button"
+import { SurfaceCard } from "@/components/bm"
 import { createRfqHref } from "@/lib/create-rfq-href"
+
+const STEPS = [
+  { Icon: CreditCard, title: "Вы оплачиваете", text: "Картой или переводом по счёту — деньги уходят в банк‑партнёр." },
+  { Icon: Lock, title: "Банк удерживает", text: "Поставщик видит оплату и может отгружать. Площадка деньги не хранит." },
+  { Icon: Truck, title: "Поставщик отгружает", text: "Накладная и фото приёмки появляются в сделке." },
+  { Icon: CircleCheck, title: "Вы принимаете", text: "Только после вашей приёмки банк переводит оплату поставщику." },
+]
 
 export default function GuaranteePage() {
   return (
     <PageShell>
-      <section className="bg-background py-12">
-        <div className="max-w-[800px] mx-auto px-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
-              <ShieldCheck size={24} className="text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-foreground">Гарантия сделки</h1>
-              <p className="text-sm text-muted-foreground mt-1">Безопасные расчёты и защита интересов заказчика</p>
-            </div>
+      <section className="bg-canvas py-10 lg:py-14">
+        <div className="mx-auto max-w-[1200px] px-4 lg:px-8">
+          <PageHead
+            title="Как работает гарантия сделки"
+            description="Trade Assurance для закупок в Таджикистане: оплата через банк‑партнёр до вашей приёмки."
+            badge={
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-0.5 text-[12px] font-semibold text-brand-700">
+                <ShieldCheck className="size-3.5" />
+                Безопасно
+              </span>
+            }
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map(({ Icon, title, text }, i) => (
+              <SurfaceCard key={title} className="grid content-start gap-3">
+                <span className="flex items-center justify-between">
+                  <span className="grid size-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                    <Icon className="size-5" />
+                  </span>
+                  <span className="text-[13px] font-semibold text-mute">Шаг {i + 1}</span>
+                </span>
+                <b className="text-[16px] text-ink">{title}</b>
+                <p className="text-[14px] text-mute">{text}</p>
+              </SurfaceCard>
+            ))}
           </div>
 
-          <div className="bg-white border border-border rounded-2xl p-8 space-y-6">
-            <div id="payment">
-              <div className="flex items-center gap-2 mb-3">
-                <CircleDollarSign size={18} className="text-primary" />
-                <h2 className="text-lg font-bold text-foreground">Безопасная оплата</h2>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Средства резервируются на платформе и переводятся исполнителю только после того, как вы примете выполненную работу. Это снижает риски для обеих сторон сделки.
+          <SurfaceCard className="mt-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <h2 className="text-[20px] font-extrabold text-ink">Готовы закупить с гарантией?</h2>
+              <p className="mt-1 text-[14.5px] text-mute">
+                Разместите заявку или купите из каталога — деньги будут защищены до приёмки.
               </p>
             </div>
-
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-3">Как это работает</h2>
-              <ol className="space-y-3 text-sm text-muted-foreground list-decimal list-inside">
-                <li>Заказчик размещает заказ и выбирает исполнителя</li>
-                <li>Оплата блокируется на счёте сделки</li>
-                <li>Исполнитель выполняет работу и сдаёт результат</li>
-                <li>После приёмки средства автоматически переводятся исполнителю</li>
-              </ol>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild>
+                <Link href={createRfqHref()}>Разместить заявку</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/services">Открыть каталог</Link>
+              </Button>
             </div>
-
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-3">Гарантия качества</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                При спорных ситуациях подключается служба арбитража платформы. Мы анализируем переписку, договорённости и результат работы, чтобы найти справедливое решение.
-              </p>
-            </div>
-
-            <Link
-              href={createRfqHref()}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-bold px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors"
-            >
-              Разместить заказ
-            </Link>
-          </div>
+          </SurfaceCard>
         </div>
       </section>
     </PageShell>

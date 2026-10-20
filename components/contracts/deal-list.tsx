@@ -39,21 +39,21 @@ export const DealList = ({ contracts, role, getCounterpartName }: DealListProps)
           <Link
             href={`${DEAL_HREF_BASE[role]}/${contract.id}`}
             className={cn(
-              "grid gap-3 rounded-2xl border bg-card p-4 transition-colors hover:border-primary sm:p-5",
-              hot ? "border-brand-300" : isDispute ? "border-destructive/30" : "border-border",
+              "grid gap-3 rounded-2xl border bg-white p-4 transition-colors hover:border-[#C9CED6] sm:p-5",
+              hot ? "border-brand-200" : isDispute ? "border-red-200" : "border-line",
             )}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-bold text-foreground line-clamp-2">{contract.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="line-clamp-2 font-bold text-ink">{contract.title}</p>
+                <p className="mt-1 text-[14px] text-mute">
                   {getCounterpartName(contract)} ·{" "}
-                  <span className="font-semibold text-foreground tnum">
+                  <span className="font-semibold text-ink tnum">
                     {formatCurrency(contract.agreed_amount, contract.currency)}
                   </span>
                 </p>
               </div>
-              <ChevronRight size={18} className="mt-1 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <ChevronRight size={18} className="mt-1 shrink-0 text-mute" aria-hidden="true" />
             </div>
 
             <DealStageBar contract={contract} />

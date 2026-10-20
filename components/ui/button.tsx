@@ -5,28 +5,35 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-160 ease-[cubic-bezier(0.23,1,0.32,1)] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] active:scale-[0.97] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[10px] text-[15px] font-semibold transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-4 focus-visible:ring-brand-600/10 active:scale-[0.98] aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90 font-bold',
-        destructive:
-          'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
+        default:
+          'bg-brand-600 text-white border border-brand-600 shadow-[0_1px_2px_rgba(16,24,40,.12)] hover:bg-brand-700',
+        dark:
+          'bg-ink text-white border border-ink hover:bg-black',
         outline:
-          'border bg-card shadow-xs hover:border-primary hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'bg-white text-ink border border-line hover:border-ink/40 hover:bg-canvas',
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+          'bg-brand-50 text-brand-700 border border-transparent hover:bg-brand-100',
         ghost:
-          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-primary underline-offset-4 hover:underline active:scale-100',
+          'text-ink/80 border border-transparent hover:text-ink hover:bg-canvas',
+        safe:
+          'bg-safe-500 text-white border border-safe-500 hover:bg-safe-700',
+        destructive:
+          'bg-red-600 text-white border border-red-600 hover:bg-red-700',
+        'destructive-outline':
+          'bg-white text-red-700 border border-red-200 hover:bg-red-50',
+        link: 'text-brand-700 underline-offset-4 hover:underline active:scale-100 h-auto px-0',
       },
       size: {
-        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
-        sm: 'h-8 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5',
-        lg: 'h-11 px-5 has-[>svg]:px-4',
-        icon: 'size-9',
-        'icon-sm': 'size-8',
-        'icon-lg': 'size-10',
+        default: 'h-11 px-4 has-[>svg]:px-3.5',
+        sm: 'h-9 rounded-lg gap-1.5 px-3 text-[14px] has-[>svg]:px-2.5',
+        lg: 'h-12 px-6 text-[16px] has-[>svg]:px-5',
+        icon: 'size-11',
+        'icon-sm': 'size-9 rounded-lg',
+        'icon-lg': 'size-12',
       },
     },
     defaultVariants: {

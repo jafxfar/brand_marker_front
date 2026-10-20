@@ -35,7 +35,7 @@ import { WithdrawalForm } from "@/components/supplier/finance/withdrawal-form"
 import { WithdrawalsHistoryTable } from "@/components/supplier/finance/withdrawals-history-table"
 import { InvoicesTable } from "@/components/supplier/finance/invoices-table"
 import { ReviewsReceivedTable } from "@/components/supplier/finance/reviews-received-table"
-import type { Currency, PaymentMilestoneStatus, Review, WithdrawalDestinationType } from "@/types"
+import type { Currency, PaymentMilestoneStatus, WithdrawalDestinationType } from "@/types"
 
 export default function SupplierFinancePage() {
   const hydrated = useHydrated()
@@ -56,7 +56,8 @@ export default function SupplierFinancePage() {
   const getMyCompany = useCompaniesStore((s) => s.getMyCompany)
 
   const { data: apiBalance } = useSupplierBalanceQuery(hydrated && useApi)
-  const { data: paymentHistory } = useSupplierPaymentHistoryQuery(hydrated && useApi)
+  const { data: paymentHistoryPage } = useSupplierPaymentHistoryQuery(hydrated && useApi)
+  const paymentHistory = paymentHistoryPage?.items ?? []
   const { data: apiCompanies } = useSupplierCompaniesQuery(hydrated && useApi)
   const { data: apiDestinations } = useSupplierFinanceDestinationsQuery(hydrated && useApi)
   const { data: apiWithdrawals } = useSupplierWithdrawalsQuery(hydrated && useApi)
@@ -65,9 +66,9 @@ export default function SupplierFinancePage() {
   const createDestinationMutation = useCreateDestinationMutation()
 
   const activeCompanyId = user?.activeCompanyId ?? apiCompanies?.items?.[0]?.id
-  const { data: apiReviews } = useQuery({
+  const { data: apiReviewsPage } = useQuery({
     queryKey: ["company-reviews", activeCompanyId],
-    queryFn: () => publicApi.companyReviews(activeCompanyId!) as Promise<Review[]>,
+    queryFn: () => publicApi.companyReviews(activeCompanyId!),
     enabled: hydrated && useApi && Boolean(activeCompanyId),
   })
 
@@ -101,24 +102,26 @@ export default function SupplierFinancePage() {
     : hydrated
       ? getInvoices(actorId)
       : paymentHistory
-        ? paymentHistory
-            .filter((p) => p.status === "released")
-            .map((p, idx) => ({
-              id: idx + 1,
-              actor_id: actorId,
-              contract_id: p.contract_id,
-              number: `INV-${p.contract_id}-${p.milestone_id}`,
-              title: p.title,
-              amount: p.amount,
-              currency: p.currency as Currency,
-              status: "paid" as const,
-              issued_at: p.created_at,
-              due_at: null,
-              paid_at: p.created_at,
-            }))
-        : []
+          .filter((p) => p.status === "released")
+          .map((p, idx) => ({
+            id: idx + 1,
+            actor_id: actorId,
+            contract_id: p.contract_id,
+            number: `INV-${p.contract_id}-${p.milestone_id}`,
+            title: p.title,
+            amount: p.amount,
+            currency: p.currency as Currency,
+            status: "paid" as const,
+            issued_at: p.created_at,
+            due_at: null,
+            paid_at: p.created_at,
+          }))
 
-  const reviews = useApi ? (apiReviews?.items ?? []) : hydrated ? (getMyCompany(actorId)?.reviews ?? []) : []
+  const reviews = useApi
+    ? (apiReviewsPage?.items ?? [])
+    : hydrated
+      ? (getMyCompany(actorId)?.reviews ?? [])
+      : []
 
   const getDestination = (id: number) => destinationList.find((d) => d.id === id)
 

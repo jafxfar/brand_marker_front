@@ -3,131 +3,105 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, Boxes, Inbox, Users, Crown,
-  Briefcase, Plus, FileCheck, MessageSquare, Send, Wallet, type LucideIcon,
+  LayoutDashboard, Boxes, Inbox, Plus, FileCheck, MessageSquare, Send, Wallet,
+  Building2, type LucideIcon,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { BrandLogo } from "@/components/bm"
+import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
+import { Button } from "@/components/ui/button"
 import { useDealActionCount } from "@/hooks/use-deal-action-count"
+import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
+import { useHydrated } from "@/hooks/use-hydrated"
+import { useAuthStore } from "@/lib/store/auth-store"
 
-interface NavItem {
+type NavItem = {
   href: string
   label: string
   Icon: LucideIcon
-  badge?: "deals"
+  badge?: "deals" | "messages"
 }
 
-interface NavSection {
-  title: string
-  items: NavItem[]
-}
-
-const navSections: NavSection[] = [
-  {
-    title: "Главное",
-    items: [
-      { href: "/supplier", label: "Главная", Icon: LayoutDashboard },
-      { href: "/supplier/rfqs", label: "Заявки заказчиков", Icon: Inbox },
-      { href: "/supplier/proposals", label: "Мои предложения", Icon: Send },
-      { href: "/supplier/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
-    ],
-  },
-  {
-    title: "Каталог",
-    items: [
-      { href: "/supplier/catalog", label: "Каталог", Icon: Boxes },
-    ],
-  },
-  {
-    title: "Финансы",
-    items: [
-      { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
-      { href: "/supplier/subscription", label: "Подписка", Icon: Crown },
-    ],
-  },
-  {
-    title: "Партнёры",
-    items: [
-      { href: "/supplier/messages", label: "Сообщения", Icon: MessageSquare },
-      { href: "/supplier/customers", label: "Заказчики", Icon: Users },
-    ],
-  },
+const navItems: NavItem[] = [
+  { href: "/supplier", label: "Обзор", Icon: LayoutDashboard },
+  { href: "/supplier/rfqs", label: "Заявки покупателей", Icon: Inbox },
+  { href: "/supplier/proposals", label: "Мои КП", Icon: Send },
+  { href: "/supplier/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
+  { href: "/supplier/catalog", label: "Товары и услуги", Icon: Boxes },
+  { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
+  { href: "/supplier/messages", label: "Сообщения", Icon: MessageSquare, badge: "messages" },
+  { href: "/supplier/company", label: "Профиль компании", Icon: Building2 },
 ]
 
 export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
+  const hydrated = useHydrated()
+  const user = useAuthStore((s) => s.user)
   const dealActions = useDealActionCount("supplier")
+  const unread = useUnreadNotificationsCount("supplier")
 
-  const getBadge = (item: NavItem): number => (item.badge === "deals" ? dealActions : 0)
+  const getBadge = (item: NavItem): number => {
+    if (!item.badge) return 0
+    if (item.badge === "deals") return dealActions
+    return hydrated ? unread : 0
+  }
 
   const isActive = (href: string): boolean =>
     href === "/supplier" ? pathname === href : pathname.startsWith(href)
 
   return (
-    <div className="flex flex-col h-full bg-card">
-      <Link
-        href="/"
-        className="flex items-center gap-2.5 h-[68px] px-5 border-b border-border flex-shrink-0"
-      >
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-          <Briefcase size={16} className="text-primary-foreground" />
+    <nav className="grid gap-1" aria-label="Меню кабинета">
+      {onNavigate ? (
+        <div className="mb-3 flex items-center justify-between border-b border-line pb-4">
+          <BrandLogo small />
         </div>
-        <div className="flex items-baseline gap-0.5">
-          <span className="text-lg font-bold text-primary tracking-tight">Бренд</span>
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            Маркет
-          </span>
-        </div>
-      </Link>
+      ) : null}
 
-      <div className="p-4">
-        <Link
-          href="/supplier/catalog/new"
-          onClick={onNavigate}
-          className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors shadow-sm"
-        >
-          <Plus size={17} />
-          Добавить позицию
-        </Link>
+      <div className="mb-4 flex items-center gap-3 rounded-xl border border-line bg-white p-3">
+        <span className="grid size-10 place-items-center rounded-lg bg-ink text-[12px] font-semibold text-white">
+          {hydrated && user?.name ? user.name.slice(0, 2).toUpperCase() : "ПП"}
+        </span>
+        <span className="min-w-0 flex-1">
+          <b className="block truncate text-[14.5px]">
+            {hydrated && user?.company ? user.company : "Поставщик"}
+          </b>
+          <span className="text-[12.5px] text-mute">Поставщик</span>
+        </span>
       </div>
 
-      <nav className="flex-1 px-3 space-y-5 overflow-y-auto pb-4">
-        {navSections.map((section) => (
-          <div key={section.title} className="space-y-1">
-            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-              {section.title}
-            </p>
-            {section.items.map((item) => {
-              const active = isActive(item.href)
-              const badge = getBadge(item)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onNavigate}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative",
-                    active
-                      ? "bg-secondary text-primary"
-                      : "text-foreground hover:bg-secondary hover:text-primary",
-                  )}
-                >
-                  <item.Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
-                  <span>{item.label}</span>
-                  {badge > 0 && (
-                    <span
-                      className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center"
-                      aria-label={`нужно действие: ${badge}`}
-                    >
-                      {badge}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-          </div>
-        ))}
-      </nav>
+      <Button asChild className="mb-4 w-full">
+        <Link href="/supplier/catalog/new" onClick={onNavigate}>
+          <Plus className="size-5" />
+          Добавить товар
+        </Link>
+      </Button>
 
-    </div>
+      <ul className="grid gap-1">
+        {navItems.map((item) => (
+          <li key={item.href}>
+            <CabinetNavLink
+              href={item.href}
+              label={item.label}
+              Icon={item.Icon}
+              active={isActive(item.href)}
+              badge={getBadge(item)}
+              onClick={onNavigate}
+            />
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-6 grid gap-2 rounded-xl border border-line bg-white p-4">
+        <b className="text-[14px]">Нужна помощь?</b>
+        <p className="text-[13px] text-mute">
+          Ответим в чате в течение часа или по телефону +992 44 600 00 00.
+        </p>
+        <a
+          href="tel:+992446000000"
+          className="justify-self-start text-[13.5px] font-semibold text-brand-700 hover:underline"
+        >
+          Написать в поддержку
+        </a>
+      </div>
+    </nav>
   )
 }

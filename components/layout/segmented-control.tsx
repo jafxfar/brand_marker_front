@@ -40,7 +40,7 @@ export const SegmentedControl = <T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "flex w-fit max-w-full flex-wrap items-center gap-1 overflow-x-auto rounded-xl border border-border bg-card p-1",
+        "inline-flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface-muted p-1 no-scrollbar",
         className,
       )}
     >
@@ -54,10 +54,10 @@ export const SegmentedControl = <T extends string>({
             aria-selected={isActive}
             tabIndex={0}
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition-[color,background-color,transform] duration-160 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+              "h-9 shrink-0 whitespace-nowrap rounded-lg px-4 text-[14px] font-semibold transition",
               isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                ? "bg-white text-ink shadow-[0_1px_3px_rgba(16,24,40,.12)]"
+                : "text-mute hover:text-ink",
             )}
             onClick={() => handleSelect(option.value)}
             onKeyDown={(event) => handleKeyDown(event, option.value)}
@@ -66,8 +66,8 @@ export const SegmentedControl = <T extends string>({
             {option.count !== undefined ? (
               <span
                 className={cn(
-                  "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                  isActive ? "bg-card/20" : "bg-muted",
+                  "ml-1 text-[12px]",
+                  isActive ? "text-brand-700" : "text-mute",
                 )}
               >
                 {option.count}

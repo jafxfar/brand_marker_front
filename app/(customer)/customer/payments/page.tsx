@@ -60,33 +60,33 @@ const BuyerPaymentsContent = () => {
   const refunds = hydrated ? getBuyerRefunds(actorId) : []
   const buyerContracts = hydrated ? getContractsForBuyer(actorId) : []
   const useApi = isApiEnabled()
-  const { data: paymentHistory } = usePaymentHistoryQuery(hydrated && useApi)
+  const { data: paymentHistoryPage } = usePaymentHistoryQuery(hydrated && useApi)
   const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
   const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
   const apiContracts = apiContractsPage?.items ?? []
+  const paymentHistoryItems = paymentHistoryPage?.items ?? []
   const fundMutation = useFundAndConfirmMilestoneMutation()
   const { viaAlif, currency: alifCurrency } = useAlifPayment(hydrated && useApi)
   const [pendingFund, setPendingFund] = useState<EscrowFundingRow | null>(null)
 
   const contractById = new Map(apiContracts.map((c) => [c.id, c]))
 
-  const apiOutgoing: OutgoingPaymentRow[] =
-    paymentHistory
-      ?.map((item) => {
-        const event = mapApiPaymentHistoryEvent(item)
-        if (event.type !== "funding" && event.type !== "release") return null
-        const contract = contractById.get(event.contractId)
-        return {
-          ...event,
-          contractTitle: contract?.title ?? `Сделка #${event.contractId}`,
-          supplierActorId: contract?.supplier_actor_id ?? 0,
-        }
-      })
-      .filter((row): row is OutgoingPaymentRow => row !== null)
-      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()) ?? []
+  const apiOutgoing: OutgoingPaymentRow[] = paymentHistoryItems
+    .map((item) => {
+      const event = mapApiPaymentHistoryEvent(item)
+      if (event.type !== "funding" && event.type !== "release") return null
+      const contract = contractById.get(event.contractId)
+      return {
+        ...event,
+        contractTitle: contract?.title ?? `Сделка #${event.contractId}`,
+        supplierActorId: contract?.supplier_actor_id ?? 0,
+      }
+    })
+    .filter((row): row is OutgoingPaymentRow => row !== null)
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
 
   const apiEscrowQueue: EscrowFundingRow[] =
-    pendingPayments?.items.map((p) => {
+    (pendingPayments?.items ?? []).map((p) => {
       const contract = contractById.get(p.contract_id)
       return {
         contractId: p.contract_id,
@@ -98,7 +98,7 @@ const BuyerPaymentsContent = () => {
         status: p.status,
         supplierActorId: contract?.supplier_actor_id ?? 0,
       }
-    }) ?? []
+    })
 
   const effectiveOutgoing = useApi ? apiOutgoing : outgoing
   const effectiveEscrowQueue = useApi ? apiEscrowQueue : escrowQueue

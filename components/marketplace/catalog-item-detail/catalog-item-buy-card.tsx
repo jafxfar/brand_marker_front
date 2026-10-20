@@ -27,45 +27,47 @@ export const CatalogItemBuyCard = ({
   })
 
   return (
-    <aside className="rounded-xl border border-border bg-card p-5 sm:sticky sm:top-24">
+    <aside className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] lg:sticky lg:top-[88px]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Поставщик</p>
+          <p className="text-[12.5px] text-mute">Поставщик</p>
           <Link
             href={performerUrl(supplier.actor_id)}
-            className="mt-0.5 inline-flex max-w-full items-center gap-1 font-semibold text-foreground hover:text-primary"
+            className="mt-0.5 inline-flex max-w-full items-center gap-1 font-semibold text-ink underline decoration-line underline-offset-2 hover:decoration-ink"
           >
             <span className="truncate">{supplier.display_name}</span>
             {verified && (
-              <BadgeCheck size={16} className="shrink-0 text-primary" aria-hidden="true" />
+              <BadgeCheck size={16} className="shrink-0 text-brand-600" aria-hidden="true" />
             )}
           </Link>
         </div>
         <div className="flex shrink-0 items-center gap-1 text-sm font-semibold">
           <Star size={14} className="fill-amber-400 text-amber-400" aria-hidden="true" />
           {supplier.rating.toFixed(1)}
-          <span className="font-normal text-muted-foreground">
+          <span className="font-normal text-mute">
             ({supplier.reviews_count})
           </span>
         </div>
       </div>
 
-      <div className="mt-4 space-y-2 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={14} className="text-primary" aria-hidden="true" />
-          Безопасные сделки на платформе
+      <div className="mt-4 space-y-2 rounded-xl bg-brand-50/60 p-3 text-[13px] text-ink/80">
+        <div className="flex items-center gap-2 font-semibold text-brand-700">
+          <ShieldCheck size={16} aria-hidden="true" />
+          Покупка под защитой
         </div>
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={14} className="text-primary" aria-hidden="true" />
-          Контракт и оплата в одном кабинете
-        </div>
+        <p className="text-mute">
+          Оплата удерживается банком‑партнёром до вашей приёмки.
+        </p>
       </div>
 
       <div className="mt-4 flex flex-col gap-2.5">
-        <Button asChild className="h-11 w-full rounded-xl text-sm font-bold">
-          <Link href={rfqHref}>Запросить предложение</Link>
+        <Button asChild className="w-full">
+          <Link href={rfqHref}>Купить с гарантией</Link>
         </Button>
-        <Button asChild variant="outline" className="h-11 w-full rounded-xl text-sm font-semibold">
+        <Button asChild variant="outline" className="w-full">
+          <Link href={rfqHref}>Запросить цену</Link>
+        </Button>
+        <Button asChild variant="ghost" className="w-full">
           <Link href={performerUrl(supplier.actor_id)}>Профиль поставщика</Link>
         </Button>
         {canReport &&

@@ -58,6 +58,15 @@ export const supplierCompaniesApi = {
       body: JSON.stringify(wizardToUpdate(data)),
     }),
 
+  uploadLogo: (file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<{ logo: string }>(`${PREFIX}/logo`, {
+      method: "POST",
+      body: form,
+    })
+  },
+
   addCertificate: (
     companyId: number,
     data: { title: string; issuer: string; issue_date: string; expiry_date?: string; file_url: string },

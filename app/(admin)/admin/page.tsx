@@ -219,7 +219,7 @@ export default function AdminDashboardPage() {
   return (
     <PageFrame>
       <PageHeader
-        title="Дашборд"
+        title="Обзор"
         description="Ключевые показатели и последние события платформы"
         actions={
           <Button
