@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Inbox } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
@@ -11,6 +11,12 @@ import { getActorId } from "@/lib/auth-display"
 import { getRfqBuyerName, getRfqBuyerRating } from "@/lib/buyer-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { isRfqInvitedFor } from "@/lib/rfq-display"
+import {
+  filterRfqsBySource,
+  isCatalogOfferRfq,
+  sortSupplierBoardRfqs,
+  type SupplierRfqSourceFilter,
+} from "@/lib/rfq-board"
 import {
   useSubmitSupplierProposalMutation,
   useSupplierProposalsQuery,
@@ -41,6 +47,7 @@ export default function SupplierRfqsPage() {
   const localProposals = useProposalsStore((s) => s.proposals)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
+  const [sourceFilter, setSourceFilter] = useState<SupplierRfqSourceFilter>("all")
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -52,12 +59,22 @@ export default function SupplierRfqsPage() {
   const localRfqs = hydrated ? getOpenRfqs() : []
   const openRfqs: RfqWithRelations[] = useApi ? (apiRfqs?.items ?? []) : localRfqs
   const totalPages = useApi ? (apiRfqs?.total_pages ?? 0) : 1
-  const filtered = (typeFilter === "all"
-    ? [...openRfqs]
-    : openRfqs.filter((r) => r.type === typeFilter)
-  ).sort(
-    (a, b) => Number(isRfqInvitedFor(b, actorId)) - Number(isRfqInvitedFor(a, actorId)),
-  )
+
+  const sourceCounts = useMemo(() => {
+    const catalog = openRfqs.filter(isCatalogOfferRfq).length
+    return {
+      all: openRfqs.length,
+      marketplace: openRfqs.length - catalog,
+      catalog,
+    }
+  }, [openRfqs])
+
+  const filtered = useMemo(() => {
+    const byType =
+      typeFilter === "all" ? openRfqs : openRfqs.filter((r) => r.type === typeFilter)
+    const bySource = filterRfqsBySource(byType, sourceFilter)
+    return sortSupplierBoardRfqs(bySource, actorId, isRfqInvitedFor)
+  }, [openRfqs, typeFilter, sourceFilter, actorId])
 
   const selectedRfq = selectedRfqId
     ? (useApi ? openRfqs.find((r) => r.id === selectedRfqId) : getRfq(selectedRfqId))
@@ -118,19 +135,55 @@ export default function SupplierRfqsPage() {
     })
   }
 
+  const emptyTitle = isLoading
+    ? "Загрузка заявок..."
+    : sourceFilter === "catalog"
+      ? "Нет запросов на ваши товары и услуги"
+      : sourceFilter === "marketplace"
+        ? "Нет заявок заказчиков"
+        : "Открытых заявок нет"
+
+  const emptyDescription = !isLoading
+    ? sourceFilter === "catalog"
+      ? "Когда заказчик нажмёт «Купить с гарантией» или «Торговаться» по вашей позиции, запрос появится здесь"
+      : "Новые заявки заказчиков и запросы из каталога появятся здесь"
+    : undefined
+
   const isEmpty = !hydrated || isLoading || filtered.length === 0
 
   return (
     <PageFrame>
       <PageHeader
-        title="Заявки заказчиков"
-        description="Выберите подходящую заявку и предложите цену — заказчик сравнит предложения и выберет исполнителя"
+        title="Заявки"
+        description="Заявки заказчиков с маркетплейса и запросы на покупку или торг по вашим товарам и услугам"
+      />
+
+      <SegmentedControl
+        value={sourceFilter}
+        options={[
+          { value: "all", label: "Все", count: sourceCounts.all },
+          {
+            value: "marketplace",
+            label: "Заявки заказчиков",
+            count: sourceCounts.marketplace,
+          },
+          {
+            value: "catalog",
+            label: "На мои товары и услуги",
+            count: sourceCounts.catalog,
+          },
+        ]}
+        onChange={(value) => {
+          setSourceFilter(value)
+          setPage(1)
+        }}
+        ariaLabel="Источник заявки"
       />
 
       <SegmentedControl
         value={typeFilter}
         options={[
-          { value: "all", label: "Все" },
+          { value: "all", label: "Все типы" },
           { value: "product", label: "Товары" },
           { value: "service", label: "Услуги" },
         ]}
@@ -142,19 +195,19 @@ export default function SupplierRfqsPage() {
         <PageSurface>
           <PageEmptyState
             icon={<Inbox />}
-            title={isLoading ? "Загрузка заявок..." : "Открытых заявок нет"}
-            description={!isLoading ? "Новые заявки заказчиков появятся здесь" : undefined}
+            title={emptyTitle}
+            description={emptyDescription}
           />
         </PageSurface>
       ) : (
         <RfqBoardTable
-            rfqs={filtered}
-            actorId={actorId}
-            getMyProposal={getMyProposal}
-            getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
-            getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}
-            onSubmitProposal={handleOpenProposal}
-          />
+          rfqs={filtered}
+          actorId={actorId}
+          getMyProposal={getMyProposal}
+          getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
+          getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}
+          onSubmitProposal={handleOpenProposal}
+        />
       )}
 
       {selectedRfq && (
@@ -170,12 +223,12 @@ export default function SupplierRfqsPage() {
           onSubmit={handleSubmitProposal}
         />
       )}
-    
+
       <ListPagination
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
       />
-</PageFrame>
+    </PageFrame>
   )
 }

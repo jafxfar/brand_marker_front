@@ -1,9 +1,10 @@
 "use client"
 
 import { useRef, useState, type ChangeEvent } from "react"
-import { ImagePlus, Link2, Loader2, Trash2 } from "lucide-react"
+import { FileText, ImagePlus, Link2, Loader2, Trash2, Video } from "lucide-react"
 import { isApiEnabled } from "@/lib/api/config"
 import { supplierCatalogApi } from "@/lib/api/supplier/catalog"
+import { resolveFileUrl } from "@/lib/file-url"
 import type { ItemMediaType } from "@/types"
 
 export type MediaFieldRow = {
@@ -39,6 +40,42 @@ const readAsDataUrl = (file: File): Promise<string> =>
     reader.onerror = () => reject(new Error("Не удалось прочитать файл"))
     reader.readAsDataURL(file)
   })
+
+const MediaPreview = ({ item }: { item: MediaFieldRow }) => {
+  const [broken, setBroken] = useState(false)
+  const previewUrl = resolveFileUrl(item.file_url)
+  const showImage = item.media_type === "image" && previewUrl && !broken
+
+  if (showImage) {
+    return (
+      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={previewUrl}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      </div>
+    )
+  }
+
+  const Icon =
+    item.media_type === "video" ? Video : item.media_type === "image" ? ImagePlus : FileText
+
+  return (
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary text-muted-foreground">
+      <Icon size={18} aria-hidden="true" />
+      <span className="sr-only">
+        {item.media_type === "video"
+          ? "Видео"
+          : item.media_type === "image"
+            ? "Изображение"
+            : "Документ"}
+      </span>
+    </div>
+  )
+}
 
 export const MediaFields = ({ media, onChange }: MediaFieldsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -116,20 +153,9 @@ export const MediaFields = ({ media, onChange }: MediaFieldsProps) => {
           key={`${item.file_url}-${index}`}
           className="rounded-xl border border-border p-3 space-y-2"
         >
-          <div className="flex gap-3 items-start">
-            {item.media_type === "image" && item.file_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={item.file_url}
-                alt={item.file_name || "Превью"}
-                className="h-14 w-14 rounded-lg object-cover border border-border bg-secondary shrink-0"
-              />
-            ) : (
-              <div className="h-14 w-14 rounded-lg border border-border bg-secondary shrink-0 flex items-center justify-center text-[10px] font-semibold uppercase text-muted-foreground">
-                {item.media_type === "video" ? "VID" : "DOC"}
-              </div>
-            )}
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2 min-w-0">
+          <div className="flex items-start gap-3">
+            <MediaPreview key={item.file_url || item.file_name || index} item={item} />
+            <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-12">
               <div className="sm:col-span-5">
                 <input
                   type="text"

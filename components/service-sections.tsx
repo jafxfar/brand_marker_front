@@ -112,7 +112,7 @@ export function FeaturedServices() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {featuredServices.map((service) => (
             <ServiceCard key={service.id} service={service} />
           ))}

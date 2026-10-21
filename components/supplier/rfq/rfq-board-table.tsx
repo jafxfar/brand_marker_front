@@ -8,9 +8,11 @@ import { useCategoryOptions } from "@/hooks/use-category-options"
 import { formatCurrency, formatDaysLeft, formatRfqBudget, getDaysLeft } from "@/lib/format"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import { isRfqInvitedFor } from "@/lib/rfq-display"
+import { isCatalogOfferRfq, isPendingCatalogOffer } from "@/lib/rfq-board"
 import { Button } from "@/components/ui/button"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 import { InvitedRfqBadge } from "@/components/supplier/rfq/invited-rfq-badge"
+import { CatalogOfferBadge } from "@/components/supplier/rfq/catalog-offer-badge"
 
 type MyProposalSummary = {
   price: number
@@ -38,6 +40,7 @@ const statusIcon = (status: ProposalStatus) => {
 
 const statusToneClass = (status: ProposalStatus) => {
   if (status === "rejected") return "text-destructive"
+  if (status === "pending_supplier") return "text-amber-600"
   if (status === "accepted" || status === "submitted" || status === "viewed") {
     return "text-primary"
   }
@@ -67,7 +70,9 @@ export const RfqBoardTable = ({
                 status: rfq.my_proposal_status,
               }
             : undefined)
-        const responded = Boolean(myProposal)
+        const catalogOffer = isCatalogOfferRfq(rfq)
+        const pendingOffer = isPendingCatalogOffer(myProposal?.status)
+        const responded = Boolean(myProposal) && !pendingOffer
         const buyerRating = getBuyerRating(rfq)
         const daysLeft = getDaysLeft(rfq.deadline)
         const urgent = daysLeft <= URGENT_DAYS
@@ -80,13 +85,21 @@ export const RfqBoardTable = ({
             key={rfq.id}
             className={cn(
               "grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5",
-              responded ? "border-border" : "border-border hover:border-primary transition-colors",
+              pendingOffer
+                ? "border-amber-300/80 hover:border-amber-400 transition-colors"
+                : responded
+                  ? "border-border"
+                  : "border-border hover:border-primary transition-colors",
             )}
           >
             <div className="min-w-0 grid gap-1.5">
-              {isRfqInvitedFor(rfq, actorId) ? (
-                <InvitedRfqBadge className="justify-self-start" />
-              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {catalogOffer ? (
+                  <CatalogOfferBadge className="justify-self-start" />
+                ) : isRfqInvitedFor(rfq, actorId) ? (
+                  <InvitedRfqBadge className="justify-self-start" />
+                ) : null}
+              </div>
               <Link
                 href={`/supplier/rfqs/${rfq.id}`}
                 className="font-bold text-foreground hover:text-primary line-clamp-2"
@@ -106,19 +119,43 @@ export const RfqBoardTable = ({
                 <span className="font-semibold tnum">
                   {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
                 </span>
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1",
-                    urgent ? "font-semibold text-amber-600" : "text-muted-foreground",
-                  )}
-                >
-                  <Clock size={14} aria-hidden="true" />
-                  {formatDaysLeft(daysLeft)}
-                </span>
+                {!catalogOffer && (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1",
+                      urgent ? "font-semibold text-amber-600" : "text-muted-foreground",
+                    )}
+                  >
+                    <Clock size={14} aria-hidden="true" />
+                    {formatDaysLeft(daysLeft)}
+                  </span>
+                )}
               </div>
             </div>
 
-            {responded && myProposal && statusMeta ? (
+            {pendingOffer && myProposal ? (
+              <div className="grid gap-1 sm:justify-items-end">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 text-sm font-semibold",
+                    statusToneClass(myProposal.status),
+                  )}
+                >
+                  Ждёт вашего решения
+                </span>
+                {myProposal.price > 0 ? (
+                  <span className="text-sm text-muted-foreground">
+                    Цена заказчика:{" "}
+                    <b className="text-foreground tnum">
+                      {formatCurrency(myProposal.price, myProposal.currency)}
+                    </b>
+                  </span>
+                ) : null}
+                <Button asChild size="sm" className="mt-1">
+                  <Link href={`/supplier/rfqs/${rfq.id}`}>Принять или отклонить</Link>
+                </Button>
+              </div>
+            ) : responded && myProposal && statusMeta ? (
               <div className="grid gap-1 sm:justify-items-end">
                 <span
                   className={cn(

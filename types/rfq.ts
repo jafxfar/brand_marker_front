@@ -65,6 +65,8 @@ type RfqBase = {
   visibility: RfqVisibility
   status: RfqStatus
   invited_supplier_ids?: number[]
+  catalog_item_id?: number | null
+  is_catalog_offer?: boolean
   created_at: string
   updated_at: string
 }
@@ -92,6 +94,8 @@ export type RfqWithRelations = Rfq & {
   attachments: RfqAttachment[]
   buyer?: RfqBuyerSummary
   is_invited?: boolean
+  is_catalog_offer?: boolean
+  catalog_item_id?: number | null
   my_proposal_status?: ProposalStatus | null
   my_contract_id?: number | null
 }

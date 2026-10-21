@@ -4,10 +4,13 @@ import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowRight, Briefcase, LockKeyhole, ShieldCheck } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { BrandLogo } from "@/components/bm"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { isApiEnabled } from "@/lib/api/config"
@@ -81,146 +84,108 @@ const AdminLoginContent = () => {
   }
 
   return (
-    <main className="grid min-h-dvh bg-background lg:grid-cols-[minmax(360px,0.85fr)_minmax(480px,1.15fr)]">
-      <aside className="relative hidden overflow-hidden bg-foreground p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <Link href="/" className="relative z-10 flex w-fit items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <Briefcase size={17} className="text-primary-foreground" aria-hidden="true" />
-          </div>
-          <span className="text-xl font-black tracking-tight">БрендМаркет</span>
+    <div className="flex min-h-dvh flex-col bg-canvas">
+      <div className="mx-auto flex h-[68px] w-full max-w-[1200px] items-center justify-between px-4 lg:px-8">
+        <BrandLogo />
+        <Link
+          href="/"
+          className="text-[14px] font-semibold text-mute hover:text-ink"
+        >
+          На главную
         </Link>
+      </div>
 
-        <div className="relative z-10 max-w-md">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-primary">
-            <ShieldCheck size={24} aria-hidden="true" />
-          </div>
-          <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight">
-            Управление платформой
+      <div className="grid flex-1 place-items-center px-4 py-10">
+        <div className="w-full max-w-[440px] rounded-2xl border border-line bg-white p-7 shadow-[0_24px_60px_-24px_rgba(16,24,40,.25)] sm:p-9">
+          <h1 className="mb-1 text-[26px] font-extrabold tracking-[-0.02em] text-ink">
+            Вход администратора
           </h1>
-          <p className="mt-4 text-sm leading-relaxed text-white/65">
-            Защищённая зона для контроля пользователей, компаний, сделок и финансовых операций.
+          <p className="mb-6 text-[15px] text-mute">
+            Служебная зона Brend Market
           </p>
-        </div>
 
-        <p className="relative z-10 text-xs text-white/40">
-          Доступ только для сотрудников платформы
-        </p>
-        <ShieldCheck
-          size={360}
-          className="absolute -bottom-20 -right-20 text-white/[0.035]"
-          aria-hidden="true"
-        />
-      </aside>
-
-      <section className="flex items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-md">
-          <Link href="/" className="mb-10 flex w-fit items-center gap-2.5 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-              <Briefcase size={17} className="text-primary-foreground" aria-hidden="true" />
-            </div>
-            <span className="text-xl font-black tracking-tight text-foreground">
-              БрендМаркет
-            </span>
-          </Link>
-
-          <div className="mb-7">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary lg:hidden">
-              <LockKeyhole size={21} aria-hidden="true" />
-            </div>
-            <h2 className="mt-4 text-2xl font-black text-foreground lg:mt-0">
-              Вход администратора
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Используйте служебную учётную запись
-            </p>
-          </div>
-
-          <form
-            onSubmit={handleSubmit(handleLogin)}
-            className="space-y-4"
-            noValidate
-          >
-            <div className="space-y-1.5">
-              <label htmlFor="admin-email" className="block text-sm font-medium text-foreground">
+          <form onSubmit={handleSubmit(handleLogin)} className="grid gap-4" noValidate>
+            <div className="grid gap-1.5">
+              <label htmlFor="admin-email" className="text-[14px] font-semibold text-ink">
                 Email
               </label>
-              <input
+              <Input
                 id="admin-email"
                 type="email"
                 autoComplete="username"
-                placeholder="admin@company.tj"
-                className="h-11 w-full rounded-xl border border-input bg-white px-4 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                placeholder="admin@example.com"
                 aria-invalid={Boolean(errors.email)}
                 aria-describedby={errors.email ? "admin-email-error" : undefined}
                 {...register("email")}
               />
-              {errors.email && (
-                <p id="admin-email-error" className="text-xs text-destructive">
+              {errors.email ? (
+                <p id="admin-email-error" className="text-[13px] text-red-700">
                   {errors.email.message}
                 </p>
-              )}
+              ) : null}
             </div>
 
-            <div className="space-y-1.5">
-              <label
-                htmlFor="admin-password"
-                className="block text-sm font-medium text-foreground"
-              >
+            <div className="grid gap-1.5">
+              <label htmlFor="admin-password" className="text-[14px] font-semibold text-ink">
                 Пароль
               </label>
-              <input
+              <Input
                 id="admin-password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="Введите пароль"
-                className="h-11 w-full rounded-xl border border-input bg-white px-4 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                placeholder="••••••••"
                 aria-invalid={Boolean(errors.password)}
-                aria-describedby={errors.password ? "admin-password-error" : undefined}
+                aria-describedby={
+                  errors.password ? "admin-password-error" : "admin-password-hint"
+                }
                 {...register("password")}
               />
-              {errors.password && (
-                <p id="admin-password-error" className="text-xs text-destructive">
+              {errors.password ? (
+                <p id="admin-password-error" className="text-[13px] text-red-700">
                   {errors.password.message}
+                </p>
+              ) : (
+                <p id="admin-password-hint" className="text-[13px] text-mute">
+                  Доступ только для сотрудников платформы.
                 </p>
               )}
             </div>
 
-            {apiError && (
-              <div
-                role="alert"
-                className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-xs text-destructive"
-              >
-                {apiError}
-              </div>
-            )}
-
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting || !apiEnabled}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-1 h-12 w-full text-[16px]"
             >
               {isSubmitting ? "Проверка доступа..." : "Войти в панель"}
-              {!isSubmitting && <ArrowRight size={16} aria-hidden="true" />}
-            </button>
+              {!isSubmitting ? <ArrowRight className="size-4" /> : null}
+            </Button>
+
+            {apiError ? (
+              <p className="text-center text-[13px] text-red-700" role="alert">
+                {apiError}
+              </p>
+            ) : null}
           </form>
 
-          <div className="mt-6 border-t border-border pt-5 text-center">
-            <Link
-              href="/login"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
-            >
-              Вход для заказчиков и исполнителей
+          <p className="mt-4 text-[12.5px] text-mute">
+            Продолжая, вы принимаете условия использования и политику обработки персональных данных.
+          </p>
+
+          <p className="mt-5 text-center text-[14px] text-mute">
+            Не сотрудник?{" "}
+            <Link href="/login" className="font-semibold text-brand-700 hover:underline">
+              Вход для покупателей и поставщиков
             </Link>
-          </div>
+          </p>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   )
 }
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-dvh bg-background" />}>
+    <Suspense fallback={<div className="min-h-dvh bg-canvas" />}>
       <AdminLoginContent />
     </Suspense>
   )

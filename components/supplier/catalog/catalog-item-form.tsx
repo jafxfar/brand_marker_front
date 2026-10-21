@@ -260,8 +260,16 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
       </PageSurface>
 
       {initial?.status === "changes_requested" && (
-        <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-orange-800">
-          Модератор запросил правки. Исправьте карточку и снова отправьте на модерацию.
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <p className="font-semibold">Позиция отклонена модератором</p>
+          {initial.rejection_reason ? (
+            <p className="mt-1.5 text-destructive/90">
+              Причина: {initial.rejection_reason}
+            </p>
+          ) : null}
+          <p className="mt-1.5 text-destructive/80">
+            Исправьте карточку и снова отправьте на модерацию.
+          </p>
         </div>
       )}
 

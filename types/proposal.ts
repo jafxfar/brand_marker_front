@@ -6,6 +6,7 @@ export const PROPOSAL_STATUSES = [
   "submitted",
   "viewed",
   "shortlisted",
+  "pending_supplier",
   "accepted",
   "rejected",
   "withdrawn",

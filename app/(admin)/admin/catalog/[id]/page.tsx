@@ -7,10 +7,10 @@ import {
   Boxes,
   CheckCircle2,
   EyeOff,
-  FilePenLine,
   Package,
   RefreshCcw,
   Trash2,
+  XCircle,
 } from "lucide-react"
 import { CatalogActionDialog } from "@/components/admin/catalog/catalog-action-dialog"
 import { AdminCatalogDetailSections } from "@/components/admin/catalog/catalog-detail-sections"
@@ -148,7 +148,7 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
                 Одобрить
               </Button>
             )}
-            {canUpdate && item.status !== "hidden" && (
+            {canUpdate && item.status === "active" && (
               <Button
                 type="button"
                 size="sm"
@@ -159,15 +159,19 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
                 Скрыть
               </Button>
             )}
-            {canUpdate && (
+            {canUpdate &&
+              (item.status === "pending_review" ||
+                item.status === "active" ||
+                item.status === "draft") && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => setSelectedAction("request_changes")}
+                className="text-destructive hover:text-destructive"
+                onClick={() => setSelectedAction("reject")}
               >
-                <FilePenLine aria-hidden="true" />
-                Запросить правки
+                <XCircle aria-hidden="true" />
+                Отклонить
               </Button>
             )}
             {canDelete && (
