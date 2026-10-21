@@ -3,26 +3,37 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, Bell, Search, LogOut, User, ChevronDown, ShoppingBag } from "lucide-react"
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Bell, Search, LogOut, User, ChevronDown, ShoppingBag } from "lucide-react"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { BrandLogo } from "@/components/bm"
 import SupplierSidebar from "@/components/supplier/sidebar"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { getUserDisplayName, getUserInitials } from "@/lib/auth-display"
 import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
 
-export default function SupplierTopbar() {
+export default function SupplierTopbar({
+  moreOpen,
+  onMoreOpenChange,
+}: {
+  moreOpen?: boolean
+  onMoreOpenChange?: (open: boolean) => void
+}) {
   const router = useRouter()
   const hydrated = useHydrated()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const mobileOpen = moreOpen ?? internalOpen
+  const setMobileOpen = onMoreOpenChange ?? setInternalOpen
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const switchSessionRole = useAuthStore((s) => s.switchSessionRole)
   const unread = useUnreadNotificationsCount("supplier")
+  const displayName = hydrated && user ? getUserDisplayName(user) : "Гость"
+  const initials = hydrated && user ? getUserInitials(user) : ""
 
   const handleLogout = () => {
     logout()
@@ -30,78 +41,64 @@ export default function SupplierTopbar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-[68px] items-center gap-4 border-b border-border bg-card px-4 sm:px-6">
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetTrigger asChild>
-          <button
-            className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-secondary transition-colors"
-            aria-label="Открыть меню"
+    <>
+      <header className="sticky top-0 z-30 h-[68px] border-b border-line bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-full max-w-[1400px] items-center gap-3 px-4 lg:gap-6 lg:px-8">
+          <BrandLogo small showWordmark className="shrink-0" />
+          <span className="hidden h-7 items-center rounded-md bg-canvas px-2.5 text-[13px] font-semibold text-mute md:inline-flex">
+            Кабинет поставщика
+          </span>
+          <label className="relative ml-0 hidden max-w-md flex-1 sm:block lg:ml-6">
+            <span className="sr-only">Поиск</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-mute" />
+            <input
+              type="text"
+              placeholder="Поиск по заявкам покупателей"
+              className="h-10 w-full rounded-[10px] border border-transparent bg-canvas pl-10 pr-3 text-[14.5px] outline-none focus:border-brand-600 focus:bg-white"
+            />
+          </label>
+          <span className="flex-1" />
+          <Link
+            href="/supplier/notifications"
+            className="relative grid size-10 place-items-center rounded-[10px] hover:bg-canvas"
+            aria-label="Уведомления"
           >
-            <Menu size={22} />
-          </button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-[280px]">
-          <SheetTitle className="sr-only">Навигация</SheetTitle>
-          <SupplierSidebar onNavigate={() => setMobileOpen(false)} />
-        </SheetContent>
-      </Sheet>
-
-      <div className="flex-1 max-w-md hidden sm:block">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Поиск по заказам и позициям..."
-            className="w-full h-10 pl-10 pr-4 rounded-xl border border-input bg-background text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-1.5 ml-auto">
-        <Link
-          href="/supplier/notifications"
-          className="relative p-2.5 rounded-lg hover:bg-secondary transition-colors"
-          aria-label="Уведомления"
-        >
-          <Bell size={20} className="text-foreground" />
-          {hydrated && unread > 0 && (
-            <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
-              {unread}
-            </span>
-          )}
-        </Link>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2.5 pl-1.5 pr-2 py-1.5 rounded-lg hover:bg-secondary transition-colors">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
-                {hydrated && user ? getUserInitials(user) : <User size={15} />}
-              </div>
-              <div className="hidden sm:flex flex-col leading-tight text-left">
-                <span className="text-xs font-semibold text-foreground max-w-[120px] truncate">
-                  {hydrated && user ? getUserDisplayName(user) : "Гость"}
+            <Bell className="size-5" />
+            {hydrated && unread > 0 ? (
+              <span className="absolute top-2 right-2.5 size-2 rounded-full bg-red-500 ring-2 ring-white" />
+            ) : null}
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex h-10 items-center gap-2.5 rounded-[10px] pl-1 pr-2 hover:bg-canvas"
+                aria-label="Аккаунт"
+              >
+                <span className="grid size-8 place-items-center rounded-lg bg-ink text-[12px] font-bold text-white">
+                  {initials || <User size={15} />}
                 </span>
-                <span className="text-[10px] text-muted-foreground">Исполнитель</span>
-              </div>
-              <ChevronDown size={14} className="text-muted-foreground hidden sm:block" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span className="font-semibold">{hydrated && user ? (user.company?.trim() || user.name) : "Гость"}</span>
-                <span className="text-xs font-normal text-muted-foreground">
-                  {hydrated && user ? user.email : ""}
+                <span className="hidden text-[14.5px] font-semibold md:block">
+                  {displayName.split(" ")[0]}
                 </span>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/supplier/profile" className="cursor-pointer">
-                <User size={15} /> Профиль
-              </Link>
-            </DropdownMenuItem>
-            {hydrated && user?.role === "supplier" && (
+                <ChevronDown className="hidden size-4 text-mute md:block" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span className="font-semibold">{displayName}</span>
+                  <span className="text-xs font-normal text-mute">
+                    {hydrated && user ? user.email : ""}
+                  </span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/supplier/profile" className="cursor-pointer">
+                  <User size={15} /> Профиль
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => {
@@ -111,16 +108,26 @@ export default function SupplierTopbar() {
                   })()
                 }}
               >
-                <ShoppingBag size={15} /> Кабинет заказчика
+                <ShoppingBag size={15} /> Перейти к закупкам
               </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
-              <LogOut size={15} /> Выйти
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </header>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-red-600 focus:text-red-600"
+              >
+                <LogOut size={15} /> Выйти
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="right" className="w-80 max-w-[88vw] p-4">
+          <SheetTitle className="sr-only">Навигация</SheetTitle>
+          <SupplierSidebar onNavigate={() => setMobileOpen(false)} />
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }

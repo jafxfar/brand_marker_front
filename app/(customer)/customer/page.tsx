@@ -125,8 +125,8 @@ export default function CustomerDashboard() {
         label="Хотите продавать на платформе? Активируйте роль исполнителя на этом же аккаунте."
       />
       <PageHeader
-        title={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""}!`}
-        description="Здесь видно, что нужно сделать по вашим заявкам и сделкам"
+        title="Обзор"
+        description={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""} — здесь видно, что требует вашего действия`}
         actions={
           <Button asChild size="lg" className="lg:hidden">
             <Link href="/customer/rfqs/new">

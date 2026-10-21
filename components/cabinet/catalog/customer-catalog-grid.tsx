@@ -3,6 +3,7 @@ import { Package, Briefcase } from "lucide-react"
 import type { CatalogItemWithRelations } from "@/types"
 import { catalogItemTypeLabel, formatItemPricing } from "@/lib/item-display"
 import { createRfqHref } from "@/lib/create-rfq-href"
+import { serviceUrl } from "@/lib/marketplace-routes"
 
 type CustomerCatalogGridProps = {
   items: CatalogItemWithRelations[]
@@ -29,20 +30,27 @@ export const CustomerCatalogGrid = ({
           className="bg-card border border-border rounded-xl p-5 flex flex-col"
         >
           <div className="flex items-start gap-3">
-            <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+            <Link
+              href={serviceUrl(item.id)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary"
+              aria-label={item.title}
+            >
               {item.type === "product" ? (
                 <Package size={19} className="text-primary" aria-hidden="true" />
               ) : (
                 <Briefcase size={19} className="text-primary" aria-hidden="true" />
               )}
-            </div>
+            </Link>
             <div className="flex-1 min-w-0">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {catalogItemTypeLabel[item.type]}
               </span>
-              <p className="text-sm font-bold text-foreground leading-snug mt-0.5">
+              <Link
+                href={serviceUrl(item.id)}
+                className="mt-0.5 block text-sm font-bold leading-snug text-foreground hover:text-primary"
+              >
                 {item.title}
-              </p>
+              </Link>
               {item.category && (
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   {item.category.name}
@@ -52,9 +60,12 @@ export const CustomerCatalogGrid = ({
           </div>
 
           {item.description && (
-            <p className="text-xs text-muted-foreground mt-2.5 line-clamp-3 leading-relaxed">
+            <Link
+              href={serviceUrl(item.id)}
+              className="mt-2.5 block text-xs leading-relaxed text-muted-foreground line-clamp-3 hover:text-primary"
+            >
               {item.description}
-            </p>
+            </Link>
           )}
 
           <div className="mt-auto pt-4 border-t border-border space-y-3">

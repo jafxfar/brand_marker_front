@@ -54,9 +54,14 @@ type SuggestionItem =
 type MarketplaceSearchProps = {
   onNavigate?: () => void
   className?: string
+  variant?: "default" | "compact"
 }
 
-export const MarketplaceSearch = ({ onNavigate, className }: MarketplaceSearchProps) => {
+export const MarketplaceSearch = ({
+  onNavigate,
+  className,
+  variant = "default",
+}: MarketplaceSearchProps) => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -330,16 +335,30 @@ export const MarketplaceSearch = ({ onNavigate, className }: MarketplaceSearchPr
     return null
   }
 
+  const isCompact = variant === "compact"
+
   return (
     <div ref={containerRef} className={`relative ${className ?? ""}`}>
-      <div className="flex items-center border-2 border-primary rounded-xl overflow-hidden shadow-sm bg-white">
-        <CategoryMegaMenu
-          variant="search"
-          onNavigate={handleNavigate}
-          onCategoryScopeSelect={handleCategoryScopeSelect}
-        />
+      <div
+        className={
+          isCompact
+            ? "relative flex items-center rounded-[10px] border border-transparent bg-canvas focus-within:border-brand-600 focus-within:bg-white"
+            : "flex items-center overflow-hidden rounded-[10px] border border-line bg-white shadow-[0_1px_2px_rgba(16,24,40,.04)]"
+        }
+      >
+        {!isCompact ? (
+          <CategoryMegaMenu
+            variant="search"
+            onNavigate={handleNavigate}
+            onCategoryScopeSelect={handleCategoryScopeSelect}
+          />
+        ) : (
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-mute">
+            <Search size={18} />
+          </span>
+        )}
 
-        {categoryScope && (
+        {categoryScope && !isCompact && (
           <div className="hidden sm:flex items-center gap-1 pl-2 pr-1 border-r border-border flex-shrink-0 max-w-[140px]">
             <span className="text-[11px] font-semibold text-primary truncate">
               {categoryScope.label}
@@ -363,8 +382,16 @@ export const MarketplaceSearch = ({ onNavigate, className }: MarketplaceSearchPr
           aria-controls={listboxId}
           aria-activedescendant={activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined}
           aria-autocomplete="list"
-          placeholder="Поиск B2B услуг, исполнителей, компаний..."
-          className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 text-sm outline-none bg-white h-11 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset"
+          placeholder={
+            isCompact
+              ? "Поиск товаров"
+              : "Поиск товаров, услуг и поставщиков..."
+          }
+          className={
+            isCompact
+              ? "h-10 w-full min-w-0 bg-transparent pl-10 pr-3 text-[14.5px] outline-none"
+              : "h-11 min-w-0 flex-1 bg-white px-3 text-[15px] outline-none sm:px-4"
+          }
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value)
@@ -376,15 +403,17 @@ export const MarketplaceSearch = ({ onNavigate, className }: MarketplaceSearchPr
           aria-label="Поиск услуг и исполнителей"
         />
 
-        <button
-          type="button"
-          onClick={() => submitSearch()}
-          className="bg-primary hover:bg-primary/90 active:scale-[0.98] text-primary-foreground px-4 sm:px-5 h-11 transition-colors flex items-center gap-2 font-semibold text-sm flex-shrink-0"
-          aria-label="Найти"
-        >
-          <Search size={16} />
-          <span className="hidden md:block">Найти</span>
-        </button>
+        {!isCompact ? (
+          <button
+            type="button"
+            onClick={() => submitSearch()}
+            className="flex h-11 shrink-0 items-center gap-2 bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700 sm:px-5"
+            aria-label="Найти"
+          >
+            <Search size={16} />
+            <span className="hidden md:block">Найти</span>
+          </button>
+        ) : null}
       </div>
 
       {categoryScope && (

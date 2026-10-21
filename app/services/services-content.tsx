@@ -39,27 +39,27 @@ export const ServicesPageContent = () => {
 
   return (
     <PageShell>
-      <section className="bg-background py-9">
-        <div className="max-w-[1440px] mx-auto px-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
-              <TrendingUp size={20} className="text-primary" />
-            </div>
+      <section className="bg-canvas py-9">
+        <div className="mx-auto max-w-[1200px] px-4 lg:px-8">
+          <div className="mb-6 flex items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-black text-foreground">Каталог услуг</h1>
-              <p className="text-sm text-muted-foreground">
-                {query ? `Результаты по запросу «${query}»` : "Лучшие предложения от проверенных исполнителей"}
+              <h1 className="text-[28px] font-extrabold tracking-[-0.02em] text-ink">Каталог</h1>
+              <p className="mt-1 text-[14.5px] text-mute">
+                {query
+                  ? `Результаты по запросу «${query}»`
+                  : "Товары и услуги от проверенных поставщиков"}
               </p>
             </div>
+            <TrendingUp className="hidden size-6 text-brand-600 sm:block" aria-hidden />
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="mb-6 flex flex-wrap gap-2">
             <Link
               href={servicesUrl(query ? { q: query } : undefined)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+              className={`inline-flex h-9 items-center justify-center rounded-lg px-3.5 text-[14px] font-semibold leading-none transition ${
                 !category
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-white text-muted-foreground border-border hover:border-primary/30"
+                  ? "bg-ink text-white"
+                  : "border border-line bg-white text-mute hover:text-ink"
               }`}
             >
               Все категории
@@ -68,10 +68,10 @@ export const ServicesPageContent = () => {
               <Link
                 key={cat.id}
                 href={servicesUrl({ ...(query ? { q: query } : {}), category: cat.id })}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                className={`inline-flex h-9 items-center justify-center rounded-lg px-3.5 text-[14px] font-semibold leading-none transition ${
                   category === cat.id
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white text-muted-foreground border-border hover:border-primary/30"
+                    ? "bg-ink text-white"
+                    : "border border-line bg-white text-mute hover:text-ink"
                 }`}
               >
                 {cat.label}
@@ -80,12 +80,15 @@ export const ServicesPageContent = () => {
           </div>
 
           {services.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-white p-12 text-center">
-              <Search size={32} className="text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">По вашему запросу услуги не найдены</p>
+            <div className="grid justify-items-center gap-2 rounded-2xl border border-dashed border-[#D5DAE1] bg-white px-6 py-14 text-center">
+              <Search size={28} className="text-mute" />
+              <b className="text-[17px] text-ink">Ничего не найдено</b>
+              <p className="max-w-md text-[15px] text-mute">
+                Попробуйте другой запрос или разместите заявку — поставщики пришлют цены сами.
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {services.map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}

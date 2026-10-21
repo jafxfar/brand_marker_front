@@ -38,26 +38,27 @@ export default function AdminTopbar() {
   const roleLabel = getStaffRoleLabel(user?.staffRoleName ?? user?.platformRole ?? "admin")
 
   return (
-    <header className="sticky top-0 z-30 flex h-17 items-center gap-4 border-b border-border bg-card px-4 sm:px-6">
+    <header className="sticky top-0 z-30 h-[68px] border-b border-line bg-white/95 backdrop-blur">
+      <div className="mx-auto flex h-full max-w-[1400px] items-center gap-4 px-4 lg:px-8">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
           <button
             type="button"
-            className="-ml-2 rounded-lg p-2 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
+            className="-ml-2 rounded-lg p-2 transition-colors hover:bg-canvas lg:hidden"
             aria-label="Открыть меню администратора"
           >
             <Menu size={22} />
           </button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72.5 p-0">
+        <SheetContent side="right" className="w-80 max-w-[88vw] p-4">
           <SheetTitle className="sr-only">Навигация администратора</SheetTitle>
           <AdminSidebar onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
       </Sheet>
 
       <div className="min-w-0">
-        <p className="truncate text-sm font-bold text-foreground">Управление платформой</p>
-        <p className="hidden text-xs text-muted-foreground sm:block">
+        <p className="truncate text-sm font-bold text-ink">Управление платформой</p>
+        <p className="hidden text-xs text-mute sm:block">
           Контроль операций и состояния маркетплейса
         </p>
       </div>
@@ -66,26 +67,26 @@ export default function AdminTopbar() {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="ml-auto flex items-center gap-2.5 rounded-lg py-1.5 pl-1.5 pr-2 transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="ml-auto flex h-10 items-center gap-2.5 rounded-[10px] py-1.5 pl-1 pr-2 transition-colors hover:bg-canvas"
             aria-label="Открыть меню профиля"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink text-xs font-bold text-white">
               {hydrated && user ? user.name.charAt(0).toUpperCase() : <Shield size={15} />}
             </div>
             <div className="hidden flex-col text-left leading-tight sm:flex">
-              <span className="max-w-35 truncate text-xs font-semibold text-foreground">
+              <span className="max-w-35 truncate text-[14.5px] font-semibold text-ink">
                 {displayName}
               </span>
-              <span className="text-[10px] text-muted-foreground">{roleLabel}</span>
+              <span className="text-[10px] text-mute">{roleLabel}</span>
             </div>
-            <ChevronDown size={14} className="hidden text-muted-foreground sm:block" />
+            <ChevronDown size={14} className="hidden text-mute sm:block" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuLabel>
             <div className="flex flex-col">
               <span className="font-semibold">{displayName}</span>
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="text-xs font-normal text-mute">
                 {hydrated && user ? user.email : ""}
               </span>
             </div>
@@ -98,13 +99,14 @@ export default function AdminTopbar() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={handleLogout}
-            className="cursor-pointer text-destructive focus:text-destructive"
+            className="cursor-pointer text-red-600 focus:text-red-600"
           >
             <LogOut size={15} />
             Выйти
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   )
 }

@@ -1,8 +1,20 @@
 import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
-import type { CatalogItemInput, CatalogItemWithRelations, ItemStatus } from "@/types"
+import type {
+  CatalogItemInput,
+  CatalogItemWithRelations,
+  ItemMediaType,
+  ItemStatus,
+} from "@/types"
 import { apiFetch } from "../client"
 
 const PREFIX = "/supplier/catalog/items"
+const MEDIA_PREFIX = "/supplier/catalog/media"
+
+export type CatalogMediaUpload = {
+  file_name: string
+  file_url: string
+  media_type: ItemMediaType
+}
 
 export const supplierCatalogApi = {
   list: (status?: ItemStatus, params: PageParams = {}) =>
@@ -32,4 +44,13 @@ export const supplierCatalogApi = {
 
   delete: (id: number) =>
     apiFetch<void>(`${PREFIX}/${id}`, { method: "DELETE" }),
+
+  uploadMedia: (file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<CatalogMediaUpload>(MEDIA_PREFIX, {
+      method: "POST",
+      body: form,
+    })
+  },
 }

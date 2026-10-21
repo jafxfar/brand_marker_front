@@ -3,6 +3,7 @@ import { Package, Briefcase } from "lucide-react"
 import type { CatalogItemWithRelations } from "@/types"
 import { catalogItemTypeLabel, formatItemPricing } from "@/lib/item-display"
 import { createRfqHref } from "@/lib/create-rfq-href"
+import { serviceUrl } from "@/lib/marketplace-routes"
 
 type SupplierCatalogGridProps = {
   items: CatalogItemWithRelations[]
@@ -33,7 +34,12 @@ export const SupplierCatalogGrid = ({ items }: SupplierCatalogGridProps) => {
               <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {catalogItemTypeLabel[item.type]}
               </span>
-              <p className="text-sm font-bold text-foreground leading-snug mt-0.5">{item.title}</p>
+              <Link
+                href={serviceUrl(item.id)}
+                className="mt-0.5 block text-sm font-bold leading-snug text-foreground hover:text-primary"
+              >
+                {item.title}
+              </Link>
               {item.category && (
                 <p className="text-[11px] text-muted-foreground mt-0.5">{item.category.name}</p>
               )}

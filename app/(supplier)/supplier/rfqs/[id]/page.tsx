@@ -199,7 +199,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           <RfqBuyerProfileCard buyer={buyer} />
           <RfqSubmitProposalCard
             myProposal={myProposal}
-            myProposalStatus={useApi ? rfq.my_proposal_status : myProposal?.status}
+            myProposalStatus={myProposal?.status ?? rfq.my_proposal_status}
             contractId={contractId}
             isRfqOpen={isRfqOpen}
             buyerName={buyerName}

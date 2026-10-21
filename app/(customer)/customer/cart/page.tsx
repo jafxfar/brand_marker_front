@@ -17,6 +17,7 @@ import PaymentDialog from "@/components/cabinet/payment-dialog"
 import { TermHint } from "@/components/ui/term-hint"
 import { Button } from "@/components/ui/button"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { serviceUrl } from "@/lib/marketplace-routes"
 import type { PaymentScheme } from "@/types"
 
 export default function CartPage() {
@@ -89,7 +90,12 @@ export default function CartPage() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground leading-snug">{item.title}</p>
+                      <Link
+                        href={serviceUrl(item.listingId)}
+                        className="text-sm font-bold leading-snug text-foreground hover:text-primary"
+                      >
+                        {item.title}
+                      </Link>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {supplier?.name ?? "Исполнитель"}
                         {item.color && item.color !== "—" ? ` · ${item.color}` : ""}

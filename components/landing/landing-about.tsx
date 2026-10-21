@@ -1,75 +1,46 @@
 import Link from "next/link"
-import { CheckCircle2, FileCheck, Shield, Users } from "lucide-react"
+import {
+  Monitor, FileText, BrickWall, Box, CupSoda, Shirt, Code2, Truck, Printer, Sparkles,
+} from "lucide-react"
+import { servicesUrl } from "@/lib/marketplace-routes"
 
-const POINTS = [
-  {
-    Icon: Shield,
-    title: "Проверенные участники",
-    text: "Исполнители с компаниями и каталогом — меньше риска для заказчика.",
-  },
-  {
-    Icon: FileCheck,
-    title: "Контракты на площадке",
-    text: "Заявки, предложения и договор в одном кабинете, без лишней переписки.",
-  },
-  {
-    Icon: Users,
-    title: "Прямое общение",
-    text: "Сообщения по сделке и статусы этапов — прозрачно для обеих сторон.",
-  },
-  {
-    Icon: CheckCircle2,
-    title: "Безопасная оплата",
-    text: "Эскроу до приёмки: деньги уходят исполнителю после подтверждения результата.",
-  },
+const CATEGORIES = [
+  { name: "Компьютеры и оргтехника", Icon: Monitor, count: 24 },
+  { name: "Офис и канцелярия", Icon: FileText, count: 18 },
+  { name: "Стройматериалы", Icon: BrickWall, count: 31 },
+  { name: "Упаковка и тара", Icon: Box, count: 12 },
+  { name: "Продукты для HoReCa", Icon: CupSoda, count: 9 },
+  { name: "Спецодежда и СИЗ", Icon: Shirt, count: 15 },
+  { name: "ИТ‑услуги", Icon: Code2, count: 22 },
+  { name: "Логистика", Icon: Truck, count: 11 },
+  { name: "Реклама и печать", Icon: Printer, count: 8 },
+  { name: "Клининг", Icon: Sparkles, count: 7 },
 ]
 
 export const LandingAbout = () => (
-  <section
-    id="about"
-    className="scroll-mt-28 border-b border-border"
-    aria-labelledby="about-heading"
-  >
-    <div className="max-w-[1440px] mx-auto px-6 py-16 sm:py-20">
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 lg:items-center">
-        <div>
-          <h2
-            id="about-heading"
-            className="text-2xl sm:text-3xl font-black text-foreground"
-          >
-            О нас
-          </h2>
-          <p className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
-            БрендМаркет — B2B-площадка для закупок товаров и услуг в
-            Таджикистане. Мы соединяем заказчиков с проверенными исполнителями и
-            сопровождаем сделку от первого запроса до оплаты.
-          </p>
-          <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Присоединяйтесь как исполнитель: получайте прямые заявки, общайтесь с
-            покупателями и заключайте договоры онлайн.
-          </p>
-          <Link
-            href="/register"
-            className="mt-6 inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-ring outline-none"
-          >
-            Стать исполнителем
-          </Link>
-        </div>
-
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {POINTS.map((point) => (
-            <li key={point.title} className="rounded-xl border border-border bg-card p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <point.Icon size={18} aria-hidden />
-              </div>
-              <h3 className="mt-3 text-sm font-bold text-foreground">{point.title}</h3>
-              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-                {point.text}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </div>
+  <section id="about" className="mx-auto mt-16 max-w-[1200px] px-4 lg:px-8">
+    <div className="mb-5 flex items-end justify-between gap-4">
+      <h2 className="text-[28px] font-extrabold tracking-[-0.02em] text-ink">Категории</h2>
+      <Link href="/services" className="text-[15px] font-semibold text-brand-700 hover:underline">
+        Весь каталог
+      </Link>
+    </div>
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {CATEGORIES.map(({ name, Icon, count }) => (
+        <Link
+          key={name}
+          href={servicesUrl({ q: name })}
+          className="grid gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:border-[#C9CED6] hover:shadow-[0_8px_24px_rgba(16,24,40,.06)]"
+        >
+          <span className="grid size-11 place-items-center rounded-xl bg-canvas text-ink">
+            <Icon className="size-6" aria-hidden />
+          </span>
+          <span>
+            <b className="block text-[15px] leading-snug">{name}</b>
+            <span className="text-[13px] text-mute">{count} предложений</span>
+          </span>
+        </Link>
+      ))}
     </div>
   </section>
 )

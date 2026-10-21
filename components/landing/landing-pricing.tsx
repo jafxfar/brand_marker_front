@@ -1,89 +1,44 @@
 import Link from "next/link"
-import { Check } from "lucide-react"
+import { CreditCard, Lock, Truck, CircleCheck } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { guaranteeUrl } from "@/lib/marketplace-routes"
 
-const BUYER_BENEFITS = [
-  "Без комиссий со сделок",
-  "Без абонентской платы",
-  "Без лимита на заявки",
-]
-
-const SUPPLIER_BENEFITS = [
-  "Без абонентской платы",
-  "Без лимита на отклики",
-  "Комиссия только с полученных выплат",
+const STEPS = [
+  { Icon: CreditCard, title: "Вы оплачиваете", text: "Картой или по счёту" },
+  { Icon: Lock, title: "Банк удерживает", text: "Поставщик видит: деньги есть" },
+  { Icon: Truck, title: "Поставщик отгружает", text: "С накладной в сделке" },
+  { Icon: CircleCheck, title: "Вы принимаете", text: "И только тогда деньги уходят" },
 ]
 
 export const LandingPricing = () => (
-  <section
-    id="pricing"
-    className="scroll-mt-28 border-b border-border"
-    aria-labelledby="pricing-heading"
-  >
-    <div className="max-w-[1440px] mx-auto px-6 py-16 sm:py-20">
-      <h2
-        id="pricing-heading"
-        className="text-2xl sm:text-3xl font-black text-foreground"
-      >
-        Бесплатно для заказчиков, прозрачно для исполнителей
-      </h2>
-      <p className="mt-2 max-w-2xl text-sm sm:text-base text-muted-foreground">
-        Никакой абонентской платы и ограничений по количеству. Исполнитель платит
-        комиссию платформы только с денег, полученных по договору.
-      </p>
-
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
-          <p className="text-xs font-bold uppercase tracking-wide text-primary">
-            Для заказчиков
-          </p>
-          <h3 className="mt-2 text-xl font-black text-foreground">
-            Абсолютно бесплатно
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Безлимитное количество запросов на товары и услуги.
-          </p>
-          <ul className="mt-6 space-y-3">
-            {BUYER_BENEFITS.map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm text-foreground">
-                <Check size={16} className="shrink-0 text-primary" aria-hidden />
-                {item}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/register"
-            className="mt-8 inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-ring outline-none"
-          >
-            Создать заявку
-          </Link>
-        </div>
-
-        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 sm:p-8">
-          <p className="text-xs font-bold uppercase tracking-wide text-primary">
-            Для исполнителей
-          </p>
-          <h3 className="mt-2 text-xl font-black text-foreground">
-            Бесплатное размещение
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Безлимитное количество откликов. Размер комиссии виден до отправки предложения.
-          </p>
-          <ul className="mt-6 space-y-3">
-            {SUPPLIER_BENEFITS.map((item) => (
-              <li key={`s-${item}`} className="flex items-center gap-2 text-sm text-foreground">
-                <Check size={16} className="shrink-0 text-primary" aria-hidden />
-                {item}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/register"
-            className="mt-8 inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-ring outline-none"
-          >
-            Начать продавать
-          </Link>
-        </div>
+  <section id="pricing" className="mt-16 bg-ink text-white">
+    <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-14 lg:grid-cols-[340px_1fr] lg:px-8">
+      <div className="grid content-start gap-4">
+        <h2 className="text-[30px] font-extrabold leading-tight tracking-[-0.02em]">
+          Как работает гарантия сделки
+        </h2>
+        <p className="text-[16px] text-white/70">
+          Площадка не держит ваши деньги у себя — их удерживает банк‑партнёр до вашей приёмки.
+        </p>
+        <Button asChild variant="outline" className="justify-self-start border-white bg-white text-ink hover:bg-canvas">
+          <Link href={guaranteeUrl()}>Подробнее</Link>
+        </Button>
       </div>
+      <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {STEPS.map(({ Icon, title, text }, n) => (
+          <li
+            key={title}
+            className="grid content-start gap-3 rounded-2xl border border-white/10 bg-white/[.06] p-5"
+          >
+            <span className="flex items-center justify-between">
+              <Icon className="size-6 text-brand-300" aria-hidden />
+              <span className="text-[13px] font-semibold text-white/50">Шаг {n + 1}</span>
+            </span>
+            <b className="text-[16px]">{title}</b>
+            <span className="text-[14px] text-white/65">{text}</span>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
 )

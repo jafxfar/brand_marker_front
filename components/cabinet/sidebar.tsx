@@ -4,134 +4,120 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, FileText, ShoppingCart, Store,
-  Briefcase, Plus, FileCheck, Wallet, Star, MessageSquare, Package, type LucideIcon,
+  Plus, FileCheck, Wallet, MessageSquare, Building2, type LucideIcon,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useCartStore } from "@/lib/store/cart-store"
+import { BrandLogo } from "@/components/bm"
+import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
+import { Button } from "@/components/ui/button"
 import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { useDealActionCount } from "@/hooks/use-deal-action-count"
+import { useAuthStore } from "@/lib/store/auth-store"
 
-interface NavItem {
+type NavItem = {
   href: string
   label: string
   Icon: LucideIcon
-  badge?: "cart" | "notifications" | "deals"
+  badge?: "deals" | "messages"
 }
 
-interface NavSection {
-  title: string
-  items: NavItem[]
-}
-
-const navSections: NavSection[] = [
-  {
-    title: "Главное",
-    items: [
-      { href: "/customer", label: "Главная", Icon: LayoutDashboard },
-      { href: "/customer/catalog", label: "Товары и услуги", Icon: Package },
-      { href: "/customer/rfqs", label: "Мои заявки", Icon: FileText },
-      { href: "/customer/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
-    ],
-  },
-  {
-    title: "Оплата",
-    items: [
-      { href: "/customer/payments", label: "Платежи", Icon: Wallet },
-      { href: "/customer/cart", label: "Корзина", Icon: ShoppingCart, badge: "cart" },
-    ],
-  },
-  {
-    title: "Партнёры",
-    items: [
-      { href: "/customer/suppliers", label: "Исполнители", Icon: Store },
-      { href: "/customer/messages", label: "Сообщения", Icon: MessageSquare },
-      { href: "/customer/reviews", label: "Мои отзывы", Icon: Star },
-    ],
-  },
+const navItems: NavItem[] = [
+  { href: "/customer", label: "Обзор", Icon: LayoutDashboard },
+  { href: "/customer/rfqs", label: "Заявки", Icon: FileText },
+  { href: "/customer/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
+  { href: "/customer/payments", label: "Платежи и документы", Icon: Wallet },
+  { href: "/customer/messages", label: "Сообщения", Icon: MessageSquare, badge: "messages" },
+  { href: "/customer/company", label: "Компания и сотрудники", Icon: Building2 },
+  { href: "/customer/suppliers", label: "Поставщики", Icon: Store },
 ]
 
 export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const hydrated = useHydrated()
-  const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0))
+  const user = useAuthStore((s) => s.user)
   const unread = useUnreadNotificationsCount("buyer")
   const dealActions = useDealActionCount("buyer")
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
     if (item.badge === "deals") return dealActions
-    return item.badge === "cart" ? cartCount : unread
+    return unread
   }
 
   const isActive = (href: string): boolean =>
     href === "/customer" ? pathname === href : pathname.startsWith(href)
 
   return (
-    <div className="flex flex-col h-full bg-card">
-      <Link
-        href="/"
-        className="flex items-center gap-2.5 h-[68px] px-5 border-b border-border flex-shrink-0"
-      >
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-          <Briefcase size={16} className="text-primary-foreground" />
+    <nav className="grid gap-1" aria-label="Меню кабинета">
+      {onNavigate ? (
+        <div className="mb-3 flex items-center justify-between border-b border-line pb-4">
+          <BrandLogo small />
+          <button
+            type="button"
+            onClick={onNavigate}
+            className="grid size-10 place-items-center rounded-lg hover:bg-canvas"
+            aria-label="Закрыть меню"
+          >
+            ×
+          </button>
         </div>
-        <div className="flex items-baseline gap-0.5">
-          <span className="text-lg font-bold text-primary tracking-tight">Бренд</span>
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            Маркет
-          </span>
-        </div>
-      </Link>
+      ) : null}
 
-      <div className="p-4">
-        <Link
-          href="/customer/rfqs/new"
-          onClick={onNavigate}
-          className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-colors shadow-sm"
-        >
-          <Plus size={17} />
-          Новая заявка
-        </Link>
+      <div className="mb-4 flex items-center gap-3 rounded-xl border border-line bg-white p-3">
+        <span className="grid size-10 place-items-center rounded-lg bg-ink text-[12px] font-semibold text-white">
+          {hydrated && user?.name ? user.name.slice(0, 2).toUpperCase() : "ПК"}
+        </span>
+        <span className="min-w-0 flex-1">
+          <b className="block truncate text-[14.5px]">
+            {hydrated && user?.company ? user.company : "Покупатель"}
+          </b>
+          <span className="text-[12.5px] text-mute">Покупатель</span>
+        </span>
       </div>
 
-      <nav className="flex-1 px-3 space-y-5 overflow-y-auto pb-4">
-        {navSections.map((section) => (
-          <div key={section.title} className="space-y-1">
-            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-              {section.title}
-            </p>
-            {section.items.map((item) => {
-              const active = isActive(item.href)
-              const badge = getBadge(item)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onNavigate}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative",
-                    active
-                      ? "bg-secondary text-primary"
-                      : "text-foreground hover:bg-secondary hover:text-primary",
-                  )}
-                >
-                  <item.Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
-                  <span>{item.label}</span>
-                  {badge > 0 && (
-                    <span
-                      className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center"
-                      aria-label={item.badge === "deals" ? `нужно действие: ${badge}` : String(badge)}
-                    >
-                      {badge}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-          </div>
+      <Button asChild className="mb-4 w-full">
+        <Link href="/customer/rfqs/new" onClick={onNavigate}>
+          <Plus className="size-5" />
+          Новая заявка
+        </Link>
+      </Button>
+
+      <ul className="grid gap-1">
+        {navItems.map((item) => (
+          <li key={item.href}>
+            <CabinetNavLink
+              href={item.href}
+              label={item.label}
+              Icon={item.Icon}
+              active={isActive(item.href)}
+              badge={getBadge(item)}
+              onClick={onNavigate}
+            />
+          </li>
         ))}
-      </nav>
-    </div>
+      </ul>
+
+      <div className="mt-4 border-t border-line pt-4">
+        <CabinetNavLink
+          href="/services"
+          label="Купить в каталоге"
+          Icon={ShoppingCart}
+          onClick={onNavigate}
+        />
+      </div>
+
+      <div className="mt-6 grid gap-2 rounded-xl border border-line bg-white p-4">
+        <b className="text-[14px]">Нужна помощь?</b>
+        <p className="text-[13px] text-mute">
+          Ответим в чате в течение часа или по телефону +992 44 600 00 00.
+        </p>
+        <a
+          href="tel:+992446000000"
+          className="justify-self-start text-[13.5px] font-semibold text-brand-700 hover:underline"
+        >
+          Написать в поддержку
+        </a>
+      </div>
+    </nav>
   )
 }

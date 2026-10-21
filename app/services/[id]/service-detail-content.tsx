@@ -1,35 +1,101 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
-import { BadgeCheck, Flag, MapPin, Star } from "lucide-react"
 import { ReportItemDialog } from "@/components/catalog/report-item-dialog"
 import { PageShell } from "@/components/marketplace/page-shell"
-import { Button } from "@/components/ui/button"
+import { CatalogItemGallery } from "@/components/marketplace/catalog-item-detail/catalog-item-gallery"
+import { CatalogItemPricing } from "@/components/marketplace/catalog-item-detail/catalog-item-pricing"
+import { CatalogItemSpecs } from "@/components/marketplace/catalog-item-detail/catalog-item-specs"
+import { CatalogItemSellerCard } from "@/components/marketplace/catalog-item-detail/catalog-item-seller-card"
+import { CatalogItemReviews } from "@/components/marketplace/catalog-item-detail/catalog-item-reviews"
+import { CatalogItemBuyCard } from "@/components/marketplace/catalog-item-detail/catalog-item-buy-card"
 import { getService } from "@/lib/mock/marketplace-services"
-import { getCategory } from "@/lib/mock/categories"
-import { getIcon } from "@/lib/icon-map"
+import { mockCatalogItems } from "@/lib/mock/items"
+import { mockCompanies } from "@/lib/mock/companies"
+import { toPublicSupplierFromCompany } from "@/lib/supplier-directory"
 import { isApiEnabled } from "@/lib/api/config"
-import { usePublicCatalogItemQuery, usePublicSupplierQuery } from "@/hooks/api/use-public-query"
-import { mapCatalogItemToService } from "@/lib/marketplace-hybrid"
+import {
+  usePublicCatalogItemQuery,
+  usePublicSupplierQuery,
+  usePublicSupplierReviewsQuery,
+} from "@/hooks/api/use-public-query"
 import {
   categoryUrl,
-  loginRedirect,
   performerUrl,
   servicesUrl,
 } from "@/lib/marketplace-routes"
-import { createRfqHref } from "@/lib/create-rfq-href"
+import { catalogItemTypeLabel } from "@/lib/item-display"
 import { tokenStorage } from "@/lib/api/client"
+import type {
+  CatalogItemWithRelations,
+  PublicSupplier,
+  Review,
+} from "@/types"
 import type { MarketplaceService } from "@/types/marketplace"
 
 type ServiceDetailContentProps = {
   serviceId: number
 }
 
+const marketplaceServiceToItem = (
+  service: MarketplaceService,
+): CatalogItemWithRelations => ({
+  id: service.id,
+  actor_id: service.providerId,
+  type: "service",
+  category_id: 0,
+  title: service.title,
+  description: service.description,
+  status: "active",
+  created_at: new Date().toISOString(),
+  category: service.categoryId
+    ? {
+        id: 0,
+        parent_id: null,
+        name: service.categoryId,
+        slug: service.categoryId,
+      }
+    : undefined,
+  attributes: service.tags.map((tag, index) => ({
+    id: index + 1,
+    item_id: service.id,
+    name: "Тег",
+    value: tag,
+    value_type: "text",
+    sort_order: index,
+  })),
+  pricing: null,
+  media: [],
+  stats: null,
+})
+
+const marketplaceServiceToSupplier = (
+  service: MarketplaceService,
+): PublicSupplier => ({
+  actor_id: service.providerId,
+  kind: "company",
+  display_name: service.provider,
+  company_id: service.providerId,
+  city: service.city,
+  country: null,
+  description: null,
+  website: null,
+  rating: service.rating,
+  verification_status: service.verified ? "verified" : "pending",
+  reviews_count: service.reviews,
+  industries: [],
+  active_catalog_count: 0,
+  trust_level: "basic",
+  success_rate: null,
+})
+
 export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) => {
   const useApi = isApiEnabled()
   const [reportOpen, setReportOpen] = useState(false)
-  const { data: apiItem, isLoading } = usePublicCatalogItemQuery(
+  const isAuthenticated = Boolean(tokenStorage.getAccess())
+
+  const { data: apiItem, isLoading: itemLoading } = usePublicCatalogItemQuery(
     serviceId,
     useApi,
   )
@@ -37,30 +103,94 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
     apiItem?.actor_id ?? 0,
     useApi && Boolean(apiItem?.actor_id),
   )
-  const isAuthenticated = Boolean(tokenStorage.getAccess())
+  const { data: reviewsPage, isLoading: reviewsLoading } =
+    usePublicSupplierReviewsQuery(
+      apiItem?.actor_id ?? 0,
+      useApi && Boolean(apiItem?.actor_id),
+      { page: 1, pageSize: 20 },
+    )
 
-  const service: MarketplaceService | null = useApi
-    ? (apiItem ? mapCatalogItemToService(apiItem, null, apiSupplier) : null)
-    : (getService(serviceId) ?? null)
+  const mockBundle = useMemo(() => {
+    if (useApi) return null
+    const catalogItem = mockCatalogItems.find((item) => item.id === serviceId)
+    if (catalogItem) {
+      const company = mockCompanies.find((c) => c.id === catalogItem.actor_id)
+      const supplier = company
+        ? toPublicSupplierFromCompany(company, mockCatalogItems.filter((i) => i.actor_id === catalogItem.actor_id).length)
+        : marketplaceServiceToSupplier({
+            id: catalogItem.id,
+            title: catalogItem.title,
+            description: catalogItem.description ?? "",
+            provider: `Поставщик #${catalogItem.actor_id}`,
+            providerId: catalogItem.actor_id,
+            city: "—",
+            rating: 4.5,
+            reviews: 0,
+            price: "",
+            tags: [],
+            verified: false,
+            badge: null,
+            icon: "Package",
+            iconBg: "",
+            iconColor: "",
+            saves: 0,
+            views: "0",
+            categoryId: catalogItem.category?.slug ?? "",
+          })
+      return {
+        item: catalogItem,
+        supplier,
+        reviews: (company?.reviews ?? []) as Review[],
+      }
+    }
 
-  const isFromApi = Boolean(apiItem)
+    const marketplace = getService(serviceId)
+    if (!marketplace) return null
+    return {
+      item: marketplaceServiceToItem(marketplace),
+      supplier: marketplaceServiceToSupplier(marketplace),
+      reviews: [] as Review[],
+    }
+  }, [serviceId, useApi])
 
-  if (useApi && (isLoading || (apiItem && supplierLoading))) {
+  const item = useApi ? (apiItem ?? null) : (mockBundle?.item ?? null)
+  const supplier = useApi
+    ? (apiSupplier ?? null)
+    : (mockBundle?.supplier ?? null)
+  const reviews = useApi
+    ? (reviewsPage?.items ?? [])
+    : (mockBundle?.reviews ?? [])
+
+  if (useApi && (itemLoading || (apiItem && supplierLoading))) {
     return (
       <PageShell>
-        <div className="max-w-[900px] mx-auto px-6 py-16 animate-pulse">
-          <div className="h-64 bg-secondary rounded-2xl" />
+        <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-4 w-48 rounded bg-secondary" />
+            <div className="grid gap-6 lg:grid-cols-[1fr_1fr_280px]">
+              <div className="aspect-square rounded-xl bg-secondary" />
+              <div className="space-y-4">
+                <div className="h-8 rounded bg-secondary" />
+                <div className="h-24 rounded bg-secondary" />
+                <div className="h-32 rounded bg-secondary" />
+              </div>
+              <div className="h-64 rounded-xl bg-secondary" />
+            </div>
+          </div>
         </div>
       </PageShell>
     )
   }
 
-  if (!service) {
+  if (!item || !supplier) {
     return (
       <PageShell>
-        <div className="max-w-[900px] mx-auto px-6 py-16 text-center">
-          <p className="text-lg font-bold text-foreground">Услуга не найдена</p>
-          <Link href={servicesUrl()} className="text-primary font-semibold hover:underline mt-2 inline-block">
+        <div className="mx-auto max-w-[1200px] px-4 py-16 text-center sm:px-6">
+          <p className="text-lg font-bold text-foreground">Позиция не найдена</p>
+          <Link
+            href={servicesUrl()}
+            className="mt-2 inline-block font-semibold text-primary hover:underline"
+          >
             К каталогу
           </Link>
         </div>
@@ -68,132 +198,115 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
     )
   }
 
-  const categoryLabel = useApi
-    ? (apiItem?.category?.name ?? service.categoryId)
-    : (getCategory(service.categoryId)?.label ?? service.categoryId)
-  const categorySlug = useApi
-    ? (apiItem?.category?.slug ?? service.categoryId)
-    : (getCategory(service.categoryId)?.slug ?? service.categoryId)
-  const Icon = getIcon(service.icon)
+  const typeLabel = catalogItemTypeLabel[item.type]
+  const catalogLabel = item.type === "product" ? "Товары" : "Услуги"
+  const categoryLabel = item.category?.name
+  const categorySlug = item.category?.slug
 
   return (
     <PageShell>
-      <section className="bg-background py-9">
-        <div className="max-w-[900px] mx-auto px-6">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
-            <Link href="/" className="hover:text-primary transition-colors">Главная</Link>
+      <section className="bg-background py-6 sm:py-9">
+        <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+          <nav
+            className="mb-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+            aria-label="Навигация"
+          >
+            <Link href="/" className="transition-colors hover:text-primary">
+              Главная
+            </Link>
             <span>/</span>
-            <Link href={servicesUrl()} className="hover:text-primary transition-colors">Услуги</Link>
+            <Link href={servicesUrl()} className="transition-colors hover:text-primary">
+              {catalogLabel}
+            </Link>
+            {categorySlug && categoryLabel && (
+              <>
+                <span>/</span>
+                <Link
+                  href={categoryUrl(categorySlug)}
+                  className="transition-colors hover:text-primary"
+                >
+                  {categoryLabel}
+                </Link>
+              </>
+            )}
             <span>/</span>
-            <span className="text-foreground font-medium line-clamp-1">{service.title}</span>
-          </div>
+            <span className="line-clamp-1 font-medium text-foreground">{item.title}</span>
+          </nav>
 
-          <div className="bg-white border border-border rounded-2xl overflow-hidden">
-            <div className={`${service.iconBg} p-8 flex items-center gap-4`}>
-              <div className="w-16 h-16 rounded-2xl bg-white/80 flex items-center justify-center shadow-sm">
-                <Icon size={32} className={service.iconColor} />
-              </div>
-              <div>
-                {service.badge && (
-                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mb-2 ${service.badge.className}`}>
-                    {service.badge.label}
-                  </span>
-                )}
-                <h1 className="text-2xl font-black text-foreground">{service.title}</h1>
-              </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)_minmax(240px,280px)] lg:items-start">
+            <div className="md:col-span-1">
+              <CatalogItemGallery media={item.media} title={item.title} />
             </div>
 
-            <div className="p-8 space-y-6">
-              <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
-
-              <div className="flex flex-wrap gap-2">
-                {service.tags.map((tag) => (
-                  <span key={tag} className="text-xs bg-muted text-muted-foreground px-3 py-1 rounded-lg font-medium">
-                    {tag}
-                  </span>
-                ))}
+            <div className="min-w-0 space-y-5 md:col-span-1">
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {typeLabel}
+                </span>
+                <h1 className="mt-1 text-xl font-black leading-snug text-foreground sm:text-2xl">
+                  {item.title}
+                </h1>
+                <Link
+                  href={performerUrl(supplier.actor_id)}
+                  className="mt-2 inline-block text-sm font-medium text-muted-foreground hover:text-primary"
+                >
+                  {supplier.display_name}
+                </Link>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-border">
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Исполнитель</div>
-                  <Link href={performerUrl(service.providerId)} className="text-sm font-semibold text-foreground hover:text-primary flex items-center gap-1">
-                    {service.provider}
-                    {service.verified && <BadgeCheck size={14} className="text-primary" />}
-                  </Link>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Город</div>
-                  <div className="text-sm font-semibold flex items-center gap-1">
-                    <MapPin size={13} className="text-muted-foreground" />
-                    {service.city}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Рейтинг</div>
-                  <div className="text-sm font-semibold flex items-center gap-1">
-                    <Star size={13} className="text-amber-400 fill-amber-400" />
-                    {service.rating} ({service.reviews})
-                  </div>
-                </div>
-                {(categoryLabel || categorySlug) && (
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">Категория</div>
-                    <Link href={categoryUrl(categorySlug)} className="text-sm font-semibold hover:text-primary transition-colors">
-                      {categoryLabel}
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <CatalogItemPricing pricing={item.pricing} />
 
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="text-2xl font-black text-primary">{service.price}</div>
-                <div className="flex flex-wrap gap-3">
-                  {isFromApi && (
-                    isAuthenticated ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setReportOpen(true)}
-                        aria-label="Пожаловаться на позицию"
+              {item.description && (
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {item.description}
+                </p>
+              )}
+
+              {item.attributes.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {[...item.attributes]
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .slice(0, 6)
+                    .map((attr) => (
+                      <span
+                        key={attr.id}
+                        className="rounded-lg bg-muted px-3 py-1 text-xs font-medium text-muted-foreground"
                       >
-                        <Flag aria-hidden="true" />
-                        Пожаловаться
-                      </Button>
-                    ) : (
-                      <Button asChild variant="outline">
-                        <Link href={loginRedirect(`/services/${service.id}`)}>
-                          <Flag aria-hidden="true" />
-                          Пожаловаться
-                        </Link>
-                      </Button>
-                    )
-                  )}
-                  <Link
-                    href={performerUrl(service.providerId)}
-                    className="px-5 py-2.5 rounded-xl border border-border text-sm font-semibold hover:border-primary/30 transition-colors"
-                  >
-                    Профиль исполнителя
-                  </Link>
-                  <Link
-                    href={createRfqHref({
-                      service: service.id,
-                      supplierId: service.providerId,
-                    })}
-                    className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
-                  >
-                    Откликнуться
-                  </Link>
+                        {attr.name}: {attr.value}
+                      </span>
+                    ))}
                 </div>
-              </div>
+              )}
+            </div>
+
+            <div className="md:col-span-2 lg:col-span-1">
+              <CatalogItemBuyCard
+                itemId={item.id}
+                supplier={supplier}
+                isAuthenticated={isAuthenticated}
+                canReport={useApi}
+                onReport={() => setReportOpen(true)}
+              />
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)]">
+            <CatalogItemSellerCard supplier={supplier} />
+            <div className="space-y-5">
+              <CatalogItemSpecs attributes={item.attributes} />
+              <CatalogItemReviews
+                reviews={reviews}
+                isLoading={useApi && reviewsLoading}
+              />
             </div>
           </div>
         </div>
       </section>
-      {isFromApi && (
+
+      {useApi && (
         <ReportItemDialog
           itemId={serviceId}
-          itemTitle={service.title}
+          itemTitle={item.title}
           open={reportOpen}
           onOpenChange={setReportOpen}
         />

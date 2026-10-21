@@ -2,18 +2,25 @@ type CabinetShellProps = {
   sidebar: React.ReactNode
   topbar: React.ReactNode
   children: React.ReactNode
+  mobileNav?: React.ReactNode
 }
 
-export const CabinetShell = ({ sidebar, topbar, children }: CabinetShellProps) => {
+export const CabinetShell = ({
+  sidebar,
+  topbar,
+  children,
+  mobileNav,
+}: CabinetShellProps) => {
   return (
-    <div className="flex min-h-dvh bg-background">
-      <aside className="sticky top-0 hidden h-dvh w-[260px] shrink-0 border-r border-border lg:block">
-        {sidebar}
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        {topbar}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+    <div className="min-h-dvh bg-canvas pb-20 lg:pb-0">
+      {topbar}
+      <div className="mx-auto max-w-[1400px] lg:flex lg:gap-8 lg:px-8 lg:py-8">
+        <aside className="hidden w-[240px] shrink-0 lg:block">
+          <div className="sticky top-[92px]">{sidebar}</div>
+        </aside>
+        <main className="min-w-0 flex-1 px-4 py-6 lg:p-0">{children}</main>
       </div>
+      {mobileNav}
     </div>
   )
 }

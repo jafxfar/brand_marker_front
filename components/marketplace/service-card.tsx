@@ -1,121 +1,58 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
-import { BadgeCheck, Eye, Heart, MapPin, Star } from "lucide-react"
+import { BadgeCheck } from "lucide-react"
 import type { MarketplaceService } from "@/types/marketplace"
 import { getIcon } from "@/lib/icon-map"
 import { serviceUrl } from "@/lib/marketplace-routes"
-import { createRfqHref } from "@/lib/create-rfq-href"
+import { VerifiedChip } from "@/components/bm"
 
 type ServiceCardProps = {
   service: MarketplaceService
 }
 
 export const ServiceCard = ({ service }: ServiceCardProps) => {
-  const [isSaved, setIsSaved] = useState(false)
   const Icon = getIcon(service.icon)
   const detailHref = serviceUrl(service.id)
 
-  const handleToggleSave = () => setIsSaved((prev) => !prev)
-
-  const handleRequest = () => {
-    window.location.href = createRfqHref({
-      service: service.id,
-      supplierId: service.providerId,
-    })
-  }
-
   return (
-    <div className="bg-white border border-border rounded-2xl hover:shadow-lg hover:border-primary/25 transition-all duration-200 group relative overflow-hidden">
-      <div className={`${service.iconBg} h-[110px] flex items-center justify-center relative`}>
-        {service.badge && (
-          <span className={`absolute top-2.5 left-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${service.badge.className} z-10 leading-4`}>
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition hover:border-[#C9CED6] hover:shadow-[0_8px_24px_rgba(16,24,40,.08)]">
+      <Link
+        href={detailHref}
+        className="relative aspect-[4/3] w-full overflow-hidden bg-canvas"
+        aria-label={service.title}
+      >
+        <span className={`absolute inset-0 grid place-items-center ${service.iconBg}`}>
+          <Icon size={40} className="text-[#59606C]" aria-hidden />
+        </span>
+        {service.badge ? (
+          <span className="absolute top-2.5 left-2.5 rounded-md bg-white px-2 py-0.5 text-[12px] font-semibold text-ink">
             {service.badge.label}
           </span>
-        )}
-        <button
-          type="button"
-          onClick={handleToggleSave}
-          className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-sm transition-all"
-          aria-label="Сохранить"
-        >
-          <Heart
-            size={14}
-            className={isSaved ? "fill-red-500 text-red-500" : "text-muted-foreground"}
-          />
-        </button>
-        <Link
-          href={detailHref}
-          className="absolute inset-0 flex items-center justify-center"
-          aria-label={service.title}
-        >
-          <div className="w-14 h-14 rounded-2xl bg-white/70 flex items-center justify-center shadow-sm">
-            <Icon size={26} className={service.iconColor} />
-          </div>
-        </Link>
-      </div>
-
-      <div className="p-3.5">
-        <Link
-          href={detailHref}
-          className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors leading-snug line-clamp-2 block"
-        >
-          {service.title}
-        </Link>
-
-        {service.description ? (
-          <Link
-            href={detailHref}
-            className="text-xs text-muted-foreground hover:text-primary transition-colors leading-relaxed line-clamp-2 mt-1.5 block"
-          >
-            {service.description}
-          </Link>
         ) : null}
+      </Link>
 
-        <div className="flex items-center gap-1.5 mt-2">
-          <div className="flex items-center gap-1 min-w-0">
-            <span className="text-xs text-muted-foreground truncate">{service.provider}</span>
-            {service.verified && <BadgeCheck size={12} className="text-primary flex-shrink-0" />}
-          </div>
+      <div className="grid flex-1 gap-2 p-4">
+        <h3 className="min-h-[42px] text-[15px] font-semibold leading-snug">
+          <Link href={detailHref} className="text-left after:absolute after:inset-0 hover:text-brand-700">
+            <span className="line-clamp-2">{service.title}</span>
+          </Link>
+        </h3>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[18px] font-extrabold tracking-tight text-ink tnum">
+            {service.price}
+          </span>
         </div>
-
-        <div className="flex items-center gap-1 mt-1">
-          <MapPin size={11} className="text-muted-foreground flex-shrink-0" />
-          <span className="text-xs text-muted-foreground">{service.city}</span>
-        </div>
-
-        <div className="flex flex-wrap gap-1 mt-2.5">
-          {service.tags.slice(0, 2).map((tag) => (
-            <span key={tag} className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-lg font-medium">
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between mt-2.5">
-          <div className="flex items-center gap-1">
-            <Star size={11} className="text-amber-400 fill-amber-400" />
-            <span className="text-xs font-bold text-foreground">{service.rating}</span>
-            <span className="text-[10px] text-muted-foreground">({service.reviews})</span>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-            <Eye size={10} />
-            <span>{service.views}</span>
-          </div>
-        </div>
-
-        <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between">
-          <div className="text-sm font-black text-primary">{service.price}</div>
-          <button
-            type="button"
-            onClick={handleRequest}
-            className="text-[11px] font-semibold text-primary hover:bg-secondary px-2 py-1 rounded-lg transition-colors"
-          >
-            Откликнуться
-          </button>
+        <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-[13px] text-mute">
+          <span className="inline-flex min-w-0 items-center gap-1 truncate font-medium text-ink/80">
+            {service.provider}
+            {service.verified ? (
+              <BadgeCheck size={14} className="shrink-0 text-brand-600" aria-hidden />
+            ) : null}
+          </span>
+          {service.verified ? <VerifiedChip compact verified /> : null}
         </div>
       </div>
-    </div>
+    </article>
   )
 }

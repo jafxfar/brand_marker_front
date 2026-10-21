@@ -88,9 +88,11 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
 
   const { data: apiContract, isLoading } = useContractQuery(contractId, hydrated && useApi)
-  const { data: paymentHistoryApi = [] } = usePaymentHistoryQuery(hydrated && useApi)
+  const { data: paymentHistoryPage } = usePaymentHistoryQuery(hydrated && useApi)
+  const paymentHistoryApi = paymentHistoryPage?.items ?? []
   const { viaAlif, currency: alifCurrency } = useAlifPayment(hydrated && useApi)
-  const { data: buyerReviews = [] } = useBuyerReviewsQuery(hydrated && useApi)
+  const { data: buyerReviewsPage } = useBuyerReviewsQuery(hydrated && useApi)
+  const buyerReviews = buyerReviewsPage?.items ?? []
   const sendMessageMutation = useSendMessageMutation()
   const markMessagesReadMutation = useMarkMessagesReadMutation("buyer")
   const openDisputeMutation = useOpenDisputeMutation()

@@ -249,7 +249,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
       <PageSurface className="space-y-4 p-6">
         <h2 className="text-sm font-semibold text-foreground">Медиа</h2>
         <p className="text-xs text-muted-foreground">
-          Изображения, документы и видео (демо — без реальной загрузки)
+          Загрузите изображения, документы или видео — либо укажите ссылку
         </p>
         <MediaFields media={media} onChange={setMedia} />
       </PageSurface>

@@ -22,26 +22,26 @@ export const PageHeader = ({
   return (
     <header
       className={cn(
-        "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+        "mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
         className,
       )}
     >
-      <div className="min-w-0 space-y-1">
+      <div className="min-w-0 space-y-1.5">
         {backHref ? (
           <Link
             href={backHref}
-            className="mb-2 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors duration-160 ease-[cubic-bezier(0.23,1,0.32,1)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mb-2 inline-flex h-9 -ml-2 items-center gap-1.5 rounded-lg pl-2 pr-3 text-[14px] font-medium text-mute hover:bg-white hover:text-ink"
             aria-label={backLabel}
           >
             <ChevronLeft size={16} aria-hidden="true" />
             {backLabel}
           </Link>
         ) : null}
-        <h1 className="text-balance text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="text-balance text-[26px] font-extrabold tracking-[-0.02em] text-ink sm:text-[28px]">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-prose text-sm text-muted-foreground">{description}</p>
+          <p className="max-w-prose text-[14.5px] text-mute">{description}</p>
         ) : null}
       </div>
       {actions ? (

@@ -1,5 +1,11 @@
 import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
-import type { ProposalMessage, ProposalUpdate, ProposalWithRelations, RfqWithRelations } from "@/types"
+import type {
+  ProposalMessage,
+  ProposalMessageThread,
+  ProposalUpdate,
+  ProposalWithRelations,
+  RfqWithRelations,
+} from "@/types"
 import { apiFetch } from "../client"
 
 const RFQ_PREFIX = "/supplier/rfqs"
@@ -35,6 +41,12 @@ export const supplierProposalsApi = {
 
   withdraw: (id: number) =>
     apiFetch<ProposalWithRelations>(`${PROPOSAL_PREFIX}/${id}/withdraw`, { method: "POST" }),
+
+  listMessageThreads: () =>
+    apiFetch<ProposalMessageThread[]>(`${PROPOSAL_PREFIX}/message-threads`),
+
+  getMessageThread: (id: number) =>
+    apiFetch<ProposalMessageThread>(`${PROPOSAL_PREFIX}/${id}/thread`),
 
   listMessages: (id: number) =>
     apiFetch<ProposalMessage[]>(`${PROPOSAL_PREFIX}/${id}/messages`),
