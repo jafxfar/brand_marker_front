@@ -224,7 +224,7 @@ export type AdminCatalogView =
 export type AdminCatalogAction =
   | "approve"
   | "hide"
-  | "request_changes"
+  | "reject"
   | "delete"
 
 export type AdminCatalogOwner = {

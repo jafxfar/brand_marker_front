@@ -25,7 +25,9 @@ import {
 } from "@/lib/rfq-display"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
+import { useQueryClient } from "@tanstack/react-query"
 import {
+  supplierRfqKeys,
   useSubmitSupplierProposalMutation,
   useSupplierProposalsQuery,
   useSupplierRfqQuery,
@@ -37,6 +39,8 @@ import { RfqBuyerProfileCard } from "@/components/supplier/rfq/rfq-buyer-profile
 import { RfqProposalsList } from "@/components/supplier/rfq/rfq-proposals-list"
 import { RfqSubmitProposalCard } from "@/components/supplier/rfq/rfq-submit-proposal-card"
 import { InvitedRfqBadge } from "@/components/supplier/rfq/invited-rfq-badge"
+import { CatalogOfferBadge } from "@/components/supplier/rfq/catalog-offer-badge"
+import { isCatalogOfferRfq } from "@/lib/rfq-board"
 import { ProposalDialog } from "@/components/supplier/proposal-dialog"
 import type { Currency } from "@/types"
 
@@ -59,6 +63,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const useApi = isApiEnabled()
+  const queryClient = useQueryClient()
   const { data: apiRfq, isLoading } = useSupplierRfqQuery(id, hydrated && useApi)
   const { data: apiProposals } = useSupplierProposalsQuery(hydrated && useApi)
   const submitProposalMutation = useSubmitSupplierProposalMutation()
@@ -86,7 +91,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   if (!rfq) {
     return (
       <PageFrame>
-        <PageHeader title="Заявка не найдена" backHref="/supplier/rfqs" backLabel="Вернуться к заявкам заказчиков" />
+        <PageHeader title="Заявка не найдена" backHref="/supplier/rfqs" backLabel="Вернуться к заявкам" />
       </PageFrame>
     )
   }
@@ -135,7 +140,7 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
         title={rfq.title}
         description={`${getRfqCategoryLabel(rfq.category_id)} · ${buyerName}`}
         backHref="/supplier/rfqs"
-        backLabel="Назад к маркетплейсу"
+        backLabel="Назад к заявкам"
       />
 
       {contractId ? (
@@ -161,7 +166,11 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           <span className={`${statusPillClass} bg-secondary text-foreground`}>
             {rfqTypeLabel[rfq.type]}
           </span>
-          {isRfqInvitedFor(rfq, actorId) ? <InvitedRfqBadge /> : null}
+          {isCatalogOfferRfq(rfq) ? (
+            <CatalogOfferBadge />
+          ) : isRfqInvitedFor(rfq, actorId) ? (
+            <InvitedRfqBadge />
+          ) : null}
         </div>
         <div className="grid grid-cols-2 gap-4 border-t border-border pt-6">
           <div>
@@ -204,6 +213,11 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
             isRfqOpen={isRfqOpen}
             buyerName={buyerName}
             onSubmit={() => setDialogOpen(true)}
+            onOfferResolved={() => {
+              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.all })
+              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.detail(id) })
+              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+            }}
           />
         </div>
       </div>

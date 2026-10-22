@@ -3,8 +3,9 @@
 import { use, useMemo } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { ArrowRight, BadgeCheck, MapPin, Star } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
+import { ServiceCard } from "@/components/marketplace/service-card"
 import { getCategoryBySlug } from "@/lib/mock/categories"
 import { getServicesByCategory } from "@/lib/mock/marketplace-services"
 import { getIcon } from "@/lib/icon-map"
@@ -14,7 +15,6 @@ import { mapCatalogItemToService, mapCategoryTreeToMarketplace } from "@/lib/mar
 import {
   categoriesUrl,
   categoryUrl,
-  serviceUrl,
   servicesUrl,
 } from "@/lib/marketplace-routes"
 import type { MarketplaceCategory, MarketplaceService } from "@/types/marketplace"
@@ -134,45 +134,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {services.map((service) => {
-                const ServiceIcon = getIcon(service.icon)
-                return (
-                  <Link
-                    key={service.id}
-                    href={serviceUrl(service.id)}
-                    className="border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg transition-all bg-white group"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`${service.iconBg} w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                        <ServiceIcon size={18} className={service.iconColor} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                          {service.title}
-                        </h2>
-                        <div className="flex items-center gap-1.5 mt-1.5">
-                          <span className="text-xs text-muted-foreground truncate">{service.provider}</span>
-                          {service.verified && <BadgeCheck size={12} className="text-primary flex-shrink-0" />}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-                      <div className="text-sm font-black text-primary">{service.price}</div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Star size={11} className="text-amber-400 fill-amber-400" />
-                          {service.rating}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MapPin size={10} />
-                          {service.city}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })}
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              {services.map((service) => (
+                <ServiceCard key={service.id} service={service} />
+              ))}
             </div>
           )}
         </div>

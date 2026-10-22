@@ -28,6 +28,11 @@ export const proposalsApi = {
       { method: "POST", body: JSON.stringify(body) },
     ),
 
+  withdrawOffer: (id: number) =>
+    apiFetch<ProposalWithRelations>(`${PROPOSAL_PREFIX}/${id}/withdraw`, {
+      method: "POST",
+    }),
+
   listMessageThreads: () =>
     apiFetch<ProposalMessageThread[]>(`${PROPOSAL_PREFIX}/message-threads`),
 

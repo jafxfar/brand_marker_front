@@ -18,35 +18,51 @@ import type { AdminCatalogAction } from "@/lib/api/admin"
 
 const actionMetadata: Record<
   AdminCatalogAction,
-  { title: string; description: string; success: string; destructive?: boolean }
+  {
+    title: string
+    description: string
+    success: string
+    confirm: string
+    destructive?: boolean
+    reasonPlaceholder?: string
+  }
 > = {
   approve: {
     title: "Одобрить позицию?",
     description: "Позиция станет активной и появится в публичном каталоге.",
     success: "Позиция одобрена",
+    confirm: "Одобрить",
   },
   hide: {
     title: "Скрыть позицию?",
     description: "Позиция исчезнет из публичного каталога до повторного одобрения.",
     success: "Позиция скрыта",
+    confirm: "Скрыть",
     destructive: true,
+    reasonPlaceholder: "Почему позиция скрыта из каталога",
   },
-  request_changes: {
-    title: "Запросить изменения?",
-    description: "Владелец получит уведомление с указанной причиной.",
-    success: "Запрос изменений отправлен",
+  reject: {
+    title: "Отклонить позицию?",
+    description:
+      "Исполнитель увидит причину отклонения и сможет исправить карточку, затем отправить её снова на модерацию.",
+    success: "Позиция отклонена, исполнитель уведомлён",
+    confirm: "Отклонить",
+    destructive: true,
+    reasonPlaceholder: "Опишите причину отклонения для исполнителя",
   },
   delete: {
     title: "Удалить позицию?",
     description: "Позиция будет мягко удалена и скрыта из всех очередей.",
     success: "Позиция удалена",
+    confirm: "Удалить",
     destructive: true,
+    reasonPlaceholder: "Почему позиция удалена",
   },
 }
 
 const actionsRequiringReason = new Set<AdminCatalogAction>([
   "hide",
-  "request_changes",
+  "reject",
   "delete",
 ])
 
@@ -104,13 +120,15 @@ export const CatalogActionDialog = ({
         {reasonRequired && (
           <div className="space-y-2">
             <label htmlFor="catalog-action-reason" className="text-sm font-semibold">
-              Причина <span className="text-destructive">*</span>
+              Причина для исполнителя <span className="text-destructive">*</span>
             </label>
             <Textarea
               id="catalog-action-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              placeholder="Опишите причину для владельца и журнала аудита"
+              placeholder={
+                metadata?.reasonPlaceholder || "Опишите причину для исполнителя"
+              }
               rows={5}
               maxLength={2000}
             />
@@ -132,7 +150,7 @@ export const CatalogActionDialog = ({
             onClick={handleSubmit}
           >
             {actionMutation.isPending && <Loader2 className="animate-spin" aria-hidden="true" />}
-            Подтвердить
+            {metadata?.confirm ?? "Подтвердить"}
           </Button>
         </DialogFooter>
       </DialogContent>

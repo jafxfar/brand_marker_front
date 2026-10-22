@@ -37,6 +37,9 @@ export type MarketplaceService = {
   icon: string
   iconBg: string
   iconColor: string
+  imageUrl: string | null
+  moqLabel: string | null
+  activityLabel: string | null
   saves: number
   views: string
   categoryId: string

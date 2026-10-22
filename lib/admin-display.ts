@@ -31,7 +31,7 @@ export const adminReportTargetLabels: Record<string, string> = {
 export const adminHistoryActionLabels: Record<string, string> = {
   "admin.catalog.approve": "Одобрение позиции",
   "admin.catalog.hide": "Скрытие позиции",
-  "admin.catalog.request_changes": "Запрос правок",
+  "admin.catalog.reject": "Отклонение позиции",
   "admin.catalog.delete": "Удаление позиции",
   "admin.rfq.hide": "Скрытие заявки",
   "admin.rfq.close": "Закрытие заявки",

@@ -1,30 +1,55 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import { BadgeCheck, Flag, ShieldCheck, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { PublicSupplier } from "@/types"
-import { createRfqHref } from "@/lib/create-rfq-href"
+import type { ItemPricing, PublicSupplier } from "@/types"
 import { loginRedirect, performerUrl } from "@/lib/marketplace-routes"
+import { resolveListPrice } from "@/lib/item-display"
+import {
+  CatalogBuyOfferDialog,
+  CatalogNegotiateOfferDialog,
+} from "@/components/marketplace/catalog-item-detail/catalog-item-offer-dialogs"
 
 type CatalogItemBuyCardProps = {
   itemId: number
+  itemTitle: string
+  pricing: ItemPricing | null
   supplier: PublicSupplier
   isAuthenticated: boolean
+  canUseApiOffers: boolean
   canReport: boolean
   onReport: () => void
 }
 
 export const CatalogItemBuyCard = ({
   itemId,
+  itemTitle,
+  pricing,
   supplier,
   isAuthenticated,
+  canUseApiOffers,
   canReport,
   onReport,
 }: CatalogItemBuyCardProps) => {
   const verified = supplier.verification_status === "verified"
-  const rfqHref = createRfqHref({
-    service: itemId,
-    supplierId: supplier.actor_id,
-  })
+  const listPrice = resolveListPrice(pricing)
+  const [buyOpen, setBuyOpen] = useState(false)
+  const [negotiateOpen, setNegotiateOpen] = useState(false)
+
+  const loginHref = loginRedirect(`/services/${itemId}`)
+
+  const handleBuy = () => {
+    if (!isAuthenticated) return
+    if (!listPrice) return
+    setBuyOpen(true)
+  }
+
+  const handleNegotiate = () => {
+    if (!isAuthenticated) return
+    setNegotiateOpen(true)
+  }
 
   return (
     <aside className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] lg:sticky lg:top-[88px]">
@@ -61,12 +86,47 @@ export const CatalogItemBuyCard = ({
       </div>
 
       <div className="mt-4 flex flex-col gap-2.5">
-        <Button asChild className="w-full">
-          <Link href={rfqHref}>Купить с гарантией</Link>
-        </Button>
-        <Button asChild variant="outline" className="w-full">
-          <Link href={rfqHref}>Запросить цену</Link>
-        </Button>
+        {canUseApiOffers ? (
+          <>
+            {isAuthenticated ? (
+              <Button
+                type="button"
+                className="w-full"
+                disabled={!listPrice}
+                onClick={handleBuy}
+              >
+                Купить с гарантией
+              </Button>
+            ) : (
+              <Button asChild className="w-full">
+                <Link href={loginHref}>Купить с гарантией</Link>
+              </Button>
+            )}
+            {isAuthenticated ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleNegotiate}
+              >
+                Торговаться
+              </Button>
+            ) : (
+              <Button asChild variant="outline" className="w-full">
+                <Link href={loginHref}>Торговаться</Link>
+              </Button>
+            )}
+            {!listPrice && isAuthenticated && (
+              <p className="text-center text-[12px] text-mute">
+                Опубликованной цены нет — доступен только торг.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-center text-[12px] text-mute">
+            Запросы доступны при подключении API.
+          </p>
+        )}
         <Button asChild variant="ghost" className="w-full">
           <Link href={performerUrl(supplier.actor_id)}>Профиль поставщика</Link>
         </Button>
@@ -84,13 +144,34 @@ export const CatalogItemBuyCard = ({
             </Button>
           ) : (
             <Button asChild variant="ghost" className="h-10 w-full text-muted-foreground">
-              <Link href={loginRedirect(`/services/${itemId}`)}>
+              <Link href={loginHref}>
                 <Flag aria-hidden="true" />
                 Пожаловаться
               </Link>
             </Button>
           ))}
       </div>
+
+      {canUseApiOffers && listPrice && (
+        <CatalogBuyOfferDialog
+          open={buyOpen}
+          onOpenChange={setBuyOpen}
+          itemId={itemId}
+          itemTitle={itemTitle}
+          price={listPrice.price}
+          currency={listPrice.currency}
+        />
+      )}
+      {canUseApiOffers && (
+        <CatalogNegotiateOfferDialog
+          open={negotiateOpen}
+          onOpenChange={setNegotiateOpen}
+          itemId={itemId}
+          itemTitle={itemTitle}
+          listPrice={listPrice?.price ?? null}
+          currency={listPrice?.currency ?? pricing?.currency ?? "TJS"}
+        />
+      )}
     </aside>
   )
 }

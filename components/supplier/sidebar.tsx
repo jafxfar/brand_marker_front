@@ -10,7 +10,7 @@ import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
 import { Button } from "@/components/ui/button"
 import { useDealActionCount } from "@/hooks/use-deal-action-count"
-import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
+import { useUnreadMessagesCount } from "@/hooks/use-unread-messages-count"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { useAuthStore } from "@/lib/store/auth-store"
 
@@ -23,7 +23,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/supplier", label: "Обзор", Icon: LayoutDashboard },
-  { href: "/supplier/rfqs", label: "Заявки покупателей", Icon: Inbox },
+  { href: "/supplier/rfqs", label: "Заявки", Icon: Inbox },
   { href: "/supplier/proposals", label: "Мои КП", Icon: Send },
   { href: "/supplier/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
   { href: "/supplier/catalog", label: "Товары и услуги", Icon: Boxes },
@@ -37,12 +37,12 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
   const dealActions = useDealActionCount("supplier")
-  const unread = useUnreadNotificationsCount("supplier")
+  const unreadMessages = useUnreadMessagesCount("supplier")
 
   const getBadge = (item: NavItem): number => {
-    if (!item.badge) return 0
+    if (!hydrated || !item.badge) return 0
     if (item.badge === "deals") return dealActions
-    return hydrated ? unread : 0
+    return unreadMessages
   }
 
   const isActive = (href: string): boolean =>

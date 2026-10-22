@@ -1,10 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, CheckCircle2, Lock, MessageSquare, Send, XCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { ArrowRight, CheckCircle2, Loader2, Lock, MessageSquare, Send, XCircle } from "lucide-react"
+import { toast } from "sonner"
 import type { Proposal, ProposalStatus } from "@/types"
 import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 import { Button } from "@/components/ui/button"
+import { supplierProposalsApi } from "@/lib/api/supplier/proposals"
+import { getApiErrorMessage } from "@/lib/api/client"
+import { isApiEnabled } from "@/lib/api/config"
 
 type RfqSubmitProposalCardProps = {
   myProposal: Proposal | undefined
@@ -13,6 +19,7 @@ type RfqSubmitProposalCardProps = {
   isRfqOpen: boolean
   buyerName: string
   onSubmit: () => void
+  onOfferResolved?: () => void
 }
 
 const cardClassName =
@@ -41,7 +48,11 @@ export const RfqSubmitProposalCard = ({
   isRfqOpen,
   buyerName,
   onSubmit,
+  onOfferResolved,
 }: RfqSubmitProposalCardProps) => {
+  const router = useRouter()
+  const [pending, setPending] = useState<"accept" | "reject" | null>(null)
+
   if (contractId) {
     return (
       <section className={cardClassName}>
@@ -78,6 +89,101 @@ export const RfqSubmitProposalCard = ({
         title="Предложение отклонено"
         text="Заказчик отклонил ваше предложение по этой заявке."
       />
+    )
+  }
+
+  if (myProposal && (myProposalStatus === "pending_supplier" || myProposal.status === "pending_supplier")) {
+    const handleAccept = async () => {
+      if (!isApiEnabled()) {
+        toast.error("Принятие запроса доступно только через API")
+        return
+      }
+      setPending("accept")
+      try {
+        const result = await supplierProposalsApi.accept(myProposal.id)
+        toast.success("Запрос принят — сделка открыта")
+        onOfferResolved?.()
+        router.push(`/supplier/contracts/${result.contract_id}`)
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось принять запрос"))
+      } finally {
+        setPending(null)
+      }
+    }
+
+    const handleReject = async () => {
+      if (!isApiEnabled()) {
+        toast.error("Отклонение запроса доступно только через API")
+        return
+      }
+      setPending("reject")
+      try {
+        await supplierProposalsApi.reject(myProposal.id)
+        toast.success("Запрос отклонён")
+        onOfferResolved?.()
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, "Не удалось отклонить запрос"))
+      } finally {
+        setPending(null)
+      }
+    }
+
+    return (
+      <section className={cardClassName}>
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle2 size={18} className="text-primary" />
+          <h2 className="text-sm font-semibold text-foreground">Запрос от заказчика</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-3">
+          {buyerName} предлагает условия из каталога. Примите — и сразу откроется сделка.
+        </p>
+        <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 space-y-2">
+          <div className="flex justify-between gap-3 text-sm min-w-0">
+            <span className="text-muted-foreground shrink-0">Цена</span>
+            <span
+              className="font-bold text-foreground truncate text-right"
+              title={formatMoneyDisplay(myProposal.price, myProposal.currency)}
+            >
+              {formatMoneyDisplay(myProposal.price, myProposal.currency)}
+            </span>
+          </div>
+          {myProposal.message && (
+            <p className="text-sm text-foreground/90 whitespace-pre-wrap pt-1 border-t border-primary/20">
+              {myProposal.message}
+            </p>
+          )}
+        </div>
+        <div className="mt-4 flex flex-col gap-2">
+          <Button
+            type="button"
+            size="lg"
+            className="w-full"
+            disabled={pending != null}
+            onClick={() => void handleAccept()}
+          >
+            {pending === "accept" ? <Loader2 className="animate-spin" /> : null}
+            Принять и открыть сделку
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            className="w-full"
+            disabled={pending != null}
+            onClick={() => void handleReject()}
+          >
+            {pending === "reject" ? <Loader2 className="animate-spin" /> : null}
+            Отклонить
+          </Button>
+          <Link
+            href={`/supplier/messages?proposal=${myProposal.id}`}
+            aria-label="Обсудить проект"
+            className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl border border-border text-sm font-bold hover:bg-secondary transition-colors"
+          >
+            <MessageSquare size={16} /> Обсудить
+          </Link>
+        </div>
+      </section>
     )
   }
 

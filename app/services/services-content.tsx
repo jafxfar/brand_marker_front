@@ -39,21 +39,23 @@ export const ServicesPageContent = () => {
 
   return (
     <PageShell>
-      <section className="bg-canvas py-9">
-        <div className="mx-auto max-w-[1200px] px-4 lg:px-8">
-          <div className="mb-6 flex items-end justify-between gap-4">
+      <section className="bg-canvas py-6 sm:py-8">
+        <div className="mx-auto max-w-[1440px] px-3 sm:px-4 lg:px-6">
+          <div className="mb-4 flex items-end justify-between gap-4 sm:mb-5">
             <div>
-              <h1 className="text-[28px] font-extrabold tracking-[-0.02em] text-ink">Каталог</h1>
-              <p className="mt-1 text-[14.5px] text-mute">
+              <h1 className="text-[24px] font-extrabold tracking-[-0.02em] text-ink sm:text-[26px]">
+                Каталог
+              </h1>
+              <p className="mt-0.5 text-[13.5px] text-mute sm:text-[14px]">
                 {query
                   ? `Результаты по запросу «${query}»`
                   : "Товары и услуги от проверенных поставщиков"}
               </p>
             </div>
-            <TrendingUp className="hidden size-6 text-brand-600 sm:block" aria-hidden />
+            <TrendingUp className="hidden size-5 text-brand-600 sm:block" aria-hidden />
           </div>
 
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-2 sm:mb-5">
             <Link
               href={servicesUrl(query ? { q: query } : undefined)}
               className={`inline-flex h-9 items-center justify-center rounded-lg px-3.5 text-[14px] font-semibold leading-none transition ${
@@ -88,7 +90,7 @@ export const ServicesPageContent = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {services.map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}

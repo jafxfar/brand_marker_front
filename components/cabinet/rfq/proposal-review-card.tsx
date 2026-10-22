@@ -31,7 +31,9 @@ export const ProposalReviewCard = ({
   marks = [],
 }: ProposalReviewCardProps) => {
   const meta = proposalStatusMeta[proposal.status]
-  const isFinal = ["accepted", "rejected", "withdrawn", "archived"].includes(proposal.status)
+  const isFinal = ["accepted", "rejected", "withdrawn", "archived", "pending_supplier"].includes(
+    proposal.status,
+  )
 
   return (
     <article

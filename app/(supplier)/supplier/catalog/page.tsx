@@ -27,7 +27,7 @@ const tabs: { value: Tab; label: string }[] = [
   { value: "all", label: "Все" },
   { value: "draft", label: "Черновики" },
   { value: "pending_review", label: "На модерации" },
-  { value: "changes_requested", label: "Нужны правки" },
+  { value: "changes_requested", label: "Отклонённые" },
   { value: "active", label: "Активные" },
   { value: "hidden", label: "Скрытые" },
   { value: "archived", label: "Архив" },

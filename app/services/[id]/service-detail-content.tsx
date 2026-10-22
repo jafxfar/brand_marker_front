@@ -282,8 +282,11 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
             <div className="md:col-span-2 lg:col-span-1">
               <CatalogItemBuyCard
                 itemId={item.id}
+                itemTitle={item.title}
+                pricing={item.pricing}
                 supplier={supplier}
                 isAuthenticated={isAuthenticated}
+                canUseApiOffers={useApi}
                 canReport={useApi}
                 onReport={() => setReportOpen(true)}
               />

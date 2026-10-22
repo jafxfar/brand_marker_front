@@ -109,6 +109,7 @@ export type CatalogItemWithRelations = ItemWithRelations & {
   pricing: ItemPricing | null
   media: ItemMedia[]
   stats: ItemStats | null
+  rejection_reason?: string | null
 }
 
 export type ItemCreate = Omit<Item, "id" | "created_at"> & {

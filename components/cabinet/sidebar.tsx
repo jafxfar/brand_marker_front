@@ -9,7 +9,7 @@ import {
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
 import { Button } from "@/components/ui/button"
-import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
+import { useUnreadMessagesCount } from "@/hooks/use-unread-messages-count"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { useDealActionCount } from "@/hooks/use-deal-action-count"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -35,13 +35,13 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
   const pathname = usePathname()
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
-  const unread = useUnreadNotificationsCount("buyer")
+  const unreadMessages = useUnreadMessagesCount("buyer")
   const dealActions = useDealActionCount("buyer")
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
     if (item.badge === "deals") return dealActions
-    return unread
+    return unreadMessages
   }
 
   const isActive = (href: string): boolean =>

@@ -13,6 +13,7 @@ export const PROPOSAL_CHAT_OPEN_STATUSES: ProposalStatus[] = [
   "submitted",
   "viewed",
   "shortlisted",
+  "pending_supplier",
 ]
 
 export const myProposalTabLabels: Record<MyProposalFilterStatus, string> = {
@@ -36,6 +37,10 @@ export const proposalStatusMeta: Record<
   },
   shortlisted: {
     label: "В избранном",
+    className: "bg-warning/10 text-warning",
+  },
+  pending_supplier: {
+    label: "Ожидает исполнителя",
     className: "bg-warning/10 text-warning",
   },
   accepted: {
