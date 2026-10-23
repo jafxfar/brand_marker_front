@@ -38,6 +38,10 @@ interface ProposalsState {
     side: "buyer" | "supplier"
   }) => ProposalMessage
   updateProposalStatus: (id: number, status: ProposalStatus) => void
+  patchProposal: (
+    id: number,
+    patch: Partial<Pick<Proposal, "price" | "currency" | "delivery_time" | "message" | "status">>,
+  ) => void
   submitProposal: (input: ProposalCreate) => Proposal
   acceptProposal: (
     proposalId: number,
@@ -147,7 +151,7 @@ export const useProposalsStore = create<ProposalsState>()(
             href:
               side === "buyer"
                 ? `/supplier/rfqs/${rfq.id}`
-                : `/customer/rfqs/${rfq.id}/proposals`,
+                : `/customer/rfqs/${rfq.id}`,
           })
         }
         return message
@@ -157,6 +161,13 @@ export const useProposalsStore = create<ProposalsState>()(
         set((state) => ({
           proposals: state.proposals.map((p) =>
             p.id === id ? { ...p, status } : p,
+          ),
+        })),
+
+      patchProposal: (id, patch) =>
+        set((state) => ({
+          proposals: state.proposals.map((p) =>
+            p.id === id ? { ...p, ...patch } : p,
           ),
         })),
 
@@ -174,7 +185,7 @@ export const useProposalsStore = create<ProposalsState>()(
             type: "proposal",
             title: "Новое предложение",
             body: `Исполнитель отправил предложение на заявку «${rfq.title}»`,
-            href: `/customer/rfqs/${rfq.id}/proposals`,
+            href: `/customer/rfqs/${rfq.id}`,
           })
         }
         return proposal

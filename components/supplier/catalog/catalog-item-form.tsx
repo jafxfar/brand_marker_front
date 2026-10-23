@@ -63,6 +63,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
     })) ?? [],
   )
   const [pricing, setPricing] = useState<PricingFieldValues>(pricingFromItem(initial))
+  const [invoice, setInvoice] = useState(initial?.invoice !== false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validate = (): boolean => {
@@ -108,6 +109,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
     title: title.trim(),
     description: description.trim(),
     status,
+    invoice,
     attributes: attributes
       .filter((a) => a.name.trim())
       .map((a, index) => ({
@@ -239,6 +241,22 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
             <p className="text-xs text-destructive mt-1">{errors.description}</p>
           )}
         </div>
+        <label className="flex items-start gap-3 rounded-xl border border-border px-4 py-3 cursor-pointer hover:border-primary/30 transition-colors">
+          <input
+            type="checkbox"
+            checked={invoice}
+            onChange={(e) => setInvoice(e.target.checked)}
+            className="mt-0.5 size-4 accent-primary"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-foreground">
+              Оплата по счёту
+            </span>
+            <span className="block text-xs text-muted-foreground mt-0.5">
+              Покупатель сможет запросить счёт на компанию
+            </span>
+          </span>
+        </label>
       </PageSurface>
 
       <PageSurface className="space-y-4 p-6">

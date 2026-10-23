@@ -8,10 +8,26 @@ export const categoriesUrl = () => "/categories"
 
 export const serviceUrl = (id: number | string) => `/services/${id}`
 
-export const servicesUrl = (params?: { q?: string; category?: string }) => {
+export type CatalogSort = "pop" | "cheap" | "rating"
+export type CatalogView = "items" | "suppliers"
+
+export type ServicesUrlParams = {
+  q?: string
+  category?: string
+  view?: CatalogView
+  verified?: boolean
+  invoice?: boolean
+  sort?: CatalogSort
+}
+
+export const servicesUrl = (params?: ServicesUrlParams) => {
   const search = new URLSearchParams()
   if (params?.q) search.set("q", params.q)
   if (params?.category) search.set("category", params.category)
+  if (params?.view && params.view !== "items") search.set("view", params.view)
+  if (params?.verified) search.set("verified", "true")
+  if (params?.invoice) search.set("invoice", "true")
+  if (params?.sort && params.sort !== "pop") search.set("sort", params.sort)
   const query = search.toString()
   return query ? `/services?${query}` : "/services"
 }

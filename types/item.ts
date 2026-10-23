@@ -97,6 +97,7 @@ export type Item = {
   title: string
   description: string | null
   status: ItemStatus
+  invoice?: boolean
   created_at: string
 }
 
@@ -140,6 +141,7 @@ export type CatalogItemInput = {
   title: string
   description: string
   status: ItemStatus
+  invoice?: boolean
   attributes: Array<Omit<ItemAttributeCreate, "item_id" | "sort_order"> & { sort_order?: number }>
   media: ItemMediaCreate[]
   pricing: ItemPricingCreate

@@ -1,4 +1,5 @@
 import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
+import type { CatalogSort } from "@/lib/marketplace-routes"
 import type {
   CatalogItemWithRelations,
   CompanyWithRelations,
@@ -7,6 +8,17 @@ import type {
   RfqWithRelations,
 } from "@/types"
 import { apiFetch } from "./client"
+
+export type PublicCatalogParams = PageParams & {
+  verified?: boolean
+  invoice?: boolean
+  sort?: CatalogSort
+  catalog_type?: "product" | "service"
+}
+
+export type PublicSuppliersParams = PageParams & {
+  verified?: boolean
+}
 
 export type CategoryTree = {
   id: number
@@ -30,9 +42,14 @@ export const publicApi = {
 
   platformSettings: () => apiFetch<PlatformSettings>("/public/platform-settings"),
 
-  suppliers: (q?: string, category?: string, params: PageParams = {}) =>
+  suppliers: (q?: string, category?: string, params: PublicSuppliersParams = {}) =>
     apiFetch<Page<PublicSupplier>>(
-      `/public/suppliers${buildPageQuery({ ...params, q, category })}`,
+      `/public/suppliers${buildPageQuery({
+        ...params,
+        q,
+        category,
+        verified: params.verified || undefined,
+      })}`,
     ),
 
   supplier: (actorId: number) =>
@@ -60,9 +77,16 @@ export const publicApi = {
       `/public/companies/${id}/catalog${buildPageQuery(params)}`,
     ),
 
-  catalog: (q?: string, category?: string, params: PageParams = {}) =>
+  catalog: (q?: string, category?: string, params: PublicCatalogParams = {}) =>
     apiFetch<Page<CatalogItemWithRelations>>(
-      `/public/catalog${buildPageQuery({ ...params, q, category })}`,
+      `/public/catalog${buildPageQuery({
+        ...params,
+        q,
+        category,
+        verified: params.verified || undefined,
+        invoice: params.invoice || undefined,
+        sort: params.sort && params.sort !== "pop" ? params.sort : undefined,
+      })}`,
     ),
 
   catalogItem: (id: number) =>

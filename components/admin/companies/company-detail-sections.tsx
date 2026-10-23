@@ -1,6 +1,7 @@
 "use client"
 
 import { type ReactNode, useState } from "react"
+import { formatCurrency } from "@/lib/format"
 import {
   Check,
   ExternalLink,
@@ -19,12 +20,9 @@ import type {
 } from "@/lib/api/admin"
 import { resolveFileUrl } from "@/lib/file-url"
 
-const formatMoney = (value: number, currency = "TJS") =>
-  new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value)
+const formatMoney = (value: number | null | undefined, currency?: string | null) =>
+  value == null ? "—" : formatCurrency(value, currency || "TJS")
+
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" }).format(new Date(value))

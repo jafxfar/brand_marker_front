@@ -4,8 +4,9 @@ import { use, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Pencil, Plus, Send } from "lucide-react"
-import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
+import { StatusBadge } from "@/components/bm"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
@@ -22,28 +23,22 @@ import {
 import {
   useAcceptProposalMutation,
   useProposalsForRfqQuery,
-  useRejectProposalMutation,
-  useShortlistProposalMutation,
 } from "@/hooks/api/use-proposals-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 import { useCategoryOptions } from "@/hooks/use-category-options"
-import { getRfqRequirements } from "@/lib/rfq-requirements"
-import { rfqTypeLabel } from "@/lib/rfq-display"
-import { formatCurrency, formatIsoDate, formatRfqBudget } from "@/lib/format"
-import { getRfqTimeline } from "@/lib/process/rfq-timeline"
-import { DEAL_NEXT_STEP, getDealPhase } from "@/lib/process/deal-stages"
 import {
-  ConfirmActionDialog,
-  DealStageBar,
-  NextActionCard,
-  ProcessTimeline,
-} from "@/components/process"
-import { RfqDescriptionSection } from "@/components/rfq/rfq-description-section"
-import { RfqRequirementsSection } from "@/components/rfq/rfq-requirements-section"
-import { RfqAttachmentsSection } from "@/components/rfq/rfq-attachments-section"
-import { RfqStatusBadge } from "@/components/rfq/rfq-status-badge"
-import { ProposalsPreviewPanel } from "@/components/cabinet/rfq/proposals-preview-panel"
+  buyerRfqBadgeLabel,
+  buyerRfqBadgeStatus,
+} from "@/lib/buyer-rfq-display"
+import { formatCurrency, formatIsoDate, formatRfqNo } from "@/lib/format"
+import { DEAL_NEXT_STEP, getDealPhase } from "@/lib/process/deal-stages"
+import { ConfirmActionDialog } from "@/components/process"
+import { ProposalsCompareTable } from "@/components/cabinet/rfq/proposals-compare-table"
 import { AcceptProposalDialog } from "@/components/cabinet/rfq/accept-proposal-dialog"
+import {
+  RfqPositionsCard,
+  RfqTermsCard,
+} from "@/components/rfq/rfq-v5-detail-cards"
 import type { Proposal, ProposalAcceptInput, RfqWithRelations } from "@/types"
 
 type PageProps = {
@@ -65,7 +60,6 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
   const publishRfqLocal = useRfqsStore((s) => s.publishRfq)
   const closeRfqLocal = useRfqsStore((s) => s.closeRfq)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
-  const updateProposalStatus = useProposalsStore((s) => s.updateProposalStatus)
   const acceptProposalLocal = useProposalsStore((s) => s.acceptProposal)
   const getContractByRfqId = useContractsStore((s) => s.getContractByRfqId)
 
@@ -77,8 +71,6 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
 
   const publishMutation = usePublishRfqMutation()
   const closeMutation = useCloseRfqMutation()
-  const shortlistMutation = useShortlistProposalMutation()
-  const rejectMutation = useRejectProposalMutation()
   const acceptMutation = useAcceptProposalMutation()
 
   const [acceptTarget, setAcceptTarget] = useState<Proposal | null>(null)
@@ -113,14 +105,20 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
   if (!rfq || rfq.actor_id !== String(actorId)) {
     return (
       <PageFrame>
-        <PageHeader title="Заявка не найдена" backHref="/customer/rfqs" backLabel="Вернуться к списку" />
+        <PageHeader
+          title="Заявка не найдена"
+          backHref="/customer/rfqs"
+          backLabel="Заявки"
+        />
       </PageFrame>
     )
   }
 
-  const requirements = getRfqRequirements(rfq)
   const canManageProposals = MANAGE_PROPOSAL_STATUSES.includes(
     rfq.status as (typeof MANAGE_PROPOSAL_STATUSES)[number],
+  )
+  const visibleProposals = proposals.filter(
+    (p) => !["withdrawn", "archived"].includes(p.status),
   )
 
   const handleAccept = async (proposalId: number, terms: ProposalAcceptInput) => {
@@ -151,159 +149,137 @@ export default function BuyerRfqDetailPage({ params }: PageProps) {
     closeRfqLocal(rfq.id)
   }
 
-  const handleShortlist = (proposalId: number) => {
-    if (useApi) {
-      shortlistMutation.mutate(proposalId)
-      return
-    }
-    updateProposalStatus(proposalId, "shortlisted")
-  }
-
-  const handleReject = (proposalId: number) => {
-    if (useApi) {
-      rejectMutation.mutate(proposalId)
-      return
-    }
-    updateProposalStatus(proposalId, "rejected")
-  }
-
-  const visibleProposals = proposals.filter(
-    (p) => !["withdrawn", "archived"].includes(p.status),
-  )
-  const timeline = getRfqTimeline(rfq, visibleProposals.length, contract)
-  const summary = [
+  const publishedLabel = formatIsoDate(rfq.created_at)
+  const description = [
     getRfqCategoryLabel(rfq.category_id),
-    rfqTypeLabel[rfq.type],
-    `бюджет ${formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}`,
-    rfq.status === "draft" ? null : `приём до ${formatIsoDate(rfq.deadline)}`,
+    rfq.status === "draft" ? "черновик" : `опубликована ${publishedLabel}`,
+    rfq.status !== "draft" ? `приём КП до ${formatIsoDate(rfq.deadline)}` : null,
   ]
     .filter(Boolean)
     .join(" · ")
 
-  const renderStatusPanel = () => {
-    if (rfq.status === "draft") {
-      return (
-        <NextActionCard
-          hot
-          title="Опубликуйте заявку"
-          text="Пока заявка в черновике, исполнители её не видят. Проверьте описание и опубликуйте — первые предложения обычно приходят в течение дня."
-          actions={
-            <>
-              <Button onClick={handlePublish} disabled={publishMutation.isPending}>
-                <Send /> Опубликовать заявку
-              </Button>
-              <Button asChild variant="outline">
-                <Link href={`/customer/rfqs/${rfq.id}/edit`}>
-                  <Pencil /> Изменить
-                </Link>
-              </Button>
-            </>
-          }
-        />
-      )
-    }
-
-    if (contract) {
-      const phase = getDealPhase(contract)
-      const supplierName = getSupplierName(contract.supplier_actor_id)
-      return (
-        <section className="grid gap-3 rounded-2xl border border-border bg-card p-5">
-          <span className="text-sm text-muted-foreground">По заявке идёт сделка</span>
-          <b className="text-[17px]">
-            {supplierName} · {formatCurrency(contract.agreed_amount, contract.currency)}
-          </b>
-          <DealStageBar contract={contract} />
-          <p className="text-sm">{DEAL_NEXT_STEP.buyer[phase]}</p>
-          <div>
-            <Button asChild>
-              <Link href={`/customer/contracts/${contract.id}`}>
-                Открыть сделку <ArrowRight />
-              </Link>
-            </Button>
-          </div>
-        </section>
-      )
-    }
-
-    if (rfq.status === "expired") {
-      return (
-        <NextActionCard
-          title="Срок приёма предложений истёк"
-          text="Исполнители больше не могут откликнуться. Если вы ещё ищете исполнителя, создайте новую заявку — это займёт пару минут."
-          actions={
-            <>
-              <Button asChild>
-                <Link href="/customer/rfqs/new">
-                  <Plus /> Новая заявка
-                </Link>
-              </Button>
-              <Button variant="outline" onClick={() => setCloseConfirmOpen(true)}>
-                Закрыть заявку
-              </Button>
-            </>
-          }
-        />
-      )
-    }
-
-    if (canManageProposals) {
-      return (
-        <ProposalsPreviewPanel
-          rfqId={rfq.id}
-          proposals={visibleProposals}
-          canManage={canManageProposals}
-          getSupplier={getSupplier}
-          getSupplierName={getSupplierName}
-          onShortlist={handleShortlist}
-          onReject={handleReject}
-          onAccept={(proposalId) => {
-            const target = proposals.find((p) => p.id === proposalId)
-            if (target) setAcceptTarget(target)
-          }}
-        />
-      )
-    }
-
-    return (
-      <PageSurface className="p-5">
-        <p className="text-muted-foreground">
-          {rfq.status === "cancelled" ? "Заявка закрыта." : "Заявка завершена."}
-        </p>
-      </PageSurface>
-    )
-  }
-
   return (
     <PageFrame>
       <PageHeader
-        title={rfq.title}
-        description={summary}
+        title={
+          <>
+            <span className="mono mr-2 text-[18px] font-semibold text-mute">
+              {formatRfqNo(rfq.id)}
+            </span>
+            {rfq.title}
+          </>
+        }
+        description={description}
         backHref="/customer/rfqs"
-        backLabel="Мои заявки"
-        actions={<RfqStatusBadge status={rfq.status} />}
+        backLabel="Заявки"
+        actions={
+          <StatusBadge
+            status={buyerRfqBadgeStatus(rfq.status)}
+            label={buyerRfqBadgeLabel(rfq.status)}
+          />
+        }
       />
 
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <div className="grid gap-5">
-          <PageSurface className="p-5">
-            <ProcessTimeline steps={timeline} label="Как идёт заявка" />
-          </PageSurface>
-          <RfqDescriptionSection description={rfq.description} />
-          <RfqRequirementsSection requirements={requirements} />
-          <RfqAttachmentsSection attachments={rfq.attachments} />
-          {canManageProposals && (
-            <button
-              type="button"
+      <div className="grid gap-6">
+        {rfq.status === "draft" ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4">
+            <span className="flex-1 text-[14px] text-brand-900">
+              Черновик не виден поставщикам. Проверьте описание и опубликуйте заявку.
+            </span>
+            <Button onClick={handlePublish} disabled={publishMutation.isPending}>
+              <Send size={16} /> Опубликовать
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/customer/rfqs/${rfq.id}/edit`}>
+                <Pencil size={16} /> Изменить
+              </Link>
+            </Button>
+          </div>
+        ) : null}
+
+        {rfq.status === "expired" ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <span className="flex-1 text-[14px] text-amber-800">
+              Срок приёма КП истёк — поставщики больше не могут ответить.
+            </span>
+            <Button asChild variant="outline" size="sm" className="h-9">
+              <Link href="/customer/rfqs/new">
+                <Plus size={16} /> Новая заявка
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9"
               onClick={() => setCloseConfirmOpen(true)}
-              disabled={closeMutation.isPending}
-              className="justify-self-start px-2 text-sm font-semibold text-destructive hover:underline disabled:opacity-50"
             >
               Закрыть заявку
-            </button>
-          )}
-        </div>
+            </Button>
+          </div>
+        ) : null}
 
-        <div className="grid gap-3">{renderStatusPanel()}</div>
+        {contract ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-4">
+            <span className="flex-1 text-[14px] text-ink">
+              По заявке идёт сделка с{" "}
+              <b>{getSupplierName(contract.supplier_actor_id)}</b>
+              {": "}
+              {DEAL_NEXT_STEP.buyer[getDealPhase(contract)].toLowerCase()}.{" "}
+              <span className="mono">
+                {formatCurrency(contract.agreed_amount, contract.currency)}
+              </span>
+            </span>
+            <Button asChild size="sm" className="h-9">
+              <Link href={`/customer/contracts/${contract.id}`}>
+                Открыть сделку <ArrowRight size={15} />
+              </Link>
+            </Button>
+          </div>
+        ) : null}
+
+        {rfq.status !== "draft" ? (
+          <section>
+            <ProposalsCompareTable
+              rfq={rfq}
+              proposals={visibleProposals}
+              canManage={canManageProposals}
+              getSupplier={getSupplier}
+              getSupplierName={getSupplierName}
+              onAccept={(proposalId) => {
+                const target = proposals.find((p) => p.id === proposalId)
+                if (target) setAcceptTarget(target)
+              }}
+            />
+          </section>
+        ) : null}
+
+        <section className="grid gap-5 lg:grid-cols-2">
+          <RfqPositionsCard rfq={rfq} />
+          <RfqTermsCard
+            rfq={rfq}
+            footer={
+              canManageProposals || rfq.status === "draft" ? (
+                <>
+                  <Button asChild variant="outline" size="sm" className="h-9">
+                    <Link href={`/customer/rfqs/${rfq.id}/edit`}>Изменить</Link>
+                  </Button>
+                  {canManageProposals ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-9"
+                      disabled={closeMutation.isPending}
+                      onClick={() => setCloseConfirmOpen(true)}
+                    >
+                      Закрыть заявку
+                    </Button>
+                  ) : null}
+                </>
+              ) : undefined
+            }
+          />
+        </section>
       </div>
 
       <ConfirmActionDialog

@@ -5,20 +5,27 @@ import { isApiEnabled } from "@/lib/api/config"
 import type { PageParams } from "@/lib/pagination"
 import type { RfqCreate, RfqUpdate } from "@/types"
 
+type RfqListParams = PageParams & { q?: string; type?: string }
+
 export const rfqKeys = {
   all: ["rfqs"] as const,
-  list: (tab?: string, page = 1) =>
-    [...rfqKeys.all, "list", tab ?? "all", page] as const,
+  list: (tab?: string, page = 1, q = "", type = "all") =>
+    [...rfqKeys.all, "list", tab ?? "all", page, q, type] as const,
   detail: (id: string) => [...rfqKeys.all, "detail", id] as const,
 }
 
 export const useRfqsQuery = (
   filter: BuyerRfqStatusFilter,
   enabled = true,
-  params: PageParams = {},
+  params: RfqListParams = {},
 ) =>
   useQuery({
-    queryKey: rfqKeys.list(filter, params.page ?? 1),
+    queryKey: rfqKeys.list(
+      filter,
+      params.page ?? 1,
+      params.q ?? "",
+      params.type ?? "all",
+    ),
     queryFn: () => rfqsApi.list(filter, params),
     enabled: enabled && isApiEnabled(),
   })

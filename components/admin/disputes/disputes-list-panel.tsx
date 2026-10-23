@@ -1,6 +1,7 @@
 "use client"
 
 import { Suspense, useCallback, useEffect, useState, Fragment} from "react"
+import { formatCurrency } from "@/lib/format"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
@@ -27,6 +28,9 @@ import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } 
 import { Input } from "@/components/ui/input"
 import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
+const formatMoney = (value: number | null | undefined, currency?: string | null) =>
+  value == null ? "—" : formatCurrency(value, currency || "TJS")
+
 const viewFilters: Array<{ value: AdminDisputeView; label: string }> = [
   { value: "open", label: "Открытые" },
   { value: "under_review", label: "На рассмотрении" },
@@ -44,14 +48,6 @@ const formatDate = (value: string) =>
     year: "numeric",
   }).format(new Date(value))
 
-const formatMoney = (value: number | null | undefined, currency: string | null) => {
-  if (value == null) return "—"
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: currency || "TJS",
-    maximumFractionDigits: 0,
-  }).format(value)
-}
 
 const DisputesSkeleton = () => (
   <PageFrame className="animate-pulse" aria-label="Загрузка споров">

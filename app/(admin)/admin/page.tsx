@@ -15,8 +15,7 @@ import {
   AttentionList,
   type AttentionItem,
 } from "@/components/admin/dashboard/attention-list"
-import { formatCurrency } from "@/lib/format"
-import { pluralRu } from "@/lib/format"
+import { formatCurrency, formatCurrencyExact, pluralRu } from "@/lib/format"
 import type { AdminDashboardMetrics } from "@/lib/api/admin"
 
 const formatDateRu = (date: Date) =>
@@ -224,16 +223,19 @@ export default function AdminDashboardPage() {
           <MetricTile
             label="Оборот за месяц"
             value={formatCurrency(metrics.monthly_revenue)}
+            valueTitle={formatCurrencyExact(metrics.monthly_revenue)}
             hint="по завершённым и текущим сделкам"
           />
           <MetricTile
             label="На гарантии"
             value={formatCurrency(metrics.escrow_balance)}
+            valueTitle={formatCurrencyExact(metrics.escrow_balance)}
             hint={`${metrics.active_contracts} ${pluralRu(metrics.active_contracts, "сделка", "сделки", "сделок")}`}
           />
           <MetricTile
             label="Комиссия за месяц"
             value={formatCurrency(commission)}
+            valueTitle={formatCurrencyExact(commission)}
             hint="4% с поставщиков"
           />
           <MetricTile

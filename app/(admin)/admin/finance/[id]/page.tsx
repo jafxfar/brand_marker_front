@@ -1,6 +1,7 @@
 "use client"
 
 import { use, useState } from "react"
+import { formatCurrency } from "@/lib/format"
 import Link from "next/link"
 import {
   CheckCircle2,
@@ -27,6 +28,9 @@ import {
   adminLabel,
 } from "@/lib/admin-display"
 
+const formatMoney = (value: number | null | undefined, currency?: string | null) =>
+  value == null ? "—" : formatCurrency(value, currency || "TJS")
+
 const sections = [
   ["transaction", "Транзакция"],
   ["gateway", "Шлюз"],
@@ -45,12 +49,6 @@ const DetailSkeleton = () => (
   </PageFrame>
 )
 
-const formatMoney = (value: number, currency: string) =>
-  new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: currency || "TJS",
-    maximumFractionDigits: 0,
-  }).format(value)
 
 const downloadBlob = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob)

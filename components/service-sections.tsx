@@ -18,10 +18,10 @@ import {
   usePublicRfqsQuery,
 } from "@/hooks/api/use-public-query"
 import {
-  mapCatalogItemToService,
   mapPublicSupplierToPerformer,
   mapRfqToRequest,
 } from "@/lib/marketplace-hybrid"
+import { useMappedMarketplaceServices } from "@/hooks/api/use-supplier-name"
 import { getIcon } from "@/lib/icon-map"
 import { CategoryCard } from "@/components/marketplace/category-card"
 import { ServiceCard } from "@/components/marketplace/service-card"
@@ -87,12 +87,13 @@ export function CategoryGrid() {
 export function FeaturedServices() {
   const useApi = isApiEnabled()
   const { data: apiCatalog } = usePublicCatalogQuery(undefined, undefined, useApi)
+  const apiFeatured = useMappedMarketplaceServices(useApi ? apiCatalog?.items : null, {
+    limit: 10,
+  })
   const featuredServices = useMemo(() => {
     if (!useApi) return getFeaturedServices(10)
-    const items = apiCatalog?.items ?? []
-    if (!items.length) return []
-    return items.map((item) => mapCatalogItemToService(item)).slice(0, 10)
-  }, [useApi, apiCatalog])
+    return apiFeatured
+  }, [useApi, apiFeatured])
 
   return (
     <section className="bg-background py-9">
@@ -112,7 +113,7 @@ export function FeaturedServices() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {featuredServices.map((service) => (
             <ServiceCard key={service.id} service={service} />
           ))}

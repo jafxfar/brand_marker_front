@@ -11,7 +11,8 @@ import { getServicesByCategory } from "@/lib/mock/marketplace-services"
 import { getIcon } from "@/lib/icon-map"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicCatalogQuery, usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
-import { mapCatalogItemToService, mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
+import { useMappedMarketplaceServices } from "@/hooks/api/use-supplier-name"
+import { mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import {
   categoriesUrl,
   categoryUrl,
@@ -41,15 +42,12 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     return getCategoryBySlug(slug) ?? null
   }, [useApi, apiCategories, slug])
 
+  const apiServices = useMappedMarketplaceServices(useApi ? apiCatalog?.items : null)
   const services: MarketplaceService[] = useMemo(() => {
-    if (useApi) {
-      const items = apiCatalog?.items ?? []
-      if (!items.length) return []
-      return items.map((item) => mapCatalogItemToService(item))
-    }
+    if (useApi) return apiServices
     const mockCategory = getCategoryBySlug(slug)
     return mockCategory ? getServicesByCategory(mockCategory.id) : []
-  }, [useApi, apiCatalog, slug])
+  }, [useApi, apiServices, slug])
 
   if (!category) {
     return (
@@ -134,7 +132,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {services.map((service) => (
                 <ServiceCard key={service.id} service={service} />
               ))}

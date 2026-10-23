@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Check, Eye, Plus, Trash2, Upload } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { Check, Eye, Plus, Star, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
+import { useContractsStore } from "@/lib/store/contracts-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
@@ -13,11 +15,13 @@ import {
   useSupplierCompaniesQuery,
   useUpdateSupplierCompanyMutation,
 } from "@/hooks/api/use-supplier-companies-query"
+import { publicApi } from "@/lib/api/public"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { ProfileSectionCard } from "@/components/supplier/company/profile-section-card"
+import { ReviewsReceivedTable } from "@/components/supplier/finance/reviews-received-table"
 import { scoreLevel } from "@/lib/catalog-quality-score"
 import { performerUrl } from "@/lib/marketplace-routes"
 import {
@@ -55,7 +59,9 @@ export default function SupplierCompanyPage() {
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getMyCompany = useCompaniesStore((s) => s.getMyCompany)
+  const getCompany = useCompaniesStore((s) => s.getCompany)
   const updateLocal = useCompaniesStore((s) => s.updateCompany)
+  const getContract = useContractsStore((s) => s.getContract)
 
   const { data: apiCompanies, isLoading } = useSupplierCompaniesQuery(
     hydrated && useApi,
@@ -67,6 +73,24 @@ export default function SupplierCompanyPage() {
     if (!hydrated) return null
     return getMyCompany(actorId) ?? null
   }, [useApi, apiCompanies, hydrated, getMyCompany, actorId])
+
+  const { data: apiReviewsPage } = useQuery({
+    queryKey: ["company-reviews", company?.id],
+    queryFn: () => publicApi.companyReviews(company!.id),
+    enabled: hydrated && useApi && Boolean(company?.id),
+  })
+
+  const reviews = useApi
+    ? (apiReviewsPage?.items ?? [])
+    : hydrated
+      ? (company?.reviews ?? [])
+      : []
+
+  const getReviewerName = (reviewerActorId: number) =>
+    getCompany(reviewerActorId)?.title ?? `Заказчик #${reviewerActorId}`
+
+  const getContractTitle = (contractId: number) =>
+    getContract(contractId)?.title ?? `Сделка #${contractId}`
 
   const [about, setAbout] = useState("")
   const [city, setCity] = useState("")
@@ -402,6 +426,24 @@ export default function SupplierCompanyPage() {
                 </label>
               </div>
             </ProfileSectionCard>
+
+            <div
+              id="reviews"
+              className="scroll-mt-24 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-6"
+            >
+              <div className="mb-4 flex items-center gap-2">
+                <Star className="size-4 text-mute" aria-hidden />
+                <b className="text-[15px]">Полученные отзывы</b>
+                {reviews.length > 0 ? (
+                  <span className="text-[13px] text-mute">· {reviews.length}</span>
+                ) : null}
+              </div>
+              <ReviewsReceivedTable
+                reviews={reviews}
+                getReviewerName={getReviewerName}
+                getContractTitle={getContractTitle}
+              />
+            </div>
 
             <div className="flex justify-end">
               <Button

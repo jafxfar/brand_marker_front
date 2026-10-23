@@ -1,18 +1,17 @@
 "use client"
 
 import { useMemo, useRef, useState } from "react"
-import { FileText, Landmark, Star } from "lucide-react"
+import { FileText, Landmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AddPayoutDestinationDialog } from "@/components/supplier/finance/add-payout-destination-dialog"
 import { PayoutAccountCard } from "@/components/supplier/finance/payout-account-card"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
-import { PageFrame, PageHeader, SegmentedControl } from "@/components/layout"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { MetricTile } from "@/components/process"
 import { StatusBadge } from "@/components/bm"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useFinanceStore } from "@/lib/store/finance-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
-import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
@@ -27,17 +26,11 @@ import {
   useRequestWithdrawalMutation,
   useCreateDestinationMutation,
 } from "@/hooks/api/use-supplier-finance-query"
-import { useSupplierCompaniesQuery } from "@/hooks/api/use-supplier-companies-query"
-import { publicApi } from "@/lib/api/public"
-import { useQuery } from "@tanstack/react-query"
 import { getSupplierBalances } from "@/lib/finance-display"
 import { WithdrawalForm } from "@/components/supplier/finance/withdrawal-form"
 import { InvoicesTable } from "@/components/supplier/finance/invoices-table"
-import { ReviewsReceivedTable } from "@/components/supplier/finance/reviews-received-table"
 import { isDealOpen } from "@/lib/process/deal-stages"
 import type { Currency, WithdrawalDestinationType } from "@/types"
-
-type HistoryTab = "invoices" | "reviews"
 
 const WITHDRAWAL_LABEL: Record<string, string> = {
   pending: "В обработке",
@@ -53,7 +46,6 @@ export default function SupplierFinancePage() {
   const actorId = getActorId(user)
   const useApi = isApiEnabled()
   const payoutRef = useRef<HTMLDivElement>(null)
-  const [tab, setTab] = useState<HistoryTab>("invoices")
   const [addDestinationOpen, setAddDestinationOpen] = useState(false)
 
   const getDestinations = useFinanceStore((s) => s.getDestinations)
@@ -63,15 +55,12 @@ export default function SupplierFinancePage() {
   const addDestinationLocal = useFinanceStore((s) => s.addDestination)
   const contracts = useContractsStore((s) => s.contracts)
   const getContract = useContractsStore((s) => s.getContract)
-  const getCompany = useCompaniesStore((s) => s.getCompany)
-  const getMyCompany = useCompaniesStore((s) => s.getMyCompany)
 
   const { data: apiBalance } = useSupplierBalanceQuery(hydrated && useApi)
   const { data: paymentHistoryPage } = useSupplierPaymentHistoryQuery(
     hydrated && useApi,
   )
   const paymentHistory = paymentHistoryPage?.items ?? []
-  const { data: apiCompanies } = useSupplierCompaniesQuery(hydrated && useApi)
   const { data: apiDestinations } = useSupplierFinanceDestinationsQuery(
     hydrated && useApi,
   )
@@ -79,13 +68,6 @@ export default function SupplierFinancePage() {
   const { data: apiInvoices } = useSupplierInvoicesQuery(hydrated && useApi)
   const withdrawalMutation = useRequestWithdrawalMutation()
   const createDestinationMutation = useCreateDestinationMutation()
-
-  const activeCompanyId = user?.activeCompanyId ?? apiCompanies?.items?.[0]?.id
-  const { data: apiReviewsPage } = useQuery({
-    queryKey: ["company-reviews", activeCompanyId],
-    queryFn: () => publicApi.companyReviews(activeCompanyId!),
-    enabled: hydrated && useApi && Boolean(activeCompanyId),
-  })
 
   const localBalances = hydrated
     ? getSupplierBalances(actorId, contracts, getWithdrawals(actorId))
@@ -137,12 +119,6 @@ export default function SupplierFinancePage() {
             due_at: null,
             paid_at: p.created_at,
           }))
-
-  const reviews = useApi
-    ? (apiReviewsPage?.items ?? [])
-    : hydrated
-      ? (getMyCompany(actorId)?.reviews ?? [])
-      : []
 
   const incomingAfterAccept = useMemo(() => {
     if (balances.escrowLocked > 0) return balances.escrowLocked
@@ -207,9 +183,6 @@ export default function SupplierFinancePage() {
     if (!contractId) return "—"
     return getContract(contractId)?.title ?? `Сделка #${contractId}`
   }
-
-  const getReviewerName = (reviewerActorId: number) =>
-    getCompany(reviewerActorId)?.title ?? `Заказчик #${reviewerActorId}`
 
   const handleAddDestination = async (input: {
     type: WithdrawalDestinationType
@@ -361,40 +334,15 @@ export default function SupplierFinancePage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4">
-        <SegmentedControl
-          value={tab}
-          onChange={setTab}
-          ariaLabel="Дополнительно"
-          options={[
-            { value: "invoices", label: "Счета", count: invoiceList.length },
-            { value: "reviews", label: "Отзывы", count: reviews.length },
-          ]}
+      <div className="mt-8 rounded-2xl border border-line bg-white p-5 md:p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <FileText className="size-4 text-mute" aria-hidden />
+          <b className="text-[15px]">Счета</b>
+        </div>
+        <InvoicesTable
+          invoices={invoiceList}
+          getContractTitle={getContractTitle}
         />
-        {tab === "invoices" ? (
-          <div className="rounded-2xl border border-line bg-white p-5 md:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <FileText className="size-4 text-mute" aria-hidden />
-              <b className="text-[15px]">Счета</b>
-            </div>
-            <InvoicesTable
-              invoices={invoiceList}
-              getContractTitle={getContractTitle}
-            />
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-line bg-white p-5 md:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Star className="size-4 text-mute" aria-hidden />
-              <b className="text-[15px]">Полученные отзывы</b>
-            </div>
-            <ReviewsReceivedTable
-              reviews={reviews}
-              getReviewerName={getReviewerName}
-              getContractTitle={(id) => getContractTitle(id)}
-            />
-          </div>
-        )}
       </div>
 
       <AddPayoutDestinationDialog

@@ -7,7 +7,10 @@ import { toRfqPayload } from "./rfq-payload"
 const PREFIX = "/buyer/rfqs"
 
 export const rfqsApi = {
-  list: (filter: BuyerRfqStatusFilter = "all", params: PageParams = {}) =>
+  list: (
+    filter: BuyerRfqStatusFilter = "all",
+    params: PageParams & { q?: string; type?: string } = {},
+  ) =>
     apiFetch<Page<RfqWithRelations>>(
       `${PREFIX}/${buildPageQuery({
         ...params,

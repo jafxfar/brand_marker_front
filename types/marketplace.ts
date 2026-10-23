@@ -43,6 +43,8 @@ export type MarketplaceService = {
   saves: number
   views: string
   categoryId: string
+  /** Accepts company invoice payment; defaults to true when omitted. */
+  invoice?: boolean
 }
 
 export type MarketplacePerformer = {

@@ -3,7 +3,7 @@ import { ChevronLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type PageHeaderProps = {
-  title: string
+  title: React.ReactNode
   description?: React.ReactNode
   actions?: React.ReactNode
   backHref?: string

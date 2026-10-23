@@ -10,7 +10,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Душанбе",
     rating: 4.9,
     reviews: 312,
-    price: "от 80 000  TJS",
+    price: "80 000 TJS",
     tags: ["React", "Next.js", "SEO"],
     verified: true,
     badge: { label: "Топ исполнитель", className: "bg-primary text-primary-foreground" },
@@ -18,7 +18,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-blue-50",
     iconColor: "text-blue-600",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "128 откликов",
     saves: 128,
     views: "2.4к",
@@ -33,7 +33,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Худжанд",
     rating: 4.8,
     reviews: 187,
-    price: "от 25 000  TJS/мес",
+    price: "25 000 TJS",
     tags: ["SEO", "Контент", "Аналитика"],
     verified: true,
     badge: { label: "Гарантия результата", className: "bg-primary/100 text-white" },
@@ -41,7 +41,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "94 откликов",
     saves: 94,
     views: "1.8к",
@@ -56,7 +56,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Бохтар",
     rating: 4.9,
     reviews: 245,
-    price: "от 15 000  TJS/мес",
+    price: "15 000 TJS",
     tags: ["1С", "Налоги", "Отчётность"],
     verified: true,
     badge: { label: "Выбор клиентов", className: "bg-foreground text-white" },
@@ -64,7 +64,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-warning/10",
     iconColor: "text-warning",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "203 откликов",
     saves: 203,
     views: "3.1к",
@@ -79,7 +79,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Душанбе",
     rating: 5.0,
     reviews: 89,
-    price: "от 120 000  TJS",
+    price: "120 000 TJS",
     tags: ["Корп. право", "Сделки", "Due diligence"],
     verified: true,
     badge: { label: "Премиум", className: "bg-warning/100 text-white" },
@@ -87,7 +87,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-violet-50",
     iconColor: "text-violet-600",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "67 откликов",
     saves: 67,
     views: "945",
@@ -102,7 +102,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Худжанд",
     rating: 4.7,
     reviews: 521,
-    price: "от 8 000  TJS",
+    price: "8 000 TJS",
     tags: ["FTL", "LTL", "Рефрижератор"],
     verified: true,
     badge: { label: "Быстрая доставка", className: "bg-primary text-primary-foreground" },
@@ -110,7 +110,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-primary/10",
     iconColor: "text-secondary-foreground",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "156 откликов",
     saves: 156,
     views: "4.2к",
@@ -125,7 +125,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Худжанд",
     rating: 4.8,
     reviews: 143,
-    price: "от 200 000  TJS",
+    price: "200 000 TJS",
     tags: ["Битрикс24", "AmoCRM", "Кастом"],
     verified: true,
     badge: { label: "Сертифицирован", className: "bg-teal-600 text-white" },
@@ -133,7 +133,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-teal-50",
     iconColor: "text-teal-600",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "112 откликов",
     saves: 112,
     views: "2.0к",
@@ -148,7 +148,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Душанбе",
     rating: 4.9,
     reviews: 76,
-    price: "от 50 000  TJS",
+    price: "50 000 TJS",
     tags: ["Executive search", "Оценка", "HR стратегия"],
     verified: true,
     badge: { label: "Конфиденциально", className: "bg-indigo-600 text-white" },
@@ -156,7 +156,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-indigo-50",
     iconColor: "text-indigo-600",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "45 откликов",
     saves: 45,
     views: "780",
@@ -171,7 +171,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Душанбе",
     rating: 4.8,
     reviews: 134,
-    price: "от 60 000  TJS",
+    price: "60 000 TJS",
     tags: ["Логотип", "Брендбук", "Гайдлайны"],
     verified: true,
     badge: { label: "Креатив", className: "bg-pink-500 text-white" },
@@ -179,7 +179,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-pink-50",
     iconColor: "text-pink-500",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "89 откликов",
     saves: 89,
     views: "1.5к",
@@ -194,7 +194,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Худжанд",
     rating: 4.6,
     reviews: 198,
-    price: "от 3 500  TJS/м²",
+    price: "3 500 TJS",
     tags: ["Ремонт", "Проект", "Смета"],
     verified: true,
     badge: { label: "Под ключ", className: "bg-red-500 text-white" },
@@ -202,7 +202,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-red-50",
     iconColor: "text-red-500",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "72 откликов",
     saves: 72,
     views: "2.8к",
@@ -217,7 +217,7 @@ export const marketplaceServices: MarketplaceService[] = [
     city: "Худжанд",
     rating: 4.7,
     reviews: 302,
-    price: "от 20 000  TJS",
+    price: "20 000 TJS",
     tags: ["Импорт", "Экспорт", "Брокер"],
     verified: true,
     badge: { label: "Выгодно", className: "bg-cyan-600 text-white" },
@@ -225,7 +225,7 @@ export const marketplaceServices: MarketplaceService[] = [
     iconBg: "bg-cyan-50",
     iconColor: "text-cyan-600",
     imageUrl: null,
-    moqLabel: "MOQ: 1",
+    moqLabel: "Мин. заказ: 1 шт",
     activityLabel: "134 откликов",
     saves: 134,
     views: "3.4к",
@@ -239,13 +239,40 @@ export const getService = (id: number): MarketplaceService | undefined =>
 export const getServicesByCategory = (categoryId: string): MarketplaceService[] =>
   marketplaceServices.filter((s) => s.categoryId === categoryId)
 
-export const searchServices = (query: string, categoryId?: string): MarketplaceService[] => {
+export const searchServices = (
+  query: string,
+  categoryId?: string,
+  filters?: {
+    verified?: boolean
+    invoice?: boolean
+    sort?: "pop" | "cheap" | "rating"
+  },
+): MarketplaceService[] => {
   const q = query.trim().toLowerCase()
-  return marketplaceServices.filter((s) => {
+  const list = marketplaceServices.filter((s) => {
     if (categoryId && s.categoryId !== categoryId) return false
+    if (filters?.verified && !s.verified) return false
+    if (filters?.invoice && s.invoice === false) return false
     if (!q) return true
     const haystack = [s.title, s.provider, s.city, ...s.tags].join(" ").toLowerCase()
     return haystack.includes(q)
+  })
+
+  const sort = filters?.sort ?? "pop"
+  const priceValue = (s: MarketplaceService) => {
+    const digits = s.price.replace(/[^\d]/g, "")
+    return digits ? Number(digits) : Number.POSITIVE_INFINITY
+  }
+  const viewsValue = (s: MarketplaceService) => {
+    const raw = s.views.replace(",", ".").replace(/к/i, "e3")
+    const n = Number(raw)
+    return Number.isFinite(n) ? n : s.saves
+  }
+
+  return [...list].sort((a, b) => {
+    if (sort === "cheap") return priceValue(a) - priceValue(b)
+    if (sort === "rating") return b.rating - a.rating
+    return viewsValue(b) + b.saves - (viewsValue(a) + a.saves)
   })
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { use, useState } from "react"
+import { formatCurrency } from "@/lib/format"
 import Link from "next/link"
 import {
   Banknote,
@@ -20,6 +21,9 @@ import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminDisputeAction } from "@/lib/api/admin"
 import { adminDisputeStatusMeta } from "@/lib/admin-display"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
+
+const formatMoney = (value: number | null | undefined, currency?: string | null) =>
+  value == null ? "—" : formatCurrency(value, currency || "TJS")
 
 const sections = [
   ["overview", "Обзор"],
@@ -41,12 +45,6 @@ const DetailSkeleton = () => (
   </PageFrame>
 )
 
-const formatMoney = (value: number, currency: string) =>
-  new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: currency || "TJS",
-    maximumFractionDigits: 0,
-  }).format(value)
 
 type PageProps = {
   params: Promise<{ id: string }>

@@ -228,7 +228,7 @@ export default function SupplierDashboard() {
                 ? formatCount(reviewCount, "отзыв", "отзыва", "отзывов")
                 : "первый отзыв появится после сделки"
             }
-            href="/supplier/finance#reviews"
+            href="/supplier/company#reviews"
           />
         </section>
 
