@@ -3,23 +3,40 @@ import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type MetricTileProps = {
-  Icon: LucideIcon
   label: string
   value: string
   /** Plain-language explanation of what the number means. */
   hint?: string
   href?: string
   valueClassName?: string
+  /** Optional icon — template v5 stats have no icon. */
+  Icon?: LucideIcon
 }
 
-export const MetricTile = ({ Icon, label, value, hint, href, valueClassName }: MetricTileProps) => {
+export const MetricTile = ({
+  Icon,
+  label,
+  value,
+  hint,
+  href,
+  valueClassName,
+}: MetricTileProps) => {
   const content = (
     <>
-      <div className="flex items-center gap-2 text-[14px] text-mute">
-        <Icon size={16} aria-hidden="true" />
-        {label}
-      </div>
-      <div className={cn("tnum text-[26px] font-extrabold leading-tight tracking-[-0.02em] text-ink", valueClassName)}>
+      {Icon ? (
+        <div className="flex items-center gap-2 text-[14px] text-mute">
+          <Icon size={16} aria-hidden="true" />
+          {label}
+        </div>
+      ) : (
+        <span className="text-[14px] text-mute">{label}</span>
+      )}
+      <div
+        className={cn(
+          "tnum text-[26px] font-extrabold leading-tight tracking-[-0.02em] text-ink",
+          valueClassName,
+        )}
+      >
         {value}
       </div>
       {hint ? <div className="text-[13px] text-mute">{hint}</div> : null}

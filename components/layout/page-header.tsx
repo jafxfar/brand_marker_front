@@ -22,11 +22,11 @@ export const PageHeader = ({
   return (
     <header
       className={cn(
-        "mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+        "mb-6 flex flex-wrap items-end justify-between gap-4",
         className,
       )}
     >
-      <div className="min-w-0 space-y-1.5">
+      <div className="min-w-0">
         {backHref ? (
           <Link
             href={backHref}
@@ -37,11 +37,11 @@ export const PageHeader = ({
             {backLabel}
           </Link>
         ) : null}
-        <h1 className="text-balance text-[26px] font-extrabold tracking-[-0.02em] text-ink sm:text-[28px]">
+        <h1 className="text-balance text-[28px] font-extrabold leading-tight tracking-[-0.02em] text-ink">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-prose text-[14.5px] text-mute">{description}</p>
+          <p className="mt-1.5 max-w-prose text-[16px] text-mute">{description}</p>
         ) : null}
       </div>
       {actions ? (

@@ -1,7 +1,7 @@
 "use client"
 
-import { Suspense , useState} from "react"
-import { FileCheck } from "lucide-react"
+import { Suspense, useMemo, useState } from "react"
+import { Briefcase } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { usePublicSuppliersByActor } from "@/hooks/api/use-supplier-name"
@@ -33,9 +33,13 @@ const BuyerContractsContent = () => {
   const [page, setPage] = useState(1)
   const actorId = getActorId(useAuthStore((s) => s.user))
   const getContractsForBuyer = useContractsStore((s) => s.getContractsForBuyer)
-  const [tab, setTab] = useUrlTab<BuyerContractListTab>("tab", BUYER_CONTRACT_TAB_VALUES, "active")
+  const [tab, setTab] = useUrlTab<BuyerContractListTab>(
+    "tab",
+    BUYER_CONTRACT_TAB_VALUES,
+    "active",
+  )
   const useApi = isApiEnabled()
-  const { data: apiContracts } = useContractsQuery(hydrated && useApi, { page })
+  const { data: apiContracts, isLoading } = useContractsQuery(hydrated && useApi, { page })
 
   const allContracts: ContractWithRelations[] = useApi
     ? ((apiContracts?.items ?? []) as ContractWithRelations[])
@@ -43,6 +47,16 @@ const BuyerContractsContent = () => {
       ? getContractsForBuyer(actorId)
       : []
   const totalPages = useApi ? (apiContracts?.total_pages ?? 0) : 1
+
+  const activeCount = useMemo(
+    () => filterDealsByTab(allContracts, "active", "buyer").length,
+    [allContracts],
+  )
+  const completedCount = useMemo(
+    () => filterDealsByTab(allContracts, "completed", "buyer").length,
+    [allContracts],
+  )
+
   const contracts = filterDealsByTab(allContracts, tab, "buyer")
   const { getName: getSupplierName } = usePublicSuppliersByActor(
     contracts.map((c) => c.supplier_actor_id),
@@ -51,23 +65,26 @@ const BuyerContractsContent = () => {
   return (
     <PageFrame>
       <PageHeader
-        title="Мои сделки"
-        description="Этап каждой сделки и что нужно сделать дальше"
+        title="Сделки"
+        description="Покупки через гарантию площадки"
       />
 
       <SegmentedControl
         value={tab}
-        options={BUYER_CONTRACT_LIST_TABS}
+        options={[
+          { value: "active", label: "В работе", count: activeCount },
+          { value: "completed", label: "Завершённые", count: completedCount },
+        ]}
         onChange={setTab}
         ariaLabel="Фильтр сделок"
       />
 
-      {!hydrated || contracts.length === 0 ? (
+      {!hydrated || isLoading || contracts.length === 0 ? (
         <PageEmptyState
           variant="card"
-          icon={<FileCheck />}
-          title="Сделок пока нет"
-          description={buyerContractEmptyMessages[tab]}
+          icon={<Briefcase />}
+          title={isLoading ? "Загружаем сделки..." : "Сделок нет"}
+          description={!isLoading ? buyerContractEmptyMessages[tab] : undefined}
         />
       ) : (
         <DealList
@@ -76,13 +93,9 @@ const BuyerContractsContent = () => {
           getCounterpartName={(c) => getSupplierName(c.supplier_actor_id)}
         />
       )}
-    
-      <ListPagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
-</PageFrame>
+
+      <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+    </PageFrame>
   )
 }
 

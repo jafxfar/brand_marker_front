@@ -6,7 +6,7 @@ export type ContractListTab = "all" | "active" | "completed" | "disputed" | "can
 
 export const CONTRACT_LIST_TABS: { value: ContractListTab; label: string }[] = [
   { value: "all", label: "Все" },
-  { value: "active", label: "Идут" },
+  { value: "active", label: "В работе" },
   { value: "completed", label: "Завершённые" },
   { value: "disputed", label: "Споры" },
   { value: "cancelled", label: "Отменённые" },

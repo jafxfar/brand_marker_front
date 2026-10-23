@@ -89,19 +89,6 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
           </li>
         ))}
       </ul>
-
-      <div className="mt-6 grid gap-2 rounded-xl border border-line bg-white p-4">
-        <b className="text-[14px]">Нужна помощь?</b>
-        <p className="text-[13px] text-mute">
-          Ответим в чате в течение часа или по телефону +992 44 600 00 00.
-        </p>
-        <a
-          href="tel:+992446000000"
-          className="justify-self-start text-[13.5px] font-semibold text-brand-700 hover:underline"
-        >
-          Написать в поддержку
-        </a>
-      </div>
     </nav>
   )
 }

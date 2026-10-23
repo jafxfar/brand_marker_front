@@ -83,7 +83,7 @@ export const DealStageBar = ({ contract, className }: { contract: DealContract; 
             key={step.key}
             className={cn(
               "h-1.5 flex-1 rounded-full",
-              done || finished ? "bg-brand-600" : now ? "bg-brand-300" : "bg-line",
+              done || finished ? "bg-brand-600" : now ? "bg-brand-200" : "bg-line",
             )}
           />
         )

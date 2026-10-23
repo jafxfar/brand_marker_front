@@ -1,214 +1,166 @@
 "use client"
 
 import Link from "next/link"
-import { AdminLink } from "@/components/admin/admin-link"
-import {
-  Activity,
-  AlertTriangle,
-  Boxes,
-  Building2,
-  CircleDollarSign,
-  ClipboardList,
-  FileCheck2,
-  FileInput,
-  FileText,
-  Gavel,
-  RefreshCcw,
-  ShieldCheck,
-  TrendingUp,
-  UserPlus,
-  Users,
-  WalletCards,
-  type LucideIcon,
-} from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
-import { ru } from "date-fns/locale"
+import { AlertTriangle, RefreshCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAdminDashboardQuery } from "@/hooks/api/use-admin-dashboard-query"
-import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
-import type {
-  AdminActivityItem,
-  AdminActivityType,
-  AdminDashboardMetrics,
-} from "@/lib/api/admin"
+import { PageFrame, PageHeader } from "@/components/layout"
+import { MetricTile } from "@/components/process"
+import {
+  QUEUE_ICONS,
+  QueueTiles,
+  type QueueTile,
+} from "@/components/admin/dashboard/queue-tiles"
+import {
+  AttentionList,
+  type AttentionItem,
+} from "@/components/admin/dashboard/attention-list"
+import { formatCurrency } from "@/lib/format"
+import { pluralRu } from "@/lib/format"
+import type { AdminDashboardMetrics } from "@/lib/api/admin"
 
-type MetricDefinition = {
-  key: keyof AdminDashboardMetrics
-  label: string
-  Icon: LucideIcon
-  currency?: boolean
-  href?: string
+const formatDateRu = (date: Date) =>
+  new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date)
+
+const formatActivityTime = (iso: string) => {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "—"
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d)
 }
 
-const metricDefinitions: MetricDefinition[] = [
-  { key: "total_users", label: "Пользователи", Icon: Users, href: "/admin/users" },
-  { key: "total_companies", label: "Компании", Icon: Building2, href: "/admin/companies" },
-  { key: "catalog_items", label: "Позиции каталога", Icon: Boxes, href: "/admin/catalog" },
-  { key: "active_rfqs", label: "Активные заявки", Icon: FileText, href: "/admin/rfqs" },
-  { key: "active_contracts", label: "Активные контракты", Icon: FileCheck2, href: "/admin/contracts" },
-  { key: "escrow_balance", label: "Баланс escrow", Icon: WalletCards, currency: true },
-  { key: "open_disputes", label: "Открытые споры", Icon: Gavel, href: "/admin/disputes" },
-  { key: "monthly_revenue", label: "Выручка за месяц", Icon: TrendingUp, currency: true },
+const buildQueues = (m: AdminDashboardMetrics): QueueTile[] => [
+  {
+    id: "companies",
+    label: "Компании",
+    hint: "документы на проверке",
+    count: m.pending_verifications ?? 0,
+    href: "/admin/companies?tab=verification",
+    Icon: QUEUE_ICONS.companies,
+  },
+  {
+    id: "catalog",
+    label: "Товары",
+    hint: "карточки на модерации",
+    count: m.pending_catalog ?? 0,
+    href: "/admin/moderation?tab=catalog",
+    Icon: QUEUE_ICONS.catalog,
+  },
+  {
+    id: "reports",
+    label: "Жалобы",
+    hint: "на товары от покупателей",
+    count: m.open_reports ?? 0,
+    href: "/admin/moderation?tab=reports",
+    Icon: QUEUE_ICONS.reports,
+  },
+  {
+    id: "changes",
+    label: "Изменения данных",
+    hint: "название, директор, адрес",
+    count: m.pending_company_changes ?? 0,
+    href: "/admin/companies?tab=changes",
+    Icon: QUEUE_ICONS.changes,
+  },
+  {
+    id: "chats",
+    label: "Переписки",
+    hint: "с признаками обхода площадки",
+    count: m.flagged_chats ?? 0,
+    href: "/admin/support",
+    Icon: QUEUE_ICONS.chats,
+  },
+  {
+    id: "disputes",
+    label: "Споры",
+    hint: "ждут решения",
+    count: m.open_disputes ?? 0,
+    href: "/admin/disputes",
+    Icon: QUEUE_ICONS.disputes,
+  },
+  {
+    id: "payouts",
+    label: "Выплаты",
+    hint: "нужны две подписи",
+    count: m.pending_payouts ?? 0,
+    href: "/admin/finance?view=payouts",
+    Icon: QUEUE_ICONS.payouts,
+  },
 ]
 
-const activityIcons: Record<AdminActivityType, LucideIcon> = {
-  registration: UserPlus,
-  contract: FileCheck2,
-  payment: CircleDollarSign,
-  dispute: AlertTriangle,
+const buildAttention = (queues: QueueTile[]): AttentionItem[] => {
+  const hints: Record<string, string> = {
+    companies: "Без проверки поставщик не может получать выплаты",
+    catalog: "Карточки ждут одобрения перед публикацией в каталоге",
+    reports: "Проверьте жалобы покупателей на товары",
+    changes: "Смена реквизитов требует повторной проверки",
+    chats: "Возможные попытки оплаты мимо площадки",
+    disputes: "Деньги остаются на гарантии до решения",
+    payouts: "Нужны подписи двух администраторов",
+  }
+
+  return queues
+    .filter((q) => q.count > 0)
+    .map((q) => ({
+      id: q.id,
+      title:
+        q.id === "companies"
+          ? `${q.count} ${pluralRu(q.count, "компания ждёт", "компании ждут", "компаний ждут")} проверки`
+          : q.id === "disputes"
+            ? `${q.count} ${pluralRu(q.count, "открытый спор", "открытых спора", "открытых споров")}`
+            : q.id === "payouts"
+              ? `${q.count} ${pluralRu(q.count, "выплата ждёт", "выплаты ждут", "выплат ждут")} подтверждения`
+              : `${q.label}: ${q.count}`,
+      hint: hints[q.id] ?? q.hint,
+      href: q.href,
+      Icon: q.Icon,
+    }))
 }
-
-const activityLabels: Record<AdminActivityType, string> = {
-  registration: "Регистрация",
-  contract: "Контракт",
-  payment: "Платёж",
-  dispute: "Спор",
-}
-
-type QuickAction = {
-  label: string
-  href?: string
-}
-
-const quickActions: QuickAction[] = [
-  { label: "Проверить компанию", href: "/admin/companies?status=pending" },
-  { label: "Разрешить спор", href: "/admin/disputes" },
-  { label: "Проверить жалобу", href: "/admin/moderation" },
-  { label: "Заявки RFQ", href: "/admin/rfqs" },
-  { label: "Предложения", href: "/admin/proposals" },
-  { label: "Контракты", href: "/admin/contracts" },
-]
-
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value)
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "TJS",
-    maximumFractionDigits: 0,
-  }).format(value)
-
-const formatMetric = (value: number, currency = false) =>
-  currency ? formatCurrency(value) : formatNumber(value)
 
 const DashboardSkeleton = () => (
   <PageFrame className="animate-pulse" aria-label="Загрузка дашборда">
-    <div className="space-y-2">
-      <div className="h-8 w-52 rounded-lg bg-muted" />
-      <div className="h-4 w-80 max-w-full rounded bg-muted" />
-    </div>
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 8 }, (_, index) => (
-        <div key={index} className="h-32 rounded-xl border border-border bg-card p-5">
-          <div className="h-10 w-10 rounded-xl bg-muted" />
-          <div className="mt-4 h-6 w-24 rounded bg-muted" />
-        </div>
+    <div className="h-10 w-64 rounded-xl bg-canvas" />
+    <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+      {Array.from({ length: 7 }, (_, i) => (
+        <div key={i} className="h-28 rounded-2xl bg-canvas" />
       ))}
     </div>
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-      <div className="h-96 rounded-xl border border-border bg-card" />
-      <div className="h-96 rounded-xl border border-border bg-card" />
+    <div className="mt-6 h-40 rounded-xl bg-canvas" />
+    <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {Array.from({ length: 4 }, (_, i) => (
+        <div key={i} className="h-28 rounded-2xl bg-canvas" />
+      ))}
     </div>
   </PageFrame>
 )
 
-const MetricCard = ({
-  definition,
-  value,
-}: {
-  definition: MetricDefinition
-  value: number
-}) => {
-  const content = (
-    <>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
-          <definition.Icon size={19} aria-hidden="true" />
-        </div>
-        <Activity size={16} className="text-muted-foreground/45" aria-hidden="true" />
-      </div>
-      <p className="mt-5 text-2xl font-bold tracking-tight text-foreground">
-        {formatMetric(value, definition.currency)}
-      </p>
-      <p className="mt-1 text-sm text-muted-foreground">{definition.label}</p>
-    </>
-  )
-
-  if (definition.href) {
-    return (
-      <Link
-        href={definition.href}
-        className="group block rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        aria-label={`Перейти к разделу: ${definition.label}`}
-      >
-        {content}
-      </Link>
-    )
-  }
-
-  return (
-    <article className="rounded-xl border border-border bg-card p-5">
-      {content}
-    </article>
-  )
-}
-
-const ActivityRow = ({ item }: { item: AdminActivityItem }) => {
-  const Icon = activityIcons[item.type]
-  const happenedAt = new Date(item.happened_at)
-  const hasValidDate = !Number.isNaN(happenedAt.getTime())
-
-  return (
-    <li className="flex gap-3 px-5 py-4">
-      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
-        <Icon size={17} aria-hidden="true" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-foreground">{item.title}</p>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {item.description}
-            </p>
-          </div>
-          {hasValidDate && (
-            <time
-              dateTime={item.happened_at}
-              className="flex-shrink-0 text-[11px] text-muted-foreground"
-            >
-              {formatDistanceToNow(happenedAt, { addSuffix: true, locale: ru })}
-            </time>
-          )}
-        </div>
-        <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-primary">
-          {activityLabels[item.type]}
-        </p>
-      </div>
-    </li>
-  )
-}
-
 export default function AdminDashboardPage() {
-  const { data, isLoading, isError, isFetching, refetch } = useAdminDashboardQuery()
+  const { data, isLoading, isError, isFetching, refetch } =
+    useAdminDashboardQuery()
 
-  if (isLoading) {
-    return <DashboardSkeleton />
-  }
+  if (isLoading) return <DashboardSkeleton />
 
   if (isError || !data) {
     return (
       <div className="mx-auto flex min-h-[60dvh] max-w-xl items-center justify-center">
-        <div className="w-full rounded-xl border border-destructive/20 bg-card p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
-            <AlertTriangle size={22} aria-hidden="true" />
+        <div className="w-full rounded-2xl border border-line bg-white p-8 text-center">
+          <div className="mx-auto grid size-12 place-items-center rounded-xl bg-red-50 text-red-700">
+            <AlertTriangle size={22} aria-hidden />
           </div>
-          <h1 className="mt-4 text-xl font-bold text-foreground">Не удалось загрузить данные</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="mt-4 text-xl font-bold">Не удалось загрузить данные</h1>
+          <p className="mt-2 text-sm text-mute">
             Проверьте подключение к API и повторите запрос.
           </p>
           <Button type="button" className="mt-5" onClick={() => refetch()}>
-            <RefreshCcw size={16} aria-hidden="true" />
+            <RefreshCcw size={16} aria-hidden />
             Повторить
           </Button>
         </div>
@@ -216,11 +168,31 @@ export default function AdminDashboardPage() {
     )
   }
 
+  const metrics = {
+    ...data.metrics,
+    pending_catalog: data.metrics.pending_catalog ?? 0,
+    open_reports: data.metrics.open_reports ?? 0,
+    pending_payouts: data.metrics.pending_payouts ?? 0,
+    flagged_chats: data.metrics.flagged_chats ?? 0,
+    pending_company_changes: data.metrics.pending_company_changes ?? 0,
+  }
+
+  const queues = buildQueues(metrics)
+  const attention = buildAttention(queues)
+  const commission = Math.round(metrics.monthly_revenue * 0.04)
+  const today = formatDateRu(new Date())
+  const activity = [...data.recent_activity]
+    .sort(
+      (a, b) =>
+        new Date(b.happened_at).getTime() - new Date(a.happened_at).getTime(),
+    )
+    .slice(0, 4)
+
   return (
     <PageFrame>
       <PageHeader
-        title="Обзор"
-        description="Ключевые показатели и последние события платформы"
+        title="Обзор площадки"
+        description={today}
         actions={
           <Button
             type="button"
@@ -233,145 +205,103 @@ export default function AdminDashboardPage() {
             <RefreshCcw
               size={15}
               className={isFetching ? "animate-spin" : undefined}
-              aria-hidden="true"
+              aria-hidden
             />
             Обновить
           </Button>
         }
       />
 
-      <section aria-labelledby="metrics-title">
-        <h2 id="metrics-title" className="sr-only">
-          Показатели платформы
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {metricDefinitions.map((definition) => (
-            <MetricCard
-              key={definition.key}
-              definition={definition}
-              value={data.metrics[definition.key]}
-            />
-          ))}
-        </div>
-      </section>
+      <div className="grid gap-6">
+        <QueueTiles tiles={queues} />
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-        <PageSurface aria-labelledby="activity-title">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <div>
-              <h2 id="activity-title" className="font-bold text-foreground">
-                Последняя активность
-              </h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Регистрации, контракты, платежи и споры
-              </p>
-            </div>
-            <Activity size={19} className="text-primary" aria-hidden="true" />
-          </div>
-          {data.recent_activity.length > 0 ? (
-            <ul className="divide-y divide-border">
-              {data.recent_activity.map((item) => (
-                <ActivityRow key={item.id} item={item} />
+        <AttentionList items={attention} />
+
+        <section
+          className="grid grid-cols-2 gap-3 lg:grid-cols-4"
+          aria-label="Ключевые показатели"
+        >
+          <MetricTile
+            label="Оборот за месяц"
+            value={formatCurrency(metrics.monthly_revenue)}
+            hint="по завершённым и текущим сделкам"
+          />
+          <MetricTile
+            label="На гарантии"
+            value={formatCurrency(metrics.escrow_balance)}
+            hint={`${metrics.active_contracts} ${pluralRu(metrics.active_contracts, "сделка", "сделки", "сделок")}`}
+          />
+          <MetricTile
+            label="Комиссия за месяц"
+            value={formatCurrency(commission)}
+            hint="4% с поставщиков"
+          />
+          <MetricTile
+            label="Компаний"
+            value={String(metrics.total_companies)}
+            hint={`${metrics.pending_verifications} на проверке`}
+          />
+        </section>
+
+        <section className="grid gap-5 lg:grid-cols-2">
+          <div className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-6">
+            <span className="text-[13px] font-semibold text-mute">
+              Безопасность за сутки
+            </span>
+            <dl className="mt-3 grid grid-cols-3 gap-3">
+              {(
+                [
+                  ["Неудачных входов", "—"],
+                  ["Заблокировано IP", "—"],
+                  ["Сеансов без 2FA", "—"],
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-[12.5px] text-mute">{label}</dt>
+                  <dd className="mono text-[22px] font-semibold">{value}</dd>
+                </div>
               ))}
-            </ul>
-          ) : (
-            <PageEmptyState
-              icon={<Activity size={24} />}
-              title="Событий пока нет"
-              description="Новая активность появится здесь автоматически"
-            />
-          )}
-        </PageSurface>
+            </dl>
+            <p className="mt-3 text-[13px] text-mute">
+              Двухфакторный вход обязателен для всех администраторов. Вход в
+              панель — только из доверенной сети.
+            </p>
+          </div>
 
-        <aside className="space-y-6">
-          <PageSurface className="p-5" aria-labelledby="attention-title">
-            <div className="flex items-center justify-between">
-              <h2 id="attention-title" className="font-bold text-foreground">
-                Требует внимания
-              </h2>
-              <ShieldCheck size={19} className="text-primary" aria-hidden="true" />
+          <div className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[13px] font-semibold text-mute">
+                Последние действия
+              </span>
+              <Link
+                href="/admin/logs"
+                className="text-[13px] text-brand-700 hover:underline"
+              >
+                Журнал →
+              </Link>
             </div>
-            <div className="mt-4 space-y-3">
-              <AdminLink
-                href="/admin/companies?status=pending"
-                hideWhenDenied
-                className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                aria-label="Открыть компании на верификации"
-              >
-                <FileCheck2 size={18} className="text-primary" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">Верификация компаний</p>
-                  <p className="text-lg font-bold text-foreground">
-                    {formatNumber(data.metrics.pending_verifications)}
-                  </p>
-                </div>
-              </AdminLink>
-              <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
-                <Gavel size={18} className="text-primary" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">Открытые споры</p>
-                  <p className="text-lg font-bold text-foreground">
-                    {formatNumber(data.metrics.open_disputes)}
-                  </p>
-                </div>
-              </div>
-              <AdminLink
-                href="/admin/rfqs?view=reported"
-                hideWhenDenied
-                className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                aria-label="Открыть заявки с жалобами"
-              >
-                <ClipboardList size={18} className="text-primary" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">Заявки RFQ</p>
-                  <p className="text-sm font-bold text-foreground">Перейти к модерации</p>
-                </div>
-              </AdminLink>
-              <AdminLink
-                href="/admin/proposals?view=reported"
-                hideWhenDenied
-                className="flex items-center gap-3 rounded-xl bg-secondary p-3.5 transition-colors hover:bg-secondary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                aria-label="Открыть предложения с жалобами"
-              >
-                <FileInput size={18} className="text-primary" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground">Предложения</p>
-                  <p className="text-sm font-bold text-foreground">Перейти к модерации</p>
-                </div>
-              </AdminLink>
-            </div>
-          </PageSurface>
-
-          <PageSurface className="p-5" aria-labelledby="actions-title">
-            <h2 id="actions-title" className="font-bold text-foreground">
-              Быстрые действия
-            </h2>
-            <div className="mt-4 space-y-3">
-              {quickActions.map((action) =>
-                action.href ? (
-                  <Link
-                    key={action.label}
-                    href={action.href}
-                    className="flex items-center justify-between rounded-xl border border-border px-3.5 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary/35 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            {activity.length === 0 ? (
+              <p className="mt-3 text-[14px] text-mute">Событий пока нет.</p>
+            ) : (
+              <ul className="mt-3 grid gap-2.5 text-[13.5px]">
+                {activity.map((item) => (
+                  <li
+                    key={item.id}
+                    className="grid grid-cols-[110px_1fr] gap-3"
                   >
-                    <span>{action.label}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                      Открыть
+                    <span className="mono text-[12px] text-mute">
+                      {formatActivityTime(item.happened_at)}
                     </span>
-                  </Link>
-                ) : (
-                  <div
-                    key={action.label}
-                    className="flex items-center justify-between rounded-xl border border-dashed border-border px-3.5 py-3 text-sm text-muted-foreground"
-                  >
-                    <span>{action.label}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Скоро</span>
-                  </div>
-                ),
-              )}
-            </div>
-          </PageSurface>
-        </aside>
+                    <span>
+                      <b className="font-medium">{item.title}:</b>{" "}
+                      {item.description}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
       </div>
     </PageFrame>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import {
   LayoutDashboard, Inbox, FileCheck, MessageSquare, Menu, Loader2,
 } from "lucide-react"
@@ -8,6 +8,7 @@ import SupplierSidebar from "@/components/supplier/sidebar"
 import SupplierTopbar from "@/components/supplier/topbar"
 import { CabinetShell } from "@/components/layout/cabinet-shell"
 import { CabinetMobileNav } from "@/components/layout/cabinet-mobile-nav"
+import { SupportChatWidget } from "@/components/support/support-chat-widget"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
 import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
 import { useDealActionCount } from "@/hooks/use-deal-action-count"
@@ -72,6 +73,9 @@ export default function SupplierShell({ children }: { children: React.ReactNode 
       }
     >
       {children}
+      <Suspense fallback={null}>
+        <SupportChatWidget role="supplier" />
+      </Suspense>
     </CabinetShell>
   )
 }

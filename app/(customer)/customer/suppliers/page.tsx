@@ -7,9 +7,13 @@ import { usePublicCategoriesQuery } from "@/hooks/api/use-public-query"
 import { mapCategoryTreeToMarketplace } from "@/lib/marketplace-hybrid"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useItemsStore } from "@/lib/store/items-store"
+import { useContractsStore } from "@/lib/store/contracts-store"
+import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { usePublicSuppliersQuery } from "@/hooks/api/use-public-query"
+import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 import {
   formatPublicSupplierSummary,
   getActiveCatalogItemsCount,
@@ -27,7 +31,7 @@ import {
   PageSurface,
   SegmentedControl,
 } from "@/components/layout"
-import type { PublicSupplier } from "@/types"
+import type { ContractWithRelations, PublicSupplier } from "@/types"
 
 export default function SuppliersPage() {
   const hydrated = useHydrated()
@@ -36,8 +40,12 @@ export default function SuppliersPage() {
   const [query, setQuery] = useState("")
   const [categorySlug, setCategorySlug] = useState("")
 
-  const getSupplierCompaniesByCategory = useCompaniesStore((s) => s.getSupplierCompaniesByCategory)
+  const actorId = getActorId(useAuthStore((s) => s.user))
+  const getSupplierCompaniesByCategory = useCompaniesStore(
+    (s) => s.getSupplierCompaniesByCategory,
+  )
   const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
+  const getContractsForBuyer = useContractsStore((s) => s.getContractsForBuyer)
 
   const { data: apiCategories } = usePublicCategoriesQuery(useApi)
   const categoryTabs = useMemo(() => {
@@ -56,6 +64,22 @@ export default function SuppliersPage() {
     hydrated && useApi,
     { page },
   )
+
+  const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
+  const apiContracts = (apiContractsPage?.items ?? []) as ContractWithRelations[]
+
+  const dealsBySupplier = useMemo(() => {
+    const contracts: ContractWithRelations[] = useApi
+      ? apiContracts
+      : hydrated
+        ? getContractsForBuyer(actorId)
+        : []
+    const map = new Map<number, number>()
+    contracts.forEach((c) => {
+      map.set(c.supplier_actor_id, (map.get(c.supplier_actor_id) ?? 0) + 1)
+    })
+    return map
+  }, [useApi, apiContracts, hydrated, getContractsForBuyer, actorId])
 
   const getCategoriesForSupplier = (companyId: number) =>
     getSupplierCategories(getItemsBySupplier(companyId))
@@ -137,9 +161,9 @@ export default function SuppliersPage() {
       />
 
       {!hydrated || (useApi && isLoading) ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-xl bg-secondary" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-56 animate-pulse rounded-2xl bg-canvas" />
           ))}
         </div>
       ) : suppliers.length === 0 ? (
@@ -150,23 +174,24 @@ export default function SuppliersPage() {
           />
         </PageSurface>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {suppliers.map((supplier) => (
             <SupplierDirectoryCard
               key={supplier.actor_id}
               supplier={supplier}
               summary={formatPublicSupplierSummary(supplier)}
               categoryNames={supplier.industries}
+              myDealsCount={dealsBySupplier.get(supplier.actor_id) ?? 0}
             />
           ))}
         </div>
       )}
-    
+
       <ListPagination
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
       />
-</PageFrame>
+    </PageFrame>
   )
 }

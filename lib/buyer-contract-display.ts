@@ -1,21 +1,16 @@
 import type { ContractListTab } from "@/lib/contract-display"
 
-export type BuyerContractListTab = Extract<
-  ContractListTab,
-  "active" | "completed" | "disputed"
->
+export type BuyerContractListTab = Extract<ContractListTab, "active" | "completed">
 
 export const BUYER_CONTRACT_LIST_TABS: {
   value: BuyerContractListTab
   label: string
 }[] = [
-  { value: "active", label: "Идут" },
+  { value: "active", label: "В работе" },
   { value: "completed", label: "Завершённые" },
-  { value: "disputed", label: "Споры" },
 ]
 
 export const buyerContractEmptyMessages: Record<BuyerContractListTab, string> = {
-  active: "Сделка появится, когда вы выберете исполнителя по заявке",
+  active: "Сделка появится, когда вы купите в каталоге или выберете КП.",
   completed: "Здесь будут сделки, по которым исполнитель получил оплату",
-  disputed: "Споров нет — и хорошо",
 }

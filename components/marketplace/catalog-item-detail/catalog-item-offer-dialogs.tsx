@@ -26,6 +26,9 @@ type BuyDialogProps = {
   itemTitle: string
   price: number
   currency: string
+  presetMessage?: string
+  qtyLabel?: string
+  total?: number
 }
 
 export const CatalogBuyOfferDialog = ({
@@ -35,6 +38,9 @@ export const CatalogBuyOfferDialog = ({
   itemTitle,
   price,
   currency,
+  presetMessage,
+  qtyLabel,
+  total,
 }: BuyDialogProps) => {
   const router = useRouter()
   const [message, setMessage] = useState("")
@@ -43,9 +49,11 @@ export const CatalogBuyOfferDialog = ({
   const handleSubmit = async () => {
     setPending(true)
     try {
+      const parts = [presetMessage, message.trim()].filter(Boolean)
       const offer = await catalogApi.createOffer(itemId, {
         kind: "buy",
-        message: message.trim() || undefined,
+        price,
+        message: parts.length ? parts.join("\n") : undefined,
       })
       toast.success("Запрос на покупку отправлен исполнителю")
       setMessage("")
@@ -70,10 +78,20 @@ export const CatalogBuyOfferDialog = ({
         </DialogHeader>
         <div className="space-y-4">
           <div className="rounded-xl bg-brand-50/60 px-4 py-3 text-sm">
-            <p className="text-mute">Цена</p>
+            <p className="text-mute">
+              {qtyLabel ? `Цена за единицу · ${qtyLabel}` : "Цена"}
+            </p>
             <p className="mt-0.5 text-lg font-bold text-ink">
               {formatCurrency(price, currency)}
             </p>
+            {total != null && (
+              <p className="mt-1 text-[13px] text-mute">
+                Итого:{" "}
+                <span className="font-semibold text-ink">
+                  {formatCurrency(total, currency)}
+                </span>
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <label htmlFor="buy-offer-message" className="text-sm font-semibold">
@@ -109,6 +127,7 @@ type NegotiateDialogProps = {
   itemTitle: string
   listPrice: number | null
   currency: string
+  presetMessage?: string
 }
 
 export const CatalogNegotiateOfferDialog = ({
@@ -118,6 +137,7 @@ export const CatalogNegotiateOfferDialog = ({
   itemTitle,
   listPrice,
   currency,
+  presetMessage,
 }: NegotiateDialogProps) => {
   const router = useRouter()
   const [price, setPrice] = useState(listPrice != null ? String(listPrice) : "")
@@ -136,10 +156,11 @@ export const CatalogNegotiateOfferDialog = ({
     }
     setPending(true)
     try {
+      const parts = [presetMessage, message.trim()].filter(Boolean)
       const offer = await catalogApi.createOffer(itemId, {
         kind: "negotiate",
         price: parsed,
-        message: message.trim(),
+        message: parts.join("\n"),
       })
       toast.success("Предложение отправлено исполнителю")
       setMessage("")
@@ -156,7 +177,7 @@ export const CatalogNegotiateOfferDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Торговаться</DialogTitle>
+          <DialogTitle>Запросить цену у поставщика</DialogTitle>
           <DialogDescription>
             {itemTitle}. Назовите свою цену и кратко опишите условия. Если
             исполнитель согласится, сразу откроется сделка.

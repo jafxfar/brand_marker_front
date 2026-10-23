@@ -46,7 +46,7 @@ export default function CustomerTopbar({
         <div className="mx-auto flex h-full max-w-[1400px] items-center gap-3 px-4 lg:gap-6 lg:px-8">
           <BrandLogo small showWordmark className="shrink-0" />
           <span className="hidden h-7 items-center rounded-md bg-canvas px-2.5 text-[13px] font-semibold text-mute md:inline-flex">
-            Кабинет покупателя
+            Закупки
           </span>
           <label className="relative ml-0 hidden max-w-md flex-1 sm:block lg:ml-6">
             <span className="sr-only">Поиск</span>
