@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import type { NotificationRole } from "@/lib/api/notifications"
+import { adminSupportApi } from "@/lib/api/admin/support"
 import { contractsApi } from "@/lib/api/contracts"
 import { supplierContractsApi } from "@/lib/api/supplier/contracts"
+import { supportApi } from "@/lib/api/support"
 import { isApiEnabled } from "@/lib/api/config"
 import { ensureAccessToken } from "@/lib/api/client"
 import { getNotificationsWsUrl } from "@/lib/notifications-ws"
@@ -22,10 +24,18 @@ import {
   appendContractMessageToCache,
   updateContractMessageStatusInCache,
 } from "@/lib/contract-chat-cache"
+import {
+  appendSupportMessageToCache,
+  supportKeys,
+  updateSupportMessageStatusInCache,
+} from "@/lib/support-chat-cache"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { NotificationToast } from "@/components/notifications/notification-toast"
 import type { ApiNotification } from "@/types/notification"
 import type { Message } from "@/types"
+import type { SupportMessage } from "@/types/support"
+
+export type SocketRole = NotificationRole | "admin"
 
 type ContractMessagePayload = {
   contract_id: number
@@ -33,15 +43,22 @@ type ContractMessagePayload = {
   messages?: Message[]
 }
 
+type SupportMessagePayload = {
+  ticket_id: number
+  message?: SupportMessage
+  messages?: SupportMessage[]
+  status?: string
+}
+
 type WsPayload = {
   event: string
-  data?: ApiNotification | ContractMessagePayload
+  data?: ApiNotification | ContractMessagePayload | SupportMessagePayload
 }
 
 const ackInFlight = new Set<string>()
 
 export const useNotificationsSocket = (
-  role: NotificationRole,
+  role: SocketRole,
   enabled = true,
 ) => {
   const queryClient = useQueryClient()
@@ -55,9 +72,11 @@ export const useNotificationsSocket = (
 
     let cancelled = false
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+    const supportRole = role === "admin" ? null : role
 
-    const ackDelivered = async (contractId: number, messageId: number) => {
-      const key = `${role}:${contractId}:${messageId}`
+    const ackContractDelivered = async (contractId: number, messageId: number) => {
+      if (role === "admin") return
+      const key = `contract:${role}:${contractId}:${messageId}`
       if (ackInFlight.has(key)) return
       ackInFlight.add(key)
       try {
@@ -65,7 +84,29 @@ export const useNotificationsSocket = (
         const updated = await api.markMessageDelivered(contractId, messageId)
         updateContractMessageStatusInCache(queryClient, contractId, [updated])
       } catch {
-        // ignore ack failures; status may already be delivered/viewed
+        // ignore ack failures
+      } finally {
+        ackInFlight.delete(key)
+      }
+    }
+
+    const ackSupportDelivered = async (ticketId: number, messageId: number) => {
+      const key = `support:${role}:${ticketId}:${messageId}`
+      if (ackInFlight.has(key)) return
+      ackInFlight.add(key)
+      try {
+        const updated =
+          role === "admin"
+            ? await adminSupportApi.markDelivered(ticketId, messageId)
+            : await supportApi.markDelivered(role, ticketId, messageId)
+        updateSupportMessageStatusInCache(
+          queryClient,
+          ticketId,
+          [updated],
+          supportRole ?? undefined,
+        )
+      } catch {
+        // ignore ack failures
       } finally {
         ackInFlight.delete(key)
       }
@@ -92,7 +133,9 @@ export const useNotificationsSocket = (
           }
           if (payload.event === "notification.created" && payload.data) {
             const notification = payload.data as ApiNotification
-            prependNotificationToCache(queryClient, role, notification)
+            if (role !== "admin") {
+              prependNotificationToCache(queryClient, role, notification)
+            }
             toast.custom(
               (id) =>
                 createElement(NotificationToast, {
@@ -113,18 +156,21 @@ export const useNotificationsSocket = (
               void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.all })
               void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
             }
+            if (notification.type === "support") {
+              void queryClient.invalidateQueries({ queryKey: supportKeys.all })
+            }
             return
           }
-          if (payload.event === "contract.message" && payload.data) {
+          if (payload.event === "contract.message" && payload.data && role !== "admin") {
             const data = payload.data as ContractMessagePayload
             if (!data.contract_id || !data.message) return
             appendContractMessageToCache(queryClient, data.contract_id, data.message)
             if (userId > 0 && data.message.sender_id !== userId) {
-              void ackDelivered(data.contract_id, data.message.id)
+              void ackContractDelivered(data.contract_id, data.message.id)
             }
             return
           }
-          if (payload.event === "contract.message.status" && payload.data) {
+          if (payload.event === "contract.message.status" && payload.data && role !== "admin") {
             const data = payload.data as ContractMessagePayload
             if (!data.contract_id) return
             const updates = data.messages?.length
@@ -133,6 +179,44 @@ export const useNotificationsSocket = (
                 ? [data.message]
                 : []
             updateContractMessageStatusInCache(queryClient, data.contract_id, updates)
+            return
+          }
+          if (payload.event === "support.message" && payload.data) {
+            const data = payload.data as SupportMessagePayload
+            if (!data.ticket_id || !data.message) return
+            appendSupportMessageToCache(
+              queryClient,
+              data.ticket_id,
+              data.message,
+              supportRole ?? undefined,
+            )
+            void queryClient.invalidateQueries({ queryKey: supportKeys.adminUnread })
+            if (supportRole) {
+              void queryClient.invalidateQueries({ queryKey: supportKeys.unread(supportRole) })
+            }
+            if (userId > 0 && data.message.sender_id !== userId) {
+              void ackSupportDelivered(data.ticket_id, data.message.id)
+            }
+            return
+          }
+          if (payload.event === "support.message.status" && payload.data) {
+            const data = payload.data as SupportMessagePayload
+            if (!data.ticket_id) return
+            const updates = data.messages?.length
+              ? data.messages
+              : data.message
+                ? [data.message]
+                : []
+            updateSupportMessageStatusInCache(
+              queryClient,
+              data.ticket_id,
+              updates,
+              supportRole ?? undefined,
+            )
+            return
+          }
+          if (payload.event === "support.ticket.closed") {
+            void queryClient.invalidateQueries({ queryKey: supportKeys.all })
           }
         } catch {
           // ignore malformed messages

@@ -11,6 +11,11 @@ export type AdminDashboardMetrics = {
   open_disputes: number
   monthly_revenue: number
   pending_verifications: number
+  pending_catalog: number
+  open_reports: number
+  pending_payouts: number
+  flagged_chats: number
+  pending_company_changes: number
 }
 
 export type AdminActivityType =

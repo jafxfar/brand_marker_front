@@ -3,8 +3,17 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, FileText, ShoppingCart, Store,
-  Plus, FileCheck, Wallet, MessageSquare, Building2, type LucideIcon,
+  LayoutDashboard,
+  FileText,
+  ShoppingCart,
+  Store,
+  Plus,
+  FileCheck,
+  Wallet,
+  MessageSquare,
+  Building2,
+  BadgeCheck,
+  type LucideIcon,
 } from "lucide-react"
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
@@ -18,17 +27,19 @@ type NavItem = {
   href: string
   label: string
   Icon: LucideIcon
-  badge?: "deals" | "messages"
+  badge?: "deals" | "messages" | "approvals" | "rfqs"
 }
 
+/** Order matches extended CNAV.buyer in BrendMarket-v5. */
 const navItems: NavItem[] = [
   { href: "/customer", label: "Обзор", Icon: LayoutDashboard },
-  { href: "/customer/rfqs", label: "Заявки", Icon: FileText },
+  { href: "/customer/rfqs", label: "Заявки", Icon: FileText, badge: "rfqs" },
   { href: "/customer/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
+  { href: "/customer/approvals", label: "Согласования", Icon: BadgeCheck, badge: "approvals" },
   { href: "/customer/payments", label: "Платежи и документы", Icon: Wallet },
+  { href: "/customer/suppliers", label: "Поставщики", Icon: Store },
   { href: "/customer/messages", label: "Сообщения", Icon: MessageSquare, badge: "messages" },
   { href: "/customer/company", label: "Компания и сотрудники", Icon: Building2 },
-  { href: "/customer/suppliers", label: "Поставщики", Icon: Store },
 ]
 
 export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -41,11 +52,24 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
     if (item.badge === "deals") return dealActions
-    return unreadMessages
+    if (item.badge === "messages") return unreadMessages
+    if (item.badge === "approvals") return 0
+    return 0
   }
 
   const isActive = (href: string): boolean =>
     href === "/customer" ? pathname === href : pathname.startsWith(href)
+
+  const companyName =
+    hydrated && user?.company ? user.company : "Покупатель"
+  const initials =
+    hydrated && user?.name
+      ? user.name
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((w) => w[0]?.toUpperCase() ?? "")
+          .join("")
+      : "ПК"
 
   return (
     <nav className="grid gap-1" aria-label="Меню кабинета">
@@ -65,17 +89,15 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
 
       <div className="mb-4 flex items-center gap-3 rounded-xl border border-line bg-white p-3">
         <span className="grid size-10 place-items-center rounded-lg bg-ink text-[12px] font-semibold text-white">
-          {hydrated && user?.name ? user.name.slice(0, 2).toUpperCase() : "ПК"}
+          {initials}
         </span>
         <span className="min-w-0 flex-1">
-          <b className="block truncate text-[14.5px]">
-            {hydrated && user?.company ? user.company : "Покупатель"}
-          </b>
+          <b className="block truncate text-[14.5px]">{companyName}</b>
           <span className="text-[12.5px] text-mute">Покупатель</span>
         </span>
       </div>
 
-      <Button asChild className="mb-4 w-full">
+      <Button asChild className="mb-4 h-11 w-full rounded-[10px] text-[15px]">
         <Link href="/customer/rfqs/new" onClick={onNavigate}>
           <Plus className="size-5" />
           Новая заявка
@@ -111,12 +133,13 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
         <p className="text-[13px] text-mute">
           Ответим в чате в течение часа или по телефону +992 44 600 00 00.
         </p>
-        <a
-          href="tel:+992446000000"
+        <button
+          type="button"
           className="justify-self-start text-[13.5px] font-semibold text-brand-700 hover:underline"
+          onClick={onNavigate}
         >
           Написать в поддержку
-        </a>
+        </button>
       </div>
     </nav>
   )

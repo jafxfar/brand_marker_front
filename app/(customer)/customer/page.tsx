@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
-import { Briefcase, FileText, Lock, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
@@ -10,8 +10,8 @@ import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { getActorId, getUserDisplayName } from "@/lib/auth-display"
-import { formatPrice } from "@/lib/format"
+import { getActorId } from "@/lib/auth-display"
+import { formatCurrency, formatPrice } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
@@ -23,14 +23,15 @@ import { getEscrowSummary } from "@/lib/contract-display"
 import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
 import { isDealOpen } from "@/lib/process/deal-stages"
 import { buildBuyerTodo, type BuyerRfqProposalsSummary } from "@/lib/process/todo"
+import { MOCK_BUYER_APPROVALS } from "@/lib/mock/buyer-approvals"
+import { MOCK_BUYER_SPEND } from "@/lib/mock/buyer-spend"
 import { Button } from "@/components/ui/button"
 import { PageFrame, PageHeader } from "@/components/layout"
-import { ActiveRfqsPanel } from "@/components/cabinet/dashboard/active-rfqs-panel"
+import { SpendChart } from "@/components/cabinet/dashboard/spend-chart"
+import { HomeDealsPanel } from "@/components/cabinet/dashboard/home-deals-panel"
 import { ActivateRoleBanner } from "@/components/company/activate-role-banner"
-import { EscrowExplainer, MetricTile, TodoList } from "@/components/process"
+import { MetricTile, TodoList } from "@/components/process"
 import type { ContractWithRelations, Proposal, RfqWithRelations } from "@/types"
-
-const VISIBLE_PROPOSAL_STATUSES: Proposal["status"][] = ["submitted", "viewed", "shortlisted"]
 
 export default function CustomerDashboard() {
   const hydrated = useHydrated()
@@ -42,15 +43,25 @@ export default function CustomerDashboard() {
   const getRfqsByBuyer = useRfqsStore((s) => s.getRfqsByBuyer)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const getContractsForBuyer = useContractsStore((s) => s.getContractsForBuyer)
-  const getUnreadMessageCountForBuyer = useContractsStore((s) => s.getUnreadMessageCountForBuyer)
+  const getUnreadMessageCountForBuyer = useContractsStore(
+    (s) => s.getUnreadMessageCountForBuyer,
+  )
   const getCompany = useCompaniesStore((s) => s.getCompany)
 
-  const { data: apiRfqsPage, isLoading: rfqsLoading } = useRfqsQuery("all", hydrated && useApi)
+  const { data: apiRfqsPage, isLoading: rfqsLoading } = useRfqsQuery(
+    "all",
+    hydrated && useApi,
+  )
   const apiRfqs = apiRfqsPage?.items ?? []
-  const { data: apiContractsPage, isLoading: contractsLoading } = useContractsQuery(hydrated && useApi)
+  const { data: apiContractsPage, isLoading: contractsLoading } =
+    useContractsQuery(hydrated && useApi)
   const apiContracts = apiContractsPage?.items ?? []
 
-  const rfqs: RfqWithRelations[] = useApi ? apiRfqs : hydrated ? getRfqsByBuyer(actorId) : []
+  const rfqs: RfqWithRelations[] = useApi
+    ? apiRfqs
+    : hydrated
+      ? getRfqsByBuyer(actorId)
+      : []
   const contracts: ContractWithRelations[] = useApi
     ? (apiContracts as ContractWithRelations[])
     : hydrated
@@ -78,14 +89,6 @@ export default function CustomerDashboard() {
     return map
   }, [useApi, openRfqs, proposalQueries, getProposalsForRfq])
 
-  const proposalsCount = useMemo(() => {
-    const map = new Map<string, number>()
-    proposalsByRfq.forEach((list, rfqId) => {
-      map.set(rfqId, list.filter((p) => VISIBLE_PROPOSAL_STATUSES.includes(p.status)).length)
-    })
-    return map
-  }, [proposalsByRfq])
-
   const supplierIds = useApi ? contracts.map((c) => c.supplier_actor_id) : []
   const resolveSupplierName = useSupplierActorName(supplierIds)
   const getSupplierName = (supplierId: number) =>
@@ -99,23 +102,53 @@ export default function CustomerDashboard() {
       : getUnreadMessageCountForBuyer(actorId)
     : 0
 
-  const rfqsWithNewProposals: BuyerRfqProposalsSummary[] = openRfqs.map((rfq) => ({
-    rfqId: rfq.id,
-    rfqTitle: rfq.title,
-    count: (proposalsByRfq.get(rfq.id) ?? []).filter((p) => p.status === "submitted").length,
+  const rfqsWithNewProposals: BuyerRfqProposalsSummary[] = openRfqs.map(
+    (rfq) => ({
+      rfqId: rfq.id,
+      rfqTitle: rfq.title,
+      count: (proposalsByRfq.get(rfq.id) ?? []).filter(
+        (p) => p.status === "submitted",
+      ).length,
+    }),
+  )
+
+  const pendingApprovals = MOCK_BUYER_APPROVALS.filter(
+    (a) => a.status === "wait",
+  ).map((a) => ({
+    id: a.id,
+    what: a.what,
+    whoName: a.whoName,
+    amountLabel: formatCurrency(a.amount, a.currency),
+    reason: a.reason,
   }))
 
   const todo = buildBuyerTodo({
     contracts,
     getSupplierName,
     rfqsWithNewProposals,
-    drafts: rfqs.filter((r) => r.status === "draft").map((r) => ({ id: r.id, title: r.title })),
+    drafts: rfqs
+      .filter((r) => r.status === "draft")
+      .map((r) => ({ id: r.id, title: r.title })),
     unreadMessages,
+    pendingApprovals,
   })
 
   const openDeals = contracts.filter(isDealOpen)
-  const heldAmount = contracts.reduce((sum, c) => sum + getEscrowSummary(c).held, 0)
+  const heldAmount = contracts.reduce(
+    (sum, c) => sum + getEscrowSummary(c).held,
+    0,
+  )
   const loading = !hydrated || (useApi && (rfqsLoading || contractsLoading))
+
+  const spendSeries = MOCK_BUYER_SPEND
+  const lastSpend = spendSeries[spendSeries.length - 1]?.[1] ?? 0
+  const prevSpend = spendSeries[spendSeries.length - 2]?.[1] ?? 0
+  const spendDeltaPct =
+    prevSpend > 0 ? Math.round(((lastSpend - prevSpend) / prevSpend) * 100) : 0
+  const companyLabel =
+    hydrated && user?.company
+      ? `${user.company} · закупки компании`
+      : "Закупки компании"
 
   return (
     <PageFrame>
@@ -126,7 +159,7 @@ export default function CustomerDashboard() {
       />
       <PageHeader
         title="Обзор"
-        description={`Здравствуйте${hydrated && user ? `, ${getUserDisplayName(user)}` : ""} — здесь видно, что требует вашего действия`}
+        description={companyLabel}
         actions={
           <Button asChild size="lg" className="lg:hidden">
             <Link href="/customer/rfqs/new">
@@ -136,40 +169,57 @@ export default function CustomerDashboard() {
         }
       />
 
-      <div className="grid gap-8">
+      <div className="grid gap-6">
         <TodoList
           items={todo}
           loading={loading}
-          emptyText="Новых дел нет. Создайте заявку, когда понадобится товар или услуга."
+          emptyText="Всё сделано."
         />
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Сводка">
+        <section
+          className="grid grid-cols-2 gap-3 lg:grid-cols-4"
+          aria-label="Сводка"
+        >
           <MetricTile
-            Icon={FileText}
             label="Открытые заявки"
             value={loading ? "—" : String(openRfqs.length)}
-            hint="принимают предложения"
+            hint="принимают КП"
             href="/customer/rfqs?status=receiving_proposals"
           />
           <MetricTile
-            Icon={Briefcase}
-            label="Идут сделки"
+            label="Сделки в работе"
             value={loading ? "—" : String(openDeals.length)}
-            hint="от договора до приёмки и оплаты"
+            hint="от договора до приёмки"
             href="/customer/contracts?tab=active"
           />
           <MetricTile
-            Icon={Lock}
-            label="На гарантии площадки"
+            label="На гарантии"
             value={loading ? "—" : formatPrice(heldAmount)}
-            hint="уйдут исполнителям после приёмки"
+            hint="в банке‑партнёре до приёмки"
             href="/customer/payments?tab=escrow"
+          />
+          <MetricTile
+            label="Расходы в сентябре"
+            value={loading ? "—" : formatPrice(lastSpend)}
+            hint={
+              spendDeltaPct > 0
+                ? `+${spendDeltaPct}% к августу`
+                : spendDeltaPct < 0
+                  ? `${spendDeltaPct}% к августу`
+                  : "за текущий месяц"
+            }
+            href="/customer/payments"
           />
         </section>
 
-        <EscrowExplainer />
-
-        <ActiveRfqsPanel rfqs={rfqs} hydrated={!loading} proposalsCount={proposalsCount} />
+        <section className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+          <SpendChart series={spendSeries} />
+          <HomeDealsPanel
+            contracts={contracts}
+            getSupplierName={getSupplierName}
+            loading={loading}
+          />
+        </section>
       </div>
     </PageFrame>
   )

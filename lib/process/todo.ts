@@ -8,7 +8,15 @@ import {
   getUnpaidMilestone,
 } from "@/lib/process/deal-stages"
 
-export type TodoIcon = "deal" | "proposal" | "draft" | "rfq" | "clock" | "message" | "dispute"
+export type TodoIcon =
+  | "deal"
+  | "proposal"
+  | "draft"
+  | "rfq"
+  | "clock"
+  | "message"
+  | "dispute"
+  | "approval"
 
 export type TodoItem = {
   id: string
@@ -55,6 +63,13 @@ export type BuyerTodoInput = {
   rfqsWithNewProposals: BuyerRfqProposalsSummary[]
   drafts: { id: string; title: string }[]
   unreadMessages: number
+  pendingApprovals?: {
+    id: string
+    what: string
+    whoName: string
+    amountLabel: string
+    reason: string
+  }[]
 }
 
 const buyerDealText = (contract: ContractWithRelations, supplierName: string): { text: string; cta: string } => {
@@ -93,6 +108,7 @@ export const buildBuyerTodo = ({
   rfqsWithNewProposals,
   drafts,
   unreadMessages,
+  pendingApprovals = [],
 }: BuyerTodoInput): TodoItem[] => {
   const items: TodoItem[] = []
 
@@ -111,6 +127,18 @@ export const buildBuyerTodo = ({
         cta,
       })
     })
+
+  pendingApprovals.forEach((approval) => {
+    items.push({
+      id: `approval-${approval.id}`,
+      icon: "approval",
+      hot: true,
+      title: `Согласовать покупку: ${approval.what}`,
+      text: `${approval.whoName} · ${approval.amountLabel} · ${approval.reason}`,
+      href: "/customer/approvals",
+      cta: "Рассмотреть",
+    })
+  })
 
   rfqsWithNewProposals
     .filter((r) => r.count > 0)

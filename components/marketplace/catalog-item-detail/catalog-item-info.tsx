@@ -1,0 +1,195 @@
+"use client"
+
+import { Star } from "lucide-react"
+import type { ItemAttribute, ItemPricing, PublicSupplier } from "@/types"
+import { formatCurrency } from "@/lib/format"
+import {
+  activeTierIndex,
+  formatItemPricing,
+  getPricingMoq,
+  getSortedTiers,
+  priceForQty,
+} from "@/lib/item-display"
+import { scrollToProductSection } from "@/lib/product-scroll"
+import { cn } from "@/lib/utils"
+
+type CatalogItemInfoProps = {
+  title: string
+  pricing: ItemPricing | null
+  attributes: ItemAttribute[]
+  supplier: PublicSupplier
+  unit?: string
+  qty?: number
+}
+
+export const CatalogItemInfo = ({
+  title,
+  pricing,
+  attributes,
+  supplier,
+  unit = "шт",
+  qty,
+}: CatalogItemInfoProps) => {
+  const moq = getPricingMoq(pricing)
+  const effectiveQty = qty ?? moq
+  const tiers = getSortedTiers(pricing)
+  const currency = pricing?.currency ?? "TJS"
+  const unitPrice = priceForQty(pricing, effectiveQty)
+  const activeIdx = activeTierIndex(pricing, effectiveQty)
+  const keyAttrs = [...attributes]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .slice(0, 6)
+  const headline = formatItemPricing(pricing)
+
+  return (
+    <div id="pinfo" className="grid min-w-0 content-start gap-5">
+      <div className="grid gap-2">
+        <h1 className="text-[22px] font-extrabold leading-snug tracking-[-0.01em] text-ink lg:text-[24px]">
+          {title}
+        </h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px]">
+          {supplier.reviews_count > 0 ? (
+            <button
+              type="button"
+              onClick={() => scrollToProductSection("previews")}
+              className="inline-flex items-center gap-1.5"
+            >
+              <span className="inline-flex items-center gap-0.5" aria-hidden>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    className={
+                      i < Math.round(supplier.rating)
+                        ? "fill-amber-400 text-amber-400"
+                        : "text-line"
+                    }
+                  />
+                ))}
+              </span>
+              <b>{supplier.rating.toFixed(1)}</b>
+              <span className="text-mute underline underline-offset-2">
+                {supplier.reviews_count}{" "}
+                {pluralReviews(supplier.reviews_count)}
+              </span>
+            </button>
+          ) : (
+            <span className="text-mute">Пока нет отзывов о товаре</span>
+          )}
+        </div>
+      </div>
+
+      <div className="border-t border-line pt-5">
+        {tiers.length > 1 ? (
+          <div className="grid gap-3">
+            <div>
+              <b className="text-[30px] font-extrabold leading-none tracking-[-0.02em] tnum text-ink">
+                {headline.includes("от") ? headline : `${headline}`}
+              </b>
+              <p className="mt-1.5 text-[14px] text-mute">
+                Минимальный заказ: {moq} {unit}
+              </p>
+            </div>
+            <div
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${tiers.length}, minmax(0, 1fr))`,
+              }}
+            >
+              {tiers.map((tier, i) => {
+                const on = i === activeIdx
+                const range =
+                  tier.maxQty != null
+                    ? `${tier.minQty}–${tier.maxQty}`
+                    : `≥ ${tier.minQty}`
+                return (
+                  <div
+                    key={`${tier.minQty}-${tier.price}`}
+                    className={cn(
+                      "rounded-xl px-3 py-2.5",
+                      on ? "bg-brand-50 ring-1 ring-brand-600" : "bg-canvas",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "block text-[12.5px]",
+                        on ? "font-semibold text-brand-700" : "text-mute",
+                      )}
+                    >
+                      {range} {unit}
+                    </span>
+                    <b
+                      className={cn(
+                        "block text-[17px] font-extrabold tnum",
+                        on && "text-brand-700",
+                      )}
+                    >
+                      {formatCurrency(tier.price, currency)}
+                    </b>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ) : unitPrice != null ? (
+          <div>
+            <b className="text-[30px] font-extrabold leading-none tracking-[-0.02em] tnum text-ink">
+              {formatCurrency(unitPrice, currency)}
+            </b>
+            <p className="mt-1.5 text-[14px] text-mute">
+              Минимальный заказ: {moq} {unit}
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl bg-canvas p-4">
+            <b className="text-[24px] font-extrabold">Цена по запросу</b>
+            <p className="mt-1 text-[13.5px] text-mute">
+              Поставщик пришлёт коммерческое предложение под ваш объём.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {keyAttrs.length > 0 && (
+        <div className="grid gap-3 border-t border-line pt-5">
+          <h2 className="text-[17px] font-extrabold text-ink">
+            Основные характеристики
+          </h2>
+          <dl className="grid grid-cols-2 gap-y-4 rounded-xl bg-canvas p-4 sm:grid-cols-3">
+            {keyAttrs.map((attr, i) => (
+              <div
+                key={attr.id}
+                className={cn(
+                  "px-3",
+                  i % 3 !== 0 && "sm:border-l sm:border-line",
+                  i % 2 !== 0 && "border-l border-line sm:border-l-0",
+                  i % 2 !== 0 && i % 3 !== 0 && "sm:border-l",
+                )}
+              >
+                <dt className="text-[13px] text-mute">{attr.name}</dt>
+                <dd className="mt-0.5 line-clamp-2 text-[15px] font-bold text-ink">
+                  {attr.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <button
+            type="button"
+            onClick={() => scrollToProductSection("pspecs")}
+            className="justify-self-start text-[13.5px] font-semibold underline underline-offset-2"
+          >
+            Все характеристики ({attributes.length})
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const pluralReviews = (n: number) => {
+  const mod10 = n % 10
+  const mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return "отзыв"
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "отзыва"
+  return "отзывов"
+}

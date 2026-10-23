@@ -9,6 +9,7 @@ import { CabinetShell } from "@/components/layout/cabinet-shell"
 import { PageEmptyState } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
 import { canAccessAdminPath, getFirstAllowedAdminPath } from "@/lib/admin-permissions"
 import { useAuthStore } from "@/lib/store/auth-store"
 
@@ -29,6 +30,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     adminRoles.has(user.platformRole)
   const canAccessPath = isAllowed && canAccessAdminPath(user, pathname)
   const fallbackPath = isAllowed ? getFirstAllowedAdminPath(user) : null
+  useNotificationsSocket("admin", isAllowed)
 
   useEffect(() => {
     if (!hydrated || !isAllowed || sessionRefreshed.current) return

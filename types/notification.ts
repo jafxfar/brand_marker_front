@@ -6,6 +6,7 @@ export const NOTIFICATION_TYPES = [
   "rfq",
   "contract",
   "proposal",
+  "support",
 ] as const
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]

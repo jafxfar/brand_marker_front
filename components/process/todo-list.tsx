@@ -1,9 +1,8 @@
 import Link from "next/link"
 import {
   AlertTriangle,
-  ArrowRight,
+  BadgeCheck,
   Briefcase,
-  Check,
   Clock,
   FileText,
   Inbox,
@@ -22,6 +21,7 @@ const ICONS: Record<TodoIcon, LucideIcon> = {
   clock: Clock,
   message: MessageSquare,
   dispute: AlertTriangle,
+  approval: BadgeCheck,
 }
 
 type TodoListProps = {
@@ -29,75 +29,96 @@ type TodoListProps = {
   loading?: boolean
   emptyText?: string
   title?: string
+  /** Template v5: single bordered list instead of separate cards. */
+  compact?: boolean
 }
 
-const TodoRow = ({ item }: { item: TodoItem }) => {
+const TodoRow = ({
+  item,
+  compact,
+}: {
+  item: TodoItem
+  compact?: boolean
+}) => {
   const Icon = ICONS[item.icon]
   return (
-    <li
+    <div
       className={cn(
-        "flex flex-wrap items-center gap-4 rounded-2xl border p-4 sm:flex-nowrap",
-        item.hot
-          ? "border-brand-200 bg-brand-50/50"
-          : "border-line bg-white",
+        "flex flex-wrap items-center gap-4 sm:flex-nowrap",
+        compact
+          ? cn(
+              "border-b border-line px-4 py-3.5 last:border-0",
+              item.hot && "bg-brand-50/50",
+            )
+          : cn(
+              "rounded-2xl border p-4",
+              item.hot
+                ? "border-brand-200 bg-brand-50/50"
+                : "border-line bg-white",
+            ),
       )}
     >
       <span
         className={cn(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-          item.hot ? "bg-brand-600 text-white" : "bg-canvas text-mute",
+          "grid shrink-0 place-items-center",
+          compact ? "size-9 rounded" : "size-11 rounded-xl",
+          item.hot ? "bg-brand-500 text-white" : "bg-canvas text-brand-500",
         )}
         aria-hidden="true"
       >
-        <Icon size={20} />
+        <Icon size={compact ? 18 : 20} />
       </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[15.5px] font-bold text-ink">{item.title}</p>
-        <p className="mt-0.5 text-[14px] text-mute">{item.text}</p>
+      <div className="min-w-[200px] flex-1">
+        <b className={cn("block", compact ? "text-[14.5px]" : "text-[15.5px]")}>
+          {item.title}
+        </b>
+        <span className={cn("text-mute", compact ? "text-[13px]" : "text-[14px]")}>
+          {item.text}
+        </span>
       </div>
       <Link
         href={item.href}
         className={cn(
-          "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[10px] px-4 text-[15px] font-semibold transition-colors",
+          "inline-flex shrink-0 items-center justify-center rounded-[10px] px-3.5 text-[14px] font-semibold transition-colors",
+          compact ? "h-9" : "h-11 px-4 text-[15px]",
           item.hot
             ? "bg-brand-600 text-white hover:bg-brand-700"
-            : "border border-line bg-white text-ink hover:border-ink/40 hover:bg-canvas",
+            : "border border-line bg-white text-ink hover:bg-canvas",
         )}
       >
         {item.cta}
-        <ArrowRight size={16} aria-hidden="true" />
       </Link>
-    </li>
+    </div>
   )
 }
 
 export const TodoList = ({
   items,
   loading = false,
-  emptyText = "Новых дел нет.",
+  emptyText = "Всё сделано.",
   title = "Требует вашего действия",
+  compact = true,
 }: TodoListProps) => (
-  <section className="grid gap-3" aria-label={title}>
-    <h2 className="text-[20px] font-extrabold tracking-[-0.02em] text-ink">{title}</h2>
+  <section className="grid gap-2" aria-label={title}>
+    <span className="text-[13px] font-semibold text-mute">{title}</span>
     {loading ? (
-      <div className="h-20 animate-pulse rounded-2xl bg-canvas" />
+      <div className="mt-0 h-20 animate-pulse rounded-xl border border-line bg-white" />
     ) : items.length === 0 ? (
-      <div className="flex items-center gap-4 rounded-2xl border border-dashed border-[#D5DAE1] bg-white p-4">
-        <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"
-          aria-hidden="true"
-        >
-          <Check size={20} />
-        </span>
-        <div>
-          <p className="font-bold text-ink">Всё сделано</p>
-          <p className="text-[14px] text-mute">{emptyText}</p>
-        </div>
+      <div className="rounded-xl border border-line bg-white p-6 text-mute">
+        {emptyText}
+      </div>
+    ) : compact ? (
+      <div className="overflow-hidden rounded-xl border border-line bg-white">
+        {items.map((item) => (
+          <TodoRow key={item.id} item={item} compact />
+        ))}
       </div>
     ) : (
       <ul className="grid gap-3">
         {items.map((item) => (
-          <TodoRow key={item.id} item={item} />
+          <li key={item.id}>
+            <TodoRow item={item} />
+          </li>
         ))}
       </ul>
     )}

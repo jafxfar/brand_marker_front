@@ -1,311 +1,87 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Ban, Pencil, Plus, RefreshCcw, Search, UserCheck, UserCog } from "lucide-react"
-import { toast } from "sonner"
-import {
-  StaffFormDialog,
-  type StaffFormDialogState,
-} from "@/components/admin/staff/staff-form-dialog"
-import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { useAdminRolesQuery } from "@/hooks/api/use-admin-roles-query"
-import {
-  useAdminStaffQuery,
-  useUpdateAdminStaffMutation,
-} from "@/hooks/api/use-admin-staff-query"
+import { Suspense, useCallback, useMemo } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { AdminRolesPanel } from "@/components/admin/roles/roles-panel"
+import { AdminStaffPanel } from "@/components/admin/staff/staff-panel"
+import { PageFrame, PageHeader, SegmentedControl } from "@/components/layout"
 import { useAdminPermission } from "@/hooks/use-admin-permission"
-import {
-  canManageStaffMember,
-  canManageStaffRole,
-  getStaffRoleLabel,
-} from "@/lib/admin-permissions"
-import type { AdminStaffMember, AdminStaffStatus } from "@/lib/api/admin"
+import { hasPermission } from "@/lib/admin-permissions"
+import { pickHubTab, type AdminHubTabOption } from "@/lib/admin-hub"
 import { useAuthStore } from "@/lib/store/auth-store"
 
-const SEARCH_DEBOUNCE_MS = 300
+type AccessHubTab = "staff" | "roles"
 
-const statusMetadata: Record<AdminStaffStatus, { label: string; className: string }> = {
-  active: {
-    label: "Активен",
-    className: "border-primary/20 bg-primary/10 text-primary",
-  },
-  blocked: {
-    label: "Заблокирован",
-    className: "border-destructive/20 bg-destructive/10 text-destructive",
-  },
-  pending: {
-    label: "Ожидает активации",
-    className: "border-warning/20 bg-warning/10 text-warning",
-  },
-}
+const ALL_TABS: AdminHubTabOption<AccessHubTab>[] = [
+  { value: "staff", label: "Сотрудники", permission: "admin_staff.view" },
+  { value: "roles", label: "Роли", permission: "roles.manage" },
+]
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("ru-RU", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value))
-
-const getFullName = (member: AdminStaffMember) =>
-  `${member.first_name} ${member.last_name}`.trim() || member.email
-
-const StaffSkeleton = () => (
-  <PageFrame className="animate-pulse" aria-label="Загрузка сотрудников">
+const HubSkeleton = () => (
+  <PageFrame className="animate-pulse" aria-label="Загрузка">
     <div className="h-16 w-80 max-w-full rounded-xl bg-muted" />
+    <div className="h-12 rounded-xl bg-muted" />
     <div className="h-96 rounded-xl bg-muted" />
   </PageFrame>
 )
 
-export default function AdminStaffPage() {
+const AccessHub = () => {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const user = useAuthStore((state) => state.user)
-  const canCreate = useAdminPermission("admin_staff.create")
-  const canUpdate = useAdminPermission("admin_staff.update")
-  const [searchInput, setSearchInput] = useState("")
-  const [query, setQuery] = useState("")
-  const [dialogState, setDialogState] = useState<StaffFormDialogState>(null)
-  const [statusTarget, setStatusTarget] = useState<AdminStaffMember | null>(null)
+  const canStaff = useAdminPermission("admin_staff.view")
+  const canRoles = hasPermission(user, "roles.manage")
 
-  const staffQuery = useAdminStaffQuery(query)
-  const rolesQuery = useAdminRolesQuery(canCreate || canUpdate)
-  const statusMutation = useUpdateAdminStaffMutation()
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setQuery(searchInput.trim()), SEARCH_DEBOUNCE_MS)
-    return () => window.clearTimeout(timeoutId)
-  }, [searchInput])
-
-  const assignableRoles = useMemo(
-    () => (rolesQuery.data?.items ?? []).filter((role) => role.is_active && canManageStaffRole(user, role.name)),
-    [rolesQuery.data, user],
+  const can = useCallback(
+    (permission: string) => {
+      if (permission === "admin_staff.view") return canStaff
+      if (permission === "roles.manage") return canRoles
+      return false
+    },
+    [canRoles, canStaff],
   )
 
-  const nextStatus = statusTarget?.status === "blocked" ? "active" : "blocked"
+  const tabs = useMemo(
+    () => ALL_TABS.filter((tab) => !tab.permission || can(tab.permission)),
+    [can],
+  )
 
-  const handleStatusConfirm = async () => {
-    if (!statusTarget) return
-    try {
-      await statusMutation.mutateAsync({
-        userId: statusTarget.id,
-        data: { status: nextStatus },
-      })
-      toast.success(nextStatus === "blocked" ? "Сотрудник заблокирован" : "Сотрудник разблокирован")
-      setStatusTarget(null)
-    } catch {
-      // error toast via mutation onError
-    }
-  }
+  const tab = pickHubTab(searchParams.get("tab"), tabs.length ? tabs : ALL_TABS, can)
 
-  if (staffQuery.isLoading) return <StaffSkeleton />
-
-  if (staffQuery.isError || !staffQuery.data) {
-    return (
-      <div className="flex min-h-[55dvh] items-center justify-center">
-        <div className="w-full max-w-lg rounded-xl border border-destructive/20 bg-card p-8 text-center">
-          <UserCog className="mx-auto text-destructive" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-bold">Не удалось загрузить сотрудников</h1>
-          <Button type="button" className="mt-5" onClick={() => staffQuery.refetch()}>
-            <RefreshCcw aria-hidden="true" />
-            Повторить
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  const { items, total } = staffQuery.data
+  const setTab = useCallback(
+    (next: AccessHubTab) => {
+      const params = new URLSearchParams()
+      if (next !== "staff") params.set("tab", next)
+      const qs = params.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname)
+    },
+    [pathname, router],
+  )
 
   return (
     <PageFrame>
       <PageHeader
-        title="Сотрудники"
-        description="Учётные записи панели управления и их роли"
-        actions={
-          canCreate && (
-            <Button type="button" onClick={() => setDialogState({ mode: "create" })}>
-              <Plus aria-hidden="true" />
-              Добавить сотрудника
-            </Button>
-          )
-        }
+        title="Доступ"
+        description="Сотрудники панели и матрица ролей"
       />
 
-      <PageSurface>
-        <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:max-w-sm">
-            <Search
-              size={16}
-              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              type="search"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Поиск по имени или email"
-              aria-label="Поиск сотрудников"
-              maxLength={255}
-              className="pl-9"
-            />
-          </div>
-          <p className="text-sm text-muted-foreground">Всего: {total}</p>
-        </div>
-
-        {items.length === 0 ? (
-          <PageEmptyState
-            icon={<UserCog aria-hidden="true" />}
-            title={query ? "Никого не нашли" : "Сотрудников пока нет"}
-            description={
-              query
-                ? "Попробуйте изменить запрос."
-                : "Добавьте сотрудника и назначьте ему роль с нужными доступами."
-            }
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/35 hover:bg-muted/35">
-                  <TableHead className="px-5">Сотрудник</TableHead>
-                  <TableHead>Роль</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Создан</TableHead>
-                  <TableHead className="w-24 px-5 text-right">
-                    <span className="sr-only">Действия</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((member) => {
-                  const canManage = canUpdate && canManageStaffMember(user, member)
-                  const isBlocked = member.status === "blocked"
-                  const roleName = member.role_name ?? member.platform_role
-
-                  return (
-                    <TableRow key={member.id}>
-                      <TableCell className="px-5 py-3">
-                        <p className="font-semibold text-foreground">
-                          {getFullName(member)}
-                          {member.id === user?.userId && (
-                            <span className="ml-2 text-xs font-normal text-muted-foreground">(вы)</span>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{member.email}</p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">{getStaffRoleLabel(roleName)}</p>
-                        {member.role_description && (
-                          <p className="line-clamp-1 max-w-64 text-xs text-muted-foreground">
-                            {member.role_description}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={statusMetadata[member.status].className}>
-                          {statusMetadata[member.status].label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDate(member.created_at)}
-                      </TableCell>
-                      <TableCell className="px-5 text-right">
-                        {canManage && (
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDialogState({ mode: "edit", member })}
-                              aria-label={`Редактировать: ${getFullName(member)}`}
-                              title="Редактировать"
-                            >
-                              <Pencil aria-hidden="true" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setStatusTarget(member)}
-                              aria-label={`${isBlocked ? "Разблокировать" : "Заблокировать"}: ${getFullName(member)}`}
-                              title={isBlocked ? "Разблокировать" : "Заблокировать"}
-                              className={isBlocked ? undefined : "text-destructive hover:text-destructive"}
-                            >
-                              {isBlocked ? <UserCheck aria-hidden="true" /> : <Ban aria-hidden="true" />}
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </PageSurface>
-
-      <StaffFormDialog
-        state={dialogState}
-        roles={assignableRoles}
-        onClose={() => setDialogState(null)}
+      <SegmentedControl
+        value={tab}
+        options={tabs}
+        onChange={setTab}
+        ariaLabel="Доступ к панели"
       />
 
-      <AlertDialog
-        open={Boolean(statusTarget)}
-        onOpenChange={(open) => {
-          if (!open && !statusMutation.isPending) setStatusTarget(null)
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {nextStatus === "blocked" ? "Заблокировать сотрудника?" : "Разблокировать сотрудника?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {nextStatus === "blocked"
-                ? `${statusTarget ? getFullName(statusTarget) : ""} потеряет доступ к панели управления.`
-                : `${statusTarget ? getFullName(statusTarget) : ""} снова сможет войти в панель управления.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={statusMutation.isPending}>Отмена</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(event) => {
-                event.preventDefault()
-                handleStatusConfirm()
-              }}
-              disabled={statusMutation.isPending}
-              className={
-                nextStatus === "blocked"
-                  ? "bg-destructive text-white hover:bg-destructive/90"
-                  : undefined
-              }
-            >
-              {nextStatus === "blocked" ? "Заблокировать" : "Разблокировать"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {tab === "roles" ? <AdminRolesPanel embedded /> : <AdminStaffPanel embedded />}
     </PageFrame>
+  )
+}
+
+export default function AdminStaffPage() {
+  return (
+    <Suspense fallback={<HubSkeleton />}>
+      <AccessHub />
+    </Suspense>
   )
 }

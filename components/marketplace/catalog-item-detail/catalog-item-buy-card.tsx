@@ -1,12 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
-import { BadgeCheck, Flag, ShieldCheck, Star } from "lucide-react"
+import {
+  ChevronRight,
+  MessageCircle,
+  Minus,
+  Plus,
+  RefreshCw,
+  ShieldCheck,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { ItemPricing, PublicSupplier } from "@/types"
-import { loginRedirect, performerUrl } from "@/lib/marketplace-routes"
-import { resolveListPrice } from "@/lib/item-display"
+import type { ItemAttribute, ItemPricing, PublicSupplier } from "@/types"
+import { guaranteeUrl, loginRedirect, performerUrl } from "@/lib/marketplace-routes"
+import { formatCurrency } from "@/lib/format"
+import {
+  baseUnitPrice,
+  findAttrValue,
+  formatItemPricing,
+  getPricingMoq,
+  priceForQty,
+} from "@/lib/item-display"
 import {
   CatalogBuyOfferDialog,
   CatalogNegotiateOfferDialog,
@@ -16,150 +30,245 @@ type CatalogItemBuyCardProps = {
   itemId: number
   itemTitle: string
   pricing: ItemPricing | null
+  attributes: ItemAttribute[]
   supplier: PublicSupplier
   isAuthenticated: boolean
   canUseApiOffers: boolean
-  canReport: boolean
-  onReport: () => void
+  unit?: string
+  qty: number
+  onQtyChange: (qty: number) => void
 }
 
 export const CatalogItemBuyCard = ({
   itemId,
   itemTitle,
   pricing,
+  attributes,
   supplier,
   isAuthenticated,
   canUseApiOffers,
-  canReport,
-  onReport,
+  unit = "шт",
+  qty,
+  onQtyChange,
 }: CatalogItemBuyCardProps) => {
-  const verified = supplier.verification_status === "verified"
-  const listPrice = resolveListPrice(pricing)
+  const moq = getPricingMoq(pricing)
   const [buyOpen, setBuyOpen] = useState(false)
   const [negotiateOpen, setNegotiateOpen] = useState(false)
 
+  const currency = pricing?.currency ?? "TJS"
+  const unitPrice = priceForQty(pricing, qty)
+  const base = baseUnitPrice(pricing)
+  const total = unitPrice != null ? unitPrice * qty : null
+  const baseTotal = base != null ? base * qty : null
+  const savings =
+    total != null && baseTotal != null && baseTotal > total
+      ? baseTotal - total
+      : 0
+  const priceLabel = formatItemPricing(pricing)
+  const req = unitPrice == null
+
+  const lead =
+    findAttrValue(attributes, ["срок", "доставка", "отгрузк", "lead"]) ?? "—"
+  const city = supplier.city ?? "—"
+
   const loginHref = loginRedirect(`/services/${itemId}`)
+  const askHref = performerUrl(supplier.actor_id)
 
-  const handleBuy = () => {
-    if (!isAuthenticated) return
-    if (!listPrice) return
-    setBuyOpen(true)
-  }
+  const offerMessage = useMemo(() => {
+    if (unitPrice == null || total == null) return undefined
+    return `Количество: ${qty} ${unit}. Цена за единицу: ${formatCurrency(unitPrice, currency)}. Итого: ${formatCurrency(total, currency)}.`
+  }, [qty, unit, unitPrice, total, currency])
 
-  const handleNegotiate = () => {
-    if (!isAuthenticated) return
-    setNegotiateOpen(true)
-  }
+  const clampQty = (next: number) => Math.max(moq, Math.floor(next) || moq)
 
   return (
-    <aside className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] lg:sticky lg:top-[88px]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[12.5px] text-mute">Поставщик</p>
-          <Link
-            href={performerUrl(supplier.actor_id)}
-            className="mt-0.5 inline-flex max-w-full items-center gap-1 font-semibold text-ink underline decoration-line underline-offset-2 hover:decoration-ink"
-          >
-            <span className="truncate">{supplier.display_name}</span>
-            {verified && (
-              <BadgeCheck size={16} className="shrink-0 text-brand-600" aria-hidden="true" />
-            )}
-          </Link>
+    <aside className="grid content-start gap-4 self-start lg:sticky lg:top-[88px] lg:col-start-2 lg:row-span-2 lg:row-start-1">
+      <div className="grid gap-5 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)]">
+        <div id="pbuy" className="grid scroll-mt-32 gap-4">
+          {!req && (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[14px] font-semibold">
+                  Количество, {unit}
+                </span>
+                <div className="flex h-11 rounded-[10px] border border-line bg-white">
+                  <button
+                    type="button"
+                    className="grid w-11 place-items-center rounded-l-[10px] hover:bg-canvas disabled:opacity-40"
+                    aria-label="Меньше"
+                    disabled={qty <= moq}
+                    onClick={() => onQtyChange(clampQty(qty - 1))}
+                  >
+                    <Minus size={16} aria-hidden />
+                  </button>
+                  <input
+                    type="number"
+                    min={moq}
+                    value={qty}
+                    aria-label="Количество"
+                    className="w-16 text-center text-[16px] font-bold tnum outline-none"
+                    onChange={(e) =>
+                      onQtyChange(clampQty(Number(e.target.value)))
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="grid w-11 place-items-center rounded-r-[10px] hover:bg-canvas"
+                    aria-label="Больше"
+                    onClick={() => onQtyChange(clampQty(qty + 1))}
+                  >
+                    <Plus size={16} aria-hidden />
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-end justify-between gap-3">
+                <span className="text-[14px] text-mute">Итого</span>
+                <span className="text-right">
+                  <b className="block text-[24px] font-extrabold leading-none tnum">
+                    {total != null ? formatCurrency(total, currency) : "—"}
+                  </b>
+                  {savings > 0 && (
+                    <span className="text-[12.5px] font-semibold text-brand-700">
+                      экономия {formatCurrency(savings, currency)}
+                    </span>
+                  )}
+                </span>
+              </div>
+            </>
+          )}
+          {req && (
+            <div>
+              <b className="block text-[24px] font-extrabold leading-none tnum">
+                Цена по запросу
+              </b>
+              <span className="mt-1 block text-[13px] text-mute">
+                Мин. заказ: {moq} {unit}
+              </span>
+            </div>
+          )}
+          {!req && (
+            <p className="text-[13px] text-mute">
+              {priceLabel} · мин. {moq} {unit}
+            </p>
+          )}
         </div>
-        <div className="flex shrink-0 items-center gap-1 text-sm font-semibold">
-          <Star size={14} className="fill-amber-400 text-amber-400" aria-hidden="true" />
-          {supplier.rating.toFixed(1)}
-          <span className="font-normal text-mute">
-            ({supplier.reviews_count})
-          </span>
-        </div>
-      </div>
 
-      <div className="mt-4 space-y-2 rounded-xl bg-brand-50/60 p-3 text-[13px] text-ink/80">
-        <div className="flex items-center gap-2 font-semibold text-brand-700">
-          <ShieldCheck size={16} aria-hidden="true" />
-          Покупка под защитой
+        <div className="grid gap-2.5">
+          {canUseApiOffers ? (
+            <>
+              {!req &&
+                (isAuthenticated ? (
+                  <Button
+                    type="button"
+                    className="h-12 w-full rounded-full text-[16px]"
+                    onClick={() => setBuyOpen(true)}
+                  >
+                    <ShieldCheck className="size-5" aria-hidden />
+                    Купить с гарантией
+                  </Button>
+                ) : (
+                  <Button asChild className="h-12 w-full rounded-full text-[16px]">
+                    <Link href={loginHref}>
+                      <ShieldCheck className="size-5" aria-hidden />
+                      Купить с гарантией
+                    </Link>
+                  </Button>
+                ))}
+              {isAuthenticated ? (
+                <Button
+                  type="button"
+                  variant={req ? "default" : "outline"}
+                  className="h-12 w-full rounded-full text-[16px]"
+                  onClick={() => setNegotiateOpen(true)}
+                >
+                  Запросить цену
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  variant={req ? "default" : "outline"}
+                  className="h-12 w-full rounded-full text-[16px]"
+                >
+                  <Link href={loginHref}>Запросить цену</Link>
+                </Button>
+              )}
+              <Button asChild variant="outline" className="h-12 w-full rounded-full">
+                <Link href={isAuthenticated ? askHref : loginHref}>
+                  <MessageCircle className="size-4" aria-hidden />
+                  Начать чат
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <p className="text-center text-[12px] text-mute">
+              Запросы доступны при подключении API.
+            </p>
+          )}
         </div>
-        <p className="text-mute">
-          Оплата удерживается банком‑партнёром до вашей приёмки.
+
+        <div className="grid gap-1.5 border-t border-line pt-4">
+          <b className="text-[16px] font-extrabold">Доставка</b>
+          <p className="text-[14px]">
+            {city} · отгрузка {lead}
+          </p>
+          <p className="text-[13px] text-mute">по договорённости</p>
+        </div>
+
+        <div className="grid gap-3 border-t border-line pt-4">
+          <Link
+            href={guaranteeUrl()}
+            className="flex items-center justify-between text-left"
+          >
+            <b className="text-[16px] font-extrabold">Защита заказа Brend Market</b>
+            <ChevronRight className="size-4 text-mute" aria-hidden />
+          </Link>
+          <div className="grid gap-1">
+            <span className="flex items-center gap-2 text-[14px] font-semibold">
+              <ShieldCheck className="size-[18px] text-brand-600" aria-hidden />
+              Безопасные платежи
+            </span>
+            <span className="flex flex-wrap gap-1.5 pl-[26px]">
+              {["Корти Милли", "Visa", "Mastercard", "Alif", "По счёту"].map(
+                (x) => (
+                  <span
+                    key={x}
+                    className="grid h-5 place-items-center rounded border border-line px-1.5 text-[10.5px] font-bold text-mute"
+                  >
+                    {x}
+                  </span>
+                ),
+              )}
+            </span>
+            <span className="pl-[26px] text-[13px] text-mute">
+              Деньги удерживает банк‑партнёр до вашей приёмки
+            </span>
+          </div>
+          <div className="grid gap-1">
+            <span className="flex items-center gap-2 text-[14px] font-semibold">
+              <RefreshCw className="size-[18px] text-brand-600" aria-hidden />
+              Возврат денег
+            </span>
+            <span className="pl-[26px] text-[13px] text-mute">
+              Если товар не отгружен, потерян или не соответствует договору
+            </span>
+          </div>
+        </div>
+        <p className="text-[12.5px] text-mute">
+          Защищены только заказы, оформленные и оплаченные через Brend Market.
         </p>
       </div>
 
-      <div className="mt-4 flex flex-col gap-2.5">
-        {canUseApiOffers ? (
-          <>
-            {isAuthenticated ? (
-              <Button
-                type="button"
-                className="w-full"
-                disabled={!listPrice}
-                onClick={handleBuy}
-              >
-                Купить с гарантией
-              </Button>
-            ) : (
-              <Button asChild className="w-full">
-                <Link href={loginHref}>Купить с гарантией</Link>
-              </Button>
-            )}
-            {isAuthenticated ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleNegotiate}
-              >
-                Торговаться
-              </Button>
-            ) : (
-              <Button asChild variant="outline" className="w-full">
-                <Link href={loginHref}>Торговаться</Link>
-              </Button>
-            )}
-            {!listPrice && isAuthenticated && (
-              <p className="text-center text-[12px] text-mute">
-                Опубликованной цены нет — доступен только торг.
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-center text-[12px] text-mute">
-            Запросы доступны при подключении API.
-          </p>
-        )}
-        <Button asChild variant="ghost" className="w-full">
-          <Link href={performerUrl(supplier.actor_id)}>Профиль поставщика</Link>
-        </Button>
-        {canReport &&
-          (isAuthenticated ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-10 w-full text-muted-foreground"
-              onClick={onReport}
-              aria-label="Пожаловаться на позицию"
-            >
-              <Flag aria-hidden="true" />
-              Пожаловаться
-            </Button>
-          ) : (
-            <Button asChild variant="ghost" className="h-10 w-full text-muted-foreground">
-              <Link href={loginHref}>
-                <Flag aria-hidden="true" />
-                Пожаловаться
-              </Link>
-            </Button>
-          ))}
-      </div>
-
-      {canUseApiOffers && listPrice && (
+      {canUseApiOffers && unitPrice != null && (
         <CatalogBuyOfferDialog
           open={buyOpen}
           onOpenChange={setBuyOpen}
           itemId={itemId}
           itemTitle={itemTitle}
-          price={listPrice.price}
-          currency={listPrice.currency}
+          price={unitPrice}
+          currency={currency}
+          presetMessage={offerMessage}
+          qtyLabel={`${qty} ${unit}`}
+          total={total ?? undefined}
         />
       )}
       {canUseApiOffers && (
@@ -168,8 +277,9 @@ export const CatalogItemBuyCard = ({
           onOpenChange={setNegotiateOpen}
           itemId={itemId}
           itemTitle={itemTitle}
-          listPrice={listPrice?.price ?? null}
-          currency={listPrice?.currency ?? pricing?.currency ?? "TJS"}
+          listPrice={unitPrice}
+          currency={currency}
+          presetMessage={offerMessage}
         />
       )}
     </aside>

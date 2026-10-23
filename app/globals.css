@@ -202,6 +202,20 @@
   font-variant-numeric: tabular-nums;
 }
 
+@utility mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.bar-tip {
+  display: none;
+  pointer-events: none;
+}
+.bar-col:hover .bar-tip,
+.bar-col:focus-visible .bar-tip {
+  display: block;
+}
+
 @utility scroll-thin {
   scrollbar-width: thin;
   scrollbar-color: #c9d1dc transparent;

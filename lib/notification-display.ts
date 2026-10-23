@@ -1,5 +1,5 @@
 import {
-  FileCheck, FileText, Info, ScrollText, Users, Wallet, type LucideIcon,
+  FileCheck, FileText, Headphones, Info, ScrollText, Users, Wallet, type LucideIcon,
 } from "lucide-react"
 import type { NotificationType } from "@/types/notification"
 
@@ -11,6 +11,7 @@ export const notificationTypeIcon: Record<NotificationType, LucideIcon> = {
   rfq: ScrollText,
   contract: FileCheck,
   proposal: Users,
+  support: Headphones,
 }
 
 export const getNotificationIcon = (type: NotificationType | string): LucideIcon =>

@@ -1,82 +1,118 @@
 "use client"
 
-import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
-import type { Proposal } from "@/types"
+import type { Proposal, ProposalStatus } from "@/types"
+import { StatusBadge } from "@/components/bm"
 import { proposalStatusMeta } from "@/lib/proposal-display"
 import { formatDeliveryTime, formatMoneyDisplay } from "@/lib/format"
 
 type MyProposalsTableProps = {
   proposals: Proposal[]
   getRfqTitle: (rfqId: string) => string
-  onWithdraw?: (proposalId: number) => void
-  withdrawingId?: number
+  getBuyerName: (rfqId: string) => string
+  getValidUntil: (rfqId: string) => string
 }
 
-const canWithdraw = (status: Proposal["status"]) =>
-  status === "submitted" || status === "viewed" || status === "shortlisted"
+const proposalBadgeStatus = (status: ProposalStatus): string => {
+  switch (status) {
+    case "submitted":
+    case "viewed":
+      return "sent"
+    case "accepted":
+      return "won"
+    case "shortlisted":
+    case "pending_supplier":
+      return "wait"
+    case "rejected":
+      return "rejected"
+    case "withdrawn":
+      return "withdrawn"
+    case "archived":
+      return "archived"
+    default:
+      return "sent"
+  }
+}
+
+const formatRfqNo = (rfqId: string): string => {
+  const digits = rfqId.replace(/\D/g, "")
+  const short = (digits || rfqId).slice(-4)
+  return `З‑${short}`
+}
 
 export const MyProposalsTable = ({
   proposals,
   getRfqTitle,
-  onWithdraw,
-  withdrawingId,
+  getBuyerName,
+  getValidUntil,
 }: MyProposalsTableProps) => (
   <>
-    <div className="hidden md:block bg-card border border-border rounded-xl overflow-hidden">
+    <div className="hidden overflow-x-auto rounded-2xl border border-line bg-white md:block">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border bg-secondary/40">
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Заявка</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Цена</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Срок</th>
-            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Статус</th>
-            {onWithdraw && (
-              <th className="text-right px-4 py-3 text-xs font-bold text-muted-foreground">Действия</th>
-            )}
+          <tr className="border-b border-line">
+            {(
+              [
+                "Заявка",
+                "Покупатель",
+                "Сумма",
+                "Срок",
+                "Действует до",
+                "Статус",
+              ] as const
+            ).map((label) => (
+              <th
+                key={label}
+                className="px-5 py-3.5 text-left text-[13px] font-semibold text-mute"
+              >
+                {label}
+              </th>
+            ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">
+        <tbody className="divide-y divide-line">
           {proposals.map((proposal) => {
             const meta = proposalStatusMeta[proposal.status]
-            const rfqTitle = getRfqTitle(proposal.rfq_id)
-            const showWithdraw = onWithdraw && canWithdraw(proposal.status)
+            const title = getRfqTitle(proposal.rfq_id)
+            const href = `/supplier/rfqs/${proposal.rfq_id}`
             return (
-              <tr key={proposal.id} className="hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/supplier/rfqs/${proposal.rfq_id}`}
-                    className="font-semibold text-foreground hover:text-primary line-clamp-2 wrap-anywhere"
-                  >
-                    {rfqTitle}
+              <tr key={proposal.id} className="hover:bg-canvas">
+                <td className="px-5 py-3.5">
+                  <Link href={href} className="block min-w-0">
+                    <span className="mono text-[12.5px] text-mute">
+                      {formatRfqNo(proposal.rfq_id)}
+                    </span>
+                    <div className="font-semibold text-ink line-clamp-2">{title}</div>
                   </Link>
                 </td>
-                <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                  {formatMoneyDisplay(proposal.price, proposal.currency)}
+                <td className="px-5 py-3.5 text-ink">
+                  <Link href={href} className="block">
+                    {getBuyerName(proposal.rfq_id)}
+                  </Link>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground max-w-48 wrap-anywhere">
-                  {formatDeliveryTime(proposal.delivery_time)}
+                <td className="whitespace-nowrap px-5 py-3.5">
+                  <Link href={href} className="mono font-semibold text-ink">
+                    {formatMoneyDisplay(proposal.price, proposal.currency)}
+                  </Link>
                 </td>
-                <td className="px-4 py-3">
-                  <span className={`${statusPillClass} ${meta.className}`}>
-                    {meta.label}
-                  </span>
+                <td className="px-5 py-3.5 text-ink">
+                  <Link href={href} className="block">
+                    {formatDeliveryTime(proposal.delivery_time)}
+                  </Link>
                 </td>
-                {onWithdraw && (
-                  <td className="px-4 py-3 text-right">
-                    {showWithdraw && (
-                      <button
-                        type="button"
-                        onClick={() => onWithdraw(proposal.id)}
-                        disabled={withdrawingId === proposal.id}
-                        className="text-xs font-semibold text-destructive hover:underline disabled:opacity-50"
-                        aria-label={`Отозвать предложение на ${rfqTitle}`}
-                      >
-                        {withdrawingId === proposal.id ? "Отзыв…" : "Отозвать"}
-                      </button>
-                    )}
-                  </td>
-                )}
+                <td className="whitespace-nowrap px-5 py-3.5 text-ink">
+                  <Link href={href} className="block">
+                    {getValidUntil(proposal.rfq_id)}
+                  </Link>
+                </td>
+                <td className="px-5 py-3.5">
+                  <Link href={href} className="inline-flex">
+                    <StatusBadge
+                      status={proposalBadgeStatus(proposal.status)}
+                      label={meta.label}
+                    />
+                  </Link>
+                </td>
               </tr>
             )
           })}
@@ -84,55 +120,44 @@ export const MyProposalsTable = ({
       </table>
     </div>
 
-    <div className="md:hidden space-y-3">
+    <ul className="grid gap-2 md:hidden">
       {proposals.map((proposal) => {
         const meta = proposalStatusMeta[proposal.status]
-        const rfqTitle = getRfqTitle(proposal.rfq_id)
-        const showWithdraw = onWithdraw && canWithdraw(proposal.status)
+        const title = getRfqTitle(proposal.rfq_id)
         return (
-          <div
-            key={proposal.id}
-            className="bg-card border border-border rounded-xl p-4"
-          >
+          <li key={proposal.id}>
             <Link
               href={`/supplier/rfqs/${proposal.rfq_id}`}
-              className="block hover:text-primary transition-colors"
+              className="grid gap-2 rounded-2xl border border-line bg-white p-4 hover:bg-canvas"
             >
-              <p className="text-sm font-bold text-foreground wrap-anywhere">{rfqTitle}</p>
-            </Link>
-            <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-              <div className="min-w-0">
-                <p className="text-muted-foreground">Цена</p>
-                <p className="font-semibold text-foreground mt-0.5 wrap-anywhere">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="mono text-[12.5px] text-mute">
+                    {formatRfqNo(proposal.rfq_id)}
+                  </span>
+                  <p className="font-semibold text-ink line-clamp-2">{title}</p>
+                </div>
+                <StatusBadge
+                  status={proposalBadgeStatus(proposal.status)}
+                  label={meta.label}
+                />
+              </div>
+              <p className="text-[13px] text-mute">{getBuyerName(proposal.rfq_id)}</p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
+                <span className="mono font-semibold text-ink">
                   {formatMoneyDisplay(proposal.price, proposal.currency)}
-                </p>
-              </div>
-              <div className="min-w-0">
-                <p className="text-muted-foreground">Срок</p>
-                <p className="font-semibold text-foreground mt-0.5 wrap-anywhere">
+                </span>
+                <span className="text-ink">
                   {formatDeliveryTime(proposal.delivery_time)}
-                </p>
+                </span>
+                <span className="text-mute">
+                  до {getValidUntil(proposal.rfq_id)}
+                </span>
               </div>
-            </div>
-            <div className="flex items-center justify-between mt-3">
-              <span className={`${statusPillClass} ${meta.className}`}>
-                {meta.label}
-              </span>
-              {showWithdraw && (
-                <button
-                  type="button"
-                  onClick={() => onWithdraw(proposal.id)}
-                  disabled={withdrawingId === proposal.id}
-                  className="text-xs font-semibold text-destructive hover:underline disabled:opacity-50"
-                  aria-label={`Отозвать предложение на ${rfqTitle}`}
-                >
-                  {withdrawingId === proposal.id ? "Отзыв…" : "Отозвать"}
-                </button>
-              )}
-            </div>
-          </div>
+            </Link>
+          </li>
         )
       })}
-    </div>
+    </ul>
   </>
 )

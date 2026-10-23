@@ -1,7 +1,16 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { FolderTree, Loader2, Pencil, Plus, RefreshCcw, Search, Trash2 } from "lucide-react"
+import { useCallback, useMemo, useState } from "react"
+import {
+  ChevronDown,
+  FolderTree,
+  Loader2,
+  Pencil,
+  Plus,
+  RefreshCcw,
+  Search,
+  Trash2,
+} from "lucide-react"
 import {
   CategoryDialog,
   type CategoryDialogState,
@@ -26,7 +35,7 @@ import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminCategory } from "@/lib/api/admin"
 import { cn } from "@/lib/utils"
 
-type CategoryNode = AdminCategory & { depth: number }
+type CategoryNode = AdminCategory & { depth: number; hasChildren: boolean }
 
 const DEPTH_INDENT = ["pl-0", "pl-6", "pl-12", "pl-18", "pl-24"]
 
@@ -40,16 +49,29 @@ const buildTreeRows = (categories: AdminCategory[]): CategoryNode[] => {
   const knownIds = new Set(categories.map((category) => category.id))
   const rows: CategoryNode[] = []
   const visit = (parentId: number | null, depth: number) => {
-    const children = [...(byParent.get(parentId) ?? [])].sort((a, b) => a.name.localeCompare(b.name, "ru"))
+    const children = [...(byParent.get(parentId) ?? [])].sort((a, b) =>
+      a.name.localeCompare(b.name, "ru"),
+    )
     children.forEach((category) => {
-      rows.push({ ...category, depth })
+      const childCount = (byParent.get(category.id) ?? []).length
+      rows.push({
+        ...category,
+        depth,
+        hasChildren: childCount > 0 || category.children_count > 0,
+      })
       visit(category.id, depth + 1)
     })
   }
   visit(null, 0)
   categories
     .filter((category) => category.parent_id != null && !knownIds.has(category.parent_id))
-    .forEach((category) => rows.push({ ...category, depth: 0 }))
+    .forEach((category) =>
+      rows.push({
+        ...category,
+        depth: 0,
+        hasChildren: category.children_count > 0,
+      }),
+    )
   return rows
 }
 
@@ -83,6 +105,8 @@ const CountPill = ({ label, value }: { label: string; value: number }) => (
 
 const CategoryRow = ({
   category,
+  collapsed,
+  onToggleCollapse,
   canUpdate,
   canDelete,
   onAddChild,
@@ -90,6 +114,8 @@ const CategoryRow = ({
   onDelete,
 }: {
   category: CategoryNode
+  collapsed: boolean
+  onToggleCollapse: (id: number) => void
   canUpdate: boolean
   canDelete: boolean
   onAddChild: (category: AdminCategory) => void
@@ -102,10 +128,41 @@ const CategoryRow = ({
   return (
     <li className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className={cn("min-w-0", DEPTH_INDENT[Math.min(category.depth, DEPTH_INDENT.length - 1)])}>
-        <p className={cn("truncate text-foreground", category.depth === 0 ? "font-bold" : "font-medium")}>
-          {category.name}
-        </p>
-        <div className="mt-1 flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1">
+          {category.hasChildren ? (
+            <button
+              type="button"
+              onClick={() => onToggleCollapse(category.id)}
+              className="flex size-7 shrink-0 items-center justify-center rounded-md text-mute transition-colors hover:bg-secondary hover:text-ink"
+              aria-expanded={!collapsed}
+              aria-label={
+                collapsed
+                  ? `Развернуть «${category.name}»`
+                  : `Свернуть «${category.name}»`
+              }
+            >
+              <ChevronDown
+                size={16}
+                className={cn(
+                  "transition-transform duration-200",
+                  collapsed && "-rotate-90",
+                )}
+                aria-hidden="true"
+              />
+            </button>
+          ) : (
+            <span className="size-7 shrink-0" aria-hidden="true" />
+          )}
+          <p
+            className={cn(
+              "min-w-0 truncate text-foreground",
+              category.depth === 0 ? "font-bold" : "font-medium",
+            )}
+          >
+            {category.name}
+          </p>
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-2 pl-7">
           <code className="text-xs text-muted-foreground">{category.slug}</code>
           <CountPill label="Позиции" value={category.catalog_items_count} />
           <CountPill label="Компании" value={category.companies_count} />
@@ -143,9 +200,11 @@ const CategoryRow = ({
               onClick={() => onDelete(category)}
               disabled={inUse}
               title={inUse ? `Нельзя удалить: ${usageLabel(category)}` : undefined}
-              aria-label={inUse
-                ? `Нельзя удалить «${category.name}»: ${usageLabel(category)}`
-                : `Удалить «${category.name}»`}
+              aria-label={
+                inUse
+                  ? `Нельзя удалить «${category.name}»: ${usageLabel(category)}`
+                  : `Удалить «${category.name}»`
+              }
               className="text-destructive hover:text-destructive"
             >
               <Trash2 aria-hidden="true" />
@@ -161,17 +220,57 @@ export default function AdminCategoriesPage() {
   const categoriesQuery = useAdminCategoriesQuery()
   const deleteMutation = useDeleteCategoryMutation()
   const [search, setSearch] = useState("")
+  const [collapsedIds, setCollapsedIds] = useState<Set<number>>(() => new Set())
   const [dialogState, setDialogState] = useState<CategoryDialogState>(null)
   const [deleting, setDeleting] = useState<AdminCategory | null>(null)
   const canUpdate = useAdminPermission("admin_catalog.update")
   const canDelete = useAdminPermission("admin_catalog.delete")
 
   const categories = useMemo(() => categoriesQuery.data?.items ?? [], [categoriesQuery.data])
+  const byId = useMemo(() => {
+    const map = new Map<number, AdminCategory>()
+    categories.forEach((category) => map.set(category.id, category))
+    return map
+  }, [categories])
+
   const rows = useMemo(() => {
     const tree = buildTreeRows(categories)
     const query = search.trim().toLowerCase()
-    return query ? tree.filter((category) => matchesQuery(category, query)) : tree
-  }, [categories, search])
+
+    if (query) {
+      const matchingIds = new Set(
+        tree.filter((category) => matchesQuery(category, query)).map((category) => category.id),
+      )
+      const visibleIds = new Set(matchingIds)
+      for (const category of tree) {
+        if (!matchingIds.has(category.id)) continue
+        let parentId = category.parent_id
+        while (parentId != null) {
+          visibleIds.add(parentId)
+          parentId = byId.get(parentId)?.parent_id ?? null
+        }
+      }
+      return tree.filter((category) => visibleIds.has(category.id))
+    }
+
+    return tree.filter((category) => {
+      let parentId = category.parent_id
+      while (parentId != null) {
+        if (collapsedIds.has(parentId)) return false
+        parentId = byId.get(parentId)?.parent_id ?? null
+      }
+      return true
+    })
+  }, [byId, categories, collapsedIds, search])
+
+  const toggleCollapse = useCallback((id: number) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   const handleDeleteConfirm = async () => {
     if (!deleting) return
@@ -220,7 +319,7 @@ export default function AdminCategoriesPage() {
           <div className="relative">
             <Search
               size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"
             />
             <Input
@@ -240,6 +339,8 @@ export default function AdminCategoriesPage() {
               <CategoryRow
                 key={category.id}
                 category={category}
+                collapsed={collapsedIds.has(category.id)}
+                onToggleCollapse={toggleCollapse}
                 canUpdate={canUpdate}
                 canDelete={canDelete}
                 onAddChild={(parent) => setDialogState({ mode: "create", parentId: parent.id })}

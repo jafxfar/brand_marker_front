@@ -1,7 +1,7 @@
 "use client"
 
-import { Suspense , useState} from "react"
-import { FileCheck } from "lucide-react"
+import { Suspense, useMemo, useState } from "react"
+import { Briefcase } from "lucide-react"
 import {
   PageEmptyState,
   PageFrame,
@@ -16,21 +16,19 @@ import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
-import { CONTRACT_LIST_TABS, type ContractListTab } from "@/lib/contract-display"
-import { filterDealsByTab } from "@/lib/process/deal-stages"
+import { filterDealsByTab, type DealListTab } from "@/lib/process/deal-stages"
 import { DealList } from "@/components/contracts/deal-list"
 import { ListPagination } from "@/components/list-pagination"
 import type { ContractWithRelations } from "@/types"
 
-const emptyMessages: Record<ContractListTab, string> = {
-  all: "Сделка начнётся, когда заказчик выберет ваше предложение",
-  active: "Сделка начнётся, когда заказчик выберет ваше предложение",
-  completed: "Здесь будут сделки, по которым вы получили оплату",
-  disputed: "Споров нет — и хорошо",
-  cancelled: "Отменённых сделок нет",
-}
+type SupplierDealTab = Extract<DealListTab, "active" | "completed">
 
-const CONTRACT_TAB_VALUES = CONTRACT_LIST_TABS.map((option) => option.value)
+const TAB_VALUES: SupplierDealTab[] = ["active", "completed"]
+
+const emptyMessages: Record<SupplierDealTab, string> = {
+  active: "Сделка появится, когда покупатель выберет ваше КП.",
+  completed: "Здесь будут сделки, по которым вы получили оплату",
+}
 
 const SupplierContractsContent = () => {
   const hydrated = useHydrated()
@@ -38,32 +36,45 @@ const SupplierContractsContent = () => {
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getContractsByTab = useContractsStore((s) => s.getContractsByTab)
-
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [tab, setTab] = useUrlTab<ContractListTab>("tab", CONTRACT_TAB_VALUES, "all")
+  const [tab, setTab] = useUrlTab<SupplierDealTab>("tab", TAB_VALUES, "active")
   const useApi = isApiEnabled()
-  const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi, { page })
+  const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi, {
+    page,
+  })
 
   const allContracts: ContractWithRelations[] = useApi
     ? ((apiContracts?.items ?? []) as ContractWithRelations[])
     : hydrated
       ? getContractsByTab(actorId, "all")
       : []
+
+  const activeCount = useMemo(
+    () => filterDealsByTab(allContracts, "active", "supplier").length,
+    [allContracts],
+  )
+  const completedCount = useMemo(
+    () => filterDealsByTab(allContracts, "completed", "supplier").length,
+    [allContracts],
+  )
+
   const contracts = filterDealsByTab(allContracts, tab, "supplier")
   const totalPages = useApi ? (apiContracts?.total_pages ?? 0) : 1
-
   const isEmpty = !hydrated || isLoading || contracts.length === 0
 
   return (
     <PageFrame>
       <PageHeader
-        title="Мои сделки"
-        description="Этап каждой сделки и что нужно сделать дальше"
+        title="Сделки"
+        description="Заказы, которые вы выполняете"
       />
 
       <SegmentedControl
         value={tab}
-        options={CONTRACT_LIST_TABS}
+        options={[
+          { value: "active", label: "В работе", count: activeCount },
+          { value: "completed", label: "Завершённые", count: completedCount },
+        ]}
         onChange={setTab}
         ariaLabel="Фильтр сделок"
       />
@@ -71,8 +82,8 @@ const SupplierContractsContent = () => {
       {isEmpty ? (
         <PageEmptyState
           variant="card"
-          icon={<FileCheck />}
-          title={isLoading ? "Загружаем сделки..." : "Сделок пока нет"}
+          icon={<Briefcase />}
+          title={isLoading ? "Загружаем сделки..." : "Сделок нет"}
           description={!isLoading ? emptyMessages[tab] : undefined}
         />
       ) : (
@@ -82,13 +93,9 @@ const SupplierContractsContent = () => {
           getCounterpartName={(c) => getCompany(c.buyer_actor_id)?.title ?? "Заказчик"}
         />
       )}
-    
-      <ListPagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
-</PageFrame>
+
+      <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+    </PageFrame>
   )
 }
 
