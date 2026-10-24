@@ -11,6 +11,7 @@ import {
   Gavel,
   Headphones,
   LayoutDashboard,
+  MessageSquare,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -23,7 +24,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { useAdminSupportUnreadQuery } from "@/hooks/api/use-support-query"
+import {
+  emptyAdminNavCounts,
+  useAdminNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
+import type { AdminNavCounts } from "@/lib/api/nav-counts"
 import {
   ADMIN_HUB_ANY_PERMISSIONS,
   getAdminRoutePermission,
@@ -33,10 +38,14 @@ import {
 import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
 
+type AdminBadgeKey = keyof AdminNavCounts
+
 type AdminNavItem = {
   label: string
   href: string
   Icon: LucideIcon
+  badge?: AdminBadgeKey
+  hotHref?: string
 }
 
 type AdminNavSection = {
@@ -54,11 +63,47 @@ const adminNavSections: AdminNavSection[] = [
   {
     title: "Операции",
     items: [
-      { label: "Проверка компаний", href: "/admin/companies", Icon: Building2 },
-      { label: "Модерация", href: "/admin/moderation", Icon: ShieldCheck },
-      { label: "Переписки", href: "/admin/support", Icon: Headphones },
-      { label: "Споры", href: "/admin/disputes", Icon: Gavel },
-      { label: "Выплаты", href: "/admin/finance", Icon: CircleDollarSign },
+      {
+        label: "Проверка компаний",
+        href: "/admin/companies",
+        hotHref: "/admin/companies?tab=verification",
+        Icon: Building2,
+        badge: "companies",
+      },
+      {
+        label: "Модерация",
+        href: "/admin/moderation",
+        hotHref: "/admin/moderation?tab=catalog&view=draft",
+        Icon: ShieldCheck,
+        badge: "moderation",
+      },
+      {
+        label: "Поддержка",
+        href: "/admin/support",
+        Icon: Headphones,
+        badge: "support",
+      },
+      {
+        label: "Все переписки",
+        href: "/admin/chats",
+        hotHref: "/admin/chats?filter=flag",
+        Icon: MessageSquare,
+        badge: "chats",
+      },
+      {
+        label: "Споры",
+        href: "/admin/disputes",
+        hotHref: "/admin/disputes?tab=disputes&view=open",
+        Icon: Gavel,
+        badge: "disputes",
+      },
+      {
+        label: "Выплаты",
+        href: "/admin/finance",
+        hotHref: "/admin/finance?view=payouts",
+        Icon: CircleDollarSign,
+        badge: "finance",
+      },
     ],
   },
   {
@@ -158,9 +203,8 @@ type AdminSidebarProps = {
 export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const pathname = usePathname()
   const user = useAuthStore((state) => state.user)
-  const canSupport = hasPermission(user, "admin_support.view")
-  const unreadQuery = useAdminSupportUnreadQuery(canSupport)
-  const supportUnread = unreadQuery.data?.count ?? 0
+  const countsQuery = useAdminNavCounts()
+  const counts = countsQuery.data ?? emptyAdminNavCounts()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
@@ -236,10 +280,13 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
               <CollapsibleContent className="grid gap-1 pt-1">
                 {section.items.map((item) => {
                   const isActive = itemMatchesPath(item.href, pathname)
+                  const badge = item.badge ? counts[item.badge] : 0
+                  const href =
+                    badge > 0 && item.hotHref ? item.hotHref : item.href
                   return (
                     <Link
                       key={item.href}
-                      href={item.href}
+                      href={href}
                       onClick={onNavigate}
                       className={cn(
                         "flex h-11 w-full items-center gap-3 rounded-[10px] px-3 text-[15px]",
@@ -256,9 +303,9 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
                         aria-hidden="true"
                       />
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      {item.href === "/admin/support" && supportUnread > 0 ? (
-                        <span className="rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
-                          {supportUnread > 99 ? "99+" : supportUnread}
+                      {badge > 0 ? (
+                        <span className="grid h-[22px] min-w-[22px] place-items-center rounded-full bg-red-600 px-1.5 text-[12px] font-bold text-white">
+                          {badge > 99 ? "99+" : badge}
                         </span>
                       ) : null}
                     </Link>

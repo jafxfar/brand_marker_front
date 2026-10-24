@@ -38,6 +38,10 @@ import { isApiEnabled } from "@/lib/api/config"
 import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { proposalsApi } from "@/lib/api/proposals"
 import { proposalKeys } from "@/hooks/api/use-proposals-query"
+import {
+  emptyBuyerNavCounts,
+  useBuyerNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 
 const MyRfqsContent = () => {
   const hydrated = useHydrated()
@@ -59,6 +63,7 @@ const MyRfqsContent = () => {
   const getRfqsByBuyerTab = useRfqsStore((s) => s.getRfqsByBuyerTab)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const useApi = isApiEnabled()
+  const navCounts = useBuyerNavCounts(useApi).data ?? emptyBuyerNavCounts()
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 300)
@@ -90,7 +95,15 @@ const MyRfqsContent = () => {
   const hasFilters = Boolean(debouncedSearch) || typeFilter !== "all" || statusFilter !== "all"
 
   const tabCounts = useMemo(() => {
-    if (useApi) return undefined
+    if (useApi) {
+      return {
+        all: undefined as number | undefined,
+        quotes: navCounts.rfqs,
+        deal: undefined as number | undefined,
+        draft: undefined as number | undefined,
+        closed: undefined as number | undefined,
+      }
+    }
     const typed = filterRfqsByType(
       localAll.filter((rfq) => matchesRfqSearch(rfq, debouncedSearch)),
       typeFilter,
@@ -107,7 +120,7 @@ const MyRfqsContent = () => {
       draft: count("draft"),
       closed: count("closed"),
     }
-  }, [useApi, localAll, debouncedSearch, typeFilter])
+  }, [useApi, localAll, debouncedSearch, typeFilter, navCounts.rfqs])
 
   const proposalQueries = useQueries({
     queries: (useApi ? rfqs : []).map((rfq) => ({
@@ -149,10 +162,10 @@ const MyRfqsContent = () => {
 
       <SegmentedControl
         value={statusFilter}
-        options={BUYER_RFQ_V5_TABS.map((tab) => ({
-          ...tab,
-          ...(tabCounts ? { count: tabCounts[tab.value] } : {}),
-        }))}
+        options={BUYER_RFQ_V5_TABS.map((tab) => {
+          const count = tabCounts?.[tab.value]
+          return count == null ? tab : { ...tab, count }
+        })}
         onChange={(value) => {
           setStatusFilter(value)
           setPage(1)

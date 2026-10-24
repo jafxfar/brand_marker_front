@@ -11,8 +11,10 @@ import { CabinetMobileNav } from "@/components/layout/cabinet-mobile-nav"
 import { SupportChatWidget } from "@/components/support/support-chat-widget"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
 import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
-import { useDealActionCount } from "@/hooks/use-deal-action-count"
-import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
+import {
+  emptySupplierNavCounts,
+  useSupplierNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 export default function SupplierShell({ children }: { children: React.ReactNode }) {
@@ -20,8 +22,8 @@ export default function SupplierShell({ children }: { children: React.ReactNode 
   useNotificationsSocket("supplier", gate === "allowed")
   const [moreOpen, setMoreOpen] = useState(false)
   const hydrated = useHydrated()
-  const dealActions = useDealActionCount("supplier")
-  const unread = useUnreadNotificationsCount("supplier")
+  const countsQuery = useSupplierNavCounts(gate === "allowed")
+  const counts = countsQuery.data ?? emptySupplierNavCounts()
 
   if (gate !== "allowed") {
     return (
@@ -46,21 +48,25 @@ export default function SupplierShell({ children }: { children: React.ReactNode 
               match: (p) => p === "/supplier",
             },
             {
-              href: "/supplier/rfqs",
+              href: "/supplier/rfqs?response=open",
               label: "Заявки",
               Icon: Inbox,
+              badge: hydrated ? counts.rfqs : 0,
+              match: (p) => p.startsWith("/supplier/rfqs"),
             },
             {
-              href: "/supplier/contracts",
+              href: "/supplier/contracts?tab=active",
               label: "Сделки",
               Icon: FileCheck,
-              badge: hydrated ? dealActions : 0,
+              badge: hydrated ? counts.deals : 0,
+              match: (p) => p.startsWith("/supplier/contracts"),
             },
             {
               href: "/supplier/messages",
               label: "Чаты",
               Icon: MessageSquare,
-              badge: hydrated ? unread : 0,
+              badge: hydrated ? counts.messages : 0,
+              match: (p) => p.startsWith("/supplier/messages"),
             },
             {
               label: "Ещё",

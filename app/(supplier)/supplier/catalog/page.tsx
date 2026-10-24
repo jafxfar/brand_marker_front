@@ -1,14 +1,19 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { Suspense, useMemo, useState } from "react"
 import Link from "next/link"
 import { Boxes, Plus } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useItemsStore } from "@/lib/store/items-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierCatalogQuery } from "@/hooks/api/use-supplier-catalog-query"
+import {
+  emptySupplierNavCounts,
+  useSupplierNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { CatalogProductRow } from "@/components/supplier/catalog/catalog-product-row"
 import { ListPagination } from "@/components/list-pagination"
 import { Button } from "@/components/ui/button"
@@ -25,6 +30,16 @@ import type { ItemStatus } from "@/types"
 
 type Tab = "all" | ItemStatus
 
+const TAB_VALUES = [
+  "all",
+  "draft",
+  "pending_review",
+  "changes_requested",
+  "active",
+  "hidden",
+  "archived",
+] as const satisfies readonly Tab[]
+
 const tabs: { value: Tab; label: string }[] = [
   { value: "all", label: "Все" },
   { value: "draft", label: "Черновики" },
@@ -35,15 +50,16 @@ const tabs: { value: Tab; label: string }[] = [
   { value: "archived", label: "Архив" },
 ]
 
-export default function SupplierCatalogPage() {
+function SupplierCatalogContent() {
   const hydrated = useHydrated()
   const [page, setPage] = useState(1)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
   const getItemsByStatus = useItemsStore((s) => s.getItemsByStatus)
-  const [tab, setTab] = useState<Tab>("all")
+  const [tab, setTab] = useUrlTab<Tab>("status", TAB_VALUES, "all")
   const useApi = isApiEnabled()
+  const navCounts = useSupplierNavCounts(useApi).data ?? emptySupplierNavCounts()
 
   const apiStatus: ItemStatus | undefined = tab === "all" ? undefined : tab
   const { data: apiItems, isLoading } = useSupplierCatalogQuery(
@@ -124,8 +140,15 @@ export default function SupplierCatalogPage() {
 
       <SegmentedControl
         value={tab}
-        options={tabs}
-        onChange={setTab}
+        options={tabs.map((option) =>
+          option.value === "pending_review" && navCounts.catalog > 0
+            ? { ...option, count: navCounts.catalog }
+            : option,
+        )}
+        onChange={(value) => {
+          setTab(value)
+          setPage(1)
+        }}
         ariaLabel="Статус позиции"
         className="mb-5"
       />
@@ -166,5 +189,13 @@ export default function SupplierCatalogPage() {
         onPageChange={setPage}
       />
     </PageFrame>
+  )
+}
+
+export default function SupplierCatalogPage() {
+  return (
+    <Suspense fallback={null}>
+      <SupplierCatalogContent />
+    </Suspense>
   )
 }

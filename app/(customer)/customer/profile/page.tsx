@@ -10,6 +10,7 @@ import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
+import { TwoFactorSettings } from "@/components/auth/two-factor-settings"
 import { authApi } from "@/lib/api/auth"
 
 export default function ProfilePage() {
@@ -84,6 +85,7 @@ export default function ProfilePage() {
         description="Контактные данные и настройки доставки"
       />
 
+      <div className="space-y-6">
       <form onSubmit={handleSave} className="space-y-6">
         <PageSurface className="space-y-5 p-5 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -147,6 +149,8 @@ export default function ProfilePage() {
           </Button>
         </div>
       </form>
+      <TwoFactorSettings />
+      </div>
     </PageFrame>
   )
 }

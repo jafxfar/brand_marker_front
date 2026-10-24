@@ -3,50 +3,85 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, Boxes, Inbox, Plus, FileCheck, MessageSquare, Send, Wallet,
-  Building2, type LucideIcon,
+  LayoutDashboard,
+  Boxes,
+  Inbox,
+  Plus,
+  FileCheck,
+  MessageSquare,
+  Send,
+  Wallet,
+  Building2,
+  type LucideIcon,
 } from "lucide-react"
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
 import { Button } from "@/components/ui/button"
-import { useDealActionCount } from "@/hooks/use-deal-action-count"
-import { useUnreadMessagesCount } from "@/hooks/use-unread-messages-count"
+import {
+  emptySupplierNavCounts,
+  useSupplierNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { useAuthStore } from "@/lib/store/auth-store"
+
+type BadgeKey = "rfqs" | "deals" | "messages" | "catalog"
 
 type NavItem = {
   href: string
   label: string
   Icon: LucideIcon
-  badge?: "deals" | "messages"
+  badge?: BadgeKey
 }
 
 const navItems: NavItem[] = [
   { href: "/supplier", label: "Обзор", Icon: LayoutDashboard },
-  { href: "/supplier/rfqs", label: "Заявки", Icon: Inbox },
+  {
+    href: "/supplier/rfqs?response=open",
+    label: "Заявки",
+    Icon: Inbox,
+    badge: "rfqs",
+  },
   { href: "/supplier/proposals", label: "Мои КП", Icon: Send },
-  { href: "/supplier/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
-  { href: "/supplier/catalog", label: "Товары и услуги", Icon: Boxes },
+  {
+    href: "/supplier/contracts?tab=active",
+    label: "Сделки",
+    Icon: FileCheck,
+    badge: "deals",
+  },
+  {
+    href: "/supplier/catalog?status=pending_review",
+    label: "Товары и услуги",
+    Icon: Boxes,
+    badge: "catalog",
+  },
   { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
-  { href: "/supplier/messages", label: "Сообщения", Icon: MessageSquare, badge: "messages" },
+  {
+    href: "/supplier/messages",
+    label: "Сообщения",
+    Icon: MessageSquare,
+    badge: "messages",
+  },
   { href: "/supplier/company", label: "Профиль компании", Icon: Building2 },
 ]
+
+const pathOf = (href: string) => href.split("?")[0] ?? href
 
 export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
-  const dealActions = useDealActionCount("supplier")
-  const unreadMessages = useUnreadMessagesCount("supplier")
+  const countsQuery = useSupplierNavCounts()
+  const counts = countsQuery.data ?? emptySupplierNavCounts()
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
-    if (item.badge === "deals") return dealActions
-    return unreadMessages
+    return counts[item.badge] ?? 0
   }
 
-  const isActive = (href: string): boolean =>
-    href === "/supplier" ? pathname === href : pathname.startsWith(href)
+  const isActive = (href: string): boolean => {
+    const base = pathOf(href)
+    return base === "/supplier" ? pathname === base : pathname.startsWith(base)
+  }
 
   return (
     <nav className="grid gap-1" aria-label="Меню кабинета">

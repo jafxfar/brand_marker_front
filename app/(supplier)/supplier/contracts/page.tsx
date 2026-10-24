@@ -16,6 +16,10 @@ import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
+import {
+  emptySupplierNavCounts,
+  useSupplierNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { filterDealsByTab, type DealListTab } from "@/lib/process/deal-stages"
 import { DealList } from "@/components/contracts/deal-list"
 import { ListPagination } from "@/components/list-pagination"
@@ -39,6 +43,7 @@ const SupplierContractsContent = () => {
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [tab, setTab] = useUrlTab<SupplierDealTab>("tab", TAB_VALUES, "active")
   const useApi = isApiEnabled()
+  const navCounts = useSupplierNavCounts(useApi).data ?? emptySupplierNavCounts()
   const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi, {
     page,
   })
@@ -49,10 +54,10 @@ const SupplierContractsContent = () => {
       ? getContractsByTab(actorId, "all")
       : []
 
-  const activeCount = useMemo(
-    () => filterDealsByTab(allContracts, "active", "supplier").length,
-    [allContracts],
-  )
+  const activeCount = useMemo(() => {
+    if (useApi) return navCounts.deals
+    return filterDealsByTab(allContracts, "active", "supplier").length
+  }, [useApi, navCounts.deals, allContracts])
   const completedCount = useMemo(
     () => filterDealsByTab(allContracts, "completed", "supplier").length,
     [allContracts],

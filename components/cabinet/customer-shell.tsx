@@ -11,8 +11,10 @@ import { CabinetMobileNav } from "@/components/layout/cabinet-mobile-nav"
 import { SupportChatWidget } from "@/components/support/support-chat-widget"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
 import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
-import { useDealActionCount } from "@/hooks/use-deal-action-count"
-import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
+import {
+  emptyBuyerNavCounts,
+  useBuyerNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 export default function CustomerShell({ children }: { children: React.ReactNode }) {
@@ -20,8 +22,8 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
   useNotificationsSocket("buyer", gate === "allowed")
   const [moreOpen, setMoreOpen] = useState(false)
   const hydrated = useHydrated()
-  const dealActions = useDealActionCount("buyer")
-  const unread = useUnreadNotificationsCount("buyer")
+  const countsQuery = useBuyerNavCounts(gate === "allowed")
+  const counts = countsQuery.data ?? emptyBuyerNavCounts()
 
   if (gate !== "allowed") {
     return (
@@ -46,21 +48,25 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
               match: (p) => p === "/customer",
             },
             {
-              href: "/customer/rfqs",
+              href: "/customer/rfqs?status=quotes",
               label: "Заявки",
               Icon: FileText,
+              badge: hydrated ? counts.rfqs : 0,
+              match: (p) => p.startsWith("/customer/rfqs"),
             },
             {
-              href: "/customer/contracts",
+              href: "/customer/contracts?tab=active",
               label: "Сделки",
               Icon: FileCheck,
-              badge: hydrated ? dealActions : 0,
+              badge: hydrated ? counts.deals : 0,
+              match: (p) => p.startsWith("/customer/contracts"),
             },
             {
               href: "/customer/messages",
               label: "Чаты",
               Icon: MessageSquare,
-              badge: hydrated ? unread : 0,
+              badge: hydrated ? counts.messages : 0,
+              match: (p) => p.startsWith("/customer/messages"),
             },
             {
               label: "Ещё",

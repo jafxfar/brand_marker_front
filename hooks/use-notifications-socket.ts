@@ -15,6 +15,7 @@ import { getNotificationsWsUrl } from "@/lib/notifications-ws"
 import {
   prependNotificationToCache,
 } from "@/hooks/api/use-notifications-query"
+import { navCountsKeys } from "@/hooks/api/use-nav-counts-query"
 import {
   contractKeys,
   supplierContractKeys,
@@ -145,6 +146,7 @@ export const useNotificationsSocket = (
                 }),
               { duration: 6000 },
             )
+            void queryClient.invalidateQueries({ queryKey: navCountsKeys.all })
             if (notification.type === "proposal") {
               void queryClient.invalidateQueries({ queryKey: ["proposals"] })
               void queryClient.invalidateQueries({ queryKey: ["proposal-messages"] })
@@ -165,6 +167,7 @@ export const useNotificationsSocket = (
             const data = payload.data as ContractMessagePayload
             if (!data.contract_id || !data.message) return
             appendContractMessageToCache(queryClient, data.contract_id, data.message)
+            void queryClient.invalidateQueries({ queryKey: navCountsKeys.all })
             if (userId > 0 && data.message.sender_id !== userId) {
               void ackContractDelivered(data.contract_id, data.message.id)
             }
@@ -179,6 +182,7 @@ export const useNotificationsSocket = (
                 ? [data.message]
                 : []
             updateContractMessageStatusInCache(queryClient, data.contract_id, updates)
+            void queryClient.invalidateQueries({ queryKey: navCountsKeys.all })
             return
           }
           if (payload.event === "support.message" && payload.data) {
@@ -194,6 +198,7 @@ export const useNotificationsSocket = (
             if (supportRole) {
               void queryClient.invalidateQueries({ queryKey: supportKeys.unread(supportRole) })
             }
+            void queryClient.invalidateQueries({ queryKey: navCountsKeys.all })
             if (userId > 0 && data.message.sender_id !== userId) {
               void ackSupportDelivered(data.ticket_id, data.message.id)
             }
@@ -213,10 +218,12 @@ export const useNotificationsSocket = (
               updates,
               supportRole ?? undefined,
             )
+            void queryClient.invalidateQueries({ queryKey: navCountsKeys.all })
             return
           }
           if (payload.event === "support.ticket.closed") {
             void queryClient.invalidateQueries({ queryKey: supportKeys.all })
+            void queryClient.invalidateQueries({ queryKey: navCountsKeys.all })
           }
         } catch {
           // ignore malformed messages

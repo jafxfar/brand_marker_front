@@ -18,23 +18,27 @@ import {
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
 import { Button } from "@/components/ui/button"
-import { useUnreadMessagesCount } from "@/hooks/use-unread-messages-count"
+import {
+  emptyBuyerNavCounts,
+  useBuyerNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { useDealActionCount } from "@/hooks/use-deal-action-count"
 import { useAuthStore } from "@/lib/store/auth-store"
+
+type BadgeKey = "rfqs" | "deals" | "messages" | "approvals"
 
 type NavItem = {
   href: string
   label: string
   Icon: LucideIcon
-  badge?: "deals" | "messages" | "approvals" | "rfqs"
+  badge?: BadgeKey
 }
 
 /** Order matches extended CNAV.buyer in BrendMarket-v5. */
 const navItems: NavItem[] = [
   { href: "/customer", label: "Обзор", Icon: LayoutDashboard },
-  { href: "/customer/rfqs", label: "Заявки", Icon: FileText, badge: "rfqs" },
-  { href: "/customer/contracts", label: "Сделки", Icon: FileCheck, badge: "deals" },
+  { href: "/customer/rfqs?status=quotes", label: "Заявки", Icon: FileText, badge: "rfqs" },
+  { href: "/customer/contracts?tab=active", label: "Сделки", Icon: FileCheck, badge: "deals" },
   { href: "/customer/approvals", label: "Согласования", Icon: BadgeCheck, badge: "approvals" },
   { href: "/customer/payments", label: "Платежи и документы", Icon: Wallet },
   { href: "/customer/suppliers", label: "Поставщики", Icon: Store },
@@ -42,23 +46,24 @@ const navItems: NavItem[] = [
   { href: "/customer/company", label: "Компания и сотрудники", Icon: Building2 },
 ]
 
+const pathOf = (href: string) => href.split("?")[0] ?? href
+
 export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const hydrated = useHydrated()
   const user = useAuthStore((s) => s.user)
-  const unreadMessages = useUnreadMessagesCount("buyer")
-  const dealActions = useDealActionCount("buyer")
+  const countsQuery = useBuyerNavCounts()
+  const counts = countsQuery.data ?? emptyBuyerNavCounts()
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
-    if (item.badge === "deals") return dealActions
-    if (item.badge === "messages") return unreadMessages
-    if (item.badge === "approvals") return 0
-    return 0
+    return counts[item.badge] ?? 0
   }
 
-  const isActive = (href: string): boolean =>
-    href === "/customer" ? pathname === href : pathname.startsWith(href)
+  const isActive = (href: string): boolean => {
+    const base = pathOf(href)
+    return base === "/customer" ? pathname === base : pathname.startsWith(base)
+  }
 
   const companyName =
     hydrated && user?.company ? user.company : "Покупатель"

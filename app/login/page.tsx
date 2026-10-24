@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { BrandLogo } from "@/components/bm"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { TwoFactorChallenge } from "@/components/auth/two-factor-challenge"
 import { useAuthStore } from "@/lib/store/auth-store"
 import type { MarketplaceSessionRole } from "@/lib/store/auth-store"
 import { isApiEnabled } from "@/lib/api/config"
@@ -49,13 +50,33 @@ function LoginContent() {
   const hydrated = useHydrated()
   const login = useAuthStore((s) => s.login)
   const loginWithCredentials = useAuthStore((s) => s.loginWithCredentials)
+  const completeLoginWith2fa = useAuthStore((s) => s.completeLoginWith2fa)
   const isReady = useAuthStore((s) => s.isReady)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
   const [tab, setTab] = useState<"in" | "up">("in")
   const [role, setRole] = useState<MarketplaceSessionRole>("customer")
   const [apiError, setApiError] = useState<string | null>(null)
+  const [challengeToken, setChallengeToken] = useState<string | null>(null)
+  const [otpBusy, setOtpBusy] = useState(false)
   const useApi = isApiEnabled()
+
+  const finishLogin = (sessionRole: MarketplaceSessionRole | "admin") => {
+    toast.success("Вы вошли в систему")
+    if (sessionRole === "admin") {
+      router.push("/admin")
+      return
+    }
+    const redirect = searchParams.get("redirect")
+    const roleHome = sessionRole === "customer" ? "/customer" : "/supplier"
+    const marketplaceRedirect =
+      redirect &&
+      !redirect.startsWith("/admin") &&
+      redirect.startsWith(roleHome)
+        ? redirect
+        : null
+    router.replace(marketplaceRedirect || roleHome)
+  }
 
   const {
     register,
@@ -88,33 +109,45 @@ function LoginContent() {
     setApiError(null)
     try {
       if (useApi) {
-        const sessionRole = await loginWithCredentials({
+        const result = await loginWithCredentials({
           email: values.email,
           password: values.password,
           role,
         })
-        if (sessionRole === "admin") {
-          toast.success("Вы вошли в систему")
-          router.push("/admin")
+        if (result.status === "needs_2fa") {
+          setChallengeToken(result.challengeToken)
           return
         }
-      } else {
-        login({ email: values.email, role })
+        finishLogin(result.role)
+        return
       }
-      toast.success("Вы вошли в систему")
-      const redirect = searchParams.get("redirect")
-      const roleHome = role === "customer" ? "/customer" : "/supplier"
-      const marketplaceRedirect =
-        redirect &&
-        !redirect.startsWith("/admin") &&
-        redirect.startsWith(roleHome)
-          ? redirect
-          : null
-      router.replace(marketplaceRedirect || roleHome)
+      login({ email: values.email, role })
+      finishLogin(role)
     } catch (err) {
       const message = getApiErrorMessage(err, "Ошибка входа")
       setApiError(message)
       toast.error(message)
+    }
+  }
+
+  const onVerify2fa = async (code: string) => {
+    if (!challengeToken) return
+    setApiError(null)
+    setOtpBusy(true)
+    try {
+      const sessionRole = await completeLoginWith2fa({
+        challengeToken,
+        code,
+        role,
+      })
+      setChallengeToken(null)
+      finishLogin(sessionRole)
+    } catch (err) {
+      const message = getApiErrorMessage(err, "Неверный код")
+      setApiError(message)
+      toast.error(message)
+    } finally {
+      setOtpBusy(false)
     }
   }
 
@@ -132,6 +165,18 @@ function LoginContent() {
 
       <div className="grid flex-1 place-items-center px-4 py-10">
         <div className="w-full max-w-[440px] rounded-2xl border border-line bg-white p-7 shadow-[0_24px_60px_-24px_rgba(16,24,40,.25)] sm:p-9">
+          {challengeToken ? (
+            <TwoFactorChallenge
+              busy={otpBusy}
+              error={apiError}
+              onSubmit={onVerify2fa}
+              onBack={() => {
+                setChallengeToken(null)
+                setApiError(null)
+              }}
+            />
+          ) : (
+            <>
           <div className="mb-6 grid grid-cols-2 rounded-xl bg-surface-muted p-1">
             {(
               [
@@ -257,6 +302,8 @@ function LoginContent() {
               Зарегистрироваться
             </Link>
           </p>
+            </>
+          )}
         </div>
       </div>
     </div>

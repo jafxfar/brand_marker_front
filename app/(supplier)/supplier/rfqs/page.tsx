@@ -29,6 +29,10 @@ import {
   useSupplierProposalsQuery,
   useSupplierRfqBoardQuery,
 } from "@/hooks/api/use-supplier-rfqs-query"
+import {
+  emptySupplierNavCounts,
+  useSupplierNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { RfqBoardTable } from "@/components/supplier/rfq/rfq-board-table"
 import { RfqListToolbar } from "@/components/cabinet/rfq/rfq-list-toolbar"
 import { ListPagination } from "@/components/list-pagination"
@@ -68,6 +72,7 @@ const SupplierRfqsContent = () => {
   )
 
   const useApi = isApiEnabled()
+  const navCounts = useSupplierNavCounts(useApi).data ?? emptySupplierNavCounts()
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 300)
@@ -224,7 +229,11 @@ const SupplierRfqsContent = () => {
         onFilterChange={setSourceFilter}
         filterAriaLabel="Источник заявки"
         secondaryFilterValue={responseFilter}
-        secondaryFilterOptions={SUPPLIER_RESPONSE_FILTER_OPTIONS}
+        secondaryFilterOptions={SUPPLIER_RESPONSE_FILTER_OPTIONS.map((option) =>
+          option.value === "open" && navCounts.rfqs > 0
+            ? { ...option, count: navCounts.rfqs }
+            : option,
+        )}
         onSecondaryFilterChange={(value) =>
           setResponseFilter(value as SupplierRfqResponseFilter)
         }

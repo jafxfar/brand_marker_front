@@ -12,6 +12,11 @@ export const VERIFICATION_STATUSES = [
 
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number]
 
+export type CompanyProfileGalleryItem = {
+  src: string
+  name: string
+}
+
 export type CompanyProfile = {
   company_id: number
   founded_year: number | null
@@ -19,6 +24,11 @@ export type CompanyProfile = {
   annual_revenue_range: string | null
   languages: string[]
   industries: string[]
+  warehouse_area?: string | null
+  markets?: string | null
+  brands?: string | null
+  notable_clients?: string | null
+  gallery?: CompanyProfileGalleryItem[]
 }
 
 export type CompanyCategory = {

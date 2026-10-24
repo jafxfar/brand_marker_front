@@ -12,9 +12,14 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import {
+  useAddSupplierTeamMemberMutation,
+  useRemoveSupplierTeamMemberMutation,
   useSupplierCompaniesQuery,
   useUpdateSupplierCompanyMutation,
+  useUpdateSupplierTeamMemberMutation,
 } from "@/hooks/api/use-supplier-companies-query"
+import { supplierCompaniesApi } from "@/lib/api/supplier/companies"
+import { getApiErrorMessage } from "@/lib/api/client"
 import { publicApi } from "@/lib/api/public"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,8 +27,18 @@ import { Label } from "@/components/ui/label"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { ProfileSectionCard } from "@/components/supplier/company/profile-section-card"
 import { ReviewsReceivedTable } from "@/components/supplier/finance/reviews-received-table"
+import { EmployeeList } from "@/components/cabinet/company/employee-list"
+import { InviteEmployeeDialog } from "@/components/cabinet/company/invite-employee-dialog"
 import { scoreLevel } from "@/lib/catalog-quality-score"
 import { performerUrl } from "@/lib/marketplace-routes"
+import {
+  canManageTeam,
+  COMPANY_ROLE_RIGHTS,
+  mapCompanyUsersToEmployees,
+  myCompanyRole,
+  nameFromEmail,
+  type CompanyTeamEmployee,
+} from "@/lib/company-team"
 import {
   DEFAULT_SUPPLIER_PROFILE_EXTRA,
   profileCompleteness,
@@ -31,7 +46,11 @@ import {
   writeSupplierProfileExtra,
   type SupplierCompanyProfileExtra,
 } from "@/lib/mock/supplier-company-profile"
-import { emptyCompanyWizardInput, type CompanyWithRelations } from "@/types"
+import {
+  emptyCompanyWizardInput,
+  type CompanyRole,
+  type CompanyWithRelations,
+} from "@/types"
 import { cn } from "@/lib/utils"
 
 const VERIFY_ITEMS = [
@@ -67,12 +86,50 @@ export default function SupplierCompanyPage() {
     hydrated && useApi,
   )
   const updateMutation = useUpdateSupplierCompanyMutation()
+  const addMember = useAddSupplierTeamMemberMutation()
+  const updateMember = useUpdateSupplierTeamMemberMutation()
+  const removeMember = useRemoveSupplierTeamMemberMutation()
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [localEmployees, setLocalEmployees] = useState<CompanyTeamEmployee[]>(
+    [],
+  )
 
   const company: CompanyWithRelations | null = useMemo(() => {
-    if (useApi) return (apiCompanies?.items?.[0] as CompanyWithRelations) ?? null
+    if (useApi) {
+      const items = (apiCompanies?.items ?? []) as CompanyWithRelations[]
+      const activeId = user?.activeCompanyId ?? user?.companyId
+      return items.find((c) => c.id === activeId) ?? items[0] ?? null
+    }
     if (!hydrated) return null
     return getMyCompany(actorId) ?? null
-  }, [useApi, apiCompanies, hydrated, getMyCompany, actorId])
+  }, [
+    useApi,
+    apiCompanies,
+    hydrated,
+    getMyCompany,
+    actorId,
+    user?.activeCompanyId,
+    user?.companyId,
+  ])
+
+  const employees = useMemo(() => {
+    if (useApi && company) {
+      return mapCompanyUsersToEmployees(company.company_users ?? [], user?.userId)
+    }
+    if (localEmployees.length > 0) return localEmployees
+    if (company) {
+      return mapCompanyUsersToEmployees(company.company_users ?? [], user?.userId)
+    }
+    return []
+  }, [useApi, company, user?.userId, localEmployees])
+
+  const myRole =
+    myCompanyRole(company?.company_users ?? [], user?.userId) ??
+    employees.find((e) => e.me)?.role ??
+    null
+  const canManage = canManageTeam(myRole)
+  const teamBusy =
+    addMember.isPending || updateMember.isPending || removeMember.isPending
 
   const { data: apiReviewsPage } = useQuery({
     queryKey: ["company-reviews", company?.id],
@@ -103,8 +160,35 @@ export default function SupplierCompanyPage() {
     if (!company) return
     setAbout(company.description ?? "")
     setCity(company.city ?? "")
-    const stored = readSupplierProfileExtra(company.id)
     const fromProfile = company.profile
+    if (useApi && fromProfile) {
+      const gallery = Array.isArray(fromProfile.gallery)
+        ? fromProfile.gallery.map((g) => ({
+            src: g.src,
+            name: g.name || "photo",
+          }))
+        : []
+      setExtra({
+        photos: gallery,
+        facts: {
+          founded:
+            fromProfile.founded_year != null
+              ? String(fromProfile.founded_year)
+              : "",
+          staff:
+            fromProfile.employees_count != null
+              ? String(fromProfile.employees_count)
+              : "",
+          area: fromProfile.warehouse_area ?? "",
+          markets: fromProfile.markets ?? company.city ?? "",
+          brands: fromProfile.brands ?? "",
+        },
+        clients: fromProfile.notable_clients ?? "",
+        certs: company.certificates.map((c) => c.title),
+      })
+      return
+    }
+    const stored = readSupplierProfileExtra(company.id)
     setExtra({
       ...stored,
       facts: {
@@ -127,27 +211,162 @@ export default function SupplierCompanyPage() {
           ? stored.certs
           : company.certificates.map((c) => c.title),
     })
-  }, [company])
+  }, [company, useApi])
 
   const completeness = profileCompleteness(about, extra)
   const level = scoreLevel(completeness)
   const verified = company?.verification_status === "verified"
-  const publicHref = performerUrl(actorId || company?.id || 0)
+  const publicActorId =
+    user?.actors.find(
+      (a) => a.side === "supplier" && a.company_id === company?.id,
+    )?.id ??
+    (actorId || company?.id || 0)
+  const publicHref = `${performerUrl(publicActorId)}?guest=1`
 
-  const handlePhotos = (files: FileList | null) => {
+  const handleRoleChange = async (userId: number, role: CompanyRole) => {
+    const target = employees.find((e) => e.userId === userId)
+    if (!target || target.role === role) return
+    if (useApi && company) {
+      try {
+        await updateMember.mutateAsync({
+          companyId: company.id,
+          targetUserId: userId,
+          data: { role },
+        })
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось изменить роль"))
+      }
+      return
+    }
+    setLocalEmployees((prev) => {
+      const base =
+        prev.length > 0
+          ? prev
+          : mapCompanyUsersToEmployees(company?.company_users ?? [], user?.userId)
+      return base.map((e) =>
+        e.userId !== userId
+          ? e
+          : { ...e, role, rights: COMPANY_ROLE_RIGHTS[role] },
+      )
+    })
+    toast.success("Роль обновлена")
+  }
+
+  const handleRemove = async (userId: number) => {
+    if (useApi && company) {
+      try {
+        await removeMember.mutateAsync({
+          companyId: company.id,
+          targetUserId: userId,
+        })
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось удалить сотрудника"))
+      }
+      return
+    }
+    setLocalEmployees((prev) => {
+      const base =
+        prev.length > 0
+          ? prev
+          : mapCompanyUsersToEmployees(company?.company_users ?? [], user?.userId)
+      return base.filter((e) => e.userId !== userId)
+    })
+    toast.success("Сотрудник удалён")
+  }
+
+  const handleInvite = async (data: { email: string; role: CompanyRole }) => {
+    if (useApi && company) {
+      try {
+        await addMember.mutateAsync({
+          companyId: company.id,
+          data: { email: data.email, role: data.role },
+        })
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось добавить сотрудника"))
+        throw err
+      }
+      return
+    }
+    const employee: CompanyTeamEmployee = {
+      userId: Date.now(),
+      membershipId: Date.now(),
+      name: nameFromEmail(data.email),
+      email: data.email,
+      role: data.role,
+      rights: COMPANY_ROLE_RIGHTS[data.role],
+    }
+    setLocalEmployees((prev) => {
+      const base =
+        prev.length > 0
+          ? prev
+          : mapCompanyUsersToEmployees(company?.company_users ?? [], user?.userId)
+      return [...base, employee]
+    })
+    toast.success("Сотрудник добавлен")
+  }
+
+  const handlePhotos = async (files: FileList | null) => {
     if (!files) return
+    const selected = Array.from(files).filter((f) => /^image\//.test(f.type))
+    if (!selected.length) return
+
+    if (useApi) {
+      try {
+        const uploaded: { src: string; name: string }[] = []
+        for (const file of selected) {
+          if (extra.photos.length + uploaded.length >= 12) break
+          const res = await supplierCompaniesApi.uploadLogo(file)
+          uploaded.push({ src: res.logo, name: file.name })
+        }
+        setExtra((prev) => ({
+          ...prev,
+          photos: [...prev.photos, ...uploaded].slice(0, 12),
+        }))
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось загрузить фото"))
+      }
+      return
+    }
+
     const next = [...extra.photos]
-    Array.from(files).forEach((file) => {
-      if (!/^image\//.test(file.type) || next.length >= 12) return
+    selected.forEach((file) => {
+      if (next.length >= 12) return
       next.push({ src: URL.createObjectURL(file), name: file.name })
     })
     setExtra((prev) => ({ ...prev, photos: next }))
   }
 
-  const handleCerts = (files: FileList | null) => {
-    if (!files) return
-    const names = Array.from(files).map((f) => f.name)
-    setExtra((prev) => ({ ...prev, certs: [...prev.certs, ...names] }))
+  const handleCerts = async (files: FileList | null) => {
+    if (!files || !company) return
+    const selected = Array.from(files)
+    if (!selected.length) return
+
+    if (useApi) {
+      try {
+        const titles: string[] = []
+        const today = new Date().toISOString().slice(0, 10)
+        for (const file of selected) {
+          const uploaded = await supplierCompaniesApi.uploadCertificateFile(file)
+          await supplierCompaniesApi.addCertificate(company.id, {
+            title: file.name.replace(/\.[^.]+$/, "") || file.name,
+            issuer: company.title,
+            issue_date: today,
+            file_url: uploaded.file_url,
+          })
+          titles.push(file.name)
+        }
+        setExtra((prev) => ({ ...prev, certs: [...prev.certs, ...titles] }))
+        toast.success("Сертификаты загружены")
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось загрузить сертификат"))
+      }
+      return
+    }
+
+    setExtra((prev) => ({
+      ...prev,
+      certs: [...prev.certs, ...selected.map((f) => f.name)],
+    }))
   }
 
   const handleSave = async () => {
@@ -156,7 +375,7 @@ export default function SupplierCompanyPage() {
       return
     }
     setSaving(true)
-    writeSupplierProfileExtra(company.id, extra)
+    if (!useApi) writeSupplierProfileExtra(company.id, extra)
     try {
       if (useApi) {
         const base = emptyCompanyWizardInput()
@@ -191,6 +410,11 @@ export default function SupplierCompanyPage() {
             actor_types: company.actor_types?.length
               ? company.actor_types
               : ["supplier"],
+            warehouse_area: extra.facts.area || null,
+            markets: extra.facts.markets || null,
+            brands: extra.facts.brands || null,
+            notable_clients: extra.clients || null,
+            gallery: extra.photos.map((p) => ({ src: p.src, name: p.name })),
           },
         })
       } else if (updateLocal) {
@@ -200,8 +424,8 @@ export default function SupplierCompanyPage() {
         })
       }
       toast.success("Страница компании сохранена")
-    } catch {
-      toast.error("Не удалось сохранить")
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Не удалось сохранить"))
     } finally {
       setSaving(false)
     }
@@ -225,12 +449,25 @@ export default function SupplierCompanyPage() {
         title="Страница компании"
         description="Расскажите о компании — покупатели чаще выбирают тех, кого «видно»"
         actions={
-          <Button asChild variant="outline" size="lg">
-            <Link href={publicHref}>
-              <Eye size={16} />
-              Посмотреть как покупатель
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {company && canManage ? (
+              <Button
+                type="button"
+                size="lg"
+                disabled={teamBusy}
+                onClick={() => setInviteOpen(true)}
+              >
+                <Plus size={16} />
+                Добавить в команду
+              </Button>
+            ) : null}
+            <Button asChild variant="outline" size="lg">
+              <Link href={publicHref} target="_blank" rel="noreferrer">
+                <Eye size={16} />
+                Посмотреть как гость
+              </Link>
+            </Button>
+          </div>
         }
       />
 
@@ -238,10 +475,15 @@ export default function SupplierCompanyPage() {
         <div className="rounded-2xl border border-dashed border-[#D5DAE1] bg-white px-6 py-14 text-center">
           <b className="text-[17px]">Компания ещё не создана</b>
           <p className="mx-auto mt-2 max-w-md text-[15px] text-mute">
-            Профиль компании появится здесь после регистрации исполнителя.
-            Пока можно заполнить черновик страницы после создания компании в
-            аккаунте.
+            Создайте профиль компании, чтобы заполнить страницу и работать с
+            заказами на площадке.
           </p>
+          <Button asChild size="lg" className="mt-5">
+            <Link href="/supplier/company/new">
+              <Plus size={16} />
+              Создать компанию
+            </Link>
+          </Button>
         </div>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -290,6 +532,25 @@ export default function SupplierCompanyPage() {
 
             <ProfileSectionCard
               step="2"
+              title="Команда"
+              hint="Роли и доступ к кабинету. Руководителя компании изменить нельзя."
+            >
+              <div className="grid gap-4">
+                <EmployeeList
+                  employees={employees}
+                  canManage={canManage}
+                  busy={teamBusy}
+                  onInviteClick={() => setInviteOpen(true)}
+                  onChangeRole={(userId, role) =>
+                    void handleRoleChange(userId, role)
+                  }
+                  onRemove={(userId) => void handleRemove(userId)}
+                />
+              </div>
+            </ProfileSectionCard>
+
+            <ProfileSectionCard
+              step="3"
               title="Фото компании"
               hint="Склад, офис, производство, команда, доставка — до 12 фото"
             >
@@ -328,7 +589,7 @@ export default function SupplierCompanyPage() {
                       multiple
                       className="sr-only"
                       onChange={(e) => {
-                        handlePhotos(e.target.files)
+                        void handlePhotos(e.target.files)
                         e.target.value = ""
                       }}
                     />
@@ -344,7 +605,7 @@ export default function SupplierCompanyPage() {
             </ProfileSectionCard>
 
             <ProfileSectionCard
-              step="3"
+              step="4"
               title="Факты о компании"
               hint="Короткие цифры, которым доверяют"
             >
@@ -383,7 +644,7 @@ export default function SupplierCompanyPage() {
             </ProfileSectionCard>
 
             <ProfileSectionCard
-              step="4"
+              step="5"
               title="Сертификаты компании"
               hint="Дилерские свидетельства, лицензии, ISO"
             >
@@ -417,7 +678,7 @@ export default function SupplierCompanyPage() {
                     accept=".pdf,image/*"
                     className="sr-only"
                     onChange={(e) => {
-                      handleCerts(e.target.files)
+                      void handleCerts(e.target.files)
                       e.target.value = ""
                     }}
                   />
@@ -515,6 +776,13 @@ export default function SupplierCompanyPage() {
           </aside>
         </div>
       )}
+
+      <InviteEmployeeDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        busy={teamBusy}
+        onInvite={handleInvite}
+      />
     </PageFrame>
   )
 }

@@ -1,12 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Info, Trash2 } from "lucide-react"
-import { toast } from "sonner"
-import { StatusBadge } from "@/components/bm"
+import { Trash2, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -15,206 +11,153 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  BUYER_EMPLOYEE_ROLES,
-  formatEmployeeLimit,
+  ASSIGNABLE_COMPANY_ROLES,
+  COMPANY_ROLE_LABELS,
+  companyRoleLabel,
   initialsFromName,
-  type BuyerEmployee,
-  type BuyerEmployeeRole,
-} from "@/lib/mock/buyer-employees"
-
-const STATUS_LABEL: Record<BuyerEmployee["status"], string> = {
-  active: "Активен",
-  invited: "Приглашён",
-  blocked: "Заблокирован",
-}
+  type CompanyTeamEmployee,
+} from "@/lib/company-team"
+import type { CompanyRole } from "@/types"
 
 type EmployeeListProps = {
-  employees: BuyerEmployee[]
-  isBoss: boolean
-  onChangeRole: (id: string, role: BuyerEmployeeRole) => void
-  onChangeLimit: (id: string, limit: number) => void
-  onRemove: (id: string) => void
+  employees: CompanyTeamEmployee[]
+  canManage: boolean
+  busy?: boolean
+  onInviteClick?: () => void
+  onChangeRole: (userId: number, role: CompanyRole) => void
+  onRemove: (userId: number) => void
 }
 
 export const EmployeeList = ({
   employees,
-  isBoss,
+  canManage,
+  busy = false,
+  onInviteClick,
   onChangeRole,
-  onChangeLimit,
   onRemove,
 }: EmployeeListProps) => {
-  const [limitTarget, setLimitTarget] = useState<BuyerEmployee | null>(null)
-  const [limitValue, setLimitValue] = useState("0")
-  const [removeTarget, setRemoveTarget] = useState<BuyerEmployee | null>(null)
-
-  const openLimit = (employee: BuyerEmployee) => {
-    setLimitTarget(employee)
-    setLimitValue(String(employee.limit ?? 0))
-  }
-
-  const saveLimit = () => {
-    if (!limitTarget) return
-    const v = Number(limitValue)
-    if (!(v >= 0) || !Number.isFinite(v)) {
-      toast.error("Укажите сумму")
-      return
-    }
-    onChangeLimit(limitTarget.id, v)
-    toast.success("Лимит сохранён")
-    setLimitTarget(null)
-  }
+  const [removeTarget, setRemoveTarget] = useState<CompanyTeamEmployee | null>(
+    null,
+  )
 
   const confirmRemove = () => {
     if (!removeTarget) return
-    onRemove(removeTarget.id)
-    toast.success(`${removeTarget.name} удалён(а), доступ закрыт`)
+    onRemove(removeTarget.userId)
     setRemoveTarget(null)
+  }
+
+  if (employees.length === 0) {
+    return (
+      <div className="grid place-items-center gap-2 rounded-xl border border-dashed border-[#D5DAE1] bg-canvas/40 px-5 py-10 text-center">
+        <Users className="size-7 text-mute" aria-hidden />
+        <div>
+          <b className="text-[15px]">В команде пока никого</b>
+          <p className="mt-1 text-[13.5px] text-mute">
+            Добавьте сотрудника по email — он должен быть зарегистрирован на
+            площадке.
+          </p>
+        </div>
+        {canManage && onInviteClick ? (
+          <Button
+            type="button"
+            size="sm"
+            className="mt-1"
+            onClick={onInviteClick}
+            disabled={busy}
+          >
+            Добавить сотрудника
+          </Button>
+        ) : null}
+      </div>
+    )
   }
 
   return (
     <>
-      {isBoss ? (
-        <div className="flex items-start gap-3 rounded-xl bg-brand-50 p-4 text-[14px]">
-          <Info className="size-5 shrink-0 text-brand-700" aria-hidden />
-          <span>
-            Вы руководитель: можете менять роли, лимиты и удалять сотрудников.
-            Все изменения записываются в историю ниже.
-          </span>
-        </div>
-      ) : null}
-
-      <div className="divide-y divide-line rounded-2xl border border-line bg-white">
+      <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line">
         {employees.map((employee) => {
-          const canEdit = isBoss && !employee.me
+          const isDirector = employee.role === "director"
+          const canEdit = canManage && !employee.me && !isDirector
           return (
-            <div
-              key={employee.id}
-              className="grid items-center gap-3 p-4 md:grid-cols-[minmax(0,1.2fr)_180px_minmax(0,1fr)_auto] md:gap-5 md:p-5"
+            <li
+              key={employee.membershipId}
+              className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#EEF0F3] text-[13px] font-bold">
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#EEF0F3] text-[13px] font-bold text-ink">
                   {initialsFromName(employee.name)}
                 </span>
                 <div className="min-w-0">
-                  <b className="text-[15px]">
+                  <p className="text-[15px] font-semibold leading-snug">
                     {employee.name}
                     {employee.me ? (
-                      <span className="text-[12.5px] font-normal text-mute">
-                        {" "}
+                      <span className="ml-1 text-[12.5px] font-normal text-mute">
                         (вы)
                       </span>
                     ) : null}
-                  </b>
-                  <div className="tnum text-[13px] text-mute">{employee.phone}</div>
+                  </p>
+                  <p className="mt-0.5 break-all text-[13px] leading-snug text-mute">
+                    {employee.email}
+                  </p>
                 </div>
               </div>
 
-              <div>
+              <div className="flex w-full flex-col gap-1.5 sm:w-[220px] sm:shrink-0 sm:items-end">
                 {canEdit ? (
                   <>
-                    <label className="sr-only" htmlFor={`er-${employee.id}`}>
+                    <label
+                      className="sr-only"
+                      htmlFor={`er-${employee.userId}`}
+                    >
                       Роль
                     </label>
                     <select
-                      id={`er-${employee.id}`}
+                      id={`er-${employee.userId}`}
                       value={employee.role}
+                      disabled={busy}
                       onChange={(e) =>
                         onChangeRole(
-                          employee.id,
-                          e.target.value as BuyerEmployeeRole,
+                          employee.userId,
+                          e.target.value as CompanyRole,
                         )
                       }
-                      className="h-10 w-full rounded-[10px] border border-line bg-white px-3 text-[15px] outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/10"
+                      className="h-9 w-full rounded-[10px] border border-line bg-white px-3 text-[14px] outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/10 disabled:opacity-60 sm:w-[200px]"
                     >
-                      {BUYER_EMPLOYEE_ROLES.map((role) => (
+                      {ASSIGNABLE_COMPANY_ROLES.map((role) => (
                         <option key={role} value={role}>
-                          {role}
+                          {COMPANY_ROLE_LABELS[role]}
                         </option>
                       ))}
                     </select>
                   </>
                 ) : (
-                  <span className="text-[14.5px] font-semibold">
-                    {employee.role}
-                  </span>
+                  <p className="text-[14px] font-semibold sm:text-right">
+                    {companyRoleLabel(employee.role)}
+                  </p>
                 )}
-              </div>
-
-              <div className="text-[13.5px]">
-                <span className="text-mute">{employee.rights}</span>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                  <span>
-                    Лимит:{" "}
-                    <b className="tnum">{formatEmployeeLimit(employee.limit)}</b>
-                  </span>
-                  <span>·</span>
-                  <StatusBadge
-                    status={employee.status}
-                    label={STATUS_LABEL[employee.status]}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-start gap-2 md:justify-end">
-                {canEdit ? (
-                  <>
+                <div className="flex w-full items-center gap-1 sm:w-auto sm:justify-end">
+                  <p className="min-w-0 flex-1 text-[12.5px] leading-snug text-mute sm:flex-none sm:text-right">
+                    {employee.rights}
+                  </p>
+                  {canEdit ? (
                     <Button
                       type="button"
                       variant="ghost"
-                      className="h-9 px-3"
-                      onClick={() => openLimit(employee)}
-                    >
-                      Лимит
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-9 px-3 text-red-600 hover:text-red-700"
+                      size="icon"
+                      className="size-8 shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      disabled={busy}
+                      aria-label={`Удалить ${employee.name}`}
                       onClick={() => setRemoveTarget(employee)}
                     >
                       <Trash2 className="size-4" aria-hidden />
-                      Удалить
                     </Button>
-                  </>
-                ) : null}
+                  ) : null}
+                </div>
               </div>
-            </div>
+            </li>
           )
         })}
-      </div>
-
-      <Dialog
-        open={Boolean(limitTarget)}
-        onOpenChange={(open) => !open && setLimitTarget(null)}
-      >
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle>Лимит: {limitTarget?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-2">
-            <Label htmlFor="emp-limit">Лимит на одну сделку, TJS</Label>
-            <Input
-              id="emp-limit"
-              type="number"
-              min={0}
-              value={limitValue}
-              onChange={(e) => setLimitValue(e.target.value)}
-              className="tnum"
-            />
-            <p className="text-[13px] text-mute">
-              0 — сотрудник не может покупать, только смотреть
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="ghost" onClick={() => setLimitTarget(null)}>
-              Отмена
-            </Button>
-            <Button type="button" variant="dark" onClick={saveLimit}>
-              Сохранить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </ul>
 
       <Dialog
         open={Boolean(removeTarget)}
@@ -226,14 +169,23 @@ export const EmployeeList = ({
           </DialogHeader>
           <p className="text-[14.5px] text-mute">
             {removeTarget
-              ? `${removeTarget.name} потеряет доступ к кабинету компании.`
+              ? `${removeTarget.name} (${removeTarget.email}) потеряет доступ к кабинету компании.`
               : null}
           </p>
           <DialogFooter className="gap-2">
-            <Button type="button" variant="ghost" onClick={() => setRemoveTarget(null)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setRemoveTarget(null)}
+            >
               Отмена
             </Button>
-            <Button type="button" variant="destructive" onClick={confirmRemove}>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={busy}
+              onClick={confirmRemove}
+            >
               Удалить
             </Button>
           </DialogFooter>

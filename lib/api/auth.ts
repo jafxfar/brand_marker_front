@@ -20,6 +20,7 @@ export type MeResponse = {
     phone: string | null
     role: string
     status: string
+    totp_enabled?: boolean
   }
   actors: ActorSummary[]
   active_actor_id: number | null
@@ -43,21 +44,76 @@ export type MeResponse = {
   } | null
 }
 
+export type LoginChallenge = {
+  requires_2fa: true
+  challenge_token: string
+  role?: "buyer" | "supplier" | null
+}
+
+export type LoginResult = TokenPair | LoginChallenge
+
+export type TwoFactorSetup = {
+  otpauth_url: string
+  secret: string
+  backup_codes: string[]
+  qr_data_url: string
+}
+
+export const isLoginChallenge = (value: LoginResult): value is LoginChallenge =>
+  Boolean(
+    value &&
+      typeof value === "object" &&
+      "requires_2fa" in value &&
+      (value as LoginChallenge).requires_2fa &&
+      typeof (value as LoginChallenge).challenge_token === "string",
+  )
+
 export const authApi = {
   login: async (
     email: string,
     password: string,
     role?: "buyer" | "supplier",
-  ): Promise<TokenPair> => {
-    const data = await apiFetch<TokenPair>("/auth/login", {
+  ): Promise<LoginResult> => {
+    const data = await apiFetch<LoginResult>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password, ...(role ? { role } : {}) }),
+      skipAuth: true,
+    })
+    if (isLoginChallenge(data)) {
+      return data
+    }
+    tokenStorage.setTokens(data)
+    tokenStorage.clearActor()
+    return data
+  },
+
+  verify2fa: async (challengeToken: string, code: string): Promise<TokenPair> => {
+    const data = await apiFetch<TokenPair>("/auth/2fa/verify", {
+      method: "POST",
+      body: JSON.stringify({ challenge_token: challengeToken, code }),
       skipAuth: true,
     })
     tokenStorage.setTokens(data)
     tokenStorage.clearActor()
     return data
   },
+
+  setup2fa: () =>
+    apiFetch<TwoFactorSetup>("/auth/2fa/setup", {
+      method: "POST",
+    }),
+
+  confirm2fa: (code: string) =>
+    apiFetch<MeResponse["user"]>("/auth/2fa/confirm", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
+
+  disable2fa: (password: string, code: string) =>
+    apiFetch<MeResponse["user"]>("/auth/2fa/disable", {
+      method: "POST",
+      body: JSON.stringify({ password, code }),
+    }),
 
   register: async (payload: {
     email: string

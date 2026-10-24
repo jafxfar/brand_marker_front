@@ -8,6 +8,7 @@ import { ArrowRight } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { TwoFactorChallenge } from "@/components/auth/two-factor-challenge"
 import { BrandLogo } from "@/components/bm"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,7 +35,12 @@ const AdminLoginContent = () => {
   const loginAdminWithCredentials = useAuthStore(
     (state) => state.loginAdminWithCredentials,
   )
+  const completeAdminLoginWith2fa = useAuthStore(
+    (state) => state.completeAdminLoginWith2fa,
+  )
   const [apiError, setApiError] = useState<string | null>(null)
+  const [challengeToken, setChallengeToken] = useState<string | null>(null)
+  const [otpBusy, setOtpBusy] = useState(false)
   const apiEnabled = isApiEnabled()
   const isAdmin =
     isAuthenticated &&
@@ -73,13 +79,35 @@ const AdminLoginContent = () => {
     }
 
     try {
-      await loginAdminWithCredentials(values)
+      const result = await loginAdminWithCredentials(values)
+      if (result.status === "needs_2fa") {
+        setChallengeToken(result.challengeToken)
+        return
+      }
       toast.success("Вы вошли в систему")
       router.replace(adminRedirect)
     } catch (error) {
       const message = getApiErrorMessage(error, "Ошибка входа администратора")
       setApiError(message)
       toast.error(message)
+    }
+  }
+
+  const handleVerify2fa = async (code: string) => {
+    if (!challengeToken) return
+    setApiError(null)
+    setOtpBusy(true)
+    try {
+      await completeAdminLoginWith2fa({ challengeToken, code })
+      setChallengeToken(null)
+      toast.success("Вы вошли в систему")
+      router.replace(adminRedirect)
+    } catch (error) {
+      const message = getApiErrorMessage(error, "Неверный код")
+      setApiError(message)
+      toast.error(message)
+    } finally {
+      setOtpBusy(false)
     }
   }
 
@@ -97,6 +125,18 @@ const AdminLoginContent = () => {
 
       <div className="grid flex-1 place-items-center px-4 py-10">
         <div className="w-full max-w-[440px] rounded-2xl border border-line bg-white p-7 shadow-[0_24px_60px_-24px_rgba(16,24,40,.25)] sm:p-9">
+          {challengeToken ? (
+            <TwoFactorChallenge
+              busy={otpBusy}
+              error={apiError}
+              onSubmit={handleVerify2fa}
+              onBack={() => {
+                setChallengeToken(null)
+                setApiError(null)
+              }}
+            />
+          ) : (
+            <>
           <h1 className="mb-1 text-[26px] font-extrabold tracking-[-0.02em] text-ink">
             Вход администратора
           </h1>
@@ -177,6 +217,8 @@ const AdminLoginContent = () => {
               Вход для покупателей и поставщиков
             </Link>
           </p>
+            </>
+          )}
         </div>
       </div>
     </div>

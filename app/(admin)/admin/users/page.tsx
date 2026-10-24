@@ -16,19 +16,7 @@ import {
   MoreHorizontal,
   RefreshCcw,
   Search,
-  UserCheck,
 } from "lucide-react"
-import { toast } from "sonner"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,38 +27,33 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  useAdminUsersQuery,
-  useUpdateAdminUserStatusMutation,
-} from "@/hooks/api/use-admin-users-query"
-import { useAdminPermission } from "@/hooks/use-admin-permission"
+import { useAdminUsersQuery } from "@/hooks/api/use-admin-users-query"
 import type {
   AdminUser,
   AdminUserRole,
   AdminUserStatus,
-  AdminUserStatusFilter,
+  AdminUserTabFilter,
 } from "@/lib/api/admin"
-import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
 import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
+import { formatMoneyDisplay } from "@/lib/format"
 
-
-const statusFilters: Array<{
-  value: AdminUserStatusFilter
+const tabFilters: Array<{
+  value: AdminUserTabFilter
   label: string
 }> = [
   { value: "all", label: "Все" },
-  { value: "active", label: "Активные" },
+  { value: "buyer", label: "Покупатели" },
+  { value: "supplier", label: "Поставщики" },
   { value: "blocked", label: "Заблокированные" },
-  { value: "pending", label: "Ожидают активации" },
 ]
 
 const roleLabels: Record<AdminUserRole, string> = {
-  buyer: "Заказчик",
-  supplier: "Исполнитель",
-  both: "Заказчик и исполнитель",
+  buyer: "Покупатель",
+  supplier: "Поставщик",
+  both: "Покупатель и поставщик",
   admin: "Администратор",
   superadmin: "Суперадминистратор",
   moderator: "Модератор",
@@ -94,17 +77,11 @@ const statusMetadata: Record<
   },
 }
 
-const staffRoleRank: Partial<Record<AdminUserRole, number>> = {
-  moderator: 1,
-  admin: 2,
-  superadmin: 3,
-}
-
-const isStatusFilter = (value: string | null): value is AdminUserStatusFilter =>
+const isTabFilter = (value: string | null): value is AdminUserTabFilter =>
   value === "all" ||
-  value === "active" ||
-  value === "blocked" ||
-  value === "pending"
+  value === "buyer" ||
+  value === "supplier" ||
+  value === "blocked"
 
 const formatRegistrationDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -150,72 +127,38 @@ const UsersSkeleton = () => (
   </PageFrame>
 )
 
-type UserActionButtonProps = {
-  user: AdminUser
-  canManage: boolean
-  onSelect: (user: AdminUser) => void
-}
-
-const UserActionButton = ({
-  user,
-  canManage,
-  onSelect,
-}: UserActionButtonProps) => {
-  if (!canManage) {
-    return (
-      <span className="text-xs text-muted-foreground" title="Недостаточно прав">
-        Защищён
-      </span>
-    )
-  }
-
-  const isBlocked = user.status === "blocked"
-  return (
-    <Button
-      type="button"
-      variant={isBlocked ? "outline" : "ghost"}
-      size="sm"
-      onClick={() => onSelect(user)}
-      className={cn(!isBlocked && "text-destructive hover:text-destructive")}
-      aria-label={`${isBlocked ? "Разблокировать" : "Заблокировать"} ${user.email}`}
-    >
-      {isBlocked ? <UserCheck aria-hidden="true" /> : <Ban aria-hidden="true" />}
-      {isBlocked ? "Разблокировать" : "Заблокировать"}
-    </Button>
-  )
-}
-
 const AdminUsersContent = () => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const currentUser = useAuthStore((state) => state.user)
-  const canUpdateUsers = useAdminPermission("admin_users.update")
-  const statusParam = searchParams.get("status")
-  const status = isStatusFilter(statusParam) ? statusParam : "all"
+  const tabParam = searchParams.get("tab") ?? searchParams.get("status")
+  const tab = isTabFilter(tabParam) ? tabParam : "all"
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const query = searchParams.get("query") ?? ""
   const [searchInput, setSearchInput] = useState(query)
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
+
+  const status = tab === "blocked" ? "blocked" : "all"
+  const roleSide = tab === "buyer" || tab === "supplier" ? tab : null
 
   const usersQuery = useAdminUsersQuery({
     page,
     pageSize: DEFAULT_PAGE_SIZE,
     status,
+    roleSide,
     query,
   })
-  const updateStatusMutation = useUpdateAdminUserStatusMutation()
 
   const replaceSearchParams = useCallback(
     (updates: Record<string, string | null>) => {
       const nextParams = new URLSearchParams(searchParams.toString())
       Object.entries(updates).forEach(([key, value]) => {
-        if (!value || (key === "status" && value === "all")) {
+        if (!value || (key === "tab" && value === "all")) {
           nextParams.delete(key)
           return
         }
         nextParams.set(key, value)
       })
+      nextParams.delete("status")
       const nextQuery = nextParams.toString()
       router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname)
     },
@@ -242,42 +185,11 @@ const AdminUsersContent = () => {
     replaceSearchParams({ page: String(usersQuery.data.pages) })
   }, [page, replaceSearchParams, usersQuery.data])
 
-  const currentRoleRank =
-    staffRoleRank[currentUser?.platformRole as AdminUserRole] ?? 0
-
-  const canManageUser = (user: AdminUser) => {
-    if (!canUpdateUsers) return false
-    if (user.id === currentUser?.userId) return false
-    const targetRoleRank = staffRoleRank[user.role] ?? 0
-    return targetRoleRank === 0 || targetRoleRank < currentRoleRank
-  }
-
-  const handleStatusChange = (nextStatus: AdminUserStatusFilter) => {
+  const handleTabChange = (nextTab: AdminUserTabFilter) => {
     replaceSearchParams({
-      status: nextStatus,
+      tab: nextTab,
       page: null,
     })
-  }
-
-  const handleConfirmStatusChange = async () => {
-    if (!selectedUser) return
-    const nextStatus: AdminUserStatus =
-      selectedUser.status === "blocked" ? "active" : "blocked"
-
-    try {
-      await updateStatusMutation.mutateAsync({
-        userId: selectedUser.id,
-        status: nextStatus,
-      })
-      toast.success(
-        nextStatus === "blocked"
-          ? "Пользователь заблокирован"
-          : "Пользователь разблокирован",
-      )
-      setSelectedUser(null)
-    } catch {
-      // error toast via MutationCache
-    }
   }
 
   const getPageHref = (targetPage: number) => {
@@ -324,14 +236,20 @@ const AdminUsersContent = () => {
     )
   }
 
-  const { items, status_counts: statusCounts, total, pages } = usersQuery.data
-  const hasFilters = Boolean(query || status !== "all")
+  const { items, total, pages } = usersQuery.data
+  const tabCounts = usersQuery.data.tab_counts ?? {
+    all: total,
+    buyer: 0,
+    supplier: 0,
+    blocked: usersQuery.data.status_counts?.blocked ?? 0,
+  }
+  const hasFilters = Boolean(query || tab !== "all")
 
   return (
     <PageFrame>
       <PageHeader
         title="Пользователи"
-        description="Управление доступом и статусами учётных записей"
+        description="Нажмите на пользователя, чтобы увидеть всю историю"
         actions={
           <p className="text-sm text-muted-foreground">
             Найдено <strong className="ml-1 text-foreground">{total}</strong>
@@ -359,14 +277,14 @@ const AdminUsersContent = () => {
         </div>
         <div className="p-3">
           <SegmentedControl
-            value={status}
-            options={statusFilters.map((filter) => ({
+            value={tab}
+            options={tabFilters.map((filter) => ({
               ...filter,
-              count: statusCounts[filter.value],
+              count: tabCounts[filter.value],
             }))}
-            onChange={handleStatusChange}
-            ariaLabel="Статус пользователей"
-            className="w-full max-w-full border-0 bg-transparent p-0"
+            onChange={handleTabChange}
+            ariaLabel="Тип пользователей"
+            className="w-full max-w-full border-0 p-0"
           />
         </div>
       </PageSurface>
@@ -377,7 +295,7 @@ const AdminUsersContent = () => {
             title={hasFilters ? "Пользователи не найдены" : "Пользователей пока нет"}
             description={
               hasFilters
-                ? "Измените поисковый запрос или выбранный статус."
+                ? "Измените поисковый запрос или выбранный фильтр."
                 : "Новые учётные записи появятся здесь после регистрации."
             }
           />
@@ -388,7 +306,7 @@ const AdminUsersContent = () => {
                 variant="outline"
                 onClick={() => {
                   setSearchInput("")
-                  replaceSearchParams({ query: null, status: null, page: null })
+                  replaceSearchParams({ query: null, tab: null, page: null })
                 }}
               >
                 Сбросить фильтры
@@ -406,16 +324,20 @@ const AdminUsersContent = () => {
               <TableHeader>
                 <TableRow className="bg-muted/35 hover:bg-muted/35">
                   <TableHead className="px-5">Пользователь</TableHead>
-                  <TableHead>Контакты</TableHead>
+                  <TableHead>Компания</TableHead>
                   <TableHead>Роль</TableHead>
+                  <TableHead>Сделок · оборот</TableHead>
                   <TableHead>Статус</TableHead>
-                  <TableHead>Регистрация</TableHead>
-                  <TableHead className="px-5 text-right">Действие</TableHead>
+                  <TableHead className="px-5 text-right"> </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow
+                    key={user.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/admin/users/${user.id}`)}
+                  >
                     <TableCell className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-primary">
@@ -426,32 +348,40 @@ const AdminUsersContent = () => {
                             {`${user.first_name} ${user.last_name}`.trim() || "Без имени"}
                           </p>
                           <p className="text-xs text-muted-foreground">ID {user.id}</p>
+                          <p className="mt-0.5 max-w-52 truncate text-xs text-muted-foreground">
+                            {user.email}
+                          </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-60">
-                        <p className="truncate text-sm text-foreground">{user.email}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {user.phone || "Телефон не указан"}
-                        </p>
-                      </div>
+                      <p className="max-w-48 truncate text-sm text-foreground">
+                        {user.company_title || "Без компании"}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{roleLabels[user.role]}</Badge>
                     </TableCell>
+                    <TableCell className="whitespace-nowrap tabular-nums">
+                      <span className="font-semibold text-foreground">
+                        {user.contracts_count ?? 0}
+                      </span>
+                      <span className="mx-1 text-muted-foreground">·</span>
+                      <span className="text-muted-foreground">
+                        {formatMoneyDisplay(user.contracts_sum ?? 0, "TJS")}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <UserStatusBadge status={user.status} />
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatRegistrationDate(user.created_at)}
-                    </TableCell>
                     <TableCell className="px-5 text-right">
-                      <UserActionButton
-                        user={user}
-                        canManage={canManageUser(user)}
-                        onSelect={setSelectedUser}
-                      />
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="text-sm font-semibold text-primary"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        Открыть →
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -461,34 +391,39 @@ const AdminUsersContent = () => {
 
           <ul className="divide-y divide-border md:hidden">
             {items.map((user) => (
-              <li key={user.id} className="space-y-4 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-primary">
-                    {getInitials(user)}
+              <li key={user.id}>
+                <Link
+                  href={`/admin/users/${user.id}`}
+                  className="block space-y-3 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-primary">
+                      {getInitials(user)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-bold text-foreground">
+                        {`${user.first_name} ${user.last_name}`.trim() || "Без имени"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        {user.company_title || "Без компании"}
+                      </p>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground">ID {user.id}</span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-foreground">
-                      {`${user.first_name} ${user.last_name}`.trim() || "Без имени"}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">{roleLabels[user.role]}</Badge>
+                    <UserStatusBadge status={user.status} />
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {user.contracts_count ?? 0} ·{" "}
+                      {formatMoneyDisplay(user.contracts_sum ?? 0, "TJS")}
+                    </span>
                   </div>
-                  <span className="text-[11px] text-muted-foreground">ID {user.id}</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{roleLabels[user.role]}</Badge>
-                  <UserStatusBadge status={user.status} />
-                </div>
-                <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-                  <div className="text-xs text-muted-foreground">
-                    <p>{user.phone || "Телефон не указан"}</p>
-                    <p className="mt-0.5">{formatRegistrationDate(user.created_at)}</p>
+                  <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
+                    <span>{formatRegistrationDate(user.created_at)}</span>
+                    <span className="font-semibold text-primary">Открыть →</span>
                   </div>
-                  <UserActionButton
-                    user={user}
-                    canManage={canManageUser(user)}
-                    onSelect={setSelectedUser}
-                  />
-                </div>
+                </Link>
               </li>
             ))}
           </ul>
@@ -561,52 +496,6 @@ const AdminUsersContent = () => {
           </Button>
         </nav>
       )}
-
-      <AlertDialog
-        open={Boolean(selectedUser)}
-        onOpenChange={(open) => {
-          if (!open && !updateStatusMutation.isPending) {
-            setSelectedUser(null)
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {selectedUser?.status === "blocked"
-                ? "Разблокировать пользователя?"
-                : "Заблокировать пользователя?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedUser?.status === "blocked"
-                ? `${selectedUser.email} снова сможет входить в систему и пользоваться платформой.`
-                : `${selectedUser?.email ?? "Пользователь"} потеряет доступ к системе, включая уже активные сессии.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={updateStatusMutation.isPending}>
-              Отмена
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(event) => {
-                event.preventDefault()
-                handleConfirmStatusChange()
-              }}
-              disabled={updateStatusMutation.isPending}
-              className={cn(
-                selectedUser?.status !== "blocked" &&
-                  "bg-destructive text-white hover:bg-destructive/90",
-              )}
-            >
-              {updateStatusMutation.isPending
-                ? "Сохранение..."
-                : selectedUser?.status === "blocked"
-                  ? "Разблокировать"
-                  : "Заблокировать"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </PageFrame>
   )
 }

@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { buyerCompaniesApi } from "@/lib/api/companies"
+import {
+  buyerCompaniesApi,
+  type TeamMemberPayload,
+  type TeamMemberUpdatePayload,
+} from "@/lib/api/companies"
 import { isApiEnabled } from "@/lib/api/config"
 import type { PageParams } from "@/lib/pagination"
 import type { CompanyWizardInput } from "@/types"
@@ -7,6 +11,8 @@ import type { CompanyWizardInput } from "@/types"
 export const buyerCompanyKeys = {
   all: ["buyer-companies"] as const,
   mine: (page = 1) => [...buyerCompanyKeys.all, "mine", page] as const,
+  detail: (companyId: number) =>
+    [...buyerCompanyKeys.all, "detail", companyId] as const,
 }
 
 export const useBuyerCompaniesQuery = (enabled = true, params: PageParams = {}) =>
@@ -14,6 +20,16 @@ export const useBuyerCompaniesQuery = (enabled = true, params: PageParams = {}) 
     queryKey: buyerCompanyKeys.mine(params.page ?? 1),
     queryFn: () => buyerCompaniesApi.mine(params),
     enabled: enabled && isApiEnabled(),
+  })
+
+export const useBuyerCompanyQuery = (
+  companyId: number | null | undefined,
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: buyerCompanyKeys.detail(companyId ?? 0),
+    queryFn: () => buyerCompaniesApi.get(companyId!),
+    enabled: enabled && isApiEnabled() && Boolean(companyId),
   })
 
 export const useCreateBuyerCompanyMutation = () => {
@@ -46,6 +62,66 @@ export const useUpdateBuyerCompanyMutation = () => {
     meta: {
       successMessage: "Компания обновлена",
       errorMessage: "Не удалось обновить компанию",
+    },
+  })
+}
+
+const invalidateBuyerCompanies = (qc: ReturnType<typeof useQueryClient>) => {
+  qc.invalidateQueries({ queryKey: buyerCompanyKeys.all })
+}
+
+export const useAddBuyerTeamMemberMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      companyId,
+      data,
+    }: {
+      companyId: number
+      data: TeamMemberPayload
+    }) => buyerCompaniesApi.addTeamMember(companyId, data),
+    onSuccess: () => invalidateBuyerCompanies(qc),
+    meta: {
+      successMessage: "Сотрудник добавлен",
+      errorMessage: "Не удалось добавить сотрудника",
+    },
+  })
+}
+
+export const useUpdateBuyerTeamMemberMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      companyId,
+      targetUserId,
+      data,
+    }: {
+      companyId: number
+      targetUserId: number
+      data: TeamMemberUpdatePayload
+    }) => buyerCompaniesApi.updateTeamMember(companyId, targetUserId, data),
+    onSuccess: () => invalidateBuyerCompanies(qc),
+    meta: {
+      successMessage: "Роль обновлена",
+      errorMessage: "Не удалось изменить роль",
+    },
+  })
+}
+
+export const useRemoveBuyerTeamMemberMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      companyId,
+      targetUserId,
+    }: {
+      companyId: number
+      targetUserId: number
+    }) => buyerCompaniesApi.removeTeamMember(companyId, targetUserId),
+    onSuccess: () => invalidateBuyerCompanies(qc),
+    meta: {
+      successMessage: "Сотрудник удалён",
+      errorMessage: "Не удалось удалить сотрудника",
     },
   })
 }
