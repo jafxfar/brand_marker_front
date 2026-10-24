@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supplierRfqsApi, supplierProposalsApi } from "@/lib/api/supplier/proposals"
 import { isApiEnabled } from "@/lib/api/config"
 import { notificationKeys } from "@/hooks/api/use-notifications-query"
+import { navCountsKeys } from "@/hooks/api/use-nav-counts-query"
 import type { PageParams } from "@/lib/pagination"
 import type { ProposalWithRelations } from "@/types"
 
@@ -63,6 +64,7 @@ export const useSubmitSupplierProposalMutation = () => {
       qc.invalidateQueries({ queryKey: supplierRfqKeys.detail(rfqId) })
       qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
       qc.invalidateQueries({ queryKey: notificationKeys.all })
+      void qc.invalidateQueries({ queryKey: navCountsKeys.role("supplier") })
     },
     meta: {
       successMessage: "Предложение отправлено",
@@ -79,6 +81,7 @@ export const useWithdrawProposalMutation = () => {
       qc.invalidateQueries({ queryKey: supplierRfqKeys.all })
       qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
       qc.invalidateQueries({ queryKey: notificationKeys.all })
+      void qc.invalidateQueries({ queryKey: navCountsKeys.role("supplier") })
     },
     meta: {
       successMessage: "Предложение отозвано",
@@ -105,6 +108,7 @@ export const useUpdateSupplierProposalMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supplierRfqKeys.all })
       qc.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+      void qc.invalidateQueries({ queryKey: navCountsKeys.role("supplier") })
     },
     meta: {
       successMessage: "Предложение обновлено",
