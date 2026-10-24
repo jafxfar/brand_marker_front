@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { BadgeCheck, Info, Settings } from "lucide-react"
-import { toast } from "sonner"
+import { BadgeCheck, Info, Loader2, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/bm"
 import {
@@ -18,6 +17,13 @@ import {
   type BuyerApprovalStatus,
 } from "@/lib/mock/buyer-approvals"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { isApiEnabled } from "@/lib/api/config"
+import { useHydrated } from "@/hooks/use-hydrated"
+import {
+  useApprovalsQuery,
+  useDecideApprovalMutation,
+} from "@/hooks/api/use-approvals-query"
+import type { PurchaseApproval } from "@/lib/api/approvals"
 
 type Tab = "wait" | "hist"
 
@@ -28,9 +34,35 @@ const STATUS_LABEL: Record<BuyerApprovalStatus, string> = {
   rejected: "Отклонено",
 }
 
+const mapApiApproval = (a: PurchaseApproval): BuyerApproval => ({
+  id: String(a.id),
+  whoName: a.who_name,
+  whoRole: a.who_role,
+  limitLabel: a.limit_label,
+  what: a.title,
+  supplierName: a.supplier_name,
+  amount: a.amount,
+  currency: a.currency,
+  created: a.created_at.slice(0, 10),
+  status: a.status,
+  reason: a.reason,
+})
+
 export default function CustomerApprovalsPage() {
+  const hydrated = useHydrated()
+  const useApi = isApiEnabled()
   const [tab, setTab] = useState<Tab>("wait")
-  const [items, setItems] = useState<BuyerApproval[]>(MOCK_BUYER_APPROVALS)
+  const [localItems, setLocalItems] = useState<BuyerApproval[]>(MOCK_BUYER_APPROVALS)
+
+  const { data: apiPage, isLoading } = useApprovalsQuery(
+    "all",
+    hydrated && useApi,
+  )
+  const decideMutation = useDecideApprovalMutation()
+
+  const items: BuyerApproval[] = useApi
+    ? (apiPage?.items ?? []).map(mapApiApproval)
+    : localItems
 
   const waitCount = items.filter((a) => a.status === "wait").length
   const list = useMemo(
@@ -41,12 +73,13 @@ export default function CustomerApprovalsPage() {
     [items, tab],
   )
 
-  const decide = (id: string, status: "approved" | "rejected") => {
-    setItems((prev) =>
+  const decide = async (id: string, status: "approved" | "rejected") => {
+    if (useApi) {
+      await decideMutation.mutateAsync({ id: Number(id), action: status })
+      return
+    }
+    setLocalItems((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status } : a)),
-    )
-    toast.success(
-      status === "approved" ? "Покупка согласована" : "Покупка отклонена",
     )
   }
 
@@ -76,7 +109,13 @@ export default function CustomerApprovalsPage() {
         className="mb-5"
       />
 
-      {list.length === 0 ? (
+      {useApi && isLoading ? (
+        <PageEmptyState
+          variant="card"
+          icon={<Loader2 className="animate-spin" />}
+          title="Загрузка…"
+        />
+      ) : list.length === 0 ? (
         <PageEmptyState
           variant="card"
           icon={<BadgeCheck />}
@@ -117,14 +156,16 @@ export default function CustomerApprovalsPage() {
                         type="button"
                         variant="outline"
                         className="h-9"
-                        onClick={() => decide(a.id, "rejected")}
+                        disabled={decideMutation.isPending}
+                        onClick={() => void decide(a.id, "rejected")}
                       >
                         Отклонить
                       </Button>
                       <Button
                         type="button"
                         className="h-9"
-                        onClick={() => decide(a.id, "approved")}
+                        disabled={decideMutation.isPending}
+                        onClick={() => void decide(a.id, "approved")}
                       >
                         Согласовать
                       </Button>

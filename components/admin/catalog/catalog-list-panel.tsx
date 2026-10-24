@@ -202,7 +202,7 @@ export function AdminCatalogContent({ embedded = true }: { embedded?: boolean } 
               count: viewCounts[filter.value],
             }))}
             onChange={(next) => replaceSearchParams({ view: next, page: null })}
-            className="w-full max-w-full border-0 bg-transparent p-0"
+            className="w-full"
           />
         </div>
       </PageSurface>

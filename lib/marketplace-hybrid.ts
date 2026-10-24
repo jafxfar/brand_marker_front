@@ -11,7 +11,7 @@ import type {
   MarketplaceRequest,
   MarketplaceService,
 } from "@/types/marketplace"
-import { formatCurrency, formatPrice, formatRelativeIso } from "@/lib/format"
+import { formatPrice, formatRelativeIso } from "@/lib/format"
 import { resolveFileUrl } from "@/lib/file-url"
 
 const CATEGORY_ICONS: Record<string, { icon: string; color: string; iconBg: string; iconColor: string }> = {
@@ -118,23 +118,30 @@ export const mapPublicSupplierToPerformer = (
   }
 }
 
+const formatCatalogAmount = (value: number): string =>
+  new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value)
+
 const formatCatalogPrice = (item: CatalogItemWithRelations): string => {
   const pricing = item.pricing
-  if (!pricing) return "По запросу"
+  if (!pricing) return "Цена по запросу"
   const currency = pricing.currency || "TJS"
   if (pricing.pricing_type === "tiered" && pricing.tiers.length > 0) {
-    const min = pricing.tiers.reduce(
-      (lowest, tier) => (tier.price < lowest ? tier.price : lowest),
-      pricing.tiers[0]!.price,
-    )
-    return `от ${formatCurrency(min, currency)}`
+    const prices = pricing.tiers.map((tier) => tier.price)
+    const min = Math.min(...prices)
+    const max = Math.max(...prices)
+    if (min === max) return `${formatCatalogAmount(min)} ${currency}`
+    return `${formatCatalogAmount(min)}–${formatCatalogAmount(max)} ${currency}`
   }
-  if (pricing.fixed_price != null) return `от ${formatCurrency(pricing.fixed_price, currency)}`
-  if (pricing.hourly_rate != null) return `от ${formatCurrency(pricing.hourly_rate, currency)}/ч`
+  if (pricing.fixed_price != null) {
+    return `${formatCatalogAmount(pricing.fixed_price)} ${currency}`
+  }
+  if (pricing.hourly_rate != null) {
+    return `${formatCatalogAmount(pricing.hourly_rate)} ${currency}`
+  }
   if (pricing.monthly_rate != null) {
-    return `от ${formatCurrency(pricing.monthly_rate, currency)}/мес`
+    return `${formatCatalogAmount(pricing.monthly_rate)} ${currency}`
   }
-  return "По запросу"
+  return "Цена по запросу"
 }
 
 const catalogItemImageUrl = (item: CatalogItemWithRelations): string | null => {
@@ -145,15 +152,19 @@ const catalogItemImageUrl = (item: CatalogItemWithRelations): string | null => {
 
 const catalogMoqLabel = (item: CatalogItemWithRelations): string | null => {
   const pricing = item.pricing
-  if (!pricing) return "MOQ: 1"
+  const unitAttr = item.attributes.find(
+    (attr) => /единиц|unit|ед\.?\s*изм/i.test(attr.name),
+  )
+  const unit = unitAttr?.value?.trim() || "шт"
+  if (!pricing) return `Мин. заказ: 1 ${unit}`
   if (pricing.pricing_type === "tiered" && pricing.tiers.length > 0) {
     const minQty = pricing.tiers.reduce(
       (lowest, tier) => (tier.min_qty < lowest ? tier.min_qty : lowest),
       pricing.tiers[0]!.min_qty,
     )
-    return `MOQ: ${minQty}`
+    return `Мин. заказ: ${minQty} ${unit}`
   }
-  return "MOQ: 1"
+  return `Мин. заказ: 1 ${unit}`
 }
 
 const catalogActivityLabel = (item: CatalogItemWithRelations): string | null => {
@@ -172,7 +183,10 @@ export const mapCatalogItemToService = (
   id: item.id,
   title: item.title,
   description: item.description ?? "",
-  provider: supplier?.display_name ?? company?.title ?? "Исполнитель",
+  provider:
+    supplier?.display_name
+    ?? company?.title
+    ?? (item.actor_id > 0 ? "" : "Поставщик"),
   providerId: item.actor_id,
   city: supplier?.city ?? company?.city ?? "—",
   rating:
@@ -195,6 +209,7 @@ export const mapCatalogItemToService = (
   saves: item.stats?.leads ?? 0,
   views: String(item.stats?.views ?? 0),
   categoryId: item.category?.slug ?? "services",
+  invoice: item.invoice !== false,
 })
 
 export const mapRfqToRequest = (rfq: RfqWithRelations): MarketplaceRequest => {

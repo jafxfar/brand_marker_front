@@ -204,12 +204,14 @@ export const filterPerformers = (params: {
   featured?: boolean
   scope?: string
   q?: string
+  category?: string
 }): MarketplacePerformer[] => {
   const q = params.q?.trim().toLowerCase()
   return marketplacePerformers.filter((p) => {
     if (params.verified && !p.verified) return false
     if (params.featured && !p.featured) return false
     if (params.scope === "worldwide" && !p.worldwide) return false
+    if (params.category && p.categoryId !== params.category) return false
     if (!q) return true
     const haystack = [p.name, p.category, p.city, ...p.specialties].join(" ").toLowerCase()
     return haystack.includes(q)

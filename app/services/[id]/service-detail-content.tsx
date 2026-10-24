@@ -23,6 +23,7 @@ import {
 } from "@/hooks/api/use-public-query"
 import { categoryUrl, servicesUrl } from "@/lib/marketplace-routes"
 import { mapCatalogItemToService } from "@/lib/marketplace-hybrid"
+import { useMappedMarketplaceServices } from "@/hooks/api/use-supplier-name"
 import { getPricingMoq } from "@/lib/item-display"
 import { tokenStorage } from "@/lib/api/client"
 import type {
@@ -169,14 +170,12 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
     { page: 1, pageSize: 8 },
   )
 
+  const apiRelated = useMappedMarketplaceServices(
+    useApi ? relatedCatalog?.items : null,
+    { excludeId: serviceId, limit: 4 },
+  )
   const relatedServices = useMemo(() => {
-    if (useApi) {
-      const items = relatedCatalog?.items ?? []
-      return items
-        .filter((entry) => entry.id !== serviceId)
-        .slice(0, 4)
-        .map((entry) => mapCatalogItemToService(entry))
-    }
+    if (useApi) return apiRelated
     if (!item) return []
     const sameCat = mockCatalogItems.filter(
       (entry) =>
@@ -202,7 +201,7 @@ export const ServiceDetailContent = ({ serviceId }: ServiceDetailContentProps) =
         const pub = company ? toPublicSupplierFromCompany(company, 0) : null
         return mapCatalogItemToService(entry, company ?? null, pub)
       })
-  }, [useApi, relatedCatalog, serviceId, item])
+  }, [useApi, apiRelated, serviceId, item])
 
   if (useApi && (itemLoading || (apiItem && supplierLoading))) {
     return (

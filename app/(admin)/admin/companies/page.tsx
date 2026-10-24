@@ -13,6 +13,10 @@ import {
   SegmentedControl,
 } from "@/components/layout"
 import { useAdminDashboardQuery } from "@/hooks/api/use-admin-dashboard-query"
+import {
+  emptyAdminNavCounts,
+  useAdminNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { pickHubTab } from "@/lib/admin-hub"
 
 type CompaniesHubTab = "list" | "verification" | "changes"
@@ -37,6 +41,7 @@ const CompaniesHub = () => {
   const searchParams = useSearchParams()
   const tab = pickHubTab(searchParams.get("tab"), HUB_TABS, () => true)
   const dashboardQuery = useAdminDashboardQuery()
+  const navCounts = useAdminNavCounts().data ?? emptyAdminNavCounts()
 
   const setTab = useCallback(
     (next: CompaniesHubTab) => {
@@ -62,11 +67,15 @@ const CompaniesHub = () => {
 
       <SegmentedControl
         value={tab}
-        options={HUB_TABS.map((option) =>
-          option.value === "changes"
-            ? { ...option, count: changesCount }
-            : option,
-        )}
+        options={HUB_TABS.map((option) => {
+          if (option.value === "verification" && navCounts.companies > 0) {
+            return { ...option, count: navCounts.companies }
+          }
+          if (option.value === "changes") {
+            return { ...option, count: changesCount }
+          }
+          return option
+        })}
         onChange={setTab}
         ariaLabel="Разделы проверки компаний"
       />
@@ -74,6 +83,7 @@ const CompaniesHub = () => {
       {tab === "verification" ? (
         <AdminVerificationContent embedded />
       ) : tab === "changes" ? (
+        // No company change-request API yet — pending_company_changes is always 0 on the backend.
         <PageSurface>
           <PageEmptyState
             icon={<Building2 />}

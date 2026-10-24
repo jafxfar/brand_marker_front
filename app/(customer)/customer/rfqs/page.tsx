@@ -1,12 +1,18 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Plus } from "lucide-react"
+import { FileText, Plus } from "lucide-react"
+import { useQueries } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { ListPagination } from "@/components/list-pagination"
-import { PageFrame, PageHeader, PageToolbar, PageSurface, PageEmptyState } from "@/components/layout"
-import { useQueries } from "@tanstack/react-query"
+import {
+  PageEmptyState,
+  PageFrame,
+  PageHeader,
+  PageSurface,
+  SegmentedControl,
+} from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
@@ -14,26 +20,34 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
 import {
-  BUYER_RFQ_STATUS_FILTER_OPTIONS,
+  BUYER_RFQ_V5_TABS,
   BUYER_RFQ_STATUS_FILTER_VALUES,
+  getRfqStatusesForBuyerFilter,
   type BuyerRfqStatusFilter,
 } from "@/lib/buyer-rfq-display"
-import { RfqListTable } from "@/components/cabinet/rfq/rfq-list-table"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  RFQ_TYPE_FILTER_OPTIONS,
+  RFQ_TYPE_FILTER_VALUES,
+  filterRfqsByType,
+  matchesRfqSearch,
+  type RfqTypeFilter,
+} from "@/lib/rfq-list-search"
+import { RfqListTable } from "@/components/cabinet/rfq/rfq-list-table"
+import { RfqListToolbar } from "@/components/cabinet/rfq/rfq-list-toolbar"
 import { isApiEnabled } from "@/lib/api/config"
 import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { proposalsApi } from "@/lib/api/proposals"
 import { proposalKeys } from "@/hooks/api/use-proposals-query"
+import {
+  emptyBuyerNavCounts,
+  useBuyerNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 
 const MyRfqsContent = () => {
   const hydrated = useHydrated()
   const [page, setPage] = useState(1)
+  const [searchInput, setSearchInput] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const [statusFilter, setStatusFilter] = useUrlTab<BuyerRfqStatusFilter>(
@@ -41,14 +55,72 @@ const MyRfqsContent = () => {
     BUYER_RFQ_STATUS_FILTER_VALUES,
     "all",
   )
+  const [typeFilter, setTypeFilter] = useUrlTab<RfqTypeFilter>(
+    "type",
+    RFQ_TYPE_FILTER_VALUES,
+    "all",
+  )
   const getRfqsByBuyerTab = useRfqsStore((s) => s.getRfqsByBuyerTab)
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const useApi = isApiEnabled()
-  const { data: apiRfqs, isLoading } = useRfqsQuery(statusFilter, hydrated && useApi, { page })
+  const navCounts = useBuyerNavCounts(useApi).data ?? emptyBuyerNavCounts()
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [searchInput])
+
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, statusFilter, typeFilter])
+
+  const { data: apiRfqs, isLoading } = useRfqsQuery(statusFilter, hydrated && useApi, {
+    page,
+    q: debouncedSearch || undefined,
+    type: typeFilter !== "all" ? typeFilter : undefined,
+  })
+
+  const localAll = hydrated ? getRfqsByBuyerTab(actorId, "all") : []
   const localRfqs = hydrated ? getRfqsByBuyerTab(actorId, statusFilter) : []
-  const rfqs = useApi ? (apiRfqs?.items ?? []) : localRfqs
+
+  const rfqs = useMemo(() => {
+    if (useApi) return apiRfqs?.items ?? []
+    return filterRfqsByType(
+      localRfqs.filter((rfq) => matchesRfqSearch(rfq, debouncedSearch)),
+      typeFilter,
+    )
+  }, [useApi, apiRfqs, localRfqs, debouncedSearch, typeFilter])
+
   const totalPages = useApi ? (apiRfqs?.total_pages ?? 0) : 1
+  const hasFilters = Boolean(debouncedSearch) || typeFilter !== "all" || statusFilter !== "all"
+
+  const tabCounts = useMemo(() => {
+    if (useApi) {
+      return {
+        all: undefined as number | undefined,
+        quotes: navCounts.rfqs,
+        deal: undefined as number | undefined,
+        draft: undefined as number | undefined,
+        closed: undefined as number | undefined,
+      }
+    }
+    const typed = filterRfqsByType(
+      localAll.filter((rfq) => matchesRfqSearch(rfq, debouncedSearch)),
+      typeFilter,
+    )
+    const count = (tab: BuyerRfqStatusFilter) => {
+      const statuses = getRfqStatusesForBuyerFilter(tab)
+      if (statuses === null) return typed.length
+      return typed.filter((r) => statuses.includes(r.status)).length
+    }
+    return {
+      all: count("all"),
+      quotes: count("quotes"),
+      deal: count("deal"),
+      draft: count("draft"),
+      closed: count("closed"),
+    }
+  }, [useApi, localAll, debouncedSearch, typeFilter, navCounts.rfqs])
 
   const proposalQueries = useQueries({
     queries: (useApi ? rfqs : []).map((rfq) => ({
@@ -64,61 +136,74 @@ const MyRfqsContent = () => {
     return proposalQueries[index]?.data?.items?.length ?? 0
   }
 
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value as BuyerRfqStatusFilter)
-  }
-
   return (
     <PageFrame>
       <PageHeader
-        title="Мои заявки"
-        description="Ваши запросы исполнителям и их статусы"
+        title="Заявки"
+        description="Опишите закупку — поставщики пришлют коммерческие предложения"
         actions={
           <Button asChild size="lg">
             <Link href="/customer/rfqs/new">
-              <Plus size={17} /> Создать заявку
+              <Plus size={17} /> Новая заявка
             </Link>
           </Button>
         }
       />
 
-      <PageToolbar label="Статус" htmlFor="rfq-status-filter">
-        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-          <SelectTrigger
-            id="rfq-status-filter"
-            className="w-[220px]"
-            aria-label="Фильтр по статусу заявки"
-          >
-            <SelectValue placeholder="Все статусы" />
-          </SelectTrigger>
-          <SelectContent>
-            {BUYER_RFQ_STATUS_FILTER_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </PageToolbar>
-
-      <PageSurface>
-        {useApi && isLoading ? (
-          <PageEmptyState title="Загрузка…" />
-        ) : (
-          <RfqListTable
-            rfqs={rfqs}
-            hydrated={hydrated}
-            getProposalCount={getProposalCount}
-          />
-        )}
-      </PageSurface>
-    
-      <ListPagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
+      <RfqListToolbar
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="Поиск по названию или номеру"
+        filterValue={typeFilter}
+        filterOptions={RFQ_TYPE_FILTER_OPTIONS}
+        onFilterChange={setTypeFilter}
+        filterAriaLabel="Тип заявки"
       />
-</PageFrame>
+
+      <SegmentedControl
+        value={statusFilter}
+        options={BUYER_RFQ_V5_TABS.map((tab) => {
+          const count = tabCounts?.[tab.value]
+          return count == null ? tab : { ...tab, count }
+        })}
+        onChange={(value) => {
+          setStatusFilter(value)
+          setPage(1)
+        }}
+        ariaLabel="Статус заявки"
+      />
+
+      {useApi && isLoading ? (
+        <PageSurface className="animate-pulse p-12">
+          <div className="mx-auto h-4 w-1/3 rounded bg-secondary" />
+        </PageSurface>
+      ) : rfqs.length === 0 ? (
+        <PageSurface>
+          <PageEmptyState
+            icon={<FileText />}
+            title={hasFilters ? "Заявки не найдены" : "Заявок нет"}
+            description={
+              hasFilters
+                ? "Измените поиск или фильтры."
+                : "Создайте заявку — это займёт 3 минуты."
+            }
+          />
+          {!hasFilters ? (
+            <div className="flex justify-center pb-10">
+              <Button asChild size="lg">
+                <Link href="/customer/rfqs/new">
+                  <Plus size={17} /> Новая заявка
+                </Link>
+              </Button>
+            </div>
+          ) : null}
+        </PageSurface>
+      ) : (
+        <RfqListTable rfqs={rfqs} getProposalCount={getProposalCount} />
+      )}
+
+      <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+    </PageFrame>
   )
 }
 

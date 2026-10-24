@@ -19,6 +19,10 @@ import { filterDealsByTab } from "@/lib/process/deal-stages"
 import { isApiEnabled } from "@/lib/api/config"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 import {
+  emptyBuyerNavCounts,
+  useBuyerNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
+import {
   PageEmptyState,
   PageFrame,
   PageHeader,
@@ -39,6 +43,7 @@ const BuyerContractsContent = () => {
     "active",
   )
   const useApi = isApiEnabled()
+  const navCounts = useBuyerNavCounts(useApi).data ?? emptyBuyerNavCounts()
   const { data: apiContracts, isLoading } = useContractsQuery(hydrated && useApi, { page })
 
   const allContracts: ContractWithRelations[] = useApi
@@ -48,10 +53,10 @@ const BuyerContractsContent = () => {
       : []
   const totalPages = useApi ? (apiContracts?.total_pages ?? 0) : 1
 
-  const activeCount = useMemo(
-    () => filterDealsByTab(allContracts, "active", "buyer").length,
-    [allContracts],
-  )
+  const activeCount = useMemo(() => {
+    if (useApi) return navCounts.deals
+    return filterDealsByTab(allContracts, "active", "buyer").length
+  }, [useApi, navCounts.deals, allContracts])
   const completedCount = useMemo(
     () => filterDealsByTab(allContracts, "completed", "buyer").length,
     [allContracts],

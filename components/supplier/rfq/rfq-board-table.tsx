@@ -1,18 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { Check, Clock, Send, XCircle } from "lucide-react"
 import type { ProposalStatus, RfqWithRelations } from "@/types"
+import { StatusBadge } from "@/components/bm"
 import { cn } from "@/lib/utils"
-import { useCategoryOptions } from "@/hooks/use-category-options"
-import { formatCurrency, formatDaysLeft, formatRfqBudget, getDaysLeft } from "@/lib/format"
-import { proposalStatusMeta } from "@/lib/proposal-display"
-import { isRfqInvitedFor } from "@/lib/rfq-display"
+import { formatCurrency, formatRfqBudget, getDaysLeft, pluralRu } from "@/lib/format"
+import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
 import { isCatalogOfferRfq, isPendingCatalogOffer } from "@/lib/rfq-board"
-import { Button } from "@/components/ui/button"
-import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
-import { InvitedRfqBadge } from "@/components/supplier/rfq/invited-rfq-badge"
-import { CatalogOfferBadge } from "@/components/supplier/rfq/catalog-offer-badge"
 
 type MyProposalSummary = {
   price: number
@@ -25,180 +19,218 @@ type RfqBoardTableProps = {
   actorId: number
   getMyProposal?: (rfqId: string) => MyProposalSummary | undefined
   getBuyerName: (rfq: RfqWithRelations) => string
-  getBuyerRating: (rfq: RfqWithRelations) => number
+  getBuyerVerified: (rfq: RfqWithRelations) => boolean
   onSubmitProposal: (rfqId: string) => void
 }
 
 const URGENT_DAYS = 3
 
-const statusIcon = (status: ProposalStatus) => {
-  if (status === "rejected" || status === "withdrawn" || status === "archived") {
-    return <XCircle size={16} aria-hidden="true" />
-  }
-  return <Check size={16} aria-hidden="true" />
+const formatRfqNo = (rfqId: string): string => {
+  const digits = rfqId.replace(/\D/g, "")
+  const short = (digits || rfqId).slice(-4)
+  return `З‑${short}`
 }
 
-const statusToneClass = (status: ProposalStatus) => {
-  if (status === "rejected") return "text-destructive"
-  if (status === "pending_supplier") return "text-amber-600"
-  if (status === "accepted" || status === "submitted" || status === "viewed") {
-    return "text-primary"
+const positionsLine = (rfq: RfqWithRelations): string => {
+  if (rfq.type === "product") {
+    return `${rfq.quantity} шт.`
   }
-  if (status === "shortlisted") return "text-amber-600"
-  return "text-muted-foreground"
+  return "услуга"
 }
+
+const isExpired = (rfq: RfqWithRelations) =>
+  rfq.status === "expired" || !OPEN_RFQ_STATUSES.includes(rfq.status)
 
 export const RfqBoardTable = ({
   rfqs,
-  actorId,
   getMyProposal,
   getBuyerName,
-  getBuyerRating,
+  getBuyerVerified,
   onSubmitProposal,
-}: RfqBoardTableProps) => {
-  const { getRfqCategoryLabel } = useCategoryOptions()
+}: RfqBoardTableProps) => (
+  <>
+    <div className="hidden overflow-x-auto rounded-2xl border border-line bg-white md:block">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-line">
+            {(["№", "Заявка", "Покупатель", "Бюджет", "Осталось", ""] as const).map(
+              (label) => (
+                <th
+                  key={label || "action"}
+                  className="px-5 py-3.5 text-left text-[13px] font-semibold text-mute"
+                >
+                  {label}
+                </th>
+              ),
+            )}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {rfqs.map((rfq) => {
+            const href = `/supplier/rfqs/${rfq.id}`
+            const myProposal =
+              getMyProposal?.(rfq.id) ??
+              (rfq.my_proposal_status
+                ? {
+                    price: 0,
+                    currency: rfq.currency,
+                    status: rfq.my_proposal_status,
+                  }
+                : undefined)
+            const pendingOffer = isPendingCatalogOffer(myProposal?.status)
+            const responded = Boolean(myProposal) && !pendingOffer
+            const expired = isExpired(rfq)
+            const daysLeft = getDaysLeft(rfq.deadline)
+            const urgent = !expired && daysLeft <= URGENT_DAYS
+            const verified = getBuyerVerified(rfq)
+            const catalog = isCatalogOfferRfq(rfq)
 
-  return (
-    <ul className="grid gap-3">
+            return (
+              <tr
+                key={rfq.id}
+                className={cn("hover:bg-canvas", expired && "opacity-60")}
+              >
+                <td className="whitespace-nowrap px-5 py-3.5">
+                  <Link href={href} className="mono text-mute">
+                    {formatRfqNo(rfq.id)}
+                  </Link>
+                </td>
+                <td className="px-5 py-3.5">
+                  <Link href={href} className="block min-w-0">
+                    <b className="font-semibold text-ink line-clamp-2">{rfq.title}</b>
+                    <div className="text-[12.5px] text-mute">{positionsLine(rfq)}</div>
+                  </Link>
+                </td>
+                <td className="px-5 py-3.5">
+                  <Link href={href} className="block">
+                    <span className="text-ink">{getBuyerName(rfq)}</span>
+                    <div
+                      className={cn(
+                        "text-[12px]",
+                        verified ? "text-safe-700" : "text-amber-800",
+                      )}
+                    >
+                      {verified ? "проверена" : "не проверена"}
+                    </div>
+                  </Link>
+                </td>
+                <td className="whitespace-nowrap px-5 py-3.5">
+                  <Link href={href} className="mono text-ink">
+                    {catalog && myProposal?.price
+                      ? formatCurrency(myProposal.price, myProposal.currency)
+                      : formatRfqBudget(
+                          rfq.budget_type,
+                          rfq.budget_from,
+                          rfq.budget_to,
+                          rfq.currency,
+                        )}
+                  </Link>
+                </td>
+                <td className="whitespace-nowrap px-5 py-3.5">
+                  <Link href={href} className="block">
+                    {expired ? (
+                      <span className="text-[13px] text-amber-800">приём закрыт</span>
+                    ) : (
+                      <span
+                        className={cn(
+                          "mono",
+                          urgent && "font-semibold text-red-700",
+                        )}
+                      >
+                        {daysLeft}{" "}
+                        {pluralRu(daysLeft, "день", "дня", "дней")}
+                      </span>
+                    )}
+                  </Link>
+                </td>
+                <td className="px-5 py-3.5 text-right">
+                  {responded ? (
+                    <Link href={href} className="inline-flex">
+                      <StatusBadge status="sent" label="Отправлено" />
+                    </Link>
+                  ) : expired ? null : (
+                    <button
+                      type="button"
+                      onClick={() => onSubmitProposal(rfq.id)}
+                      className="text-[13px] font-semibold whitespace-nowrap text-brand-700 hover:underline"
+                    >
+                      Ответить →
+                    </button>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+
+    <ul className="grid gap-2 md:hidden">
       {rfqs.map((rfq) => {
-        const myProposal =
-          getMyProposal?.(rfq.id) ??
-          (rfq.my_proposal_status
-            ? {
-                price: 0,
-                currency: rfq.currency,
-                status: rfq.my_proposal_status,
-              }
-            : undefined)
-        const catalogOffer = isCatalogOfferRfq(rfq)
+        const href = `/supplier/rfqs/${rfq.id}`
+        const myProposal = getMyProposal?.(rfq.id)
         const pendingOffer = isPendingCatalogOffer(myProposal?.status)
         const responded = Boolean(myProposal) && !pendingOffer
-        const buyerRating = getBuyerRating(rfq)
+        const expired = isExpired(rfq)
         const daysLeft = getDaysLeft(rfq.deadline)
-        const urgent = daysLeft <= URGENT_DAYS
-        const statusMeta = myProposal
-          ? proposalStatusMeta[myProposal.status]
-          : null
+        const urgent = !expired && daysLeft <= URGENT_DAYS
+        const verified = getBuyerVerified(rfq)
 
         return (
-          <li
-            key={rfq.id}
-            className={cn(
-              "grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5",
-              pendingOffer
-                ? "border-amber-300/80 hover:border-amber-400 transition-colors"
-                : responded
-                  ? "border-border"
-                  : "border-border hover:border-primary transition-colors",
-            )}
-          >
-            <div className="min-w-0 grid gap-1.5">
-              <div className="flex flex-wrap gap-2">
-                {catalogOffer ? (
-                  <CatalogOfferBadge className="justify-self-start" />
-                ) : isRfqInvitedFor(rfq, actorId) ? (
-                  <InvitedRfqBadge className="justify-self-start" />
-                ) : null}
-              </div>
-              <Link
-                href={`/supplier/rfqs/${rfq.id}`}
-                className="font-bold text-foreground hover:text-primary line-clamp-2"
-              >
-                {rfq.title}
-              </Link>
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                <span>
+          <li key={rfq.id}>
+            <div
+              className={cn(
+                "grid gap-2 rounded-2xl border border-line bg-white p-3.5",
+                expired && "opacity-60",
+              )}
+            >
+              <Link href={href} className="grid gap-1">
+                <span className="flex justify-between gap-2">
+                  <span className="mono text-[12px] text-mute">
+                    {formatRfqNo(rfq.id)}
+                  </span>
+                  {responded ? (
+                    <StatusBadge status="sent" label="Отправлено" />
+                  ) : expired ? (
+                    <span className="text-[12px] text-amber-800">приём закрыт</span>
+                  ) : (
+                    <span
+                      className={cn(
+                        "text-[12px] font-semibold",
+                        urgent ? "text-red-700" : "text-brand-700",
+                      )}
+                    >
+                      {daysLeft} {pluralRu(daysLeft, "день", "дня", "дней")}
+                    </span>
+                  )}
+                </span>
+                <b className="text-[14px] leading-snug text-ink">{rfq.title}</b>
+                <span className="text-[12.5px] text-mute">
                   {getBuyerName(rfq)}
-                  {rfq.buyer?.kind === "individual" ? " · частное лицо" : ""}
-                </span>
-                {buyerRating > 0 ? <BuyerRating rating={buyerRating} compact /> : null}
-                <span aria-hidden="true">·</span>
-                <span>{getRfqCategoryLabel(rfq.category_id)}</span>
-              </p>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                <span className="font-semibold tnum">
-                  {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
-                </span>
-                {!catalogOffer && (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1",
-                      urgent ? "font-semibold text-amber-600" : "text-muted-foreground",
+                  {verified ? " · проверена" : " · не проверена"} · бюджет{" "}
+                  <span className="mono">
+                    {formatRfqBudget(
+                      rfq.budget_type,
+                      rfq.budget_from,
+                      rfq.budget_to,
+                      rfq.currency,
                     )}
-                  >
-                    <Clock size={14} aria-hidden="true" />
-                    {formatDaysLeft(daysLeft)}
                   </span>
-                )}
-              </div>
+                </span>
+              </Link>
+              {!responded && !expired ? (
+                <button
+                  type="button"
+                  onClick={() => onSubmitProposal(rfq.id)}
+                  className="justify-self-start text-[13px] font-semibold text-brand-700"
+                >
+                  Ответить →
+                </button>
+              ) : null}
             </div>
-
-            {pendingOffer && myProposal ? (
-              <div className="grid gap-1 sm:justify-items-end">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-sm font-semibold",
-                    statusToneClass(myProposal.status),
-                  )}
-                >
-                  Ждёт вашего решения
-                </span>
-                {myProposal.price > 0 ? (
-                  <span className="text-sm text-muted-foreground">
-                    Цена заказчика:{" "}
-                    <b className="text-foreground tnum">
-                      {formatCurrency(myProposal.price, myProposal.currency)}
-                    </b>
-                  </span>
-                ) : null}
-                <Button asChild size="sm" className="mt-1">
-                  <Link href={`/supplier/rfqs/${rfq.id}`}>Принять или отклонить</Link>
-                </Button>
-              </div>
-            ) : responded && myProposal && statusMeta ? (
-              <div className="grid gap-1 sm:justify-items-end">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-sm font-semibold",
-                    statusToneClass(myProposal.status),
-                  )}
-                >
-                  {statusIcon(myProposal.status)}
-                  {myProposal.status === "submitted" || myProposal.status === "viewed"
-                    ? "Предложение отправлено"
-                    : myProposal.status === "rejected"
-                      ? "Предложение отклонено"
-                      : myProposal.status === "accepted"
-                        ? "Предложение принято"
-                        : myProposal.status === "archived"
-                          ? "Выбран другой исполнитель"
-                          : statusMeta.label}
-                </span>
-                {myProposal.price > 0 ? (
-                  <span className="text-sm text-muted-foreground">
-                    Ваша цена:{" "}
-                    <b className="text-foreground tnum">
-                      {formatCurrency(myProposal.price, myProposal.currency)}
-                    </b>
-                  </span>
-                ) : null}
-                <Button asChild variant="outline" size="sm" className="mt-1">
-                  <Link href={`/supplier/rfqs/${rfq.id}`}>Подробнее</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2 sm:justify-end">
-                <Button asChild variant="outline">
-                  <Link href={`/supplier/rfqs/${rfq.id}`}>Подробнее</Link>
-                </Button>
-                <Button onClick={() => onSubmitProposal(rfq.id)}>
-                  <Send /> Предложить цену
-                </Button>
-              </div>
-            )}
           </li>
         )
       })}
     </ul>
-  )
-}
+  </>
+)

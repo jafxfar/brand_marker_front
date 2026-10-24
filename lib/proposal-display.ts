@@ -1,5 +1,23 @@
 import type { ProposalStatus } from "@/types"
 
+/** Map proposal status → BM StatusBadge key + optional label. */
+export const proposalBadgeStatus = (
+  status: ProposalStatus,
+): { status: string; label: string } => {
+  if (status === "submitted" || status === "viewed") {
+    return { status: "sent", label: "Отправлено" }
+  }
+  if (status === "shortlisted") return { status: "wait", label: "В избранном" }
+  if (status === "pending_supplier") {
+    return { status: "pending", label: "Ожидает исполнителя" }
+  }
+  if (status === "accepted") return { status: "won", label: "Принято" }
+  if (status === "rejected") return { status: "rejected", label: "Отклонено" }
+  if (status === "withdrawn") return { status: "withdrawn", label: "Отозвано" }
+  if (status === "archived") return { status: "archived", label: "В архиве" }
+  return { status, label: status }
+}
+
 export const MY_PROPOSAL_FILTER_STATUSES = [
   "submitted",
   "shortlisted",

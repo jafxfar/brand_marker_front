@@ -1,6 +1,7 @@
 "use client"
 
 import { use, useState } from "react"
+import { formatCurrency } from "@/lib/format"
 import Link from "next/link"
 import {
   FileInput,
@@ -20,6 +21,9 @@ import { proposalStatusMeta } from "@/lib/proposal-display"
 import type { ProposalStatus } from "@/types"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 
+const formatMoney = (value: number | null | undefined, currency?: string | null) =>
+  value == null ? "—" : formatCurrency(value, currency || "TJS")
+
 const sections = [
   ["supplier", "Исполнитель"],
   ["buyer", "Покупатель"],
@@ -38,12 +42,6 @@ const DetailSkeleton = () => (
   </PageFrame>
 )
 
-const formatMoney = (value: number, currency: string) =>
-  new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: currency || "TJS",
-    maximumFractionDigits: 0,
-  }).format(value)
 
 type PageProps = {
   params: Promise<{ id: string }>

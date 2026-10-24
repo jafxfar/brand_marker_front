@@ -8,6 +8,11 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { isApiEnabled } from "@/lib/api/config"
+import { TwoFactorSettings } from "@/components/auth/two-factor-settings"
+import { authApi } from "@/lib/api/auth"
+import { getApiErrorMessage } from "@/lib/api/client"
+import { toast } from "sonner"
 
 export default function SupplierProfilePage() {
   const router = useRouter()
@@ -15,6 +20,7 @@ export default function SupplierProfilePage() {
   const user = useAuthStore((s) => s.user)
   const updateProfile = useAuthStore((s) => s.updateProfile)
   const logout = useAuthStore((s) => s.logout)
+  const useApi = isApiEnabled()
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -22,6 +28,7 @@ export default function SupplierProfilePage() {
   const [city, setCity] = useState("")
   const [hasDelivery, setHasDelivery] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -33,16 +40,35 @@ export default function SupplierProfilePage() {
     }
   }, [user])
 
-  const handleSave = (event: React.FormEvent) => {
+  const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
-    updateProfile({
-      name: name.trim() || user?.name || "",
-      phone: phone.trim() || undefined,
-      city: city.trim() || undefined,
-      hasDelivery,
-    })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    const trimmedName = name.trim() || user?.name || ""
+    const parts = trimmedName.split(/\s+/)
+    const firstName = parts[0] ?? ""
+    const lastName = parts.slice(1).join(" ") || firstName
+
+    setSaving(true)
+    try {
+      if (useApi) {
+        await authApi.updateProfile({
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone.trim() || null,
+        })
+      }
+      updateProfile({
+        name: trimmedName,
+        phone: phone.trim() || undefined,
+        city: city.trim() || undefined,
+        hasDelivery,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Не удалось сохранить профиль"))
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleLogout = () => {
@@ -62,7 +88,8 @@ export default function SupplierProfilePage() {
         description="Контактные данные и настройки доставки"
       />
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <div className="space-y-6">
+      <form onSubmit={(e) => void handleSave(e)} className="space-y-6">
         <PageSurface className="space-y-5 p-5 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -114,17 +141,21 @@ export default function SupplierProfilePage() {
           >
             <LogOut size={16} /> Выйти
           </Button>
-          <Button type="submit" size="lg">
+          <Button type="submit" size="lg" disabled={saving}>
             {saved ? (
               <>
                 <Check size={16} /> Сохранено
               </>
+            ) : saving ? (
+              "Сохранение…"
             ) : (
               "Сохранить изменения"
             )}
           </Button>
         </div>
       </form>
+      <TwoFactorSettings />
+      </div>
     </PageFrame>
   )
 }

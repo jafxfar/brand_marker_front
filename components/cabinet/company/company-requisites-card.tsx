@@ -3,7 +3,7 @@
 import { Clock, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { initialsFromName } from "@/lib/mock/buyer-employees"
+import { initialsFromName } from "@/lib/company-team"
 
 export type CompanyRequisites = {
   name: string

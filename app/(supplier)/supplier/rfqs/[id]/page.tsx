@@ -1,12 +1,11 @@
 "use client"
 
-import { use, useState } from "react"
+import { use } from "react"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
-import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
-import { NextActionCard } from "@/components/process"
+import { MessageSquare } from "lucide-react"
+import { PageFrame, PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
-import { statusPillClass } from "@/components/ui/status-badge"
+import { StatusBadge, VerifiedChip } from "@/components/bm"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
@@ -16,14 +15,12 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { getRfqBuyerName, getRfqBuyerSummary } from "@/lib/buyer-display"
 import { useCategoryOptions } from "@/hooks/use-category-options"
-import { getRfqRequirements } from "@/lib/rfq-requirements"
+import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
 import {
-  isRfqInvitedFor,
-  OPEN_RFQ_STATUSES,
-  rfqStatusMeta,
-  rfqTypeLabel,
-} from "@/lib/rfq-display"
-import { formatIsoDate, formatRfqBudget } from "@/lib/format"
+  buyerRfqBadgeLabel,
+  buyerRfqBadgeStatus,
+} from "@/lib/buyer-rfq-display"
+import { formatIsoDate, formatRfqNo } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -31,18 +28,17 @@ import {
   useSubmitSupplierProposalMutation,
   useSupplierProposalsQuery,
   useSupplierRfqQuery,
+  useUpdateSupplierProposalMutation,
+  useWithdrawProposalMutation,
 } from "@/hooks/api/use-supplier-rfqs-query"
-import { RfqDescriptionSection } from "@/components/rfq/rfq-description-section"
-import { RfqRequirementsSection } from "@/components/rfq/rfq-requirements-section"
+import {
+  RfqPositionsCard,
+  RfqTermsCard,
+} from "@/components/rfq/rfq-v5-detail-cards"
+import { SupplierLeadAside } from "@/components/supplier/rfq/supplier-lead-aside"
 import { RfqAttachmentsSection } from "@/components/rfq/rfq-attachments-section"
-import { RfqBuyerProfileCard } from "@/components/supplier/rfq/rfq-buyer-profile-card"
-import { RfqProposalsList } from "@/components/supplier/rfq/rfq-proposals-list"
-import { RfqSubmitProposalCard } from "@/components/supplier/rfq/rfq-submit-proposal-card"
-import { InvitedRfqBadge } from "@/components/supplier/rfq/invited-rfq-badge"
-import { CatalogOfferBadge } from "@/components/supplier/rfq/catalog-offer-badge"
-import { isCatalogOfferRfq } from "@/lib/rfq-board"
-import { ProposalDialog } from "@/components/supplier/proposal-dialog"
 import type { Currency } from "@/types"
+import type { ProposalFormValues } from "@/components/supplier/proposal-form"
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -56,28 +52,35 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   const { getRfqCategoryLabel } = useCategoryOptions()
   const getRfqWithRelations = useRfqsStore((s) => s.getRfqWithRelations)
   const getProposalForRfq = useProposalsStore((s) => s.getProposalForRfq)
-  const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const submitProposalLocal = useProposalsStore((s) => s.submitProposal)
+  const patchProposalLocal = useProposalsStore((s) => s.patchProposal)
+  const updateProposalStatus = useProposalsStore((s) => s.updateProposalStatus)
   const getContractByRfqId = useContractsStore((s) => s.getContractByRfqId)
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [dialogOpen, setDialogOpen] = useState(false)
 
   const useApi = isApiEnabled()
   const queryClient = useQueryClient()
   const { data: apiRfq, isLoading } = useSupplierRfqQuery(id, hydrated && useApi)
   const { data: apiProposals } = useSupplierProposalsQuery(hydrated && useApi)
   const submitProposalMutation = useSubmitSupplierProposalMutation()
+  const updateProposalMutation = useUpdateSupplierProposalMutation()
+  const withdrawMutation = useWithdrawProposalMutation()
 
   const localRfq = hydrated ? getRfqWithRelations(id) : undefined
   const rfq = useApi ? apiRfq : localRfq
-  const myProposal = useApi
-    ? apiProposals?.items?.find((p) => p.rfq_id === id)
-    : rfq
-      ? getProposalForRfq(rfq.id, actorId)
-      : undefined
-  const proposals = rfq ? (useApi ? [] : getProposalsForRfq(rfq.id)) : []
+  const myProposal = (() => {
+    if (useApi) {
+      return apiProposals?.items?.find(
+        (p) => p.rfq_id === id && p.status !== "withdrawn",
+      )
+    }
+    if (!rfq) return undefined
+    const found = getProposalForRfq(rfq.id, actorId)
+    return found && found.status !== "withdrawn" ? found : undefined
+  })()
   const buyer = rfq ? getRfqBuyerSummary(rfq, getCompany) : undefined
   const buyerName = rfq ? getRfqBuyerName(rfq, getCompany) : "Заказчик"
+  const verified = buyer?.verification_status === "verified"
 
   if (!hydrated || (useApi && isLoading)) {
     return (
@@ -91,13 +94,15 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
   if (!rfq) {
     return (
       <PageFrame>
-        <PageHeader title="Заявка не найдена" backHref="/supplier/rfqs" backLabel="Вернуться к заявкам" />
+        <PageHeader
+          title="Заявка не найдена"
+          backHref="/supplier/rfqs"
+          backLabel="Заявки покупателей"
+        />
       </PageFrame>
     )
   }
 
-  const meta = rfqStatusMeta[rfq.status]
-  const requirements = getRfqRequirements(rfq)
   const localContract = useApi ? undefined : getContractByRfqId(rfq.id)
   const contractId = useApi
     ? rfq.my_contract_id ?? null
@@ -105,12 +110,15 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
       ? localContract.id
       : null
   const isRfqOpen = OPEN_RFQ_STATUSES.includes(rfq.status)
+  const deadlineLabel = formatIsoDate(rfq.deadline)
 
-  const handleSubmitProposal = (values: {
-    price: number
-    delivery_time: string
-    message: string
-  }) => {
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.all })
+    void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.detail(id) })
+    void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+  }
+
+  const handleSubmit = (values: ProposalFormValues) => {
     if (useApi) {
       void submitProposalMutation.mutateAsync({
         rfqId: rfq.id,
@@ -121,7 +129,6 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
           message: values.message,
         },
       })
-      setDialogOpen(false)
       return
     }
     submitProposalLocal({
@@ -134,105 +141,121 @@ export default function SupplierRfqDetailPage({ params }: PageProps) {
     })
   }
 
+  const handleUpdate = (proposalId: number, values: ProposalFormValues) => {
+    if (useApi) {
+      void updateProposalMutation.mutateAsync({
+        id: proposalId,
+        data: {
+          price: values.price,
+          currency: rfq.currency,
+          delivery_time: values.delivery_time,
+          message: values.message,
+        },
+      })
+      return
+    }
+    patchProposalLocal(proposalId, {
+      price: values.price,
+      currency: rfq.currency as Currency,
+      delivery_time: values.delivery_time,
+      message: values.message,
+    })
+  }
+
+  const handleWithdraw = (proposalId: number) => {
+    if (useApi) {
+      void withdrawMutation.mutateAsync(proposalId)
+      return
+    }
+    updateProposalStatus(proposalId, "withdrawn")
+  }
+
+  const description = [
+    getRfqCategoryLabel(rfq.category_id),
+    `приём КП до ${deadlineLabel}`,
+  ].join(" · ")
+
   return (
     <PageFrame>
       <PageHeader
-        title={rfq.title}
-        description={`${getRfqCategoryLabel(rfq.category_id)} · ${buyerName}`}
+        title={
+          <>
+            <span className="mono mr-2 text-[18px] font-semibold text-mute">
+              {formatRfqNo(rfq.id)}
+            </span>
+            {rfq.title}
+          </>
+        }
+        description={description}
         backHref="/supplier/rfqs"
-        backLabel="Назад к заявкам"
+        backLabel="Заявки покупателей"
+        actions={
+          <StatusBadge
+            status={buyerRfqBadgeStatus(rfq.status)}
+            label={buyerRfqBadgeLabel(rfq.status)}
+          />
+        }
       />
 
-      {contractId ? (
-        <NextActionCard
-          hot
-          title="Ваше предложение приняли"
-          text={`${buyerName} выбрал вас исполнителем. Сделка создана — перейдите в неё, чтобы следить за оплатой и сдавать работу.`}
-          actions={
-            <Button asChild>
-              <Link href={`/supplier/contracts/${contractId}`}>
-                Перейти к сделке <ArrowRight />
-              </Link>
-            </Button>
-          }
-        />
-      ) : null}
+      <div className="grid items-start gap-5 lg:grid-cols-[1fr_400px]">
+        <div className="grid gap-5">
+          <section className="rounded-xl border border-line bg-white p-5">
+            <h2 className="text-[12px] font-semibold uppercase tracking-[0.06em] text-mute">
+              Покупатель
+            </h2>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-canvas text-[14px] font-semibold text-ink">
+                {buyerName.slice(0, 1).toUpperCase()}
+              </div>
+              <div>
+                <b className="text-ink">{buyerName}</b>
+                <div className="mt-0.5">
+                  <VerifiedChip verified={verified} />
+                </div>
+              </div>
+            </div>
+            <p className="mt-3 text-[13px] text-mute">
+              Контакты покупателя откроются после выбора вашего КП. Вопросы — в
+              чате площадки.
+            </p>
+            {myProposal ? (
+              <div className="mt-3">
+                <Button asChild variant="outline" size="sm" className="h-9">
+                  <Link href={`/supplier/messages?proposal=${myProposal.id}`}>
+                    <MessageSquare size={15} /> Задать вопрос
+                  </Link>
+                </Button>
+              </div>
+            ) : null}
+          </section>
 
-      <PageSurface className="p-6">
-        <div className="mb-6 flex flex-wrap gap-2">
-          <span className={`${statusPillClass} ${meta.className}`}>
-            {meta.label}
-          </span>
-          <span className={`${statusPillClass} bg-secondary text-foreground`}>
-            {rfqTypeLabel[rfq.type]}
-          </span>
-          {isCatalogOfferRfq(rfq) ? (
-            <CatalogOfferBadge />
-          ) : isRfqInvitedFor(rfq, actorId) ? (
-            <InvitedRfqBadge />
+          <RfqPositionsCard rfq={rfq} />
+          <RfqTermsCard
+            rfq={rfq}
+            paymentLabel="Гарантия сделки: покупатель оплачивает до отгрузки"
+          />
+          {rfq.attachments?.length ? (
+            <RfqAttachmentsSection attachments={rfq.attachments} />
           ) : null}
         </div>
-        <div className="grid grid-cols-2 gap-4 border-t border-border pt-6">
-          <div>
-            <p className="text-xs text-muted-foreground">Бюджет</p>
-            <p className="mt-0.5 text-sm font-semibold text-foreground">
-              {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Принимать ответы до</p>
-            <p className="mt-0.5 text-sm font-semibold text-foreground">
-              {formatIsoDate(rfq.deadline)}
-            </p>
-          </div>
-        </div>
-      </PageSurface>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <RfqDescriptionSection description={rfq.description} />
-          <RfqRequirementsSection requirements={requirements} />
-          <RfqAttachmentsSection attachments={rfq.attachments} />
-          {!useApi && (
-            <RfqProposalsList
-              proposals={proposals}
-              currentActorId={actorId}
-              getSupplierName={(supplierId) =>
-                getCompany(supplierId)?.title ?? `Исполнитель #${supplierId}`
-              }
-            />
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <RfqBuyerProfileCard buyer={buyer} />
-          <RfqSubmitProposalCard
-            myProposal={myProposal}
-            myProposalStatus={myProposal?.status ?? rfq.my_proposal_status}
-            contractId={contractId}
-            isRfqOpen={isRfqOpen}
-            buyerName={buyerName}
-            onSubmit={() => setDialogOpen(true)}
-            onOfferResolved={() => {
-              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.all })
-              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.detail(id) })
-              void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
-            }}
-          />
-        </div>
+        <SupplierLeadAside
+          isRfqOpen={isRfqOpen}
+          deadlineLabel={deadlineLabel}
+          buyerName={buyerName}
+          myProposal={myProposal}
+          myProposalStatus={myProposal?.status ?? rfq.my_proposal_status}
+          contractId={contractId}
+          currency={rfq.currency}
+          budgetType={rfq.budget_type}
+          budgetFrom={rfq.budget_from}
+          budgetTo={rfq.budget_to}
+          onSubmit={handleSubmit}
+          onUpdate={handleUpdate}
+          onWithdraw={handleWithdraw}
+          onOfferResolved={invalidate}
+        />
       </div>
-
-      <ProposalDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        rfqTitle={rfq.title}
-        budgetType={rfq.budget_type}
-        budgetFrom={rfq.budget_from}
-        budgetTo={rfq.budget_to}
-        currency={rfq.currency}
-        defaultPrice={rfq.budget_from ?? rfq.budget_to}
-        onSubmit={handleSubmitProposal}
-      />
     </PageFrame>
   )
 }

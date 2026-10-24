@@ -15,8 +15,7 @@ import {
   AttentionList,
   type AttentionItem,
 } from "@/components/admin/dashboard/attention-list"
-import { formatCurrency } from "@/lib/format"
-import { pluralRu } from "@/lib/format"
+import { formatCurrency, formatCurrencyExact, pluralRu } from "@/lib/format"
 import type { AdminDashboardMetrics } from "@/lib/api/admin"
 
 const formatDateRu = (date: Date) =>
@@ -75,7 +74,7 @@ const buildQueues = (m: AdminDashboardMetrics): QueueTile[] => [
     label: "Переписки",
     hint: "с признаками обхода площадки",
     count: m.flagged_chats ?? 0,
-    href: "/admin/support",
+    href: "/admin/chats?filter=flag",
     Icon: QUEUE_ICONS.chats,
   },
   {
@@ -224,16 +223,19 @@ export default function AdminDashboardPage() {
           <MetricTile
             label="Оборот за месяц"
             value={formatCurrency(metrics.monthly_revenue)}
+            valueTitle={formatCurrencyExact(metrics.monthly_revenue)}
             hint="по завершённым и текущим сделкам"
           />
           <MetricTile
             label="На гарантии"
             value={formatCurrency(metrics.escrow_balance)}
+            valueTitle={formatCurrencyExact(metrics.escrow_balance)}
             hint={`${metrics.active_contracts} ${pluralRu(metrics.active_contracts, "сделка", "сделки", "сделок")}`}
           />
           <MetricTile
             label="Комиссия за месяц"
             value={formatCurrency(commission)}
+            valueTitle={formatCurrencyExact(commission)}
             hint="4% с поставщиков"
           />
           <MetricTile
@@ -251,9 +253,9 @@ export default function AdminDashboardPage() {
             <dl className="mt-3 grid grid-cols-3 gap-3">
               {(
                 [
-                  ["Неудачных входов", "—"],
+                  ["Неудачных входов", String(metrics.failed_logins_24h ?? 0)],
                   ["Заблокировано IP", "—"],
-                  ["Сеансов без 2FA", "—"],
+                  ["Без 2FA", String(metrics.users_without_2fa ?? 0)],
                 ] as const
               ).map(([label, value]) => (
                 <div key={label}>
@@ -263,8 +265,8 @@ export default function AdminDashboardPage() {
               ))}
             </dl>
             <p className="mt-3 text-[13px] text-mute">
-              Двухфакторный вход обязателен для всех администраторов. Вход в
-              панель — только из доверенной сети.
+              Рекомендуем включить 2FA в настройках аккаунта. Opt-in для всех
+              ролей; после включения код запрашивается при каждом входе.
             </p>
           </div>
 

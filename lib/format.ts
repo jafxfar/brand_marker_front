@@ -1,6 +1,7 @@
 import type { Currency } from "@/types"
 
-const COMPACT_MONEY_THRESHOLD = 1_000_000
+/** From this amount up, money is shown compactly (100 тыс., 1 млн, …). */
+const COMPACT_MONEY_THRESHOLD = 100_000
 const SCIENTIFIC_THRESHOLD = 1e15
 const NUMERIC_DELIVERY_RE = /^\d+(\.\d+)?([eE][+-]?\d+)?$/
 
@@ -19,15 +20,18 @@ const formatCompactNumber = (value: number): string => {
   }).format(value)
 }
 
-export const formatPrice = (value: number): string =>
-  formatCurrency(value, "TJS")
-
-export const formatCurrency = (value: number, currency: Currency | string = "TJS"): string =>
-  new Intl.NumberFormat("ru-RU", {
+/** Full amount with grouping, never compact — for tooltips, invoices, inputs. */
+export const formatCurrencyExact = (
+  value: number,
+  currency: Currency | string = "TJS",
+): string => {
+  if (!Number.isFinite(value)) return "—"
+  return new Intl.NumberFormat("ru-RU", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   }).format(value)
+}
 
 export const formatCompactCurrency = (
   value: number,
@@ -46,7 +50,11 @@ export const formatCompactCurrency = (
   }).format(value)
 }
 
-export const formatMoneyDisplay = (
+/**
+ * Default money display for UI: compact from 100 тыс., scientific from 1e15.
+ * Use {@link formatCurrencyExact} when the full figure must be shown.
+ */
+export const formatCurrency = (
   value: number,
   currency: Currency | string = "TJS",
 ): string => {
@@ -54,7 +62,22 @@ export const formatMoneyDisplay = (
   if (Math.abs(value) >= COMPACT_MONEY_THRESHOLD) {
     return formatCompactCurrency(value, currency)
   }
-  return formatCurrency(value, currency)
+  return formatCurrencyExact(value, currency)
+}
+
+export const formatPrice = (value: number): string => formatCurrency(value, "TJS")
+
+/** Alias of {@link formatCurrency} — kept for existing call sites. */
+export const formatMoneyDisplay = (
+  value: number,
+  currency: Currency | string = "TJS",
+): string => formatCurrency(value, currency)
+
+/** Short RFQ number for tables/headers, e.g. З‑0421 */
+export const formatRfqNo = (rfqId: string): string => {
+  const digits = rfqId.replace(/\D/g, "")
+  const short = (digits || rfqId).slice(-4)
+  return `З‑${short}`
 }
 
 export const formatDeliveryTime = (value: string | null | undefined): string => {
@@ -75,8 +98,7 @@ export const formatIsoDate = (iso: string): string =>
     year: "numeric",
   }).format(new Date(iso))
 
-export const formatRating = (value: number): string =>
-  value.toFixed(1)
+export const formatRating = (value: number): string => value.toFixed(1)
 
 /** Russian plural form: pluralRu(3, "заявка", "заявки", "заявок") → "заявки". */
 export const pluralRu = (count: number, one: string, few: string, many: string): string => {

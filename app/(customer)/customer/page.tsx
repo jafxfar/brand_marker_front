@@ -25,6 +25,9 @@ import { isDealOpen } from "@/lib/process/deal-stages"
 import { buildBuyerTodo, type BuyerRfqProposalsSummary } from "@/lib/process/todo"
 import { MOCK_BUYER_APPROVALS } from "@/lib/mock/buyer-approvals"
 import { MOCK_BUYER_SPEND } from "@/lib/mock/buyer-spend"
+import { buildSpendSeriesFromHistory } from "@/lib/buyer-spend"
+import { useApprovalsQuery } from "@/hooks/api/use-approvals-query"
+import { usePaymentHistoryQuery } from "@/hooks/api/use-payments-query"
 import { Button } from "@/components/ui/button"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { SpendChart } from "@/components/cabinet/dashboard/spend-chart"
@@ -112,15 +115,32 @@ export default function CustomerDashboard() {
     }),
   )
 
-  const pendingApprovals = MOCK_BUYER_APPROVALS.filter(
-    (a) => a.status === "wait",
-  ).map((a) => ({
-    id: a.id,
-    what: a.what,
-    whoName: a.whoName,
-    amountLabel: formatCurrency(a.amount, a.currency),
-    reason: a.reason,
-  }))
+  const { data: approvalsPage } = useApprovalsQuery(
+    "wait",
+    hydrated && useApi,
+  )
+  const { data: paymentHistoryPage } = usePaymentHistoryQuery(
+    hydrated && useApi,
+    { page: 1, pageSize: 20 },
+  )
+
+  const pendingApprovals = (
+    useApi
+      ? (approvalsPage?.items ?? []).map((a) => ({
+          id: String(a.id),
+          what: a.title,
+          whoName: a.who_name,
+          amountLabel: formatCurrency(a.amount, a.currency),
+          reason: a.reason,
+        }))
+      : MOCK_BUYER_APPROVALS.filter((a) => a.status === "wait").map((a) => ({
+          id: a.id,
+          what: a.what,
+          whoName: a.whoName,
+          amountLabel: formatCurrency(a.amount, a.currency),
+          reason: a.reason,
+        }))
+  )
 
   const todo = buildBuyerTodo({
     contracts,
@@ -140,11 +160,16 @@ export default function CustomerDashboard() {
   )
   const loading = !hydrated || (useApi && (rfqsLoading || contractsLoading))
 
-  const spendSeries = MOCK_BUYER_SPEND
+  const spendSeries = useMemo(() => {
+    if (!useApi) return MOCK_BUYER_SPEND
+    return buildSpendSeriesFromHistory(paymentHistoryPage?.items ?? [])
+  }, [useApi, paymentHistoryPage?.items])
   const lastSpend = spendSeries[spendSeries.length - 1]?.[1] ?? 0
   const prevSpend = spendSeries[spendSeries.length - 2]?.[1] ?? 0
   const spendDeltaPct =
     prevSpend > 0 ? Math.round(((lastSpend - prevSpend) / prevSpend) * 100) : 0
+  const lastMonthLabel = spendSeries[spendSeries.length - 1]?.[0] ?? ""
+  const prevMonthLabel = spendSeries[spendSeries.length - 2]?.[0] ?? ""
   const companyLabel =
     hydrated && user?.company
       ? `${user.company} · закупки компании`
@@ -199,13 +224,13 @@ export default function CustomerDashboard() {
             href="/customer/payments?tab=escrow"
           />
           <MetricTile
-            label="Расходы в сентябре"
+            label={lastMonthLabel ? `Расходы · ${lastMonthLabel}` : "Расходы"}
             value={loading ? "—" : formatPrice(lastSpend)}
             hint={
-              spendDeltaPct > 0
-                ? `+${spendDeltaPct}% к августу`
-                : spendDeltaPct < 0
-                  ? `${spendDeltaPct}% к августу`
+              spendDeltaPct > 0 && prevMonthLabel
+                ? `+${spendDeltaPct}% к ${prevMonthLabel.toLowerCase()}`
+                : spendDeltaPct < 0 && prevMonthLabel
+                  ? `${spendDeltaPct}% к ${prevMonthLabel.toLowerCase()}`
                   : "за текущий месяц"
             }
             href="/customer/payments"
@@ -213,7 +238,10 @@ export default function CustomerDashboard() {
         </section>
 
         <section className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
-          <SpendChart series={spendSeries} />
+          <SpendChart
+            series={spendSeries}
+            note={useApi ? "По оплаченным этапам сделок" : undefined}
+          />
           <HomeDealsPanel
             contracts={contracts}
             getSupplierName={getSupplierName}

@@ -2,25 +2,37 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ShoppingCart, Minus, Plus, Trash2, Package, Briefcase,
   Truck, ShieldCheck,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 import { useCartStore } from "@/lib/store/cart-store"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { formatPrice } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
+import { getApiErrorMessage } from "@/lib/api/client"
 import { getSupplier as getMockSupplier } from "@/lib/mock/suppliers"
-import PaymentDialog from "@/components/cabinet/payment-dialog"
+import { useCartCheckoutMutation } from "@/hooks/api/use-approvals-query"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { TermHint } from "@/components/ui/term-hint"
 import { Button } from "@/components/ui/button"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { serviceUrl } from "@/lib/marketplace-routes"
+import PaymentDialog from "@/components/cabinet/payment-dialog"
 import type { PaymentScheme } from "@/types"
 
 export default function CartPage() {
+  const router = useRouter()
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
   const items = useCartStore((s) => s.items)
@@ -28,13 +40,16 @@ export default function CartPage() {
   const remove = useCartStore((s) => s.remove)
   const clear = useCartStore((s) => s.clear)
   const notify = useNotificationsStore((s) => s.add)
+  const checkoutMutation = useCartCheckoutMutation()
 
   const [payOpen, setPayOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [checkingOut, setCheckingOut] = useState(false)
 
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0)
   const count = items.reduce((sum, i) => sum + i.qty, 0)
 
-  const handleCheckout = (scheme: PaymentScheme) => {
+  const handleOfflineCheckout = (scheme: PaymentScheme) => {
     const upfront =
       scheme === "prepay" ? total : scheme === "half" ? Math.round(total / 2) : 0
     notify({
@@ -44,6 +59,43 @@ export default function CartPage() {
       href: "/customer/payments",
     })
     clear()
+  }
+
+  const handleApiCheckout = async () => {
+    setCheckingOut(true)
+    try {
+      const payloadItems = items.map((item) => {
+        const itemId = Number(item.listingId)
+        if (!Number.isFinite(itemId) || itemId <= 0) {
+          throw new Error(`Некорректный товар: ${item.title}`)
+        }
+        return { item_id: itemId, qty: item.qty }
+      })
+      const idempotency_key =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `cart-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+      const result = await checkoutMutation.mutateAsync({
+        items: payloadItems,
+        idempotency_key,
+      })
+
+      clear()
+      setConfirmOpen(false)
+
+      if (!result.offers_created || result.approval.status === "wait") {
+        toast.success("Заявка отправлена на согласование")
+        router.push("/customer/approvals")
+        return
+      }
+      toast.success("Заявки созданы — исполнители получили предложения")
+      router.push("/customer/rfqs")
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Не удалось оформить корзину"))
+    } finally {
+      setCheckingOut(false)
+    }
   }
 
   if (hydrated && items.length === 0) {
@@ -173,26 +225,71 @@ export default function CartPage() {
               type="button"
               size="lg"
               className="w-full"
-              onClick={() => setPayOpen(true)}
+              disabled={checkingOut}
+              onClick={() => (useApi ? setConfirmOpen(true) : setPayOpen(true))}
             >
               <ShieldCheck size={16} /> Оформить безопасно
             </Button>
 
             <p className="text-[11px] text-muted-foreground mt-3 text-center inline-flex items-center justify-center gap-1 w-full flex-wrap">
-              Оплата защищена <TermHint term="escrow">безопасной сделкой</TermHint>. Доступна постоплата после приёмки.
+              {useApi ? (
+                <>
+                  Создаются заявки исполнителям с{" "}
+                  <TermHint term="escrow">безопасной сделкой</TermHint>. Оплата — на этапе договора.
+                </>
+              ) : (
+                <>
+                  Оплата защищена <TermHint term="escrow">безопасной сделкой</TermHint>. Доступна постоплата после приёмки.
+                </>
+              )}
             </p>
           </div>
         </div>
       </div>
 
-      <PaymentDialog
-        open={payOpen}
-        onOpenChange={setPayOpen}
-        kind="product"
-        amount={total}
-        defaultScheme="postpay"
-        onConfirm={handleCheckout}
-      />
+      {!useApi ? (
+        <PaymentDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          kind="product"
+          amount={total}
+          defaultScheme="postpay"
+          onConfirm={handleOfflineCheckout}
+        />
+      ) : (
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent className="rounded-xl sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-1.5">
+                Оформить корзину
+                <TermHint term="escrow" iconOnly />
+              </DialogTitle>
+              <DialogDescription>
+                Будут созданы заявки исполнителям на сумму {formatPrice(total)}.
+                Оплата через безопасную сделку — после принятия предложения и договора.
+                Если ваша роль требует согласования, заявки уйдут руководителю без уведомления поставщиков.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmOpen(false)}
+                disabled={checkingOut}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="button"
+                disabled={checkingOut}
+                onClick={() => void handleApiCheckout()}
+              >
+                {checkingOut ? "Оформление…" : "Подтвердить"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </PageFrame>
   )
 }

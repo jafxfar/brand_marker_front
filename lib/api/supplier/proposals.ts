@@ -12,7 +12,7 @@ const RFQ_PREFIX = "/supplier/rfqs"
 const PROPOSAL_PREFIX = "/supplier/proposals"
 
 export const supplierRfqsApi = {
-  board: (params: PageParams = {}) =>
+  board: (params: PageParams & { q?: string; source?: string } = {}) =>
     apiFetch<Page<RfqWithRelations>>(`${RFQ_PREFIX}/board${buildPageQuery(params)}`),
 
   get: (id: string) => apiFetch<RfqWithRelations>(`${RFQ_PREFIX}/${id}`),

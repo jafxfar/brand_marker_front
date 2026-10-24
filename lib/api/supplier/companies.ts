@@ -1,8 +1,27 @@
 import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
-import type { CompanyWizardInput, CompanyWithRelations } from "@/types"
+import type {
+  CompanyCertificate,
+  CompanyUser,
+  CompanyWizardInput,
+  CompanyWithRelations,
+} from "@/types"
+import type {
+  CertificateCreatePayload,
+  CertificateUpdatePayload,
+  TeamMemberPayload,
+  TeamMemberUpdatePayload,
+} from "../companies"
 import { apiFetch } from "../client"
 
 const PREFIX = "/supplier/companies"
+
+export type CompanyProfileExtras = {
+  warehouse_area?: string | null
+  markets?: string | null
+  brands?: string | null
+  notable_clients?: string | null
+  gallery?: Array<{ src: string; name: string }>
+}
 
 type CompanyUpdatePayload = {
   title?: string
@@ -21,9 +40,11 @@ type CompanyUpdatePayload = {
   industries?: string[]
   category_ids?: number[]
   actor_types?: string[]
-}
+} & CompanyProfileExtras
 
-const wizardToUpdate = (data: CompanyWizardInput): CompanyUpdatePayload => ({
+const wizardToUpdate = (
+  data: CompanyWizardInput & CompanyProfileExtras,
+): CompanyUpdatePayload => ({
   title: data.title,
   legal_name: data.legal_name || null,
   tax_number: data.tax_number || null,
@@ -40,11 +61,19 @@ const wizardToUpdate = (data: CompanyWizardInput): CompanyUpdatePayload => ({
   industries: data.industries,
   category_ids: data.category_ids,
   actor_types: data.actor_types,
+  warehouse_area: data.warehouse_area ?? null,
+  markets: data.markets ?? null,
+  brands: data.brands ?? null,
+  notable_clients: data.notable_clients ?? null,
+  gallery: data.gallery ?? [],
 })
 
 export const supplierCompaniesApi = {
   mine: (params: PageParams = {}) =>
     apiFetch<Page<CompanyWithRelations>>(`${PREFIX}/me${buildPageQuery(params)}`),
+
+  get: (companyId: number) =>
+    apiFetch<CompanyWithRelations>(`${PREFIX}/${companyId}`),
 
   create: (data: CompanyWizardInput) =>
     apiFetch<CompanyWithRelations>(`${PREFIX}/`, {
@@ -52,7 +81,7 @@ export const supplierCompaniesApi = {
       body: JSON.stringify(data),
     }),
 
-  update: (companyId: number, data: CompanyWizardInput) =>
+  update: (companyId: number, data: CompanyWizardInput & CompanyProfileExtras) =>
     apiFetch<CompanyWithRelations>(`${PREFIX}/${companyId}`, {
       method: "PATCH",
       body: JSON.stringify(wizardToUpdate(data)),
@@ -67,21 +96,57 @@ export const supplierCompaniesApi = {
     })
   },
 
-  addCertificate: (
-    companyId: number,
-    data: { title: string; issuer: string; issue_date: string; expiry_date?: string; file_url: string },
-  ) =>
+  uploadCertificateFile: (file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<{ file_url: string }>(`${PREFIX}/certificates/upload`, {
+      method: "POST",
+      body: form,
+    })
+  },
+
+  addCertificate: (companyId: number, data: CertificateCreatePayload) =>
     apiFetch<{ id: number }>(`${PREFIX}/${companyId}/certificates`, {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
-  addTeamMember: (companyId: number, data: { email: string; role: string }) =>
+  updateCertificate: (
+    companyId: number,
+    certificateId: number,
+    data: CertificateUpdatePayload,
+  ) =>
+    apiFetch<CompanyCertificate>(
+      `${PREFIX}/${companyId}/certificates/${certificateId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      },
+    ),
+
+  removeCertificate: (companyId: number, certificateId: number) =>
+    apiFetch<void>(`${PREFIX}/${companyId}/certificates/${certificateId}`, {
+      method: "DELETE",
+    }),
+
+  addTeamMember: (companyId: number, data: TeamMemberPayload) =>
     apiFetch<{ id: number }>(`${PREFIX}/${companyId}/team`, {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
+  updateTeamMember: (
+    companyId: number,
+    targetUserId: number,
+    data: TeamMemberUpdatePayload,
+  ) =>
+    apiFetch<CompanyUser>(`${PREFIX}/${companyId}/team/${targetUserId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   removeTeamMember: (companyId: number, targetUserId: number) =>
-    apiFetch<void>(`${PREFIX}/${companyId}/team/${targetUserId}`, { method: "DELETE" }),
+    apiFetch<void>(`${PREFIX}/${companyId}/team/${targetUserId}`, {
+      method: "DELETE",
+    }),
 }

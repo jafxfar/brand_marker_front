@@ -1,76 +1,179 @@
 "use client"
 
 import Link from "next/link"
-import { FileText, ShoppingCart } from "lucide-react"
 import type { RfqWithRelations } from "@/types"
-import { RfqStatusBadge } from "@/components/rfq/rfq-status-badge"
+import { StatusBadge } from "@/components/bm"
 import { useCategoryOptions } from "@/hooks/use-category-options"
-import { formatIsoDate, formatRfqBudget } from "@/lib/format"
+import {
+  buyerRfqBadgeLabel,
+  buyerRfqBadgeStatus,
+} from "@/lib/buyer-rfq-display"
+import { formatIsoDate, formatRfqBudget, pluralRu } from "@/lib/format"
 
 type RfqListTableProps = {
   rfqs: RfqWithRelations[]
   getProposalCount: (rfqId: string) => number
-  hydrated: boolean
 }
 
-export const RfqListTable = ({ rfqs, getProposalCount, hydrated }: RfqListTableProps) => {
+const formatRfqNo = (rfqId: string): string => {
+  const digits = rfqId.replace(/\D/g, "")
+  const short = (digits || rfqId).slice(-4)
+  return `З‑${short}`
+}
+
+const positionsLabel = (rfq: RfqWithRelations): string => {
+  if (rfq.type === "product") {
+    const n = rfq.quantity
+    return `${n} ${pluralRu(n, "шт.", "шт.", "шт.")}`
+  }
+  return "1 позиция"
+}
+
+const rfqHref = (rfq: RfqWithRelations) => `/customer/rfqs/${rfq.id}`
+
+export const RfqListTable = ({ rfqs, getProposalCount }: RfqListTableProps) => {
   const { getRfqCategoryLabel } = useCategoryOptions()
 
-  if (!hydrated || rfqs.length === 0) {
-    return (
-      <div className="p-10 text-center">
-        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto mb-3">
-          <FileText size={22} className="text-primary" />
-        </div>
-        <p className="text-sm font-semibold text-foreground">Заявки не найдены</p>
-        <p className="text-xs text-muted-foreground mt-1 mb-4">
-          Создайте заявку или смените фильтр
-        </p>
-        <Link
-          href="/customer/rfqs/new"
-          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-        >
-          Создать заявку
-        </Link>
-      </div>
-    )
-  }
-
   return (
-    <div className="divide-y divide-border">
-      {rfqs.map((rfq) => {
-        const proposalsCount = getProposalCount(rfq.id)
-        return (
-          <Link
-            key={rfq.id}
-            href={`/customer/rfqs/${rfq.id}`}
-            className="flex items-center gap-4 p-4 hover:bg-secondary/50 transition-colors"
-          >
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              {rfq.type === "product" ? (
-                <ShoppingCart size={17} className="text-primary" />
-              ) : (
-                <FileText size={17} className="text-primary" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{rfq.title}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {getRfqCategoryLabel(rfq.category_id)} · до {formatIsoDate(rfq.deadline)}
-                {proposalsCount > 0 && ` · ${proposalsCount} предл.`}
-              </p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <div className="text-sm font-bold text-primary">
-                {formatRfqBudget(rfq.budget_type, rfq.budget_from, rfq.budget_to, rfq.currency)}
-              </div>
-              <div className="mt-1">
-                <RfqStatusBadge status={rfq.status} />
-              </div>
-            </div>
-          </Link>
-        )
-      })}
-    </div>
+    <>
+      <div className="hidden overflow-x-auto rounded-2xl border border-line bg-white md:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-line">
+              {(
+                [
+                  "№",
+                  "Заявка",
+                  "Позиции",
+                  "Бюджет",
+                  "Приём КП до",
+                  "КП",
+                  "Статус",
+                ] as const
+              ).map((label) => (
+                <th
+                  key={label}
+                  className="px-5 py-3.5 text-left text-[13px] font-semibold text-mute"
+                >
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {rfqs.map((rfq) => {
+              const href = rfqHref(rfq)
+              const n = getProposalCount(rfq.id)
+              const collecting =
+                rfq.status === "published" || rfq.status === "receiving_proposals"
+              return (
+                <tr key={rfq.id} className="hover:bg-canvas">
+                  <td className="whitespace-nowrap px-5 py-3.5">
+                    <Link href={href} className="mono text-mute">
+                      {formatRfqNo(rfq.id)}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <Link href={href} className="block min-w-0">
+                      <b className="font-semibold text-ink line-clamp-2">{rfq.title}</b>
+                      <div className="text-[12.5px] text-mute">
+                        {getRfqCategoryLabel(rfq.category_id)}
+                      </div>
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3.5 text-ink">
+                    <Link href={href} className="block">
+                      {positionsLabel(rfq)}
+                    </Link>
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3.5">
+                    <Link href={href} className="mono text-ink">
+                      {formatRfqBudget(
+                        rfq.budget_type,
+                        rfq.budget_from,
+                        rfq.budget_to,
+                        rfq.currency,
+                      )}
+                    </Link>
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3.5 text-ink">
+                    <Link href={href} className="block">
+                      {rfq.deadline ? formatIsoDate(rfq.deadline) : "—"}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <Link
+                      href={href}
+                      className={
+                        n && collecting
+                          ? "mono font-semibold text-brand-700"
+                          : "mono text-ink"
+                      }
+                    >
+                      {n}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <Link href={href} className="inline-flex">
+                      <StatusBadge
+                        status={buyerRfqBadgeStatus(rfq.status)}
+                        label={buyerRfqBadgeLabel(rfq.status)}
+                      />
+                    </Link>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <ul className="grid gap-2 md:hidden">
+        {rfqs.map((rfq) => {
+          const href = rfqHref(rfq)
+          const n = getProposalCount(rfq.id)
+          return (
+            <li key={rfq.id}>
+              <Link
+                href={href}
+                className="grid gap-2 rounded-2xl border border-line bg-white p-4 hover:bg-canvas"
+              >
+                <span className="flex items-start justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="mono text-[12.5px] text-mute">
+                      {formatRfqNo(rfq.id)}
+                    </span>
+                    <b className="block font-semibold text-ink line-clamp-2">
+                      {rfq.title}
+                    </b>
+                    <span className="text-[12.5px] text-mute">
+                      {getRfqCategoryLabel(rfq.category_id)}
+                    </span>
+                  </span>
+                  <StatusBadge
+                    status={buyerRfqBadgeStatus(rfq.status)}
+                    label={buyerRfqBadgeLabel(rfq.status)}
+                  />
+                </span>
+                <span className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                  <span className="mono font-semibold">
+                    {formatRfqBudget(
+                      rfq.budget_type,
+                      rfq.budget_from,
+                      rfq.budget_to,
+                      rfq.currency,
+                    )}
+                  </span>
+                  <span className="text-mute">
+                    до {rfq.deadline ? formatIsoDate(rfq.deadline) : "—"}
+                  </span>
+                  <span className="mono text-mute">КП: {n}</span>
+                </span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </>
   )
 }

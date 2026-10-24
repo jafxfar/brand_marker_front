@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api/client"
 import type { PlatformSettings, PlatformSettingsInput } from "@/lib/api/public"
+import type { Page } from "@/lib/pagination"
 
 export type AdminDashboardMetrics = {
   total_users: number
@@ -16,6 +17,8 @@ export type AdminDashboardMetrics = {
   pending_payouts: number
   flagged_chats: number
   pending_company_changes: number
+  users_without_2fa?: number
+  failed_logins_24h?: number
 }
 
 export type AdminActivityType =
@@ -57,11 +60,17 @@ export type AdminUser = {
   status: AdminUserStatus
   created_at: string
   updated_at: string
+  company_id?: number | null
+  company_title?: string | null
+  contracts_count?: number
+  contracts_sum?: number
 }
 
 export type AdminUserStatusFilter = AdminUserStatus | "all"
+export type AdminUserTabFilter = "all" | "buyer" | "supplier" | "blocked"
 
 export type AdminUserStatusCounts = Record<AdminUserStatusFilter, number>
+export type AdminUserTabCounts = Record<AdminUserTabFilter, number>
 
 export type AdminUsersResponse = {
   items: AdminUser[]
@@ -70,13 +79,84 @@ export type AdminUsersResponse = {
   page_size: number
   pages: number
   status_counts: AdminUserStatusCounts
+  tab_counts: AdminUserTabCounts
 }
 
 export type AdminUsersParams = {
   page: number
   pageSize: number
   status: AdminUserStatusFilter
+  roleSide?: "buyer" | "supplier" | null
   query: string
+}
+
+export type AdminUserCompany = {
+  id: number
+  title: string
+  verification_status: string
+  rating: number
+  reviews_count: number
+}
+
+export type AdminUserStats = {
+  purchases_count: number
+  sales_count: number
+  contracts_sum: number
+  disputes_count: number
+  rating: number | null
+  reviews_count: number
+  chats_count: number
+  flagged_chats_count: number
+}
+
+export type AdminUserContractItem = {
+  id: number
+  title: string
+  status: string
+  agreed_amount: number
+  currency: string
+  role: "buyer" | "supplier"
+  counterparty: string
+  counterparty_company_id: number | null
+  created_at: string
+  has_dispute: boolean
+}
+
+export type AdminUserHistoryItem = {
+  id: number
+  action: string
+  details: Record<string, unknown>
+  created_at: string
+  actor: { id: number; email: string; name: string } | null
+}
+
+export type AdminUserChatItem = {
+  id: string
+  kind: string
+  about: string
+  ref_label: string
+  party_a: string
+  party_b: string
+  last_text: string
+  last_at: string | null
+  flagged: boolean
+}
+
+export type AdminUserDocumentItem = {
+  id: number | string
+  title: string
+  file_url: string | null
+  kind: string
+}
+
+export type AdminUserDetail = AdminUser & {
+  companies: AdminUserCompany[]
+  stats: AdminUserStats
+  contracts: AdminUserContractItem[]
+  history: AdminUserHistoryItem[]
+  chats: AdminUserChatItem[]
+  documents: AdminUserDocumentItem[]
+  verification_checklist: Record<string, boolean>
 }
 
 export type AdminCompanyVerificationStatus =
@@ -212,6 +292,27 @@ export type AdminCompanyDetail = AdminCompany & {
 }
 
 export type AdminCompanyActionResponse = {
+  id: number
+  action: AdminCompanyAction
+  verification_status: AdminCompanyVerificationStatus
+  operational_status: AdminCompanyOperationalStatus
+}
+
+/** Slim row from GET /admin/companies/pending-verification */
+export type AdminPendingVerificationCompany = {
+  id: number
+  title: string
+  actor_type: string
+  owner_id: number
+  verification_status: AdminCompanyVerificationStatus
+}
+
+export type AdminPendingVerificationParams = {
+  page: number
+  pageSize: number
+}
+
+export type AdminVerifyCompanyResponse = {
   id: number
   action: AdminCompanyAction
   verification_status: AdminCompanyVerificationStatus
@@ -753,7 +854,7 @@ export type AdminDisputeActionResponse = {
 
 export const adminApi = {
   getDashboard: () => apiFetch<AdminDashboardResponse>("/admin/dashboard"),
-  getUsers: ({ page, pageSize, status, query }: AdminUsersParams) => {
+  getUsers: ({ page, pageSize, status, roleSide, query }: AdminUsersParams) => {
     const searchParams = new URLSearchParams({
       page: String(page),
       page_size: String(pageSize),
@@ -761,15 +862,27 @@ export const adminApi = {
     if (status !== "all") {
       searchParams.set("status", status)
     }
+    if (roleSide) {
+      searchParams.set("role_side", roleSide)
+    }
     if (query.trim()) {
       searchParams.set("query", query.trim())
     }
     return apiFetch<AdminUsersResponse>(`/admin/users?${searchParams.toString()}`)
   },
-  updateUserStatus: (userId: number, status: AdminUserStatus) =>
+  getUser: (userId: number) =>
+    apiFetch<AdminUserDetail>(`/admin/users/${userId}`),
+  updateUserStatus: (
+    userId: number,
+    status: AdminUserStatus,
+    reason?: string | null,
+  ) =>
     apiFetch<AdminUser>(`/admin/users/${userId}/status`, {
       method: "PATCH",
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({
+        status,
+        ...(reason?.trim() ? { reason: reason.trim() } : {}),
+      }),
     }),
   getCompanies: ({ page, pageSize, status, query }: AdminCompaniesParams) => {
     const searchParams = new URLSearchParams({
@@ -786,6 +899,18 @@ export const adminApi = {
   },
   getCompany: (companyId: number) =>
     apiFetch<AdminCompanyDetail>(`/admin/companies/${companyId}`),
+  getPendingVerificationCompanies: ({
+    page,
+    pageSize,
+  }: AdminPendingVerificationParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+    })
+    return apiFetch<Page<AdminPendingVerificationCompany>>(
+      `/admin/companies/pending-verification?${searchParams.toString()}`,
+    )
+  },
   applyCompanyAction: (
     companyId: number,
     action: AdminCompanyAction,
@@ -794,6 +919,12 @@ export const adminApi = {
     apiFetch<AdminCompanyActionResponse>(`/admin/companies/${companyId}/action`, {
       method: "POST",
       body: JSON.stringify({ action, reason: reason?.trim() || null }),
+    }),
+  /** Legacy approve/reject; prefer applyCompanyAction for full action set. */
+  verifyCompany: (companyId: number, approved: boolean) =>
+    apiFetch<AdminVerifyCompanyResponse>(`/admin/companies/${companyId}/verify`, {
+      method: "POST",
+      body: JSON.stringify({ approved }),
     }),
   getCatalog: ({ page, pageSize, view, query }: AdminCatalogParams) => {
     const searchParams = new URLSearchParams({

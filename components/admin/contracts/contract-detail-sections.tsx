@@ -1,6 +1,7 @@
 "use client"
 
 import { AdminLink } from "@/components/admin/admin-link"
+import { formatCurrency } from "@/lib/format"
 import { FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import type { AdminContractDetail, AdminParty } from "@/lib/api/admin"
@@ -23,6 +24,9 @@ import type {
   PaymentType,
 } from "@/types"
 
+const formatMoney = (value: number | null | undefined, currency?: string | null) =>
+  value == null ? "—" : formatCurrency(value, currency || "TJS")
+
 const sectionClassName = "scroll-mt-24 rounded-xl border border-border bg-card p-5 sm:p-6"
 
 const formatDate = (value: string) =>
@@ -44,14 +48,6 @@ const fileMetaLine = (file: AdminContractDetail["files"][number]): string => {
   return parts.join(" · ")
 }
 
-const formatMoney = (value: number | null | undefined, currency: string) => {
-  if (value == null) return "—"
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: currency || "TJS",
-    maximumFractionDigits: 0,
-  }).format(value)
-}
 
 const EmptyState = ({ children }: { children: string }) => (
   <div className="rounded-xl border border-dashed border-border bg-muted/25 px-5 py-8 text-center text-sm text-muted-foreground">

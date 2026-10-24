@@ -1,28 +1,40 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Inbox } from "lucide-react"
+import { Suspense, useEffect, useMemo, useState } from "react"
+import { Search } from "lucide-react"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
 import { useProposalsStore } from "@/lib/store/proposals-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useUrlTab } from "@/hooks/use-url-tab"
 import { getActorId } from "@/lib/auth-display"
-import { getRfqBuyerName, getRfqBuyerRating } from "@/lib/buyer-display"
+import { getRfqBuyerName } from "@/lib/buyer-display"
 import { isApiEnabled } from "@/lib/api/config"
-import { isRfqInvitedFor } from "@/lib/rfq-display"
+import { isRfqInvitedFor, OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
+import { filterRfqsBySource, sortSupplierBoardRfqs } from "@/lib/rfq-board"
 import {
-  filterRfqsBySource,
-  isCatalogOfferRfq,
-  sortSupplierBoardRfqs,
+  SUPPLIER_RESPONSE_FILTER_OPTIONS,
+  SUPPLIER_RESPONSE_FILTER_VALUES,
+  SUPPLIER_SOURCE_FILTER_VALUES,
+  filterSupplierRfqsByResponse,
+  isPendingCatalogOffer,
+  matchesRfqSearch,
+  type SupplierRfqResponseFilter,
   type SupplierRfqSourceFilter,
-} from "@/lib/rfq-board"
+} from "@/lib/rfq-list-search"
+import { useCategoryOptions } from "@/hooks/use-category-options"
 import {
   useSubmitSupplierProposalMutation,
   useSupplierProposalsQuery,
   useSupplierRfqBoardQuery,
 } from "@/hooks/api/use-supplier-rfqs-query"
+import {
+  emptySupplierNavCounts,
+  useSupplierNavCounts,
+} from "@/hooks/api/use-nav-counts-query"
 import { RfqBoardTable } from "@/components/supplier/rfq/rfq-board-table"
+import { RfqListToolbar } from "@/components/cabinet/rfq/rfq-list-toolbar"
 import { ListPagination } from "@/components/list-pagination"
 import { ProposalDialog } from "@/components/supplier/proposal-dialog"
 import {
@@ -30,15 +42,14 @@ import {
   PageFrame,
   PageHeader,
   PageSurface,
-  SegmentedControl,
 } from "@/components/layout"
-import type { Currency, ProposalStatus, RfqType, RfqWithRelations } from "@/types"
+import type { Currency, ProposalStatus, RfqWithRelations } from "@/types"
 
-type TypeFilter = "all" | RfqType
-
-export default function SupplierRfqsPage() {
+const SupplierRfqsContent = () => {
   const hydrated = useHydrated()
   const [page, setPage] = useState(1)
+  const [searchInput, setSearchInput] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getOpenRfqs = useRfqsStore((s) => s.getOpenRfqs)
@@ -46,40 +57,43 @@ export default function SupplierRfqsPage() {
   const submitProposalLocal = useProposalsStore((s) => s.submitProposal)
   const localProposals = useProposalsStore((s) => s.proposals)
   const getCompany = useCompaniesStore((s) => s.getCompany)
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
-  const [sourceFilter, setSourceFilter] = useState<SupplierRfqSourceFilter>("all")
+  const { getRfqCategoryLabel, rfqCategories } = useCategoryOptions()
   const [selectedRfqId, setSelectedRfqId] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [sourceFilter, setSourceFilter] = useUrlTab<SupplierRfqSourceFilter>(
+    "source",
+    SUPPLIER_SOURCE_FILTER_VALUES,
+    "all",
+  )
+  const [responseFilter, setResponseFilter] = useUrlTab<SupplierRfqResponseFilter>(
+    "response",
+    SUPPLIER_RESPONSE_FILTER_VALUES,
+    "all",
+  )
 
   const useApi = isApiEnabled()
-  const { data: apiRfqs, isLoading } = useSupplierRfqBoardQuery(hydrated && useApi, { page })
+  const navCounts = useSupplierNavCounts(useApi).data ?? emptySupplierNavCounts()
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [searchInput])
+
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch, sourceFilter, responseFilter])
+
+  const { data: apiRfqs, isLoading } = useSupplierRfqBoardQuery(hydrated && useApi, {
+    page,
+    q: debouncedSearch || undefined,
+    source: sourceFilter !== "all" ? sourceFilter : undefined,
+  })
   const { data: apiProposals } = useSupplierProposalsQuery(hydrated && useApi)
   const submitProposalMutation = useSubmitSupplierProposalMutation()
 
   const localRfqs = hydrated ? getOpenRfqs() : []
   const openRfqs: RfqWithRelations[] = useApi ? (apiRfqs?.items ?? []) : localRfqs
   const totalPages = useApi ? (apiRfqs?.total_pages ?? 0) : 1
-
-  const sourceCounts = useMemo(() => {
-    const catalog = openRfqs.filter(isCatalogOfferRfq).length
-    return {
-      all: openRfqs.length,
-      marketplace: openRfqs.length - catalog,
-      catalog,
-    }
-  }, [openRfqs])
-
-  const filtered = useMemo(() => {
-    const byType =
-      typeFilter === "all" ? openRfqs : openRfqs.filter((r) => r.type === typeFilter)
-    const bySource = filterRfqsBySource(byType, sourceFilter)
-    return sortSupplierBoardRfqs(bySource, actorId, isRfqInvitedFor)
-  }, [openRfqs, typeFilter, sourceFilter, actorId])
-
-  const selectedRfq = selectedRfqId
-    ? (useApi ? openRfqs.find((r) => r.id === selectedRfqId) : getRfq(selectedRfqId))
-    : undefined
-
   const proposalItems = apiProposals?.items ?? []
 
   const getMyProposal = (rfqId: string) => {
@@ -100,6 +114,62 @@ export default function SupplierRfqsPage() {
       status,
     }
   }
+
+  const filtered = useMemo(() => {
+    const responded = (rfqId: string) => {
+      const mine = getMyProposal(rfqId)
+      return Boolean(mine) && !isPendingCatalogOffer(mine?.status)
+    }
+    const bySearch = (rfq: RfqWithRelations) =>
+      matchesRfqSearch(
+        rfq,
+        useApi ? "" : debouncedSearch,
+        getRfqBuyerName(rfq, getCompany),
+      )
+
+    const base = useApi
+      ? openRfqs
+      : filterRfqsBySource(openRfqs.filter(bySearch), sourceFilter)
+
+    const withResponse = filterSupplierRfqsByResponse(base, responseFilter, responded)
+
+    return sortSupplierBoardRfqs(
+      [...withResponse].sort((a, b) => {
+        const ae = a.status === "expired" || !OPEN_RFQ_STATUSES.includes(a.status)
+        const be = b.status === "expired" || !OPEN_RFQ_STATUSES.includes(b.status)
+        return Number(ae) - Number(be)
+      }),
+      actorId,
+      isRfqInvitedFor,
+    )
+  }, [
+    useApi,
+    openRfqs,
+    debouncedSearch,
+    sourceFilter,
+    responseFilter,
+    actorId,
+    getCompany,
+    localProposals,
+    proposalItems,
+  ])
+
+  const categoryHint = useMemo(() => {
+    const ids = [...new Set(filtered.map((r) => r.category_id))].slice(0, 3)
+    if (ids.length === 0) {
+      return rfqCategories
+        .slice(0, 2)
+        .map((c) => c.label)
+        .join(", ")
+    }
+    return ids.map((id) => getRfqCategoryLabel(id)).join(", ")
+  }, [filtered, rfqCategories, getRfqCategoryLabel])
+
+  const selectedRfq = selectedRfqId
+    ? useApi
+      ? openRfqs.find((r) => r.id === selectedRfqId)
+      : getRfq(selectedRfqId)
+    : undefined
 
   const handleOpenProposal = (rfqId: string) => {
     setSelectedRfqId(rfqId)
@@ -135,68 +205,59 @@ export default function SupplierRfqsPage() {
     })
   }
 
-  const emptyTitle = isLoading
-    ? "Загрузка заявок..."
-    : sourceFilter === "catalog"
-      ? "Нет запросов на ваши товары и услуги"
-      : sourceFilter === "marketplace"
-        ? "Нет заявок заказчиков"
-        : "Открытых заявок нет"
-
-  const emptyDescription = !isLoading
-    ? sourceFilter === "catalog"
-      ? "Когда заказчик нажмёт «Купить с гарантией» или «Торговаться» по вашей позиции, запрос появится здесь"
-      : "Новые заявки заказчиков и запросы из каталога появятся здесь"
-    : undefined
-
-  const isEmpty = !hydrated || isLoading || filtered.length === 0
+  const hasFilters =
+    Boolean(debouncedSearch) || sourceFilter !== "all" || responseFilter !== "all"
+  const isLoadingState = !hydrated || isLoading
+  const isEmpty = isLoadingState || filtered.length === 0
 
   return (
     <PageFrame>
       <PageHeader
-        title="Заявки"
-        description="Заявки заказчиков с маркетплейса и запросы на покупку или торг по вашим товарам и услугам"
+        title="Заявки покупателей"
+        description={
+          categoryHint
+            ? `Категории: ${categoryHint}`
+            : "Заявки в ваших категориях"
+        }
       />
 
-      <SegmentedControl
-        value={sourceFilter}
-        options={[
-          { value: "all", label: "Все", count: sourceCounts.all },
-          {
-            value: "marketplace",
-            label: "Заявки заказчиков",
-            count: sourceCounts.marketplace,
-          },
-          {
-            value: "catalog",
-            label: "На мои товары и услуги",
-            count: sourceCounts.catalog,
-          },
-        ]}
-        onChange={(value) => {
-          setSourceFilter(value)
-          setPage(1)
-        }}
-        ariaLabel="Источник заявки"
-      />
-
-      <SegmentedControl
-        value={typeFilter}
-        options={[
-          { value: "all", label: "Все типы" },
-          { value: "product", label: "Товары" },
-          { value: "service", label: "Услуги" },
-        ]}
-        onChange={setTypeFilter}
-        ariaLabel="Тип заявки"
+      <RfqListToolbar
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        searchPlaceholder="Поиск по заявке, номеру или покупателю"
+        searchAriaLabel="Поиск по заявкам покупателей"
+        onFilterChange={setSourceFilter}
+        filterAriaLabel="Источник заявки"
+        secondaryFilterValue={responseFilter}
+        secondaryFilterOptions={SUPPLIER_RESPONSE_FILTER_OPTIONS.map((option) =>
+          option.value === "open" && navCounts.rfqs > 0
+            ? { ...option, count: navCounts.rfqs }
+            : option,
+        )}
+        onSecondaryFilterChange={(value) =>
+          setResponseFilter(value as SupplierRfqResponseFilter)
+        }
+        secondaryFilterAriaLabel="Ответ по заявке"
       />
 
       {isEmpty ? (
         <PageSurface>
           <PageEmptyState
-            icon={<Inbox />}
-            title={emptyTitle}
-            description={emptyDescription}
+            icon={<Search />}
+            title={
+              isLoadingState
+                ? "Загрузка заявок..."
+                : hasFilters
+                  ? "Заявки не найдены"
+                  : "Заявок нет"
+            }
+            description={
+              isLoadingState
+                ? undefined
+                : hasFilters
+                  ? "Измените поиск или фильтры."
+                  : "Пришлём уведомление, когда появится заявка в ваших категориях."
+            }
           />
         </PageSurface>
       ) : (
@@ -205,7 +266,13 @@ export default function SupplierRfqsPage() {
           actorId={actorId}
           getMyProposal={getMyProposal}
           getBuyerName={(rfq) => getRfqBuyerName(rfq, getCompany)}
-          getBuyerRating={(rfq) => getRfqBuyerRating(rfq, getCompany)}
+          getBuyerVerified={(rfq) => {
+            const company = getCompany(Number(rfq.actor_id))
+            return (
+              rfq.buyer?.verification_status === "verified" ||
+              company?.verification_status === "verified"
+            )
+          }}
           onSubmitProposal={handleOpenProposal}
         />
       )}
@@ -224,11 +291,15 @@ export default function SupplierRfqsPage() {
         />
       )}
 
-      <ListPagination
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
+      <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </PageFrame>
+  )
+}
+
+export default function SupplierRfqsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SupplierRfqsContent />
+    </Suspense>
   )
 }

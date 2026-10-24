@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils"
 type MetricTileProps = {
   label: string
   value: string
+  /** Full value for native tooltip when the display value is truncated/compact. */
+  valueTitle?: string
   /** Plain-language explanation of what the number means. */
   hint?: string
   href?: string
@@ -17,6 +19,7 @@ export const MetricTile = ({
   Icon,
   label,
   value,
+  valueTitle,
   hint,
   href,
   valueClassName,
@@ -24,26 +27,27 @@ export const MetricTile = ({
   const content = (
     <>
       {Icon ? (
-        <div className="flex items-center gap-2 text-[14px] text-mute">
-          <Icon size={16} aria-hidden="true" />
-          {label}
+        <div className="flex min-w-0 items-center gap-2 text-[14px] text-mute">
+          <Icon size={16} className="shrink-0" aria-hidden="true" />
+          <span className="truncate">{label}</span>
         </div>
       ) : (
-        <span className="text-[14px] text-mute">{label}</span>
+        <span className="truncate text-[14px] text-mute">{label}</span>
       )}
       <div
+        title={valueTitle ?? value}
         className={cn(
-          "tnum text-[26px] font-extrabold leading-tight tracking-[-0.02em] text-ink",
+          "tnum min-w-0 truncate text-[26px] font-extrabold leading-tight tracking-[-0.02em] text-ink",
           valueClassName,
         )}
       >
         {value}
       </div>
-      {hint ? <div className="text-[13px] text-mute">{hint}</div> : null}
+      {hint ? <div className="truncate text-[13px] text-mute">{hint}</div> : null}
     </>
   )
   const className =
-    "grid content-start gap-1.5 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)]"
+    "grid min-w-0 content-start gap-1.5 overflow-hidden rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)]"
 
   if (!href) return <div className={className}>{content}</div>
   return (

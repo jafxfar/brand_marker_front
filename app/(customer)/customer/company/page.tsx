@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { Info, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -8,7 +9,13 @@ import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
-import { useBuyerCompaniesQuery } from "@/hooks/api/use-buyer-companies-query"
+import { getApiErrorMessage } from "@/lib/api/client"
+import {
+  useAddBuyerTeamMemberMutation,
+  useBuyerCompaniesQuery,
+  useRemoveBuyerTeamMemberMutation,
+  useUpdateBuyerTeamMemberMutation,
+} from "@/hooks/api/use-buyer-companies-query"
 import { Button } from "@/components/ui/button"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { EmployeeList } from "@/components/cabinet/company/employee-list"
@@ -19,19 +26,24 @@ import {
 } from "@/components/cabinet/company/company-requisites-card"
 import { InviteEmployeeDialog } from "@/components/cabinet/company/invite-employee-dialog"
 import {
-  BUYER_ROLE_RIGHTS,
+  canManageTeam,
+  COMPANY_ROLE_LABELS,
+  COMPANY_ROLE_RIGHTS,
+  mapCompanyUsersToEmployees,
+  myCompanyRole,
+  nameFromEmail,
+  type CompanyTeamEmployee,
+} from "@/lib/company-team"
+import {
   MOCK_BUYER_COMPANY_LOG,
   MOCK_BUYER_EMPLOYEES,
-  formatEmployeeLimit,
   readPurchaseRules,
   writePurchaseRules,
   type BuyerCompanyLogEntry,
-  type BuyerEmployee,
-  type BuyerEmployeeRole,
   type PurchaseRuleId,
   type PurchaseRules,
 } from "@/lib/mock/buyer-employees"
-import type { CompanyWithRelations } from "@/types"
+import type { CompanyRole, CompanyWithRelations } from "@/types"
 
 const nowLogStamp = () => {
   const d = new Date()
@@ -54,6 +66,33 @@ const nowLogStamp = () => {
   return `${d.getDate()} ${months[d.getMonth()]}, ${hh}:${mm}`
 }
 
+const mockEmployeesToTeam = (): CompanyTeamEmployee[] =>
+  MOCK_BUYER_EMPLOYEES.map((e, index) => ({
+    userId: index + 1,
+    membershipId: index + 1,
+    name: e.name,
+    email: `${e.name.toLowerCase().replace(/\s+/g, ".")}@demo.tj`,
+    role: (
+      {
+        Руководитель: "director",
+        Закупщик: "moderator",
+        Бухгалтер: "accountant",
+        Наблюдатель: "accountant",
+      } as const
+    )[e.role],
+    rights: COMPANY_ROLE_RIGHTS[
+      (
+        {
+          Руководитель: "director",
+          Закупщик: "moderator",
+          Бухгалтер: "accountant",
+          Наблюдатель: "accountant",
+        } as const
+      )[e.role]
+    ],
+    me: e.me,
+  }))
+
 export default function CustomerCompanyPage() {
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
@@ -61,9 +100,18 @@ export default function CustomerCompanyPage() {
   const actorId = getActorId(user)
   const getMyCompany = useCompaniesStore((s) => s.getMyCompany)
 
-  const { data: apiCompanies } = useBuyerCompaniesQuery(hydrated && useApi)
+  const {
+    data: apiCompanies,
+    isLoading,
+    isError,
+  } = useBuyerCompaniesQuery(hydrated && useApi)
+  const addMember = useAddBuyerTeamMemberMutation()
+  const updateMember = useUpdateBuyerTeamMemberMutation()
+  const removeMember = useRemoveBuyerTeamMemberMutation()
 
-  const [employees, setEmployees] = useState<BuyerEmployee[]>(MOCK_BUYER_EMPLOYEES)
+  const [localEmployees, setLocalEmployees] = useState<CompanyTeamEmployee[]>(
+    () => mockEmployeesToTeam(),
+  )
   const [log, setLog] = useState<BuyerCompanyLogEntry[]>(MOCK_BUYER_COMPANY_LOG)
   const [rules, setRules] = useState<PurchaseRules>(() => ({
     rule1: true,
@@ -76,9 +124,35 @@ export default function CustomerCompanyPage() {
     if (hydrated) setRules(readPurchaseRules())
   }, [hydrated])
 
-  const isBoss = employees.some((e) => e.me && e.role === "Руководитель")
+  const company = useMemo((): CompanyWithRelations | null => {
+    if (useApi) {
+      const items = apiCompanies?.items ?? []
+      const activeId = user?.activeCompanyId ?? user?.companyId
+      return (
+        items.find((c) => c.id === activeId) ??
+        items[0] ??
+        null
+      )
+    }
+    if (!hydrated || !actorId) return null
+    return getMyCompany(actorId) ?? null
+  }, [useApi, apiCompanies, user?.activeCompanyId, user?.companyId, hydrated, actorId, getMyCompany])
+
+  const employees = useMemo(() => {
+    if (useApi && company) {
+      return mapCompanyUsersToEmployees(company.company_users ?? [], user?.userId)
+    }
+    return localEmployees
+  }, [useApi, company, user?.userId, localEmployees])
+
+  const myRole = useApi
+    ? myCompanyRole(company?.company_users ?? [], user?.userId)
+    : employees.find((e) => e.me)?.role ?? null
+  const canManage = canManageTeam(myRole)
   const bossName =
     employees.find((e) => e.me)?.name ?? user?.name ?? "Руководитель"
+  const teamBusy =
+    addMember.isPending || updateMember.isPending || removeMember.isPending
 
   const pushLog = (text: string) => {
     setLog((prev) => [
@@ -87,25 +161,29 @@ export default function CustomerCompanyPage() {
     ])
   }
 
-  const company: CompanyRequisites = useMemo(() => {
-    const fromApi = (apiCompanies?.items?.[0] ?? null) as CompanyWithRelations | null
-    const fromStore =
-      !useApi && hydrated && actorId ? getMyCompany(actorId) : null
-    const source = fromApi ?? fromStore
-    const name =
-      source?.title ??
-      user?.company?.trim() ??
-      "ООО «Сомон Трейд»"
+  const requisites: CompanyRequisites = useMemo(() => {
+    if (useApi) {
+      return {
+        name: company?.title ?? user?.company?.trim() ?? "Компания",
+        verified: company?.verification_status === "verified",
+        inn: company?.tax_number?.trim() || "—",
+        form: company?.legal_name?.trim() || "—",
+        city: company?.city?.trim() || "—",
+        bank: "—",
+        account: "—",
+      }
+    }
+    const fromStore = company
     return {
-      name,
-      verified: source?.verification_status === "verified",
-      inn: source?.tax_number?.trim() || "020033881",
+      name: fromStore?.title ?? user?.company?.trim() ?? "ООО «Сомон Трейд»",
+      verified: fromStore?.verification_status === "verified",
+      inn: fromStore?.tax_number?.trim() || "020033881",
       form: "ООО",
-      city: source?.city?.trim() || "Душанбе",
+      city: fromStore?.city?.trim() || "Душанбе",
       bank: "Амонатбонк",
       account: "20202 972 0 0000 012345",
     }
-  }, [apiCompanies, useApi, hydrated, actorId, getMyCompany, user?.company])
+  }, [useApi, company, user?.company])
 
   const handleRuleChange = (id: PurchaseRuleId, checked: boolean) => {
     setRules((prev) => {
@@ -115,50 +193,90 @@ export default function CustomerCompanyPage() {
     })
   }
 
-  const handleRoleChange = (id: string, role: BuyerEmployeeRole) => {
-    const target = employees.find((e) => e.id === id)
+  const handleRoleChange = async (userId: number, role: CompanyRole) => {
+    const target = employees.find((e) => e.userId === userId)
     if (!target || target.role === role) return
-    const old = target.role
-    setEmployees((prev) =>
+
+    if (useApi && company) {
+      try {
+        await updateMember.mutateAsync({
+          companyId: company.id,
+          targetUserId: userId,
+          data: { role },
+        })
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось изменить роль"))
+      }
+      return
+    }
+
+    const old = COMPANY_ROLE_LABELS[target.role]
+    setLocalEmployees((prev) =>
       prev.map((e) =>
-        e.id !== id
+        e.userId !== userId
           ? e
-          : {
-              ...e,
-              role,
-              rights: BUYER_ROLE_RIGHTS[role],
-              limit: role === "Наблюдатель" ? 0 : e.limit,
-            },
+          : { ...e, role, rights: COMPANY_ROLE_RIGHTS[role] },
       ),
     )
-    pushLog(`Изменил роль ${target.name}: ${old} → ${role}`)
-    toast.success(`${target.name}: теперь ${role.toLowerCase()}`)
-  }
-
-  const handleLimitChange = (id: string, limit: number) => {
-    const target = employees.find((e) => e.id === id)
-    if (!target) return
-    setEmployees((prev) =>
-      prev.map((e) => (e.id !== id ? e : { ...e, limit })),
-    )
-    pushLog(`Изменил лимит ${target.name}: ${formatEmployeeLimit(limit)}`)
-  }
-
-  const handleRemove = (id: string) => {
-    const target = employees.find((e) => e.id === id)
-    if (!target) return
-    setEmployees((prev) => prev.filter((e) => e.id !== id))
-    pushLog(`Удалил сотрудника ${target.name} (${target.role.toLowerCase()})`)
-  }
-
-  const handleInvite = (employee: BuyerEmployee) => {
-    setEmployees((prev) => [...prev, employee])
     pushLog(
-      `Пригласил ${employee.name} (${employee.role.toLowerCase()})`,
+      `Изменил роль ${target.name}: ${old} → ${COMPANY_ROLE_LABELS[role]}`,
     )
+    toast.success(`${target.name}: теперь ${COMPANY_ROLE_LABELS[role]}`)
   }
 
-  if (!hydrated) {
+  const handleRemove = async (userId: number) => {
+    const target = employees.find((e) => e.userId === userId)
+    if (!target) return
+
+    if (useApi && company) {
+      try {
+        await removeMember.mutateAsync({
+          companyId: company.id,
+          targetUserId: userId,
+        })
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось удалить сотрудника"))
+      }
+      return
+    }
+
+    setLocalEmployees((prev) => prev.filter((e) => e.userId !== userId))
+    pushLog(
+      `Удалил сотрудника ${target.name} (${COMPANY_ROLE_LABELS[target.role]})`,
+    )
+    toast.success(`${target.name} удалён(а), доступ закрыт`)
+  }
+
+  const handleInvite = async (data: { email: string; role: CompanyRole }) => {
+    if (useApi && company) {
+      try {
+        await addMember.mutateAsync({
+          companyId: company.id,
+          data: { email: data.email, role: data.role },
+        })
+      } catch (err) {
+        toast.error(getApiErrorMessage(err, "Не удалось добавить сотрудника"))
+        throw err
+      }
+      return
+    }
+
+    const employee: CompanyTeamEmployee = {
+      userId: Date.now(),
+      membershipId: Date.now(),
+      name: nameFromEmail(data.email),
+      email: data.email,
+      role: data.role,
+      rights: COMPANY_ROLE_RIGHTS[data.role],
+    }
+    setLocalEmployees((prev) => [...prev, employee])
+    pushLog(
+      `Добавил ${employee.name} (${COMPANY_ROLE_LABELS[data.role]})`,
+    )
+    toast.success("Сотрудник добавлен")
+  }
+
+  if (!hydrated || (useApi && isLoading)) {
     return (
       <PageFrame>
         <div className="h-10 w-1/3 animate-pulse rounded-xl bg-canvas" />
@@ -170,16 +288,58 @@ export default function CustomerCompanyPage() {
     )
   }
 
+  if (useApi && isError) {
+    return (
+      <PageFrame>
+        <PageHeader
+          title="Компания и сотрудники"
+          description="Не удалось загрузить данные компании"
+        />
+        <p className="text-[15px] text-mute">
+          Обновите страницу или попробуйте позже.
+        </p>
+      </PageFrame>
+    )
+  }
+
+  if (useApi && !company) {
+    return (
+      <PageFrame>
+        <PageHeader
+          title="Компания и сотрудники"
+          description="Реквизиты, роли и команда"
+        />
+        <div className="rounded-2xl border border-dashed border-[#D5DAE1] bg-white px-6 py-14 text-center">
+          <b className="text-[17px]">Компания ещё не создана</b>
+          <p className="mx-auto mt-2 max-w-md text-[15px] text-mute">
+            Создайте компанию, чтобы управлять сотрудниками и реквизитами.
+          </p>
+          <Button asChild size="lg" className="mt-5">
+            <Link href="/customer/company/new">
+              <Plus size={16} />
+              Создать компанию
+            </Link>
+          </Button>
+        </div>
+      </PageFrame>
+    )
+  }
+
   return (
     <PageFrame>
       <PageHeader
         title="Компания и сотрудники"
-        description="Реквизиты, роли и лимиты покупок"
+        description="Реквизиты и команда. Руководителя компании изменить нельзя."
         actions={
-          isBoss ? (
-            <Button type="button" size="lg" onClick={() => setInviteOpen(true)}>
+          canManage ? (
+            <Button
+              type="button"
+              size="lg"
+              disabled={teamBusy}
+              onClick={() => setInviteOpen(true)}
+            >
               <Plus size={16} />
-              Пригласить сотрудника
+              Добавить сотрудника
             </Button>
           ) : null
         }
@@ -189,47 +349,53 @@ export default function CustomerCompanyPage() {
         <div className="grid min-w-0 gap-5">
           <EmployeeList
             employees={employees}
-            isBoss={isBoss}
-            onChangeRole={handleRoleChange}
-            onChangeLimit={handleLimitChange}
-            onRemove={handleRemove}
+            canManage={canManage}
+            busy={teamBusy}
+            onInviteClick={() => setInviteOpen(true)}
+            onChangeRole={(userId, role) => void handleRoleChange(userId, role)}
+            onRemove={(userId) => void handleRemove(userId)}
           />
 
-          <section className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-6">
-            <span className="text-[13px] font-semibold text-mute">
-              История изменений
-            </span>
-            <ul className="mt-3 grid gap-2.5 text-[14px]">
-              {log.slice(0, 6).map((entry, index) => (
-                <li
-                  key={`${entry.at}-${index}`}
-                  className="grid grid-cols-[110px_1fr] gap-3"
-                >
-                  <span className="tnum text-[12.5px] text-mute">{entry.at}</span>
-                  <span>
-                    <b className="font-semibold">{entry.who}:</b> {entry.text}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          {!useApi ? (
+            <section className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-6">
+              <span className="text-[13px] font-semibold text-mute">
+                История изменений
+              </span>
+              <ul className="mt-3 grid gap-2.5 text-[14px]">
+                {log.slice(0, 6).map((entry, index) => (
+                  <li
+                    key={`${entry.at}-${index}`}
+                    className="grid grid-cols-[110px_1fr] gap-3"
+                  >
+                    <span className="tnum text-[12.5px] text-mute">
+                      {entry.at}
+                    </span>
+                    <span>
+                      <b className="font-semibold">{entry.who}:</b> {entry.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <PurchaseRulesCard rules={rules} onChange={handleRuleChange} />
         </div>
 
-        <CompanyRequisitesCard company={company} />
+        <CompanyRequisitesCard company={requisites} />
       </div>
 
-      {!isBoss ? (
+      {!canManage ? (
         <p className="mt-4 flex items-start gap-2 text-[13.5px] text-mute">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Изменять роли и лимиты может только руководитель компании.
+          Изменять роли может только руководитель или администратор компании.
         </p>
       ) : null}
 
       <InviteEmployeeDialog
         open={inviteOpen}
         onOpenChange={setInviteOpen}
+        busy={teamBusy}
         onInvite={handleInvite}
       />
     </PageFrame>

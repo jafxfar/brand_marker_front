@@ -1,6 +1,29 @@
 import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
-import type { CompanyWizardInput, CompanyWithRelations, Review } from "@/types"
+import type {
+  CompanyCertificate,
+  CompanyUser,
+  CompanyWizardInput,
+  CompanyWithRelations,
+  Review,
+} from "@/types"
 import { apiFetch } from "./client"
+
+export type TeamMemberPayload = { email: string; role: string }
+export type TeamMemberUpdatePayload = { role: string }
+export type CertificateCreatePayload = {
+  title: string
+  issuer: string
+  issue_date: string
+  expiry_date?: string | null
+  file_url: string
+}
+export type CertificateUpdatePayload = {
+  title?: string | null
+  issuer?: string | null
+  issue_date?: string | null
+  expiry_date?: string | null
+  file_url?: string | null
+}
 
 const PREFIX = "/buyer/companies"
 
@@ -46,6 +69,9 @@ export const buyerCompaniesApi = {
   mine: (params: PageParams = {}) =>
     apiFetch<Page<CompanyWithRelations>>(`${PREFIX}/me${buildPageQuery(params)}`),
 
+  get: (companyId: number) =>
+    apiFetch<CompanyWithRelations>(`${PREFIX}/${companyId}`),
+
   create: (data: CompanyWizardInput) =>
     apiFetch<CompanyWithRelations>(`${PREFIX}/`, {
       method: "POST",
@@ -66,6 +92,60 @@ export const buyerCompaniesApi = {
       body: form,
     })
   },
+
+  addTeamMember: (companyId: number, data: TeamMemberPayload) =>
+    apiFetch<{ id: number }>(`${PREFIX}/${companyId}/team`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateTeamMember: (
+    companyId: number,
+    targetUserId: number,
+    data: TeamMemberUpdatePayload,
+  ) =>
+    apiFetch<CompanyUser>(`${PREFIX}/${companyId}/team/${targetUserId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  removeTeamMember: (companyId: number, targetUserId: number) =>
+    apiFetch<void>(`${PREFIX}/${companyId}/team/${targetUserId}`, {
+      method: "DELETE",
+    }),
+
+  uploadCertificateFile: (file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<{ file_url: string }>(`${PREFIX}/certificates/upload`, {
+      method: "POST",
+      body: form,
+    })
+  },
+
+  addCertificate: (companyId: number, data: CertificateCreatePayload) =>
+    apiFetch<{ id: number }>(`${PREFIX}/${companyId}/certificates`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateCertificate: (
+    companyId: number,
+    certificateId: number,
+    data: CertificateUpdatePayload,
+  ) =>
+    apiFetch<CompanyCertificate>(
+      `${PREFIX}/${companyId}/certificates/${certificateId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      },
+    ),
+
+  removeCertificate: (companyId: number, certificateId: number) =>
+    apiFetch<void>(`${PREFIX}/${companyId}/certificates/${certificateId}`, {
+      method: "DELETE",
+    }),
 }
 
 export const companiesApi = {

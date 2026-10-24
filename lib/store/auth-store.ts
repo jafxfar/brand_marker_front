@@ -4,7 +4,7 @@ import {
   DEMO_SUPPLIER_ACTOR_ID,
   DEMO_BUYER_ACTOR_IDS,
 } from "@/lib/mock/companies"
-import { authApi, type ActorSummary } from "@/lib/api/auth"
+import { authApi, isLoginChallenge, type ActorSummary } from "@/lib/api/auth"
 import { isApiEnabled } from "@/lib/api/config"
 import { setSessionActorResolver, tokenStorage } from "@/lib/api/client"
 
@@ -35,6 +35,14 @@ export type SessionUser = {
   company?: string
 }
 
+export type LoginFlowResult =
+  | { status: "ok"; role: SessionRole }
+  | { status: "needs_2fa"; challengeToken: string }
+
+export type AdminLoginFlowResult =
+  | { status: "ok" }
+  | { status: "needs_2fa"; challengeToken: string }
+
 interface AuthState {
   user: SessionUser | null
   isAuthenticated: boolean
@@ -45,10 +53,19 @@ interface AuthState {
     email: string
     password: string
     role: MarketplaceSessionRole
+  }) => Promise<LoginFlowResult>
+  completeLoginWith2fa: (params: {
+    challengeToken: string
+    code: string
+    role: MarketplaceSessionRole
   }) => Promise<SessionRole>
   loginAdminWithCredentials: (params: {
     email: string
     password: string
+  }) => Promise<AdminLoginFlowResult>
+  completeAdminLoginWith2fa: (params: {
+    challengeToken: string
+    code: string
   }) => Promise<void>
   registerWithCredentials: (params: {
     email: string
@@ -155,6 +172,57 @@ const sessionFromMe = (
   }
 }
 
+type AuthStoreSet = (partial: Partial<AuthState>) => void
+
+const finalizeMarketplaceSession = async (
+  set: AuthStoreSet,
+  role: MarketplaceSessionRole,
+): Promise<SessionRole> => {
+  let me = await authApi.me()
+  if (["admin", "superadmin", "moderator"].includes(me.user.role)) {
+    set({
+      isAuthenticated: true,
+      isReady: true,
+      user: sessionFromMe(me, "admin"),
+    })
+    return "admin"
+  }
+  let active = pickActorForRole(me.actors, role, me.active_actor_id)
+  if (!active) {
+    try {
+      me = await authApi.activateRole(sideForRole(role))
+      active = pickActorForRole(me.actors, role, me.active_actor_id)
+    } catch {
+      // fall through
+    }
+  }
+  if (!active) {
+    const sideLabel = role === "customer" ? "заказчика" : "исполнителя"
+    throw new Error(
+      `Нет профиля ${sideLabel}. Активируйте роль в настройках или создайте компанию.`,
+    )
+  }
+  set({
+    isAuthenticated: true,
+    isReady: true,
+    user: sessionFromMe(me, role),
+  })
+  return role
+}
+
+const finalizeAdminSession = async (set: AuthStoreSet): Promise<void> => {
+  const me = await authApi.me()
+  if (!["admin", "superadmin", "moderator"].includes(me.user.role)) {
+    await authApi.logout().catch(() => undefined)
+    throw new Error("У этой учётной записи нет доступа к панели администратора")
+  }
+  set({
+    isAuthenticated: true,
+    isReady: true,
+    user: sessionFromMe(me, "admin"),
+  })
+}
+
 const migrateUser = (user: SessionUser): SessionUser => {
   const companyIds =
     user.companyIds?.length > 0
@@ -238,54 +306,34 @@ export const useAuthStore = create<AuthState>()(
 
       loginWithCredentials: async ({ email, password, role }) => {
         const apiRole = role === "supplier" ? "supplier" : "buyer"
-        await authApi.login(email, password, apiRole)
-        let me = await authApi.me()
-        if (["admin", "superadmin", "moderator"].includes(me.user.role)) {
-          set({
-            isAuthenticated: true,
-            isReady: true,
-            user: sessionFromMe(me, "admin"),
-          })
-          return "admin"
+        const loginResult = await authApi.login(email, password, apiRole)
+        if (isLoginChallenge(loginResult)) {
+          return { status: "needs_2fa", challengeToken: loginResult.challenge_token }
         }
-        let active = pickActorForRole(me.actors, role, me.active_actor_id)
-        if (!active) {
-          try {
-            me = await authApi.activateRole(sideForRole(role))
-            active = pickActorForRole(me.actors, role, me.active_actor_id)
-          } catch {
-            // fall through to explicit error below
-          }
-        }
-        if (!active) {
-          const sideLabel = role === "customer" ? "заказчика" : "исполнителя"
-          throw new Error(
-            `Нет профиля ${sideLabel}. Активируйте роль в настройках или создайте компанию.`,
-          )
-        }
-        set({
-          isAuthenticated: true,
-          isReady: true,
-          user: sessionFromMe(me, role),
-        })
-        return role
+        const sessionRole = await finalizeMarketplaceSession(set, role)
+        return { status: "ok", role: sessionRole }
+      },
+
+      completeLoginWith2fa: async ({ challengeToken, code, role }) => {
+        await authApi.verify2fa(challengeToken, code)
+        return finalizeMarketplaceSession(set, role)
       },
 
       loginAdminWithCredentials: async ({ email, password }) => {
         if (!isApiEnabled()) {
           throw new Error("Для входа администратора необходимо подключение к API")
         }
-        await authApi.login(email, password)
-        const me = await authApi.me()
-        if (!["admin", "superadmin", "moderator"].includes(me.user.role)) {
-          await authApi.logout().catch(() => undefined)
-          throw new Error("У этой учётной записи нет доступа к панели администратора")
+        const loginResult = await authApi.login(email, password)
+        if (isLoginChallenge(loginResult)) {
+          return { status: "needs_2fa", challengeToken: loginResult.challenge_token }
         }
-        set({
-          isAuthenticated: true,
-          isReady: true,
-          user: sessionFromMe(me, "admin"),
-        })
+        await finalizeAdminSession(set)
+        return { status: "ok" }
+      },
+
+      completeAdminLoginWith2fa: async ({ challengeToken, code }) => {
+        await authApi.verify2fa(challengeToken, code)
+        await finalizeAdminSession(set)
       },
 
       registerWithCredentials: async ({
