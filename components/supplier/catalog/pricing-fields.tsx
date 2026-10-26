@@ -116,24 +116,12 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Ставка в час
           </label>
           <input
-            type="text"
-            inputMode="numeric"
-            maxLength={12}
-            value={values.fixed_price ?? ""}
-            onChange={(e) => {
-              const raw = e.currentTarget.value
-
-              // Только цифры, максимум 12 символов
-              if (!/^\d{0,12}$/.test(raw)) return
-
-              // Максимальная цена: 100 миллиардов
-              if (raw !== "" && Number(raw) > 100_000_000_000) return
-
-              onChange({
-                ...values,
-                fixed_price: raw,
-              })
-            }}
+            maxLength={10}
+            type="number"
+            min={0}
+            max={100_000_000_000}
+            value={values.fixed_price}
+            onChange={(e) => onChange({ ...values, fixed_price: e.target.value })}
             className={inputClass("fixed_price")}
           />
           {errors?.hourly_rate && (
@@ -148,25 +136,13 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Ставка в месяц
           </label>
           <input
-          type="text"
-          inputMode="numeric"
-          maxLength={12}
-          value={values.fixed_price ?? ""}
-          onChange={(e) => {
-            const raw = e.currentTarget.value
-
-            // Только цифры, максимум 12 символов
-            if (!/^\d{0,12}$/.test(raw)) return
-
-            // Максимальная цена: 100 миллиардов
-            if (raw !== "" && Number(raw) > 100_000_000_000) return
-
-            onChange({
-              ...values,
-              fixed_price: raw,
-            })
-          }}
-          className={inputClass("fixed_price")}
+            maxLength={10}
+            type="number"
+            min={0}
+            max={100_000_000_000}
+            value={values.fixed_price}
+            onChange={(e) => onChange({ ...values, fixed_price: e.target.value })}
+            className={inputClass("fixed_price")}
           />
           {errors?.monthly_rate && (
             <p className="text-xs text-destructive mt-1">{errors.monthly_rate}</p>
@@ -179,46 +155,26 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
           {values.tiers.map((tier, index) => (
             <div key={index} className="flex items-center gap-2">
               <input
-                type="text"
-                inputMode="numeric"
-                maxLength={12}
-                value={values.fixed_price ?? ""}
-                onChange={(e) => {
-                  const raw = e.currentTarget.value
-
-                  // Только цифры, максимум 12 символов
-                  if (!/^\d{0,12}$/.test(raw)) return
-
-                  // Максимальная цена: 100 миллиардов
-                  if (raw !== "" && Number(raw) > 100_000_000_000) return
-
-                  onChange({
-                    ...values,
-                    fixed_price: raw,
-                  })
-                }}
-                className={inputClass("fixed_price")}
+                maxLength={10}
+                type="number"
+                min={1}
+                value={tier.min_qty}
+                onChange={(e) =>
+                  handleTierUpdate(index, { min_qty: Number(e.target.value) })
+                }
+                placeholder="От кол-ва"
+                className={cn(inputClass(`tier-qty-${index}`), "max-w-[120px]")}
               />
               <input
-                type="text"
-                inputMode="numeric"
-                maxLength={12}
-                value={values.fixed_price ?? ""}
-                onChange={(e) => {
-                  const raw = e.currentTarget.value
-
-                  // Только цифры, максимум 12 символов
-                  if (!/^\d{0,12}$/.test(raw)) return
-
-                  // Максимальная цена: 100 миллиардов
-                  if (raw !== "" && Number(raw) > 100_000_000_000) return
-
-                  onChange({
-                    ...values,
-                    fixed_price: raw,
-                  })
-                }}
-                className={inputClass("fixed_price")}
+                maxLength={10}
+                type="number"
+                min={0}
+                value={tier.price}
+                onChange={(e) =>
+                  handleTierUpdate(index, { price: Number(e.target.value) })
+                }
+                placeholder="Цена"
+                className={cn(inputClass(`tier-price-${index}`), "flex-1")}
               />
               <button
                 type="button"
