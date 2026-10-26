@@ -128,11 +128,11 @@ export const ProposalForm = ({
           Цена, {currency}
         </label>
         <input
-          maxLength={15}
+          maxLength={10}
           id="pf-price"
           type="number"
           min={0}
-          max={1_000_000_000_000}
+          max={1_000_000_000}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           className={inputClass("price")}
