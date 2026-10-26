@@ -194,6 +194,7 @@ export const CatalogItemForm = ({ initial, onSubmit }: CatalogItemFormProps) => 
             Название
           </label>
           <input
+            maxLength={255}
             id="item-title"
             type="text"
             value={title}

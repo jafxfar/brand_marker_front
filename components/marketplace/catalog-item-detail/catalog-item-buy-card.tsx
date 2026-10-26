@@ -102,6 +102,7 @@ export const CatalogItemBuyCard = ({
                     <Minus size={16} aria-hidden />
                   </button>
                   <input
+                    maxLength={10}
                     type="number"
                     min={moq}
                     value={qty}

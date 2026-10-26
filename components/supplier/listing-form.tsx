@@ -110,7 +110,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
         <div className="bg-card border border-border rounded-xl p-5 sm:p-6 space-y-5">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1.5">Название</label>
-            <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === "product" ? "Напр. Офисное кресло ErgoPro" : "Напр. Разработка сайта под ключ"} className={inputClass("title")} />
+            <input maxLength={100} id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === "product" ? "Напр. Офисное кресло ErgoPro" : "Напр. Разработка сайта под ключ"} className={inputClass("title")} />
             {errors.title && <p className="text-xs text-destructive mt-1">{errors.title}</p>}
           </div>
 
@@ -134,13 +134,13 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-foreground mb-1.5">Цена, TJS</label>
-              <input id="price" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="50000" className={inputClass("price")} />
+              <input maxLength={10} id="price" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="50000" className={inputClass("price")} />
               {errors.price && <p className="text-xs text-destructive mt-1">{errors.price}</p>}
             </div>
             {kind === "product" && (
               <div>
                 <label htmlFor="inStock" className="block text-sm font-medium text-foreground mb-1.5">Количество в наличии</label>
-                <input id="inStock" type="number" min={0} value={inStock} onChange={(e) => setInStock(e.target.value)} placeholder="100" className={inputClass("inStock")} />
+                <input maxLength={10} id="inStock" type="number" min={0} value={inStock} onChange={(e) => setInStock(e.target.value)} placeholder="100" className={inputClass("inStock")} />
                 {errors.inStock && <p className="text-xs text-destructive mt-1">{errors.inStock}</p>}
               </div>
             )}
@@ -158,7 +158,7 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
                 <label htmlFor="sku" className="block text-sm font-medium text-foreground mb-1.5">
                   Артикул / ИД-номер <span className="text-muted-foreground font-normal">(необязательно)</span>
                 </label>
-                <input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="SKU-12345" className={inputClass("sku")} />
+                <input maxLength={200} id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="SKU-12345" className={inputClass("sku")} />
               </div>
             </div>
           )}

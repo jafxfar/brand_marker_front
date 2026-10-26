@@ -56,6 +56,7 @@ export const ProfileStep = ({ data, errors, onChange }: ProfileStepProps) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <WizardField label="Год основания" error={errors.founded_year}>
           <input
+            maxLength={5}
             type="number"
             value={data.founded_year}
             onChange={(e) => onChange({ founded_year: e.target.value })}
@@ -68,6 +69,7 @@ export const ProfileStep = ({ data, errors, onChange }: ProfileStepProps) => {
 
         <WizardField label="Число сотрудников" error={errors.employees_count}>
           <input
+            maxLength={10}
             type="number"
             value={data.employees_count}
             onChange={(e) => onChange({ employees_count: e.target.value })}
@@ -115,6 +117,7 @@ export const ProfileStep = ({ data, errors, onChange }: ProfileStepProps) => {
 
       <WizardField label="Отрасли (через запятую)" error={errors.industries}>
         <input
+          maxLength={100}
           type="text"
           value={data.industries.join(", ")}
           onChange={(e) => handleIndustryChange(e.target.value)}

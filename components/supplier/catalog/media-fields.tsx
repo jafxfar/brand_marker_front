@@ -158,6 +158,7 @@ export const MediaFields = ({ media, onChange }: MediaFieldsProps) => {
             <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-12">
               <div className="sm:col-span-5">
                 <input
+                  maxLength={255}
                   type="text"
                   value={item.file_name}
                   onChange={(e) => handleUpdate(index, { file_name: e.target.value })}

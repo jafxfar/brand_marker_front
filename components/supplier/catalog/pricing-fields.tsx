@@ -84,6 +84,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Цена
           </label>
           <input
+            maxLength={15}
             type="number"
             min={0}
             value={values.fixed_price}
@@ -102,6 +103,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Ставка в час
           </label>
           <input
+            maxLength={10}
             type="number"
             min={0}
             value={values.hourly_rate}
@@ -120,6 +122,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Ставка в месяц
           </label>
           <input
+            maxLength={10}
             type="number"
             min={0}
             value={values.monthly_rate}
@@ -137,6 +140,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
           {values.tiers.map((tier, index) => (
             <div key={index} className="flex items-center gap-2">
               <input
+                maxLength={10}
                 type="number"
                 min={1}
                 value={tier.min_qty}
@@ -147,6 +151,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
                 className={cn(inputClass(`tier-qty-${index}`), "max-w-[120px]")}
               />
               <input
+                maxLength={10}
                 type="number"
                 min={0}
                 value={tier.price}

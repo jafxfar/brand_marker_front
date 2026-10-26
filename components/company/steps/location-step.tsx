@@ -13,6 +13,7 @@ export const LocationStep = ({ data, errors, onChange }: LocationStepProps) => (
   <div className="space-y-5">
     <WizardField label="Страна" error={errors.country}>
       <input
+        maxLength={50}
         type="text"
         value={data.country}
         onChange={(e) => onChange({ country: e.target.value })}
@@ -23,6 +24,7 @@ export const LocationStep = ({ data, errors, onChange }: LocationStepProps) => (
 
     <WizardField label="Город" required error={errors.city}>
       <input
+        maxLength={50}
         type="text"
         value={data.city}
         onChange={(e) => onChange({ city: e.target.value })}
@@ -33,6 +35,7 @@ export const LocationStep = ({ data, errors, onChange }: LocationStepProps) => (
 
     <WizardField label="Адрес" error={errors.address}>
       <input
+        maxLength={100}
         type="text"
         value={data.address}
         onChange={(e) => onChange({ address: e.target.value })}
@@ -43,6 +46,7 @@ export const LocationStep = ({ data, errors, onChange }: LocationStepProps) => (
 
     <WizardField label="Сайт" error={errors.website}>
       <input
+        maxLength={200}
         type="url"
         value={data.website}
         onChange={(e) => onChange({ website: e.target.value })}

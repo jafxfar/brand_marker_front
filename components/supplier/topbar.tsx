@@ -52,6 +52,7 @@ export default function SupplierTopbar({
             <span className="sr-only">Поиск</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-[18px] -translate-y-1/2 text-mute" />
             <input
+              maxLength={100}
               type="text"
               placeholder="Поиск по заявкам покупателей"
               className="h-10 w-full rounded-[10px] border border-transparent bg-canvas pl-10 pr-3 text-[14.5px] outline-none focus:border-brand-600 focus:bg-white"

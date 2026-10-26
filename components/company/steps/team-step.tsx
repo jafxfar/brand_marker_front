@@ -77,6 +77,7 @@ export const TeamStep = ({ data, errors, onChange }: TeamStepProps) => {
               error={errors[`team.${index}.email`]}
             >
               <input
+                maxLength={50}
                 type="email"
                 value={member.email}
                 onChange={(e) => handleUpdate(index, { email: e.target.value })}
