@@ -135,6 +135,7 @@ export const DisputeActionDialog = ({
               Сумма возврата покупателю
             </label>
             <Input
+              maxLength={10}
               id="dispute-partial-amount"
               type="number"
               min={0}

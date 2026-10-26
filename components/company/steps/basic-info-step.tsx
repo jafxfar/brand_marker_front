@@ -110,6 +110,7 @@ export const BasicInfoStep = ({
 
       <WizardField label="Название компании" required error={errors.title}>
         <input
+          maxLength={100}
           type="text"
           value={data.title}
           onChange={(e) => onChange({ title: e.target.value })}
@@ -120,6 +121,7 @@ export const BasicInfoStep = ({
 
       <WizardField label="Юридическое название" error={errors.legal_name}>
         <input
+          maxLength={100}
           type="text"
           value={data.legal_name}
           onChange={(e) => onChange({ legal_name: e.target.value })}
@@ -130,6 +132,7 @@ export const BasicInfoStep = ({
 
       <WizardField label="ИНН / налоговый номер" error={errors.tax_number}>
         <input
+          maxLength={20}
           type="text"
           value={data.tax_number}
           onChange={(e) => onChange({ tax_number: e.target.value })}

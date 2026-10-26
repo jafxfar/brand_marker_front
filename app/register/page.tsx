@@ -184,6 +184,7 @@ function RegisterContent() {
                   Имя
                 </label>
                 <Input
+                  maxLength={100}
                   id="first_name"
                   type="text"
                   autoComplete="given-name"
@@ -200,6 +201,7 @@ function RegisterContent() {
                   Фамилия
                 </label>
                 <Input
+                  maxLength={100}
                   id="last_name"
                   type="text"
                   autoComplete="family-name"
@@ -218,6 +220,7 @@ function RegisterContent() {
                 Email
               </label>
               <Input
+                maxLength={100}
                 id="email"
                 type="email"
                 autoComplete="email"
@@ -236,6 +239,7 @@ function RegisterContent() {
                 <span className="font-normal text-mute">(необязательно)</span>
               </label>
               <Input
+                maxLength={20}
                 id="phone"
                 type="tel"
                 autoComplete="tel"

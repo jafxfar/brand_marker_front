@@ -205,6 +205,7 @@ const SettingsFormCard = ({ settings }: { settings: AdminPlatformSettings }) => 
           <div className="space-y-2">
             <Label htmlFor="commission-percent">Процент комиссии, %</Label>
             <Input
+              maxLength={3}
               id="commission-percent"
               inputMode="decimal"
               value={form.percent}
@@ -220,6 +221,7 @@ const SettingsFormCard = ({ settings }: { settings: AdminPlatformSettings }) => 
           <div className="space-y-2">
             <Label htmlFor="commission-min">Минимальная комиссия, {COMMISSION_CURRENCY}</Label>
             <Input
+              maxLength={3}
               id="commission-min"
               inputMode="decimal"
               value={form.minimum}
@@ -250,6 +252,7 @@ const SettingsFormCard = ({ settings }: { settings: AdminPlatformSettings }) => 
                   Лимит суммы договора, {COMMISSION_CURRENCY}
                 </Label>
                 <Input
+                  maxLength={10}
                   id="contract-limit"
                   inputMode="decimal"
                   value={form.limit}

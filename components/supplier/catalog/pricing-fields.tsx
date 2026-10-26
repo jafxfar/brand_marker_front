@@ -84,10 +84,24 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Цена
           </label>
           <input
-            type="number"
-            min={0}
-            value={values.fixed_price}
-            onChange={(e) => onChange({ ...values, fixed_price: e.target.value })}
+            type="text"
+            inputMode="numeric"
+            maxLength={12}
+            value={values.fixed_price ?? ""}
+            onChange={(e) => {
+              const raw = e.currentTarget.value
+
+              // Только цифры, максимум 12 символов
+              if (!/^\d{0,15}$/.test(raw)) return
+
+              // Максимальная цена: 100 миллиардов
+              if (raw !== "" && Number(raw) > 100_000_000_000) return
+
+              onChange({
+                ...values,
+                fixed_price: raw,
+              })
+            }}
             className={inputClass("fixed_price")}
           />
           {errors?.fixed_price && (
@@ -102,11 +116,13 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Ставка в час
           </label>
           <input
+            maxLength={10}
             type="number"
             min={0}
-            value={values.hourly_rate}
-            onChange={(e) => onChange({ ...values, hourly_rate: e.target.value })}
-            className={inputClass("hourly_rate")}
+            max={100_000_000_000}
+            value={values.fixed_price}
+            onChange={(e) => onChange({ ...values, fixed_price: e.target.value })}
+            className={inputClass("fixed_price")}
           />
           {errors?.hourly_rate && (
             <p className="text-xs text-destructive mt-1">{errors.hourly_rate}</p>
@@ -120,11 +136,13 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
             Ставка в месяц
           </label>
           <input
+            maxLength={10}
             type="number"
             min={0}
-            value={values.monthly_rate}
-            onChange={(e) => onChange({ ...values, monthly_rate: e.target.value })}
-            className={inputClass("monthly_rate")}
+            max={100_000_000_000}
+            value={values.fixed_price}
+            onChange={(e) => onChange({ ...values, fixed_price: e.target.value })}
+            className={inputClass("fixed_price")}
           />
           {errors?.monthly_rate && (
             <p className="text-xs text-destructive mt-1">{errors.monthly_rate}</p>
@@ -137,6 +155,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
           {values.tiers.map((tier, index) => (
             <div key={index} className="flex items-center gap-2">
               <input
+                maxLength={10}
                 type="number"
                 min={1}
                 value={tier.min_qty}
@@ -147,6 +166,7 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
                 className={cn(inputClass(`tier-qty-${index}`), "max-w-[120px]")}
               />
               <input
+                maxLength={10}
                 type="number"
                 min={0}
                 value={tier.price}

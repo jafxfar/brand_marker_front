@@ -245,6 +245,7 @@ function LoginContent() {
                 Email
               </label>
               <Input
+                maxLength={100}
                 id="email"
                 type="email"
                 autoComplete="email"

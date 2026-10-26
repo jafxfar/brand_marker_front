@@ -427,6 +427,7 @@ export const RfqForm = ({
             Что нужно сделать или купить
           </label>
           <input
+            maxLength={100}
             id="rfq-title"
             value={values.title}
             onChange={(e) => setField("title", e.target.value)}
@@ -485,6 +486,7 @@ export const RfqForm = ({
               Количество
             </label>
             <input
+              maxLength={10}
               id="quantity"
               type="number"
               min={1}
@@ -601,6 +603,7 @@ export const RfqForm = ({
                 {values.budget_type === "range" ? "От" : "Сумма"}
               </label>
               <input
+                maxLength={10}
                 id="budget-from"
                 type="number"
                 min={0}
@@ -617,6 +620,7 @@ export const RfqForm = ({
                   До
                 </label>
                 <input
+                  maxLength={10}
                   id="budget-to"
                   type="number"
                   min={0}
@@ -652,6 +656,7 @@ export const RfqForm = ({
               Принимать предложения до
             </label>
             <input
+              maxLength={10}
               id="deadline"
               type="date"
               min={DATE_INPUT_MIN}
@@ -671,6 +676,7 @@ export const RfqForm = ({
                   Когда нужна поставка
                 </label>
                 <input
+                  maxLength={10}
                   id="delivery-date"
                   type="date"
                   min={DATE_INPUT_MIN}
@@ -687,6 +693,7 @@ export const RfqForm = ({
                   Страна доставки
                 </label>
                 <input
+                  maxLength={50}
                   id="delivery-country"
                   value={values.delivery_country}
                   onChange={(e) => setField("delivery_country", e.target.value)}
@@ -700,6 +707,7 @@ export const RfqForm = ({
                   Город доставки
                 </label>
                 <input
+                  maxLength={50}
                   id="delivery-city"
                   value={values.delivery_city}
                   onChange={(e) => setField("delivery_city", e.target.value)}
@@ -716,6 +724,7 @@ export const RfqForm = ({
                   Когда начать работу
                 </label>
                 <input
+                  maxLength={10}
                   id="start-date"
                   type="date"
                   min={DATE_INPUT_MIN}
@@ -732,6 +741,7 @@ export const RfqForm = ({
                   Сколько займёт работа
                 </label>
                 <input
+                  maxLength={25}
                   id="duration"
                   value={values.project_duration}
                   onChange={(e) => setField("project_duration", e.target.value)}

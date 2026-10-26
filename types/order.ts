@@ -1,5 +1,7 @@
 export const ORDER_KINDS = ["product", "service"] as const
 
+export type Listing = any 
+
 export type OrderKind = (typeof ORDER_KINDS)[number]
 
 export const PAYMENT_SCHEMES = ["prepay", "half", "postpay"] as const

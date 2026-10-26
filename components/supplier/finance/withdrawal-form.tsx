@@ -96,8 +96,9 @@ export const WithdrawalForm = ({
         </label>
         <div className="mt-2 flex gap-2">
           <input
+            maxLength={10}
             id="withdrawal-amount"
-            type="text"
+            type="number"
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}

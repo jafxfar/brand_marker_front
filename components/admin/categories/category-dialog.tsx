@@ -145,7 +145,7 @@ export const CategoryDialog = ({ state, categories, onClose }: CategoryDialogPro
               id="category-name"
               value={name}
               onChange={handleNameChange}
-              maxLength={255}
+              maxLength={100}
               aria-invalid={Boolean(nameError)}
               aria-describedby={nameError ? "category-name-error" : undefined}
               autoFocus

@@ -84,6 +84,7 @@ export const CertificatesStep = ({
             error={errors[`certificates.${index}.title`]}
           >
             <input
+              maxLength={100}
               type="text"
               value={cert.title}
               onChange={(e) => handleUpdate(index, { title: e.target.value })}
@@ -96,6 +97,7 @@ export const CertificatesStep = ({
             error={errors[`certificates.${index}.issuer`]}
           >
             <input
+              maxLength={100}
               type="text"
               value={cert.issuer}
               onChange={(e) => handleUpdate(index, { issuer: e.target.value })}
@@ -109,6 +111,7 @@ export const CertificatesStep = ({
               error={errors[`certificates.${index}.issue_date`]}
             >
               <input
+                maxLength={10}
                 type="date"
                 min={issueDateBounds.min}
                 max={issueDateBounds.max}
@@ -125,6 +128,7 @@ export const CertificatesStep = ({
               error={errors[`certificates.${index}.expiry_date`]}
             >
               <input
+                maxLength={10}
                 type="date"
                 min={expiryDateBounds.min}
                 max={expiryDateBounds.max}

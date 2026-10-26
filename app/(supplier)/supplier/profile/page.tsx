@@ -94,19 +94,19 @@ export default function SupplierProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Контактное лицо</label>
-              <input id="name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+              <input maxLength={50} id="name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">Email</label>
-              <input id="email" value={email} disabled className={cn(inputClass, "bg-muted text-muted-foreground cursor-not-allowed")} />
+              <input maxLength={50} id="email" value={email} disabled className={cn(inputClass, "bg-muted text-muted-foreground cursor-not-allowed")} />
             </div>
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1.5">Телефон</label>
-              <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 999 123-45-67" className={inputClass} />
+              <input maxLength={15} id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 999 123-45-67" className={inputClass} />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="city" className="block text-sm font-medium text-foreground mb-1.5">Город</label>
-              <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Душанбе" className={inputClass} />
+              <input maxLength={50} id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Душанбе" className={inputClass} />
             </div>
           </div>
         </PageSurface>

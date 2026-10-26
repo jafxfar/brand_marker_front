@@ -54,6 +54,7 @@ export const AttributeFields = ({
         <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-start">
           <div className="sm:col-span-4">
             <input
+              maxLength={255}
               type="text"
               value={attr.name}
               onChange={(e) => handleUpdate(index, { name: e.target.value })}
@@ -63,6 +64,7 @@ export const AttributeFields = ({
           </div>
           <div className="sm:col-span-4">
             <input
+              maxLength={255}
               type="text"
               value={attr.value}
               onChange={(e) => handleUpdate(index, { value: e.target.value })}

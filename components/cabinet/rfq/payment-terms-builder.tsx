@@ -141,6 +141,7 @@ export const PaymentTermsBuilder = ({ price, currency, onChange }: PaymentTermsB
             >
               <div className="flex items-center gap-2">
                 <input
+                  maxLength={50}
                   type="text"
                   value={milestone.title}
                   onChange={(e) => updateMilestone(index, { title: e.target.value })}
@@ -161,6 +162,7 @@ export const PaymentTermsBuilder = ({ price, currency, onChange }: PaymentTermsB
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 w-24">
                   <input
+                    maxLength={3}
                     type="number"
                     min={0}
                     max={100}

@@ -66,12 +66,12 @@ export default function RespondDialog({
         <div className="grid grid-cols-2 gap-3 py-1">
           <div>
             <label htmlFor="r-price" className="block text-sm font-medium text-foreground mb-1.5">Ваша цена, TJS</label>
-            <input id="r-price" type="number" min={0} max={1_000_000_000_000} value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass("price")} />
+            <input maxLength={15} id="r-price" type="number" min={0} max={1_000_000_000_000} value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass("price")} />
             {errors.price && <p className="text-xs text-destructive mt-1">{errors.price}</p>}
           </div>
           <div>
             <label htmlFor="r-days" className="block text-sm font-medium text-foreground mb-1.5">Срок, дней</label>
-            <input id="r-days" type="number" min={1} max={3650} value={days} onChange={(e) => setDays(e.target.value)} className={inputClass("days")} />
+            <input maxLength={10} id="r-days" type="number" min={1} max={3650} value={days} onChange={(e) => setDays(e.target.value)} className={inputClass("days")} />
             {errors.days && <p className="text-xs text-destructive mt-1">{errors.days}</p>}
           </div>
         </div>
