@@ -91,7 +91,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Имя / контактное лицо</label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input maxLength={100} id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">Email</label>

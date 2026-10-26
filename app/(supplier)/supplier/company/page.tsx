@@ -508,6 +508,7 @@ export default function SupplierCompanyPage() {
                 <div className="grid gap-2">
                   <Label htmlFor="cp-city">Город отгрузки</Label>
                   <Input
+                    maxLength={50}
                     id="cp-city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
@@ -516,6 +517,7 @@ export default function SupplierCompanyPage() {
                 <div className="grid gap-2">
                   <Label htmlFor="cp-year">Год основания</Label>
                   <Input
+                    maxLength={4}
                     id="cp-year"
                     className="tnum"
                     value={extra.facts.founded}

@@ -189,6 +189,7 @@ export const CatalogNegotiateOfferDialog = ({
               Ваша цена ({currency})
             </label>
             <Input
+              maxLength={15}
               id="negotiate-price"
               type="number"
               min={0}
