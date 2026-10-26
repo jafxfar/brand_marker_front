@@ -54,7 +54,13 @@ export type PaymentConfig = {
   currency: string | null
 }
 
-export type GatewayPaymentStatus = "pending" | "ok" | "failed" | "canceled"
+export type GatewayPaymentStatus =
+  | "pending"
+  | "ok"
+  | "to_approve"
+  | "partially_approved"
+  | "failed"
+  | "canceled"
 
 export type AlifOrderSyncResponse = {
   order_id: string

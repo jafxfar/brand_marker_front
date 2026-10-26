@@ -27,7 +27,8 @@ type AlifPaymentNoteProps = {
 export const AlifPaymentNote = ({ className }: AlifPaymentNoteProps) => (
   <InlineHint variant="escrow" className={className}>
     Оплата картой через защищённую страницу <span className="font-semibold">Alif</span>.
-    Данные карты не передаются площадке. После оплаты вы вернётесь в сделку.
+    Данные карты не передаются площадке. После оплаты средства резервируются до приёмки
+    и уйдут исполнителю, когда вы подтвердите результат работы.
   </InlineHint>
 )
 

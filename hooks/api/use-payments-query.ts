@@ -124,7 +124,12 @@ export const useSyncAlifOrderMutation = () => {
   return useMutation({
     mutationFn: (orderId: string) => paymentsApi.syncAlifOrder(orderId),
     onSuccess: (data) => {
-      if (data.payment_status === "pending") return
+      const held =
+        data.milestone_status === "funded" ||
+        data.payment_status === "to_approve" ||
+        data.payment_status === "partially_approved" ||
+        data.payment_status === "ok"
+      if (data.payment_status === "pending" && !held) return
       invalidatePaymentQueries(qc)
     },
     meta: {

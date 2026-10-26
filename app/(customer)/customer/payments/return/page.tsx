@@ -8,13 +8,35 @@ import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components
 import { Button } from "@/components/ui/button"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { useSyncAlifOrderMutation } from "@/hooks/api/use-payments-query"
-import type { GatewayPaymentStatus } from "@/lib/api/payments"
+import type { AlifOrderSyncResponse, GatewayPaymentStatus } from "@/lib/api/payments"
 
 const POLL_INTERVAL_MS = 3000
 const MAX_ATTEMPTS = 10
 const ORDER_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/
 
 type ViewState = GatewayPaymentStatus | "checking" | "timeout" | "error" | "invalid"
+
+const SUCCESS_VIEWS = new Set<ViewState>(["ok", "to_approve", "partially_approved"])
+
+const resolveViewFromSync = (result: AlifOrderSyncResponse): ViewState | "pending" => {
+  const status = result.payment_status
+  if (status === "pending") {
+    // Milestone already funded means hold succeeded even if gateway status lags.
+    if (result.milestone_status === "funded") return "to_approve"
+    return "pending"
+  }
+  if (status === "partially_approved") return "to_approve"
+  if (
+    result.milestone_status === "funded" &&
+    (status === "ok" || status === "to_approve")
+  ) {
+    return status === "ok" ? "ok" : "to_approve"
+  }
+  if (result.milestone_status === "funded" && !["failed", "canceled"].includes(status)) {
+    return "to_approve"
+  }
+  return status
+}
 
 const viewCopy: Record<ViewState, { title: string; description: string; icon: React.ReactNode }> = {
   checking: {
@@ -35,7 +57,20 @@ const viewCopy: Record<ViewState, { title: string; description: string; icon: Re
   },
   ok: {
     title: "Оплата прошла",
-    description: "Средства зарезервированы на безопасной сделке.",
+    description:
+      "Средства зарезервированы на безопасной сделке. Исполнитель получит их после того, как вы примете работу.",
+    icon: <CheckCircle2 className="text-emerald-600" />,
+  },
+  to_approve: {
+    title: "Оплата прошла",
+    description:
+      "Средства зарезервированы до приёмки. Они уйдут исполнителю, когда вы подтвердите результат работы.",
+    icon: <CheckCircle2 className="text-emerald-600" />,
+  },
+  partially_approved: {
+    title: "Оплата прошла",
+    description:
+      "Средства зарезервированы до приёмки. Они уйдут исполнителю, когда вы подтвердите результат работы.",
     icon: <CheckCircle2 className="text-emerald-600" />,
   },
   failed: {
@@ -82,8 +117,9 @@ const PaymentReturnContent = () => {
         const result = await syncOrder(orderId)
         if (cancelled) return
         setContractId(result.contract_id)
-        if (result.payment_status !== "pending") {
-          setView(result.payment_status)
+        const next = resolveViewFromSync(result)
+        if (next !== "pending") {
+          setView(next)
           return
         }
         if (attempt >= MAX_ATTEMPTS) {
@@ -104,7 +140,8 @@ const PaymentReturnContent = () => {
     }
   }, [hydrated, isValidOrder, orderId, syncOrder])
 
-  const copy = viewCopy[view]
+  const copy = viewCopy[view] ?? viewCopy.error
+  const isSuccess = SUCCESS_VIEWS.has(view)
   const backHref = contractId ? `/customer/contracts/${contractId}` : "/customer/payments"
   const backLabel = contractId ? "Вернуться к сделке" : "К платежам"
 
@@ -117,7 +154,7 @@ const PaymentReturnContent = () => {
           title={copy.title}
           description={copy.description}
           action={
-            <Button asChild variant={view === "ok" ? "default" : "outline"}>
+            <Button asChild variant={isSuccess ? "default" : "outline"}>
               <Link href={backHref}>{backLabel}</Link>
             </Button>
           }
