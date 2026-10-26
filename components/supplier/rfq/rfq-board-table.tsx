@@ -4,9 +4,17 @@ import Link from "next/link"
 import type { ProposalStatus, RfqWithRelations } from "@/types"
 import { StatusBadge } from "@/components/bm"
 import { cn } from "@/lib/utils"
-import { formatCurrency, formatRfqBudget, getDaysLeft, pluralRu } from "@/lib/format"
+import {
+  formatCurrency,
+  formatRfqBudget,
+  getDaysLeft,
+  pluralRu,
+} from "@/lib/format"
 import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
-import { isCatalogOfferRfq, isPendingCatalogOffer } from "@/lib/rfq-board"
+import {
+  isCatalogOfferRfq,
+  isPendingCatalogOffer,
+} from "@/lib/rfq-board"
 
 type MyProposalSummary = {
   price: number
@@ -49,6 +57,7 @@ export const RfqBoardTable = ({
   onSubmitProposal,
 }: RfqBoardTableProps) => (
   <>
+    {/* Desktop */}
     <div className="hidden overflow-x-auto rounded-2xl border border-line bg-white md:block">
       <table className="w-full text-sm">
         <thead>
@@ -65,9 +74,11 @@ export const RfqBoardTable = ({
             )}
           </tr>
         </thead>
+
         <tbody className="divide-y divide-line">
           {rfqs.map((rfq) => {
             const href = `/supplier/rfqs/${rfq.id}`
+
             const myProposal =
               getMyProposal?.(rfq.id) ??
               (rfq.my_proposal_status
@@ -77,11 +88,13 @@ export const RfqBoardTable = ({
                     status: rfq.my_proposal_status,
                   }
                 : undefined)
+
             const pendingOffer = isPendingCatalogOffer(myProposal?.status)
             const responded = Boolean(myProposal) && !pendingOffer
             const expired = isExpired(rfq)
             const daysLeft = getDaysLeft(rfq.deadline)
-            const urgent = !expired && daysLeft <= URGENT_DAYS
+            const overdue = daysLeft < 0
+            const urgent = !expired && !overdue && daysLeft <= URGENT_DAYS
             const verified = getBuyerVerified(rfq)
             const catalog = isCatalogOfferRfq(rfq)
 
@@ -95,12 +108,18 @@ export const RfqBoardTable = ({
                     {formatRfqNo(rfq.id)}
                   </Link>
                 </td>
+
                 <td className="px-5 py-3.5">
                   <Link href={href} className="block min-w-0">
-                    <b className="font-semibold text-ink line-clamp-2">{rfq.title}</b>
-                    <div className="text-[12.5px] text-mute">{positionsLine(rfq)}</div>
+                    <b className="font-semibold text-ink line-clamp-2">
+                      {rfq.title}
+                    </b>
+                    <div className="text-[12.5px] text-mute">
+                      {positionsLine(rfq)}
+                    </div>
                   </Link>
                 </td>
+
                 <td className="px-5 py-3.5">
                   <Link href={href} className="block">
                     <span className="text-ink">{getBuyerName(rfq)}</span>
@@ -114,6 +133,7 @@ export const RfqBoardTable = ({
                     </div>
                   </Link>
                 </td>
+
                 <td className="whitespace-nowrap px-5 py-3.5">
                   <Link href={href} className="mono text-ink">
                     {catalog && myProposal?.price
@@ -126,10 +146,17 @@ export const RfqBoardTable = ({
                         )}
                   </Link>
                 </td>
+
                 <td className="whitespace-nowrap px-5 py-3.5">
                   <Link href={href} className="block">
                     {expired ? (
-                      <span className="text-[13px] text-amber-800">приём закрыт</span>
+                      <span className="text-[13px] text-amber-800">
+                        приём закрыт
+                      </span>
+                    ) : overdue ? (
+                      <span className="text-[13px] font-semibold text-red-700">
+                        Просрочено
+                      </span>
                     ) : (
                       <span
                         className={cn(
@@ -137,12 +164,12 @@ export const RfqBoardTable = ({
                           urgent && "font-semibold text-red-700",
                         )}
                       >
-                        {daysLeft}{" "}
-                        {pluralRu(daysLeft, "день", "дня", "дней")}
+                        {daysLeft} {pluralRu(daysLeft, "день", "дня", "дней")}
                       </span>
                     )}
                   </Link>
                 </td>
+
                 <td className="px-5 py-3.5 text-right">
                   {responded ? (
                     <Link href={href} className="inline-flex">
@@ -165,6 +192,7 @@ export const RfqBoardTable = ({
       </table>
     </div>
 
+    {/* Mobile */}
     <ul className="grid gap-2 md:hidden">
       {rfqs.map((rfq) => {
         const href = `/supplier/rfqs/${rfq.id}`
@@ -173,7 +201,8 @@ export const RfqBoardTable = ({
         const responded = Boolean(myProposal) && !pendingOffer
         const expired = isExpired(rfq)
         const daysLeft = getDaysLeft(rfq.deadline)
-        const urgent = !expired && daysLeft <= URGENT_DAYS
+        const overdue = daysLeft < 0
+        const urgent = !expired && !overdue && daysLeft <= URGENT_DAYS
         const verified = getBuyerVerified(rfq)
 
         return (
@@ -189,10 +218,17 @@ export const RfqBoardTable = ({
                   <span className="mono text-[12px] text-mute">
                     {formatRfqNo(rfq.id)}
                   </span>
+
                   {responded ? (
                     <StatusBadge status="sent" label="Отправлено" />
                   ) : expired ? (
-                    <span className="text-[12px] text-amber-800">приём закрыт</span>
+                    <span className="text-[12px] text-amber-800">
+                      приём закрыт
+                    </span>
+                  ) : overdue ? (
+                    <span className="text-[12px] font-semibold text-red-700">
+                      Просрочено
+                    </span>
                   ) : (
                     <span
                       className={cn(
@@ -204,7 +240,11 @@ export const RfqBoardTable = ({
                     </span>
                   )}
                 </span>
-                <b className="text-[14px] leading-snug text-ink">{rfq.title}</b>
+
+                <b className="text-[14px] leading-snug text-ink">
+                  {rfq.title}
+                </b>
+
                 <span className="text-[12.5px] text-mute">
                   {getBuyerName(rfq)}
                   {verified ? " · проверена" : " · не проверена"} · бюджет{" "}
@@ -218,6 +258,7 @@ export const RfqBoardTable = ({
                   </span>
                 </span>
               </Link>
+
               {!responded && !expired ? (
                 <button
                   type="button"

@@ -738,6 +738,7 @@ export const RfqForm = ({
                   placeholder="Например: 2 недели"
                   className={inputClass("project_duration")}
                   aria-invalid={!!errors.project_duration}
+                  maxLength={25}
                 />
                 <FieldError message={errors.project_duration} />
               </div>
