@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BadgeCheck, Clock, MapPin, Star, Users } from "lucide-react"
+import { BadgeCheck, Clock, Crown, MapPin, Star, Users } from "lucide-react"
 import type { MarketplacePerformer } from "@/types/marketplace"
 import { getIcon } from "@/lib/icon-map"
 import { performerUrl } from "@/lib/marketplace-routes"
@@ -26,6 +26,17 @@ export const PerformerCard = ({ performer }: PerformerCardProps) => {
               {performer.name}
             </span>
             {performer.verified && <BadgeCheck size={14} className="text-primary flex-shrink-0" />}
+            {performer.vip && (
+              <span className="inline-flex items-center gap-0.5 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                <Crown size={10} aria-hidden="true" />
+                VIP
+              </span>
+            )}
+            {performer.promoted && !performer.vip && (
+              <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                Продвигается
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
             <Icon size={11} className="text-muted-foreground" />

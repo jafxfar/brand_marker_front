@@ -159,17 +159,42 @@ export const companiesApi = {
     ),
 }
 
+export type ReviewCreatePayload = {
+  contract_id: number
+  target_actor_id: number
+  rating: number
+  service_rating?: number | null
+  delivery_rating?: number | null
+  quality_rating?: number | null
+  tags?: string[]
+  comment?: string | null
+}
+
 export const reviewsApi = {
   listGiven: (params: PageParams = {}) =>
     apiFetch<Page<Review>>(`/buyer/reviews/${buildPageQuery(params)}`),
 
-  create: (data: {
-    contract_id: number
-    target_actor_id: number
-    rating: number
-    comment?: string | null
-  }) =>
+  listReceived: (params: PageParams = {}) =>
+    apiFetch<Page<Review>>(`/buyer/reviews/received${buildPageQuery(params)}`),
+
+  create: (data: ReviewCreatePayload) =>
     apiFetch<Review>("/buyer/reviews/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+}
+
+export const supplierReviewsApi = {
+  listGiven: (params: PageParams = {}) =>
+    apiFetch<Page<Review>>(`/supplier/reviews/${buildPageQuery(params)}`),
+
+  listReceived: (params: PageParams = {}) =>
+    apiFetch<Page<Review>>(
+      `/supplier/reviews/received${buildPageQuery(params)}`,
+    ),
+
+  create: (data: ReviewCreatePayload) =>
+    apiFetch<Review>("/supplier/reviews/", {
       method: "POST",
       body: JSON.stringify(data),
     }),

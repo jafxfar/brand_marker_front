@@ -82,6 +82,30 @@ export const useAdminCompanyActionMutation = () => {
   })
 }
 
+export const useAdminCompanyVipMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      companyId,
+      vip,
+      months,
+      reason,
+    }: {
+      companyId: number
+      vip: boolean
+      months?: number | null
+      reason?: string | null
+    }) => adminApi.setCompanyVip(companyId, { vip, months, reason }),
+    onSuccess: async (_, variables) => {
+      await invalidateCompanyQueries(queryClient, variables.companyId)
+    },
+    meta: {
+      errorMessage: "Не удалось изменить VIP",
+    },
+  })
+}
+
 /** Legacy approve/reject via /verify; UI should prefer useAdminCompanyActionMutation. */
 export const useAdminVerifyCompanyMutation = () => {
   const queryClient = useQueryClient()

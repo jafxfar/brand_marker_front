@@ -37,7 +37,14 @@ type BuyerDealNextActionProps = {
   onRequestChanges: (submissionId: number) => void
   onOpenDispute: () => void
   onOpenTab: (tab: "messages" | "dispute") => void
-  onSubmitReview: (rating: number, comment: string) => void
+  onSubmitReview: (payload: {
+    rating: number
+    service_rating: number
+    delivery_rating: number
+    quality_rating: number
+    tags: string[]
+    comment: string
+  }) => void
 }
 
 const getPendingSubmission = (contract: ContractWithRelations) =>
@@ -228,7 +235,8 @@ export const BuyerDealNextAction = ({
         <ReviewDialog
           open={reviewOpen}
           onOpenChange={setReviewOpen}
-          supplierName={supplierName}
+          counterpartName={supplierName}
+          counterpartLabel="исполнителем"
           onConfirm={onSubmitReview}
         />
       </NextActionCard>

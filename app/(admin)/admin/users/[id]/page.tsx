@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table"
 import {
   useAdminUserQuery,
+  useRevokeAdminUserSessionsMutation,
   useUpdateAdminUserStatusMutation,
 } from "@/hooks/api/use-admin-users-query"
 import { useAdminPermission } from "@/hooks/use-admin-permission"
@@ -161,12 +162,23 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   const userId = Number(id)
   const userQuery = useAdminUserQuery(userId)
   const updateStatusMutation = useUpdateAdminUserStatusMutation()
+  const revokeSessionsMutation = useRevokeAdminUserSessionsMutation()
   const canUpdateUsers = useAdminPermission("admin_users.update")
   const currentUser = useAuthStore((state) => state.user)
   const [tab, setTab] = useState<DetailTab>("deals")
   const [blockOpen, setBlockOpen] = useState(false)
   const [unblockOpen, setUnblockOpen] = useState(false)
   const [reason, setReason] = useState("")
+  const [banDuration, setBanDuration] = useState<number | "permanent">(7)
+
+  const BAN_OPTIONS: Array<{ value: number | "permanent"; label: string }> = [
+    { value: 1, label: "1 день" },
+    { value: 7, label: "7 дней" },
+    { value: 30, label: "30 дней" },
+    { value: 90, label: "90 дней" },
+    { value: 365, label: "365 дней" },
+    { value: "permanent", label: "Бессрочно" },
+  ]
 
   const user = userQuery.data
 
@@ -271,6 +283,11 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         userId: user.id,
         status: nextStatus,
         reason: nextReason,
+        durationDays:
+          nextStatus === "blocked" && banDuration !== "permanent"
+            ? banDuration
+            : null,
+        permanent: nextStatus === "blocked" && banDuration === "permanent",
       })
       toast.success(
         nextStatus === "blocked"
@@ -280,6 +297,16 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       setBlockOpen(false)
       setUnblockOpen(false)
       setReason("")
+      setBanDuration(7)
+    } catch {
+      // error toast via MutationCache
+    }
+  }
+
+  const revokeSessions = async () => {
+    try {
+      await revokeSessionsMutation.mutateAsync(user.id)
+      toast.success("Все сеансы пользователя завершены")
     } catch {
       // error toast via MutationCache
     }
@@ -332,7 +359,10 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             </p>
             {user.status === "blocked" && (
               <p className="mt-1 text-sm text-destructive">
-                Заблокирован бессрочно
+                {user.banned_until
+                  ? `Заблокирован до ${formatDateTime(user.banned_until)}`
+                  : "Заблокирован бессрочно"}
+                {user.block_reason ? ` · ${user.block_reason}` : ""}
               </p>
             )}
           </div>
@@ -345,6 +375,20 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               Написать
             </a>
           </Button>
+          {canManage && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={revokeSessionsMutation.isPending}
+              onClick={() => void revokeSessions()}
+            >
+              <RefreshCcw aria-hidden="true" />
+              {revokeSessionsMutation.isPending
+                ? "Завершаем…"
+                : "Завершить сеансы"}
+            </Button>
+          )}
           {canManage && user.status === "blocked" && (
             <Button
               type="button"
@@ -432,16 +476,36 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           <DialogHeader>
             <DialogTitle>Заблокировать пользователя?</DialogTitle>
             <DialogDescription>
-              {user.email} потеряет доступ к системе. Укажите причину — она
-              сохранится в истории.
+              {user.email} потеряет доступ к системе. Каталог и КП скрываются;
+              активные сделки через эскроу продолжаются.
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            placeholder="Причина блокировки"
-            rows={3}
-          />
+          <div className="space-y-3">
+            <div>
+              <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                Срок
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {BAN_OPTIONS.map((option) => (
+                  <Button
+                    key={String(option.value)}
+                    type="button"
+                    size="sm"
+                    variant={banDuration === option.value ? "default" : "outline"}
+                    onClick={() => setBanDuration(option.value)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <Textarea
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Причина блокировки"
+              rows={3}
+            />
+          </div>
           <DialogFooter>
             <Button
               type="button"

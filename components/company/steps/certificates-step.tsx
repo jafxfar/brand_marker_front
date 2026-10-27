@@ -2,8 +2,9 @@
 
 import { Plus, Trash2 } from "lucide-react"
 import type { CompanyWizardCertificate, CompanyWizardInput } from "@/types"
-import { isoDateBounds, sanitizeIsoDateInput } from "@/lib/iso-date"
+import { isoDateBounds } from "@/lib/iso-date"
 import { WizardField, wizardInputClass } from "@/components/company/wizard-field"
+import { DateInputRu } from "@/components/ui/date-input-ru"
 
 const emptyCertificate = (): CompanyWizardCertificate => ({
   title: "",
@@ -110,20 +111,11 @@ export const CertificatesStep = ({
               label="Дата выдачи"
               error={errors[`certificates.${index}.issue_date`]}
             >
-              <input
-                maxLength={10}
-                type="date"
+              <DateInputRu
                 min={issueDateBounds.min}
                 max={issueDateBounds.max}
                 value={cert.issue_date}
-                onChange={(e) => {
-                  const next = sanitizeIsoDateInput(e.currentTarget.value, {
-                    minYear: 1900,
-                    maxYear: certYear,
-                  })
-                  if (next === null) return
-                  handleUpdate(index, { issue_date: next })
-                }}
+                onChange={(issue_date) => handleUpdate(index, { issue_date })}
                 className={wizardInputClass}
               />
             </WizardField>
@@ -132,20 +124,11 @@ export const CertificatesStep = ({
               label="Срок действия"
               error={errors[`certificates.${index}.expiry_date`]}
             >
-              <input
-                maxLength={10}
-                type="date"
+              <DateInputRu
                 min={expiryDateBounds.min}
                 max={expiryDateBounds.max}
                 value={cert.expiry_date}
-                onChange={(e) => {
-                  const next = sanitizeIsoDateInput(e.currentTarget.value, {
-                    minYear: 1900,
-                    maxYear: certYear + 50,
-                  })
-                  if (next === null) return
-                  handleUpdate(index, { expiry_date: next })
-                }}
+                onChange={(expiry_date) => handleUpdate(index, { expiry_date })}
                 className={wizardInputClass}
               />
             </WizardField>

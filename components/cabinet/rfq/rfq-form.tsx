@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, ShoppingCart, Briefcase, Paperclip, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, ShoppingCart, Briefcase, Paperclip, Send, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { validateRfqForm, type RfqFormValues } from "@/lib/schemas/rfq-form"
 import { isoDateBounds, sanitizeIsoDateInput } from "@/lib/iso-date"
@@ -13,17 +13,34 @@ import {
 } from "@/lib/bounded-number-input"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
+import { DateInputRu } from "@/components/ui/date-input-ru"
 import { InlineHint } from "@/components/process"
 import type { RfqCreate, RfqWithRelations } from "@/types"
 import { budgetTypeMeta } from "@/lib/rfq-display"
 import type { RfqFormPrefill } from "@/lib/rfq-from-listing"
 import { useCategoryOptions } from "@/hooks/use-category-options"
+import {
+  PRODUCT_WIZARD_STEPS,
+  ProductConditionsStep,
+  ProductReviewStep,
+  ProductWhatStep,
+  cityFromAddress,
+  composeProductDescription,
+  emptyProductItem,
+  parseProductItems,
+  totalProductQuantity,
+  validateProductItems,
+  type ProductLineItem,
+} from "@/components/cabinet/rfq/rfq-form-product-steps"
 
 type FormState = {
   type: "product" | "service"
   title: string
   category_id: string
   description: string
+  note: string
+  items: ProductLineItem[]
+  payment: "guarantee" | "invoice"
   budget_type: "fixed" | "range" | "open"
   budget_from: string
   budget_to: string
@@ -77,10 +94,13 @@ const defaultValues = (
 ): FormState => {
   if (!initial) {
     const base: FormState = {
-      type: "service",
+      type: "product",
       title: "",
       category_id: "",
       description: "",
+      note: "",
+      items: [emptyProductItem()],
+      payment: "guarantee",
       budget_type: "fixed",
       budget_from: "",
       budget_to: "",
@@ -98,18 +118,36 @@ const defaultValues = (
       delivery_date: "",
     }
     if (!prefill) return base
+    const qty = Number(prefill.quantity) || 1
+    const parsed = parseProductItems(prefill.description, qty)
     return {
       ...base,
       ...prefill,
+      note: parsed.note || prefill.description || "",
+      items: parsed.items[0]?.name
+        ? parsed.items
+        : [{ name: prefill.title ?? "", qty: String(qty), unit: "шт" }],
       visibility: invitedSupplierId ? "invited_only" : (prefill.visibility ?? base.visibility),
     }
   }
+
+  const qty = initial.type === "product" ? initial.quantity : 1
+  const parsed = parseProductItems(initial.description, qty)
+  const address =
+    initial.type === "product"
+      ? [initial.delivery_address, initial.delivery_city, initial.delivery_country]
+          .filter(Boolean)
+          .join(", ")
+      : ""
 
   return {
     type: initial.type,
     title: initial.title,
     category_id: initial.category_id,
     description: initial.description ?? "",
+    note: parsed.note,
+    items: initial.type === "product" ? parsed.items : [emptyProductItem()],
+    payment: "guarantee",
     budget_type: initial.budget_type,
     budget_from: initial.budget_from != null ? String(initial.budget_from) : "",
     budget_to: initial.budget_to != null ? String(initial.budget_to) : "",
@@ -119,7 +157,10 @@ const defaultValues = (
     quantity: initial.type === "product" ? String(initial.quantity) : "1",
     delivery_country: initial.type === "product" ? initial.delivery_country : "Таджикистан",
     delivery_city: initial.type === "product" ? initial.delivery_city : "",
-    delivery_address: initial.type === "product" ? (initial.delivery_address ?? "") : "",
+    delivery_address:
+      initial.type === "product"
+        ? (initial.delivery_address || address)
+        : "",
     delivery_date: initial.type === "product" ? initial.delivery_date : "",
     project_duration: initial.type === "service" ? initial.project_duration : "",
     start_date: initial.type === "service" ? initial.start_date : "",
@@ -132,41 +173,48 @@ const defaultValues = (
   }
 }
 
-const toFormValues = (values: FormState): RfqFormValues =>
-  values.type === "product"
-    ? {
-        type: "product",
-        title: values.title,
-        category_id: values.category_id,
-        description: values.description,
-        budget_type: values.budget_type,
-        budget_from: values.budget_from,
-        budget_to: values.budget_to,
-        currency: values.currency,
-        deadline: values.deadline,
-        visibility: values.visibility,
-        quantity: values.quantity,
-        delivery_country: values.delivery_country,
-        delivery_city: values.delivery_city,
-        delivery_address: values.delivery_address,
-        delivery_date: values.delivery_date,
-      }
-    : {
-        type: "service",
-        title: values.title,
-        category_id: values.category_id,
-        description: values.description,
-        budget_type: values.budget_type,
-        budget_from: values.budget_from,
-        budget_to: values.budget_to,
-        currency: values.currency,
-        deadline: values.deadline,
-        visibility: values.visibility,
-        project_duration: values.project_duration,
-        start_date: values.start_date,
-        team_size_required: values.team_size_required,
-        experience_required: values.experience_required,
-      }
+const toFormValues = (values: FormState): RfqFormValues => {
+  if (values.type === "product") {
+    const description = composeProductDescription(values.items, values.note)
+    const hasBudget =
+      Boolean(values.budget_from.trim()) && Number(values.budget_from) > 0
+    const address = values.delivery_address.trim()
+    return {
+      type: "product",
+      title: values.title,
+      category_id: values.category_id,
+      description,
+      budget_type: hasBudget ? "fixed" : "open",
+      budget_from: hasBudget ? values.budget_from : "",
+      budget_to: "",
+      currency: values.currency,
+      deadline: values.deadline,
+      visibility: values.visibility,
+      quantity: String(totalProductQuantity(values.items)),
+      delivery_country: "Таджикистан",
+      delivery_city: cityFromAddress(address),
+      delivery_address: address || null,
+      delivery_date: values.deadline,
+    }
+  }
+
+  return {
+    type: "service",
+    title: values.title,
+    category_id: values.category_id,
+    description: values.description,
+    budget_type: values.budget_type,
+    budget_from: values.budget_from,
+    budget_to: values.budget_to,
+    currency: values.currency,
+    deadline: values.deadline,
+    visibility: values.visibility,
+    project_duration: values.project_duration,
+    start_date: values.start_date,
+    team_size_required: values.team_size_required,
+    experience_required: values.experience_required,
+  }
+}
 
 const toRfqCreate = (values: FormState): RfqCreate => {
   const parsed = toFormValues(values)
@@ -216,25 +264,34 @@ const toRfqCreate = (values: FormState): RfqCreate => {
 
 type WizardStep = 1 | 2 | 3
 
-const WIZARD_STEPS: { step: WizardStep; label: string }[] = [
+const SERVICE_WIZARD_STEPS: { step: WizardStep; label: string }[] = [
   { step: 1, label: "Что нужно" },
   { step: 2, label: "Бюджет и сроки" },
   { step: 3, label: "Проверка" },
 ]
 
-const STEP_FIELDS: Record<1 | 2, string[]> = {
-  1: ["type", "title", "category_id", "description", "quantity"],
+const STEP_FIELDS_SERVICE: Record<1 | 2, string[]> = {
+  1: ["type", "title", "category_id", "description"],
   2: [
     "budget_type",
     "budget_from",
     "budget_to",
     "currency",
     "deadline",
-    "delivery_date",
-    "delivery_country",
-    "delivery_city",
     "project_duration",
     "start_date",
+  ],
+}
+
+const STEP_FIELDS_PRODUCT: Record<1 | 2, string[]> = {
+  1: ["type", "title", "category_id", "description", "quantity"],
+  2: [
+    "budget_from",
+    "deadline",
+    "delivery_address",
+    "delivery_city",
+    "delivery_country",
+    "delivery_date",
   ],
 }
 
@@ -249,14 +306,32 @@ const FIELD_INPUT_ID: Record<string, string> = {
   delivery_date: "delivery-date",
   delivery_country: "delivery-country",
   delivery_city: "delivery-city",
+  delivery_address: "w-delivery",
   project_duration: "duration",
   start_date: "start-date",
 }
 
-const getFieldStep = (field: string): 1 | 2 => (STEP_FIELDS[1].includes(field) ? 1 : 2)
+const getFieldStep = (field: string, type: FormState["type"]): 1 | 2 => {
+  const step1 =
+    type === "product" ? STEP_FIELDS_PRODUCT[1] : STEP_FIELDS_SERVICE[1]
+  if (step1.includes(field) || field.startsWith("item_")) return 1
+  return 2
+}
 
-const focusField = (field: string) => {
-  const inputId = FIELD_INPUT_ID[field]
+const focusField = (field: string, type: FormState["type"]) => {
+  const productIds: Record<string, string> = {
+    title: "w-title",
+    category_id: "w-cat",
+    description: "item-0-name",
+    quantity: "item-0-qty",
+    budget_from: "w-budget",
+    deadline: "w-deadline",
+    delivery_address: "w-delivery",
+  }
+  const inputId =
+    type === "product"
+      ? (productIds[field] ?? FIELD_INPUT_ID[field])
+      : FIELD_INPUT_ID[field]
   if (!inputId) return
   requestAnimationFrame(() => {
     const element = document.getElementById(inputId)
@@ -313,8 +388,14 @@ export const RfqForm = ({
 
   const inputClass = (field: string) =>
     cn(
-      "w-full h-11 px-4 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
-      errors[field] ? "border-destructive" : "border-input focus:border-primary",
+      values.type === "product"
+        ? "w-full h-10 px-3.5 rounded-[10px] border bg-white text-[15px] outline-none transition-colors"
+        : "w-full h-11 px-4 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
+      errors[field]
+        ? "border-destructive"
+        : values.type === "product"
+          ? "border-border focus:border-primary"
+          : "border-input focus:border-primary",
     )
 
   const goToStep = (next: WizardStep) => {
@@ -322,30 +403,58 @@ export const RfqForm = ({
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }))
   }
 
+  const collectErrors = () => {
+    const formErrors = validateRfqForm(toFormValues(values))
+    if (values.type !== "product") return formErrors
+    const itemErrors = validateProductItems(values.items)
+    if (!values.delivery_address.trim()) {
+      formErrors.delivery_address = "Укажите адрес доставки"
+      formErrors.delivery_city = "Укажите адрес доставки"
+    }
+    if (formErrors.description && !itemErrors.description) {
+      itemErrors.description = formErrors.description
+      itemErrors.item_0_name = formErrors.description
+    }
+    return { ...formErrors, ...itemErrors }
+  }
+
   /** Validates the whole form; on failure jumps to the step with the first error. */
   const handleValidateAll = (): boolean => {
-    const nextErrors = validateRfqForm(toFormValues(values))
+    const nextErrors = collectErrors()
     setErrors(nextErrors)
     const firstField = Object.keys(nextErrors)[0]
     if (!firstField) return true
-    setStep(getFieldStep(firstField))
-    focusField(firstField)
+    setStep(getFieldStep(firstField, values.type))
+    focusField(firstField, values.type)
     return false
   }
 
   const handleNext = () => {
     if (step === 3) return
-    const allErrors = validateRfqForm(toFormValues(values))
+    const allErrors = collectErrors()
+    const stepFields =
+      values.type === "product" ? STEP_FIELDS_PRODUCT[step] : STEP_FIELDS_SERVICE[step]
     const stepErrors = Object.fromEntries(
-      Object.entries(allErrors).filter(([field]) => STEP_FIELDS[step].includes(field)),
+      Object.entries(allErrors).filter(([field]) => {
+        if (values.type === "product" && step === 1 && field.startsWith("item_")) {
+          return true
+        }
+        return stepFields.includes(field)
+      }),
     )
     setErrors(stepErrors)
     const firstField = Object.keys(stepErrors)[0]
     if (firstField) {
-      focusField(firstField)
+      focusField(firstField, values.type)
       return
     }
     goToStep((step + 1) as WizardStep)
+  }
+
+  const switchType = (type: "product" | "service") => {
+    setField("type", type)
+    setErrors({})
+    setStep(1)
   }
 
   const handleBack = () => {
@@ -381,7 +490,7 @@ export const RfqForm = ({
     values.currency,
   )
 
-  const renderWhatStep = () => (
+  const renderServiceWhatStep = () => (
     <>
       <div className="grid grid-cols-2 gap-3">
         {([
@@ -393,7 +502,7 @@ export const RfqForm = ({
             <button
               key={value}
               type="button"
-              onClick={() => setField("type", value)}
+              onClick={() => switchType(value)}
               disabled={!!initial}
               aria-pressed={active}
               className={cn(
@@ -566,7 +675,7 @@ export const RfqForm = ({
     </>
   )
 
-  const renderBudgetStep = () => (
+  const renderServiceBudgetStep = () => (
     <>
       <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 space-y-5">
         <div>
@@ -663,104 +772,47 @@ export const RfqForm = ({
             <label htmlFor="deadline" className={labelClass}>
               Принимать предложения до
             </label>
-            <input
-              maxLength={10}
+            <DateInputRu
               id="deadline"
-              type="date"
               min={DATE_INPUT_MIN}
               max={DATE_INPUT_MAX}
               value={values.deadline}
-              onChange={(e) => handleDateChange("deadline", e.target.value)}
+              onChange={(v) => handleDateChange("deadline", v)}
               className={inputClass("deadline")}
               aria-invalid={!!errors.deadline}
             />
             <FieldError message={errors.deadline} />
           </div>
-
-          {values.type === "product" ? (
-            <>
-              <div>
-                <label htmlFor="delivery-date" className={labelClass}>
-                  Когда нужна поставка
-                </label>
-                <input
-                  maxLength={10}
-                  id="delivery-date"
-                  type="date"
-                  min={DATE_INPUT_MIN}
-                  max={DATE_INPUT_MAX}
-                  value={values.delivery_date}
-                  onChange={(e) => handleDateChange("delivery_date", e.target.value)}
-                  className={inputClass("delivery_date")}
-                  aria-invalid={!!errors.delivery_date}
-                />
-                <FieldError message={errors.delivery_date} />
-              </div>
-              <div>
-                <label htmlFor="delivery-country" className={labelClass}>
-                  Страна доставки
-                </label>
-                <input
-                  maxLength={50}
-                  id="delivery-country"
-                  value={values.delivery_country}
-                  onChange={(e) => setField("delivery_country", e.target.value)}
-                  className={inputClass("delivery_country")}
-                  aria-invalid={!!errors.delivery_country}
-                />
-                <FieldError message={errors.delivery_country} />
-              </div>
-              <div>
-                <label htmlFor="delivery-city" className={labelClass}>
-                  Город доставки
-                </label>
-                <input
-                  maxLength={50}
-                  id="delivery-city"
-                  value={values.delivery_city}
-                  onChange={(e) => setField("delivery_city", e.target.value)}
-                  className={inputClass("delivery_city")}
-                  aria-invalid={!!errors.delivery_city}
-                />
-                <FieldError message={errors.delivery_city} />
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label htmlFor="start-date" className={labelClass}>
-                  Когда начать работу
-                </label>
-                <input
-                  maxLength={10}
-                  id="start-date"
-                  type="date"
-                  min={DATE_INPUT_MIN}
-                  max={DATE_INPUT_MAX}
-                  value={values.start_date}
-                  onChange={(e) => handleDateChange("start_date", e.target.value)}
-                  className={inputClass("start_date")}
-                  aria-invalid={!!errors.start_date}
-                />
-                <FieldError message={errors.start_date} />
-              </div>
-              <div>
-                <label htmlFor="duration" className={labelClass}>
-                  Сколько займёт работа
-                </label>
-                <input
-                  maxLength={25}
-                  id="duration"
-                  value={values.project_duration}
-                  onChange={(e) => setField("project_duration", e.target.value)}
-                  placeholder="Например: 2 недели"
-                  className={inputClass("project_duration")}
-                  aria-invalid={!!errors.project_duration}
-                />
-                <FieldError message={errors.project_duration} />
-              </div>
-            </>
-          )}
+          <div>
+            <label htmlFor="start-date" className={labelClass}>
+              Когда начать работу
+            </label>
+            <DateInputRu
+              id="start-date"
+              min={DATE_INPUT_MIN}
+              max={DATE_INPUT_MAX}
+              value={values.start_date}
+              onChange={(v) => handleDateChange("start_date", v)}
+              className={inputClass("start_date")}
+              aria-invalid={!!errors.start_date}
+            />
+            <FieldError message={errors.start_date} />
+          </div>
+          <div>
+            <label htmlFor="duration" className={labelClass}>
+              Сколько займёт работа
+            </label>
+            <input
+              maxLength={25}
+              id="duration"
+              value={values.project_duration}
+              onChange={(e) => setField("project_duration", e.target.value)}
+              placeholder="Например: 2 недели"
+              className={inputClass("project_duration")}
+              aria-invalid={!!errors.project_duration}
+            />
+            <FieldError message={errors.project_duration} />
+          </div>
         </div>
       </div>
 
@@ -771,36 +823,22 @@ export const RfqForm = ({
     </>
   )
 
-  const summaryRows: { label: string; value: string; editStep: 1 | 2 }[] = [
+  const serviceSummaryRows: { label: string; value: string; editStep: 1 | 2 }[] = [
     { label: "Что нужно", value: values.title || "—", editStep: 1 },
-    { label: "Тип", value: values.type === "product" ? "Товар" : "Услуга", editStep: 1 },
+    { label: "Тип", value: "Услуга", editStep: 1 },
     { label: "Категория", value: categoryLabel, editStep: 1 },
-    ...(values.type === "product"
-      ? [{ label: "Количество", value: values.quantity || "—", editStep: 1 as const }]
-      : []),
     { label: "Файлы", value: attachmentsCount ? String(attachmentsCount) : "Нет", editStep: 1 },
     { label: "Бюджет", value: budgetLabel, editStep: 2 },
     { label: "Принимать предложения до", value: formatDateOrDash(values.deadline), editStep: 2 },
-    ...(values.type === "product"
-      ? [
-          { label: "Поставка", value: formatDateOrDash(values.delivery_date), editStep: 2 as const },
-          {
-            label: "Куда",
-            value: [values.delivery_city, values.delivery_country].filter(Boolean).join(", ") || "—",
-            editStep: 2 as const,
-          },
-        ]
-      : [
-          { label: "Начало работы", value: formatDateOrDash(values.start_date), editStep: 2 as const },
-          { label: "Длительность", value: values.project_duration || "—", editStep: 2 as const },
-        ]),
+    { label: "Начало работы", value: formatDateOrDash(values.start_date), editStep: 2 },
+    { label: "Длительность", value: values.project_duration || "—", editStep: 2 },
   ]
 
-  const renderReviewStep = () => (
+  const renderServiceReviewStep = () => (
     <>
       <div className="bg-card border border-border rounded-2xl p-5 sm:p-6">
         <dl className="divide-y divide-border">
-          {summaryRows.map((row) => (
+          {serviceSummaryRows.map((row) => (
             <div key={row.label} className="flex items-start justify-between gap-4 py-3 first:pt-0">
               <div className="min-w-0">
                 <dt className="text-xs text-muted-foreground">{row.label}</dt>
@@ -833,13 +871,20 @@ export const RfqForm = ({
     </>
   )
 
+  const isProduct = values.type === "product"
+  const wizardSteps = isProduct ? PRODUCT_WIZARD_STEPS : SERVICE_WIZARD_STEPS
+
   return (
     <PageFrame>
       <PageHeader
-        title={initial ? "Редактирование заявки" : "Новая заявка"}
-        description="Три простых шага — и исполнители начнут присылать предложения"
+        title={initial ? (isProduct ? "Заявка" : "Редактирование заявки") : "Новая заявка"}
+        description={
+          isProduct
+            ? undefined
+            : "Три простых шага — и исполнители начнут присылать предложения"
+        }
         backHref={cancelHref}
-        backLabel="Назад"
+        backLabel={isProduct ? "Заявки" : "Назад"}
       />
 
       {invitedSupplierName && (
@@ -855,68 +900,223 @@ export const RfqForm = ({
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-3xl space-y-6">
-        <div>
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="font-semibold text-foreground">{WIZARD_STEPS[step - 1].label}</span>
-            <span className="text-muted-foreground">Шаг {step} из 3</span>
-          </div>
-          <ol className="grid grid-cols-3 gap-2" aria-label="Шаги создания заявки">
-            {WIZARD_STEPS.map((item) => (
-              <li key={item.step} aria-current={item.step === step ? "step" : undefined}>
+      <div className={cn("mx-auto w-full max-w-3xl", isProduct ? "" : "space-y-6")}>
+        {isProduct ? (
+          <ol className="mb-6 grid grid-cols-3 gap-2" aria-label="Шаги создания заявки">
+            {wizardSteps.map((item) => (
+              <li
+                key={item.step}
+                className={cn(
+                  "grid gap-2 text-[13px]",
+                  item.step === step
+                    ? "font-semibold text-foreground"
+                    : "text-muted-foreground",
+                )}
+                aria-current={item.step === step ? "step" : undefined}
+              >
                 <span
-                  className={cn(
-                    "block h-1.5 rounded-full transition-colors",
-                    item.step <= step ? "bg-primary" : "bg-line",
-                  )}
+                  className={cn("h-1", item.step <= step ? "bg-primary" : "bg-border")}
                 />
-                <span
-                  className={cn(
-                    "mt-1.5 hidden text-xs sm:block",
-                    item.step === step ? "font-semibold text-foreground" : "text-muted-foreground",
-                  )}
-                >
+                <span>
+                  <span className="mr-1 font-mono">{item.step}</span>
                   {item.label}
                 </span>
               </li>
             ))}
           </ol>
-        </div>
+        ) : (
+          <div>
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="font-semibold text-foreground">
+                {wizardSteps[step - 1].label}
+              </span>
+              <span className="text-muted-foreground">Шаг {step} из 3</span>
+            </div>
+            <ol className="grid grid-cols-3 gap-2" aria-label="Шаги создания заявки">
+              {wizardSteps.map((item) => (
+                <li key={item.step} aria-current={item.step === step ? "step" : undefined}>
+                  <span
+                    className={cn(
+                      "block h-1.5 rounded-full transition-colors",
+                      item.step <= step ? "bg-primary" : "bg-line",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "mt-1.5 hidden text-xs sm:block",
+                      item.step === step
+                        ? "font-semibold text-foreground"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
 
-        {step === 1 && renderWhatStep()}
-        {step === 2 && renderBudgetStep()}
-        {step === 3 && renderReviewStep()}
+        {isProduct ? (
+          <div className="grid gap-5 rounded-xl border border-border bg-card p-5 md:p-6">
+            {step === 1 && (
+              <ProductWhatStep
+                errors={errors}
+                inputClass={inputClass}
+                categories={rfqCategories}
+                title={values.title}
+                categoryId={values.category_id}
+                note={values.note}
+                items={values.items}
+                type={values.type}
+                typeLocked={!!initial}
+                onTypeChange={switchType}
+                onTitleChange={(v) => setField("title", v)}
+                onCategoryChange={(v) => setField("category_id", v)}
+                onNoteChange={(v) => setField("note", v)}
+                onItemChange={(index, patch) =>
+                  setValues((prev) => ({
+                    ...prev,
+                    items: prev.items.map((item, i) =>
+                      i === index ? { ...item, ...patch } : item,
+                    ),
+                  }))
+                }
+                onAddItem={() =>
+                  setValues((prev) => ({
+                    ...prev,
+                    items: [...prev.items, emptyProductItem()],
+                  }))
+                }
+                onRemoveItem={(index) =>
+                  setValues((prev) => ({
+                    ...prev,
+                    items:
+                      prev.items.length < 2
+                        ? prev.items
+                        : prev.items.filter((_, i) => i !== index),
+                  }))
+                }
+                fileRef={fileRef}
+                onFileChange={handleFileChange}
+                attachments={initial?.attachments ?? []}
+                pendingAttachments={pendingAttachments}
+                onRemoveAttachment={onRemoveAttachment}
+                onRemovePendingAttachment={onRemovePendingAttachment}
+              />
+            )}
+            {step === 2 && (
+              <ProductConditionsStep
+                errors={errors}
+                inputClass={inputClass}
+                categories={rfqCategories}
+                budgetFrom={values.budget_from}
+                deadline={values.deadline}
+                deliveryAddress={values.delivery_address}
+                visibility={values.visibility}
+                payment={values.payment}
+                invitedLocked={!!invitedSupplierId}
+                dateMin={DATE_INPUT_MIN}
+                dateMax={DATE_INPUT_MAX}
+                onBudgetChange={(v) => setField("budget_from", v)}
+                onDeadlineChange={(v) => handleDateChange("deadline", v)}
+                onDeliveryChange={(v) => setField("delivery_address", v)}
+                onVisibilityChange={(v) => setField("visibility", v)}
+                onPaymentChange={(v) => setField("payment", v)}
+              />
+            )}
+            {step === 3 && (
+              <ProductReviewStep
+                title={values.title}
+                categoryLabel={categoryLabel}
+                items={values.items}
+                budgetFrom={values.budget_from}
+                currency={values.currency}
+                deadline={values.deadline}
+                deliveryAddress={values.delivery_address}
+                payment={values.payment}
+                visibility={values.visibility}
+                invitedSupplierName={invitedSupplierName}
+                onEdit={goToStep}
+              />
+            )}
+          </div>
+        ) : (
+          <>
+            {step === 1 && renderServiceWhatStep()}
+            {step === 2 && renderServiceBudgetStep()}
+            {step === 3 && renderServiceReviewStep()}
+          </>
+        )}
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {step === 1 ? (
-            <Button asChild variant="ghost">
-              <Link href={cancelHref}>Отмена</Link>
-            </Button>
-          ) : (
-            <Button variant="ghost" onClick={handleBack}>
-              <ArrowLeft /> Назад
-            </Button>
-          )}
-          <div className="flex flex-col-reverse gap-3 sm:flex-row">
-            <Button
-              variant="outline"
+        {isProduct ? (
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            {step > 1 ? (
+              <Button type="button" variant="ghost" onClick={handleBack}>
+                <ArrowLeft /> Назад
+              </Button>
+            ) : null}
+            <button
+              type="button"
               onClick={handleSaveDraft}
               disabled={isSubmitting}
-              aria-busy={isSubmitting}
+              className="px-2 text-[13.5px] font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
             >
               Сохранить черновик
-            </Button>
+            </button>
+            <span className="flex-1" />
             {step < 3 ? (
-              <Button onClick={handleNext}>
-                Далее <ArrowRight />
+              <Button
+                type="button"
+                className="bg-foreground text-background hover:bg-foreground/90"
+                onClick={handleNext}
+              >
+                Далее: {wizardSteps[step].label} <ArrowRight />
               </Button>
             ) : (
-              <Button onClick={handlePublish} disabled={isSubmitting} aria-busy={isSubmitting}>
+              <Button
+                type="button"
+                onClick={handlePublish}
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+              >
+                <Send size={16} />
                 {isSubmitting ? "Публикуем..." : "Опубликовать заявку"}
               </Button>
             )}
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {step === 1 ? (
+              <Button asChild variant="ghost">
+                <Link href={cancelHref}>Отмена</Link>
+              </Button>
+            ) : (
+              <Button variant="ghost" onClick={handleBack}>
+                <ArrowLeft /> Назад
+              </Button>
+            )}
+            <div className="flex flex-col-reverse gap-3 sm:flex-row">
+              <Button
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+              >
+                Сохранить черновик
+              </Button>
+              {step < 3 ? (
+                <Button onClick={handleNext}>
+                  Далее <ArrowRight />
+                </Button>
+              ) : (
+                <Button onClick={handlePublish} disabled={isSubmitting} aria-busy={isSubmitting}>
+                  {isSubmitting ? "Публикуем..." : "Опубликовать заявку"}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </PageFrame>
   )

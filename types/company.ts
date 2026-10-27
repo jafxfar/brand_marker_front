@@ -8,6 +8,7 @@ export const VERIFICATION_STATUSES = [
   "pending",
   "verified",
   "rejected",
+  "needs_documents",
 ] as const
 
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number]
@@ -69,6 +70,10 @@ export type Review = {
   reviewer_actor_id: number
   target_actor_id: number
   rating: number
+  service_rating?: number | null
+  delivery_rating?: number | null
+  quality_rating?: number | null
+  tags?: string[]
   comment: string | null
   created_at: string
 }
@@ -184,6 +189,8 @@ export const emptyCompanyWizardInput = (): CompanyWizardInput => ({
 })
 
 export type PublicSupplier = {
+  vip?: boolean
+  promoted?: boolean
   actor_id: number
   kind: "individual" | "company"
   display_name: string

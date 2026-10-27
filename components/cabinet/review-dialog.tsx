@@ -8,24 +8,107 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
+export type ReviewAxisRatings = {
+  rating: number
+  service_rating: number
+  delivery_rating: number
+  quality_rating: number
+  tags: string[]
+  comment: string
+}
+
+const AXES = [
+  { key: "service_rating" as const, label: "Сервис" },
+  { key: "delivery_rating" as const, label: "Сроки" },
+  { key: "quality_rating" as const, label: "Качество" },
+]
+
+const TAG_OPTIONS = [
+  "Надёжный",
+  "Вежливый",
+  "Быстро",
+  "Качественно",
+  "Рекомендую",
+  "Дорого",
+]
+
 interface ReviewDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  supplierName: string
-  onConfirm: (rating: number, text: string) => void
+  counterpartName: string
+  counterpartLabel?: string
+  onConfirm: (payload: ReviewAxisRatings) => void
 }
 
+const AxisStars = ({
+  value,
+  onChange,
+  label,
+}: {
+  value: number
+  onChange: (n: number) => void
+  label: string
+}) => (
+  <div className="flex items-center justify-between gap-3">
+    <span className="text-sm font-medium text-foreground">{label}</span>
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          aria-label={`${label}: ${n}`}
+          className="p-0.5"
+        >
+          <Star
+            size={20}
+            className={cn(
+              n <= value
+                ? "fill-amber-400 text-amber-400"
+                : "text-muted-foreground/40",
+            )}
+          />
+        </button>
+      ))}
+    </div>
+  </div>
+)
+
 export default function ReviewDialog({
-  open, onOpenChange, supplierName, onConfirm,
+  open,
+  onOpenChange,
+  counterpartName,
+  counterpartLabel = "исполнителем",
+  onConfirm,
 }: ReviewDialogProps) {
-  const [rating, setRating] = useState(5)
-  const [hover, setHover] = useState(0)
+  const [service, setService] = useState(5)
+  const [delivery, setDelivery] = useState(5)
+  const [quality, setQuality] = useState(5)
+  const [tags, setTags] = useState<string[]>([])
   const [text, setText] = useState("")
 
+  const average = Math.round((service + delivery + quality) / 3)
+
+  const toggleTag = (tag: string) => {
+    setTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    )
+  }
+
   const handleConfirm = () => {
-    onConfirm(rating, text.trim())
+    onConfirm({
+      rating: average,
+      service_rating: service,
+      delivery_rating: delivery,
+      quality_rating: quality,
+      tags,
+      comment: text.trim(),
+    })
     setText("")
-    setRating(5)
+    setService(5)
+    setDelivery(5)
+    setQuality(5)
+    setTags([])
     onOpenChange(false)
   }
 
@@ -35,30 +118,50 @@ export default function ReviewDialog({
         <DialogHeader>
           <DialogTitle>Оставить отзыв</DialogTitle>
           <DialogDescription>
-            Поделитесь опытом работы с исполнителем «{supplierName}»
+            Поделитесь опытом работы с {counterpartLabel} «{counterpartName}»
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center justify-center gap-2 py-2">
-          {[1, 2, 3, 4, 5].map((n) => (
+        <div className="space-y-3 py-1">
+          {AXES.map((axis) => (
+            <AxisStars
+              key={axis.key}
+              label={axis.label}
+              value={
+                axis.key === "service_rating"
+                  ? service
+                  : axis.key === "delivery_rating"
+                    ? delivery
+                    : quality
+              }
+              onChange={
+                axis.key === "service_rating"
+                  ? setService
+                  : axis.key === "delivery_rating"
+                    ? setDelivery
+                    : setQuality
+              }
+            />
+          ))}
+          <p className="text-center text-sm text-muted-foreground">
+            Средняя оценка: <b className="text-foreground">{average}</b> из 5
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {TAG_OPTIONS.map((tag) => (
             <button
-              key={n}
+              key={tag}
               type="button"
-              onClick={() => setRating(n)}
-              onMouseEnter={() => setHover(n)}
-              onMouseLeave={() => setHover(0)}
-              aria-label={`Оценка ${n}`}
-              className="p-1 transition-transform hover:scale-110"
+              onClick={() => toggleTag(tag)}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
+                tags.includes(tag)
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-secondary",
+              )}
             >
-              <Star
-                size={32}
-                className={cn(
-                  "transition-colors",
-                  n <= (hover || rating)
-                    ? "fill-amber-400 text-amber-400"
-                    : "text-muted-foreground/40",
-                )}
-              />
+              {tag}
             </button>
           ))}
         </div>

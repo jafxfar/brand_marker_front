@@ -34,11 +34,19 @@ export const useUpdateAdminUserStatusMutation = () => {
       userId,
       status,
       reason,
+      durationDays,
+      permanent,
     }: {
       userId: number
       status: AdminUserStatus
       reason?: string | null
-    }) => adminApi.updateUserStatus(userId, status, reason),
+      durationDays?: number | null
+      permanent?: boolean
+    }) =>
+      adminApi.updateUserStatus(userId, status, reason, {
+        durationDays,
+        permanent,
+      }),
     onSuccess: async (_data, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: adminUsersKeys.all }),
@@ -50,6 +58,22 @@ export const useUpdateAdminUserStatusMutation = () => {
     },
     meta: {
       errorMessage: "Не удалось изменить статус пользователя",
+    },
+  })
+}
+
+export const useRevokeAdminUserSessionsMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (userId: number) => adminApi.revokeUserSessions(userId),
+    onSuccess: async (_data, userId) => {
+      await queryClient.invalidateQueries({
+        queryKey: adminUsersKeys.detail(userId),
+      })
+    },
+    meta: {
+      errorMessage: "Не удалось завершить сеансы",
     },
   })
 }

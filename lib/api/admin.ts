@@ -58,6 +58,8 @@ export type AdminUser = {
   phone: string | null
   role: AdminUserRole
   status: AdminUserStatus
+  banned_until?: string | null
+  block_reason?: string | null
   created_at: string
   updated_at: string
   company_id?: number | null
@@ -96,6 +98,8 @@ export type AdminUserCompany = {
   verification_status: string
   rating: number
   reviews_count: number
+  vip?: boolean
+  vip_until?: string | null
 }
 
 export type AdminUserStats = {
@@ -200,6 +204,8 @@ export type AdminCompany = {
   verification_status: AdminCompanyVerificationStatus
   operational_status: AdminCompanyOperationalStatus
   rating: number
+  vip?: boolean
+  vip_until?: string | null
   created_at: string
 }
 
@@ -876,14 +882,41 @@ export const adminApi = {
     userId: number,
     status: AdminUserStatus,
     reason?: string | null,
+    options?: { durationDays?: number | null; permanent?: boolean },
   ) =>
     apiFetch<AdminUser>(`/admin/users/${userId}/status`, {
       method: "PATCH",
       body: JSON.stringify({
         status,
         ...(reason?.trim() ? { reason: reason.trim() } : {}),
+        ...(options?.durationDays
+          ? { duration_days: options.durationDays }
+          : {}),
+        ...(options?.permanent ? { permanent: true } : {}),
       }),
     }),
+  revokeUserSessions: (userId: number) =>
+    apiFetch<{ user_id: number; token_version: number }>(
+      `/admin/users/${userId}/sessions/revoke`,
+      { method: "POST" },
+    ),
+  setCompanyVip: (
+    companyId: number,
+    payload: { vip: boolean; months?: number | null; reason?: string | null },
+  ) =>
+    apiFetch<{ id: number; vip: boolean; vip_until: string | null }>(
+      `/admin/companies/${companyId}/vip`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          vip: payload.vip,
+          ...(payload.months ? { months: payload.months } : {}),
+          ...(payload.reason?.trim()
+            ? { reason: payload.reason.trim() }
+            : {}),
+        }),
+      },
+    ),
   getCompanies: ({ page, pageSize, status, query }: AdminCompaniesParams) => {
     const searchParams = new URLSearchParams({
       page: String(page),

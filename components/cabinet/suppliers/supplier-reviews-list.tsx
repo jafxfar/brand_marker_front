@@ -1,6 +1,6 @@
 import { Star } from "lucide-react"
 import type { Review } from "@/types"
-import { formatRelativeTime } from "@/lib/format"
+import { formatRelativeIso } from "@/lib/format"
 
 type SupplierReviewsListProps = {
   reviews: Review[]
@@ -43,7 +43,7 @@ export const SupplierReviewsList = ({ reviews }: SupplierReviewsListProps) => {
                 ))}
               </div>
               <span className="text-[11px] text-muted-foreground">
-                {formatRelativeTime(review.created_at)}
+                {formatRelativeIso(review.created_at)}
               </span>
             </div>
             {review.comment && (

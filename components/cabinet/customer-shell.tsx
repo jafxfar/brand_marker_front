@@ -8,6 +8,7 @@ import CustomerSidebar from "@/components/cabinet/sidebar"
 import CustomerTopbar from "@/components/cabinet/topbar"
 import { CabinetShell } from "@/components/layout/cabinet-shell"
 import { CabinetMobileNav } from "@/components/layout/cabinet-mobile-nav"
+import { SupportChatProvider } from "@/components/support/support-chat-context"
 import { SupportChatWidget } from "@/components/support/support-chat-widget"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
 import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
@@ -34,54 +35,56 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
   }
 
   return (
-    <CabinetShell
-      sidebar={<CustomerSidebar />}
-      topbar={<CustomerTopbar moreOpen={moreOpen} onMoreOpenChange={setMoreOpen} />}
-      mobileNav={
-        <CabinetMobileNav
-          moreOpen={moreOpen}
-          tabs={[
-            {
-              href: "/customer",
-              label: "Главная",
-              Icon: LayoutDashboard,
-              match: (p) => p === "/customer",
-            },
-            {
-              href: "/customer/rfqs?status=quotes",
-              label: "Заявки",
-              Icon: FileText,
-              badge: hydrated ? counts.rfqs_new : 0,
-              match: (p) => p.startsWith("/customer/rfqs"),
-            },
-            {
-              href: "/customer/contracts?tab=active",
-              label: "Сделки",
-              Icon: FileCheck,
-              badge: hydrated ? counts.deals_new : 0,
-              match: (p) => p.startsWith("/customer/contracts"),
-            },
-            {
-              href: "/customer/messages",
-              label: "Чаты",
-              Icon: MessageSquare,
-              badge: hydrated ? counts.messages : 0,
-              match: (p) => p.startsWith("/customer/messages"),
-            },
-            {
-              label: "Ещё",
-              Icon: Menu,
-              isMore: true,
-              onClick: () => setMoreOpen(true),
-            },
-          ]}
-        />
-      }
-    >
-      {children}
-      <Suspense fallback={null}>
-        <SupportChatWidget role="buyer" />
-      </Suspense>
-    </CabinetShell>
+    <SupportChatProvider>
+      <CabinetShell
+        sidebar={<CustomerSidebar />}
+        topbar={<CustomerTopbar moreOpen={moreOpen} onMoreOpenChange={setMoreOpen} />}
+        mobileNav={
+          <CabinetMobileNav
+            moreOpen={moreOpen}
+            tabs={[
+              {
+                href: "/customer",
+                label: "Главная",
+                Icon: LayoutDashboard,
+                match: (p) => p === "/customer",
+              },
+              {
+                href: "/customer/rfqs?status=quotes",
+                label: "Заявки",
+                Icon: FileText,
+                badge: hydrated ? counts.rfqs_new : 0,
+                match: (p) => p.startsWith("/customer/rfqs"),
+              },
+              {
+                href: "/customer/contracts?tab=active",
+                label: "Сделки",
+                Icon: FileCheck,
+                badge: hydrated ? counts.deals_new : 0,
+                match: (p) => p.startsWith("/customer/contracts"),
+              },
+              {
+                href: "/customer/messages",
+                label: "Чаты",
+                Icon: MessageSquare,
+                badge: hydrated ? counts.messages : 0,
+                match: (p) => p.startsWith("/customer/messages"),
+              },
+              {
+                label: "Ещё",
+                Icon: Menu,
+                isMore: true,
+                onClick: () => setMoreOpen(true),
+              },
+            ]}
+          />
+        }
+      >
+        {children}
+        <Suspense fallback={null}>
+          <SupportChatWidget role="buyer" />
+        </Suspense>
+      </CabinetShell>
+    </SupportChatProvider>
   )
 }

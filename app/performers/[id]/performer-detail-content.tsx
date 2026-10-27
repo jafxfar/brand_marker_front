@@ -206,6 +206,14 @@ export const PerformerDetailContent = ({
                     <Check className="size-4" aria-hidden />
                     Проверенная компания
                   </span>
+                ) : performer.verificationStatus === "rejected" ? (
+                  <span className="text-[13px] font-semibold text-destructive">
+                    Проверка отклонена
+                  </span>
+                ) : performer.verificationStatus === "needs_documents" ? (
+                  <span className="text-[13px] font-semibold text-amber-700">
+                    Нужны документы
+                  </span>
                 ) : (
                   <span className="text-[13px] font-semibold text-amber-700">
                     На проверке

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Headphones, Loader2, MessageCircle, X } from "lucide-react"
 import { SupportMessageList } from "@/components/support/support-message-list"
+import { useSupportChat } from "@/components/support/support-chat-context"
 import {
   useCloseSupportTicketMutation,
   useCreateSupportTicketMutation,
@@ -13,6 +14,7 @@ import {
   useSupportUnreadQuery,
 } from "@/hooks/api/use-support-query"
 import type { SupportRole } from "@/lib/api/support"
+import { isApiEnabled } from "@/lib/api/config"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
 import "./support-chat.css"
@@ -24,12 +26,13 @@ type SupportChatWidgetProps = {
 export const SupportChatWidget = ({ role }: SupportChatWidgetProps) => {
   const searchParams = useSearchParams()
   const userId = useAuthStore((s) => s.user?.userId ?? 0)
-  const [open, setOpen] = useState(false)
+  const { open, setOpen } = useSupportChat()
   const [text, setText] = useState("")
   const [file, setFile] = useState<File | null>(null)
+  const apiOn = isApiEnabled()
 
-  const ticketQuery = useSupportTicketQuery(role, true)
-  const unreadQuery = useSupportUnreadQuery(role, true)
+  const ticketQuery = useSupportTicketQuery(role, apiOn)
+  const unreadQuery = useSupportUnreadQuery(role, apiOn)
   const createTicket = useCreateSupportTicketMutation(role)
   const sendMessage = useSendSupportMessageMutation(role)
   const markRead = useMarkSupportReadMutation(role)
@@ -42,7 +45,7 @@ export const SupportChatWidget = ({ role }: SupportChatWidgetProps) => {
     if (searchParams.get("support") === "1") {
       setOpen(true)
     }
-  }, [searchParams])
+  }, [searchParams, setOpen])
 
   const ensureTicket = useCallback(async () => {
     if (ticket) return ticket
@@ -110,9 +113,24 @@ export const SupportChatWidget = ({ role }: SupportChatWidgetProps) => {
             </button>
           </header>
 
-          {ticketQuery.isLoading || createTicket.isPending ? (
+          {!apiOn ? (
+            <div className="support-tg-wallpaper flex flex-1 items-center justify-center p-6 text-center">
+              <p className="text-[14px] text-mute">
+                Чат поддержки недоступен: включите API (
+                <span className="font-mono text-[12px]">NEXT_PUBLIC_USE_API</span>
+                ).
+              </p>
+            </div>
+          ) : ticketQuery.isLoading || createTicket.isPending ? (
             <div className="support-tg-wallpaper flex flex-1 items-center justify-center">
               <Loader2 className="animate-spin text-brand-600" size={24} />
+            </div>
+          ) : ticketQuery.isError ? (
+            <div className="support-tg-wallpaper flex flex-1 items-center justify-center p-6 text-center">
+              <p className="text-[14px] text-mute">
+                Не удалось открыть обращение. Проверьте, что бэкенд запущен и миграции
+                поддержки применены.
+              </p>
             </div>
           ) : (
             <SupportMessageList

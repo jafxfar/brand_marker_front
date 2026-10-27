@@ -7,7 +7,10 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
-import { useBuyerReviewsQuery } from "@/hooks/api/use-reviews-query"
+import {
+  useBuyerReceivedReviewsQuery,
+  useBuyerReviewsQuery,
+} from "@/hooks/api/use-reviews-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
 import { ReviewsGivenTable } from "@/components/cabinet/reviews/reviews-given-table"
@@ -22,7 +25,9 @@ export default function BuyerReviewsPage() {
   const getContractLocal = useContractsStore((s) => s.getContract)
 
   const { data: apiReviewsPage, isLoading } = useBuyerReviewsQuery(hydrated && useApi)
+  const { data: receivedPage } = useBuyerReceivedReviewsQuery(hydrated && useApi)
   const apiReviews = apiReviewsPage?.items ?? []
+  const receivedReviews = receivedPage?.items ?? []
   const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
   const apiContracts = apiContractsPage?.items ?? []
 
@@ -30,7 +35,10 @@ export default function BuyerReviewsPage() {
   const reviews = useApi ? apiReviews : localReviews
 
   const supplierIds = [
-    ...new Set(reviews.map((r) => r.target_actor_id)),
+    ...new Set([
+      ...reviews.map((r) => r.target_actor_id),
+      ...receivedReviews.map((r) => r.reviewer_actor_id),
+    ]),
   ]
   const resolveName = useSupplierActorName(supplierIds)
 
@@ -53,18 +61,42 @@ export default function BuyerReviewsPage() {
     <PageFrame>
       <PageHeader
         title="Мои отзывы"
-        description="Отзывы, которые вы оставили исполнителям"
+        description="Оставленные и полученные оценки по сделкам"
       />
 
-      <PageSurface className="p-6">
-        {useApi && isLoading ? (
-          <PageEmptyState title="Загрузка…" />
-        ) : (
-          <ReviewsGivenTable
-            reviews={reviews}
-            getSupplierName={getSupplierName}
-            getContractTitle={getContractTitle}
-          />
+      <PageSurface className="p-6 space-y-8">
+        <div>
+          <h2 className="mb-3 text-sm font-bold text-foreground">Оставленные</h2>
+          {useApi && isLoading ? (
+            <PageEmptyState title="Загрузка…" />
+          ) : (
+            <ReviewsGivenTable
+              reviews={reviews}
+              getSupplierName={getSupplierName}
+              getContractTitle={getContractTitle}
+            />
+          )}
+        </div>
+        {useApi && (
+          <div>
+            <h2 className="mb-3 text-sm font-bold text-foreground">Полученные</h2>
+            {receivedReviews.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Пока нет отзывов от исполнителей
+              </p>
+            ) : (
+              <ReviewsGivenTable
+                reviews={receivedReviews.map((review) => ({
+                  ...review,
+                  // Table labels the counterpart via target_actor_id; for
+                  // received reviews show the reviewer (supplier) instead.
+                  target_actor_id: review.reviewer_actor_id,
+                }))}
+                getSupplierName={(id) => resolveName(id)}
+                getContractTitle={getContractTitle}
+              />
+            )}
+          </div>
         )}
       </PageSurface>
     </PageFrame>

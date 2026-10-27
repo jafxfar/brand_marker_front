@@ -29,7 +29,8 @@ export const formatCurrencyExact = (
   return new Intl.NumberFormat("ru-RU", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(value)
 }
 
@@ -128,8 +129,10 @@ export const formatDaysLeft = (daysLeft: number): string => {
   return `${pluralRu(daysLeft, "остался", "осталось", "осталось")} ${formatCount(daysLeft, "день", "дня", "дней")}`
 }
 
-export const formatRelativeTime = (timestamp: number): string => {
-  const diffMs = Date.now() - timestamp
+export const formatRelativeTime = (timestamp: number | string): string => {
+  const ms = typeof timestamp === "number" ? timestamp : new Date(timestamp).getTime()
+  if (!Number.isFinite(ms)) return "—"
+  const diffMs = Date.now() - ms
   const minutes = Math.floor(diffMs / 60000)
   if (minutes < 1) return "только что"
   if (minutes < 60) return `${minutes} мин назад`
@@ -139,8 +142,7 @@ export const formatRelativeTime = (timestamp: number): string => {
   return `${days} дн назад`
 }
 
-export const formatRelativeIso = (iso: string): string =>
-  formatRelativeTime(new Date(iso).getTime())
+export const formatRelativeIso = (iso: string): string => formatRelativeTime(iso)
 
 export const formatRfqBudget = (
   budgetType: string,
