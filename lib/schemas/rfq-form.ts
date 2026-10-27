@@ -16,7 +16,6 @@ const baseSchema = z.object({
   type: z.enum(["product", "service"]),
   title: z.string().min(5, "Заголовок не короче 5 символов"),
   category_id: z.string().min(1, "Выберите категорию"),
-  description: z.string().min(10, "Описание от 10 символов"),
   budget_type: z.enum(["fixed", "range", "open"]),
   budget_from: z.string().optional(),
   budget_to: z.string().optional(),
@@ -27,15 +26,22 @@ const baseSchema = z.object({
 
 const productSchema = baseSchema.extend({
   type: z.literal("product"),
-  quantity: z.string().min(1, "Укажите количество"),
-  delivery_country: z.string().min(1, "Укажите страну"),
-  delivery_city: z.string().min(1, "Укажите город"),
+  title: z.string().min(5, "Напишите название — хотя бы 5 символов"),
+  category_id: z
+    .string()
+    .min(1, "Выберите категорию — так заявку увидят нужные поставщики"),
+  description: z.string().min(1, "Опишите позицию"),
+  deadline: isoDateRequired("Укажите, до какого числа принимать КП"),
+  quantity: z.string().min(1, "Количество больше нуля"),
+  delivery_country: z.string().min(1, "Укажите адрес доставки"),
+  delivery_city: z.string().min(1, "Укажите адрес доставки"),
   delivery_address: z.string().optional(),
-  delivery_date: isoDateRequired("Укажите дату поставки"),
+  delivery_date: isoDateRequired("Укажите, до какого числа принимать КП"),
 })
 
 const serviceSchema = baseSchema.extend({
   type: z.literal("service"),
+  description: z.string().min(10, "Описание от 10 символов"),
   project_duration: z.string().min(1, "Укажите длительность"),
   start_date: isoDateRequired("Укажите дату начала"),
   team_size_required: z.string().optional(),
