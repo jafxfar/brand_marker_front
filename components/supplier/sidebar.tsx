@@ -13,6 +13,8 @@ import {
   Wallet,
   Building2,
   Crown,
+  Star,
+  Users,
   type LucideIcon,
 } from "lucide-react"
 import { BrandLogo } from "@/components/bm"
@@ -57,6 +59,8 @@ const navItems: NavItem[] = [
     badge: "catalog",
   },
   { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
+  { href: "/supplier/customers", label: "Заказчики", Icon: Users },
+  { href: "/supplier/reviews", label: "Отзывы", Icon: Star },
   { href: "/supplier/subscription", label: "Подписка", Icon: Crown },
   {
     href: "/supplier/messages",
