@@ -35,7 +35,7 @@ const viewFilters: Array<{ value: AdminCatalogView; label: string }> = [
   { value: "all", label: "Все" },
   { value: "products", label: "Товары" },
   { value: "services", label: "Услуги" },
-  { value: "draft", label: "Черновики" },
+  { value: "draft", label: "На модерации" },
   { value: "reported", label: "Жалобы" },
   { value: "hidden", label: "Скрытые" },
 ]

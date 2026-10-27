@@ -50,7 +50,7 @@ const buildQueues = (m: AdminDashboardMetrics): QueueTile[] => [
     label: "Товары",
     hint: "карточки на модерации",
     count: m.pending_catalog ?? 0,
-    href: "/admin/moderation?tab=catalog",
+    href: "/admin/moderation?tab=catalog&view=draft",
     Icon: QUEUE_ICONS.catalog,
   },
   {

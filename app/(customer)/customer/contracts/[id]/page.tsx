@@ -157,13 +157,24 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     markConversationReadLocal(contractId)
   }
 
-  const handleSubmitReview = (rating: number, text: string) => {
+  const handleSubmitReview = (payload: {
+    rating: number
+    service_rating: number
+    delivery_rating: number
+    quality_rating: number
+    tags: string[]
+    comment: string
+  }) => {
     if (useApi) {
       createReviewMutation.mutate({
         contract_id: contractId,
         target_actor_id: contract.supplier_actor_id,
-        rating,
-        comment: text || null,
+        rating: payload.rating,
+        service_rating: payload.service_rating,
+        delivery_rating: payload.delivery_rating,
+        quality_rating: payload.quality_rating,
+        tags: payload.tags,
+        comment: payload.comment || null,
       })
       return
     }
@@ -171,8 +182,8 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
       contractId,
       reviewerActorId: actorId,
       targetActorId: contract.supplier_actor_id,
-      rating,
-      comment: text || null,
+      rating: payload.rating,
+      comment: payload.comment || null,
     })
   }
 

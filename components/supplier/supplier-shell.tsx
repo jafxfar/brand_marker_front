@@ -8,6 +8,7 @@ import SupplierSidebar from "@/components/supplier/sidebar"
 import SupplierTopbar from "@/components/supplier/topbar"
 import { CabinetShell } from "@/components/layout/cabinet-shell"
 import { CabinetMobileNav } from "@/components/layout/cabinet-mobile-nav"
+import { SupportChatProvider } from "@/components/support/support-chat-context"
 import { SupportChatWidget } from "@/components/support/support-chat-widget"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
 import { useNotificationsSocket } from "@/hooks/use-notifications-socket"
@@ -34,54 +35,56 @@ export default function SupplierShell({ children }: { children: React.ReactNode 
   }
 
   return (
-    <CabinetShell
-      sidebar={<SupplierSidebar />}
-      topbar={<SupplierTopbar moreOpen={moreOpen} onMoreOpenChange={setMoreOpen} />}
-      mobileNav={
-        <CabinetMobileNav
-          moreOpen={moreOpen}
-          tabs={[
-            {
-              href: "/supplier",
-              label: "Главная",
-              Icon: LayoutDashboard,
-              match: (p) => p === "/supplier",
-            },
-            {
-              href: "/supplier/rfqs?response=open",
-              label: "Заявки",
-              Icon: Inbox,
-              badge: hydrated ? counts.rfqs : 0,
-              match: (p) => p.startsWith("/supplier/rfqs"),
-            },
-            {
-              href: "/supplier/contracts?tab=active",
-              label: "Сделки",
-              Icon: FileCheck,
-              badge: hydrated ? counts.deals : 0,
-              match: (p) => p.startsWith("/supplier/contracts"),
-            },
-            {
-              href: "/supplier/messages",
-              label: "Чаты",
-              Icon: MessageSquare,
-              badge: hydrated ? counts.messages : 0,
-              match: (p) => p.startsWith("/supplier/messages"),
-            },
-            {
-              label: "Ещё",
-              Icon: Menu,
-              isMore: true,
-              onClick: () => setMoreOpen(true),
-            },
-          ]}
-        />
-      }
-    >
-      {children}
-      <Suspense fallback={null}>
-        <SupportChatWidget role="supplier" />
-      </Suspense>
-    </CabinetShell>
+    <SupportChatProvider>
+      <CabinetShell
+        sidebar={<SupplierSidebar />}
+        topbar={<SupplierTopbar moreOpen={moreOpen} onMoreOpenChange={setMoreOpen} />}
+        mobileNav={
+          <CabinetMobileNav
+            moreOpen={moreOpen}
+            tabs={[
+              {
+                href: "/supplier",
+                label: "Главная",
+                Icon: LayoutDashboard,
+                match: (p) => p === "/supplier",
+              },
+              {
+                href: "/supplier/rfqs?response=open",
+                label: "Заявки",
+                Icon: Inbox,
+                badge: hydrated ? counts.rfqs : 0,
+                match: (p) => p.startsWith("/supplier/rfqs"),
+              },
+              {
+                href: "/supplier/contracts?tab=active",
+                label: "Сделки",
+                Icon: FileCheck,
+                badge: hydrated ? counts.deals : 0,
+                match: (p) => p.startsWith("/supplier/contracts"),
+              },
+              {
+                href: "/supplier/messages",
+                label: "Чаты",
+                Icon: MessageSquare,
+                badge: hydrated ? counts.messages : 0,
+                match: (p) => p.startsWith("/supplier/messages"),
+              },
+              {
+                label: "Ещё",
+                Icon: Menu,
+                isMore: true,
+                onClick: () => setMoreOpen(true),
+              },
+            ]}
+          />
+        }
+      >
+        {children}
+        <Suspense fallback={null}>
+          <SupportChatWidget role="supplier" />
+        </Suspense>
+      </CabinetShell>
+    </SupportChatProvider>
   )
 }

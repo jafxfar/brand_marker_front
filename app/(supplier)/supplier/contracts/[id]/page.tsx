@@ -21,6 +21,10 @@ import {
   useSupplierSubmitWorkMutation,
   useSupplierUploadContractFileMutation,
 } from "@/hooks/api/use-contracts-query"
+import {
+  useCreateSupplierReviewMutation,
+  useSupplierReviewsQuery,
+} from "@/hooks/api/use-reviews-query"
 import { canUploadContractFiles, contractStatusMeta } from "@/lib/contract-display"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { DeadlineBanner, DeadlineCountdown } from "@/components/contracts/deadline-countdown"
@@ -74,6 +78,8 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const openDisputeMutation = useSupplierOpenDisputeMutation()
   const submitWorkMutation = useSupplierSubmitWorkMutation()
   const uploadFileMutation = useSupplierUploadContractFileMutation()
+  const createReviewMutation = useCreateSupplierReviewMutation()
+  const { data: givenReviews } = useSupplierReviewsQuery(hydrated && useApi)
 
   const localContract = hydrated ? getContractLocal(contractId) : undefined
   const contract: ContractWithRelations | undefined = useApi
@@ -100,6 +106,9 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const meta = contractStatusMeta[contract.status]
   const buyer = getCompany(contract.buyer_actor_id)
   const buyerName = buyer?.title ?? "Заказчик"
+  const hasReview = Boolean(
+    givenReviews?.items?.some((review) => review.contract_id === contractId),
+  )
   const canDispute = !DISPUTE_DISABLED_STATUSES.includes(
     contract.status as (typeof DISPUTE_DISABLED_STATUSES)[number],
   )
@@ -212,7 +221,25 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
         <DeadlineBanner dueDate={contract.due_date} status={contract.status} />
       </div>
 
-      <SupplierDealNextAction contract={contract} onOpenTab={setTab} />
+      <SupplierDealNextAction
+        contract={contract}
+        buyerName={buyerName}
+        hasReview={hasReview}
+        onOpenTab={setTab}
+        onSubmitReview={(payload) => {
+          if (!useApi) return
+          createReviewMutation.mutate({
+            contract_id: contractId,
+            target_actor_id: contract.buyer_actor_id,
+            rating: payload.rating,
+            service_rating: payload.service_rating,
+            delivery_rating: payload.delivery_rating,
+            quality_rating: payload.quality_rating,
+            tags: payload.tags,
+            comment: payload.comment || null,
+          })
+        }}
+      />
 
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto">

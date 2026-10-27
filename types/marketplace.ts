@@ -61,7 +61,11 @@ export type MarketplacePerformer = {
   color: string
   specialties: string[]
   verified: boolean
+  /** pending | verified | rejected | needs_documents */
+  verificationStatus?: string
   featured: boolean
+  vip?: boolean
+  promoted?: boolean
   worldwide: boolean
   icon: string
   description: string

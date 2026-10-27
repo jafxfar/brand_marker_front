@@ -12,11 +12,13 @@ import {
   Send,
   Wallet,
   Building2,
+  Crown,
   type LucideIcon,
 } from "lucide-react"
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
 import { Button } from "@/components/ui/button"
+import { useSupportChat } from "@/components/support/support-chat-context"
 import {
   emptySupplierNavCounts,
   useSupplierNavCounts,
@@ -55,6 +57,7 @@ const navItems: NavItem[] = [
     badge: "catalog",
   },
   { href: "/supplier/finance", label: "Финансы", Icon: Wallet },
+  { href: "/supplier/subscription", label: "Подписка", Icon: Crown },
   {
     href: "/supplier/messages",
     label: "Сообщения",
@@ -72,6 +75,7 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
   const user = useAuthStore((s) => s.user)
   const countsQuery = useSupplierNavCounts()
   const counts = countsQuery.data ?? emptySupplierNavCounts()
+  const { openSupport } = useSupportChat()
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
@@ -124,6 +128,23 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
           </li>
         ))}
       </ul>
+
+      <div className="mt-6 grid gap-2 rounded-xl border border-line bg-white p-4">
+        <b className="text-[14px]">Нужна помощь?</b>
+        <p className="text-[13px] text-mute">
+          Ответим в чате в течение часа или по телефону +992 44 600 00 00.
+        </p>
+        <button
+          type="button"
+          className="justify-self-start text-[13.5px] font-semibold text-brand-700 hover:underline"
+          onClick={() => {
+            openSupport()
+            onNavigate?.()
+          }}
+        >
+          Написать в поддержку
+        </button>
+      </div>
     </nav>
   )
 }

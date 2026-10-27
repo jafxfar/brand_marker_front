@@ -107,11 +107,27 @@ const getPageNumbers = (currentPage: number, totalPages: number) => {
     .sort((first, second) => first - second)
 }
 
-const UserStatusBadge = ({ status }: { status: AdminUserStatus }) => {
+const UserStatusBadge = ({
+  status,
+  bannedUntil,
+}: {
+  status: AdminUserStatus
+  bannedUntil?: string | null
+}) => {
   const metadata = statusMetadata[status]
+  const untilLabel =
+    status === "blocked" && bannedUntil
+      ? ` до ${new Intl.DateTimeFormat("ru-RU", {
+          day: "2-digit",
+          month: "short",
+        }).format(new Date(bannedUntil))}`
+      : status === "blocked"
+        ? " · бессрочно"
+        : ""
   return (
     <Badge variant="outline" className={metadata.className}>
       {metadata.label}
+      {untilLabel}
     </Badge>
   )
 }
@@ -372,7 +388,10 @@ const AdminUsersContent = () => {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <UserStatusBadge status={user.status} />
+                      <UserStatusBadge
+                        status={user.status}
+                        bannedUntil={user.banned_until}
+                      />
                     </TableCell>
                     <TableCell className="px-5 text-right">
                       <Link
@@ -413,7 +432,10 @@ const AdminUsersContent = () => {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{roleLabels[user.role]}</Badge>
-                    <UserStatusBadge status={user.status} />
+                    <UserStatusBadge
+                      status={user.status}
+                      bannedUntil={user.banned_until}
+                    />
                     <span className="text-xs tabular-nums text-muted-foreground">
                       {user.contracts_count ?? 0} ·{" "}
                       {formatMoneyDisplay(user.contracts_sum ?? 0, "TJS")}

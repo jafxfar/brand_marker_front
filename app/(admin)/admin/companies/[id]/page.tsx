@@ -7,6 +7,7 @@ import {
   Ban,
   Building2,
   CheckCircle2,
+  Crown,
   FileQuestion,
   PauseCircle,
   RefreshCcw,
@@ -14,6 +15,7 @@ import {
   Star,
   XCircle,
 } from "lucide-react"
+import { toast } from "sonner"
 import { CompanyActionDialog } from "@/components/admin/companies/company-action-dialog"
 import { AdminCompanyDetailSections } from "@/components/admin/companies/company-detail-sections"
 import {
@@ -21,7 +23,10 @@ import {
   CompanyVerificationBadge,
 } from "@/components/admin/companies/company-status-badges"
 import { Button } from "@/components/ui/button"
-import { useAdminCompanyQuery } from "@/hooks/api/use-admin-companies-query"
+import {
+  useAdminCompanyQuery,
+  useAdminCompanyVipMutation,
+} from "@/hooks/api/use-admin-companies-query"
 import type { AdminCompanyAction } from "@/lib/api/admin"
 import { useAdminPermission } from "@/hooks/use-admin-permission"
 import { resolveFileUrl } from "@/lib/file-url"
@@ -56,6 +61,7 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
   const { id } = use(params)
   const companyId = Number(id)
   const companyQuery = useAdminCompanyQuery(companyId)
+  const vipMutation = useAdminCompanyVipMutation()
   const [selectedAction, setSelectedAction] = useState<AdminCompanyAction | null>(null)
   const canVerify = useAdminPermission("admin_companies.update")
   const canBlock = useAdminPermission("admin_companies.block")
@@ -162,11 +168,46 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
               <div className="mt-3 flex flex-wrap gap-2">
                 <CompanyVerificationBadge status={company.verification_status} />
                 <CompanyOperationalBadge status={company.operational_status} />
+                {company.vip && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                    <Crown size={12} aria-hidden="true" />
+                    VIP
+                    {company.vip_until
+                      ? ` до ${new Date(company.vip_until).toLocaleDateString("ru-RU")}`
+                      : ""}
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
+            {canVerify && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={vipMutation.isPending}
+                onClick={async () => {
+                  try {
+                    await vipMutation.mutateAsync({
+                      companyId: company.id,
+                      vip: !company.vip,
+                      months: company.vip ? null : 3,
+                      reason: company.vip ? "Снятие VIP" : "Админ VIP",
+                    })
+                    toast.success(
+                      company.vip ? "VIP снят" : "VIP выдан на 3 месяца",
+                    )
+                  } catch {
+                    // MutationCache toast
+                  }
+                }}
+              >
+                <Crown aria-hidden="true" />
+                {company.vip ? "Снять VIP" : "Дать VIP"}
+              </Button>
+            )}
             {canVerify && company.verification_status !== "verified" && (
               <Button type="button" size="sm" onClick={() => setSelectedAction("approve")}>
                 <CheckCircle2 aria-hidden="true" />

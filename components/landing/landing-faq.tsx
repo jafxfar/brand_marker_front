@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { helpUrl } from "@/lib/marketplace-routes"
+import { loginRedirect } from "@/lib/marketplace-routes"
 
 const FAQ = [
   {
@@ -35,7 +35,7 @@ export const LandingFaq = () => (
           Не нашли ответ? Напишите в поддержку — ответим в течение часа в рабочее время.
         </p>
         <Button asChild variant="outline" className="justify-self-start">
-          <Link href={helpUrl()}>
+          <Link href={loginRedirect("/customer?support=1")}>
             <MessageSquare className="size-4" />
             Написать в поддержку
           </Link>

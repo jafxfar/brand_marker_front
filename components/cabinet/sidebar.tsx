@@ -18,6 +18,7 @@ import {
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
 import { Button } from "@/components/ui/button"
+import { useSupportChat } from "@/components/support/support-chat-context"
 import {
   emptyBuyerNavCounts,
   useBuyerNavCounts,
@@ -54,6 +55,7 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
   const user = useAuthStore((s) => s.user)
   const countsQuery = useBuyerNavCounts()
   const counts = countsQuery.data ?? emptyBuyerNavCounts()
+  const { openSupport } = useSupportChat()
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
@@ -141,7 +143,10 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
         <button
           type="button"
           className="justify-self-start text-[13.5px] font-semibold text-brand-700 hover:underline"
-          onClick={onNavigate}
+          onClick={() => {
+            openSupport()
+            onNavigate?.()
+          }}
         >
           Написать в поддержку
         </button>

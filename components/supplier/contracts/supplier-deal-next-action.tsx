@@ -1,10 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { MessageSquare, Upload } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
 import { Button } from "@/components/ui/button"
 import { NextActionCard } from "@/components/process"
+import ReviewDialog from "@/components/cabinet/review-dialog"
 import {
   DEAL_NEXT_STEP,
   getDealPhase,
@@ -17,7 +19,17 @@ type SupplierDealTab = "messages" | "dispute" | "submission"
 
 type SupplierDealNextActionProps = {
   contract: ContractWithRelations
+  buyerName: string
+  hasReview?: boolean
   onOpenTab: (tab: SupplierDealTab) => void
+  onSubmitReview?: (payload: {
+    rating: number
+    service_rating: number
+    delivery_rating: number
+    quality_rating: number
+    tags: string[]
+    comment: string
+  }) => void
 }
 
 const getLatestSubmission = (contract: ContractWithRelations) =>
@@ -25,7 +37,14 @@ const getLatestSubmission = (contract: ContractWithRelations) =>
     (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime(),
   )[0]
 
-export const SupplierDealNextAction = ({ contract, onOpenTab }: SupplierDealNextActionProps) => {
+export const SupplierDealNextAction = ({
+  contract,
+  buyerName,
+  hasReview = false,
+  onOpenTab,
+  onSubmitReview,
+}: SupplierDealNextActionProps) => {
+  const [reviewOpen, setReviewOpen] = useState(false)
   const phase = getDealPhase(contract)
   const title = DEAL_NEXT_STEP.supplier[phase]
 
@@ -129,13 +148,32 @@ export const SupplierDealNextAction = ({ contract, onOpenTab }: SupplierDealNext
     return (
       <NextActionCard
         title={title}
-        text="Оплата по сделке зачислена на ваш баланс. Вывести деньги можно в разделе «Финансы»."
-        actions={
-          <Button asChild variant="outline">
-            <Link href="/supplier/finance">Перейти в финансы</Link>
-          </Button>
+        text={
+          hasReview
+            ? "Спасибо за отзыв! Оплата по сделке зачислена на ваш баланс."
+            : `Оцените заказчика ${buyerName} — отзыв поможет другим исполнителям.`
         }
-      />
+        actions={
+          <>
+            {!hasReview && onSubmitReview ? (
+              <Button onClick={() => setReviewOpen(true)}>Оставить отзыв</Button>
+            ) : null}
+            <Button asChild variant="outline">
+              <Link href="/supplier/finance">Перейти в финансы</Link>
+            </Button>
+          </>
+        }
+      >
+        {onSubmitReview ? (
+          <ReviewDialog
+            open={reviewOpen}
+            onOpenChange={setReviewOpen}
+            counterpartName={buyerName}
+            counterpartLabel="заказчиком"
+            onConfirm={onSubmitReview}
+          />
+        ) : null}
+      </NextActionCard>
     )
   }
 
