@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "lucide-react"
 import type { CompanyWizardCertificate, CompanyWizardInput } from "@/types"
 import { isoDateBounds } from "@/lib/iso-date"
 import { WizardField, wizardInputClass } from "@/components/company/wizard-field"
+import { DateInputRu } from "@/components/ui/date-input-ru"
 
 const emptyCertificate = (): CompanyWizardCertificate => ({
   title: "",
@@ -110,15 +111,11 @@ export const CertificatesStep = ({
               label="Дата выдачи"
               error={errors[`certificates.${index}.issue_date`]}
             >
-              <input
-                maxLength={10}
-                type="date"
+              <DateInputRu
                 min={issueDateBounds.min}
                 max={issueDateBounds.max}
                 value={cert.issue_date}
-                onChange={(e) =>
-                  handleUpdate(index, { issue_date: e.target.value })
-                }
+                onChange={(issue_date) => handleUpdate(index, { issue_date })}
                 className={wizardInputClass}
               />
             </WizardField>
@@ -127,15 +124,11 @@ export const CertificatesStep = ({
               label="Срок действия"
               error={errors[`certificates.${index}.expiry_date`]}
             >
-              <input
-                maxLength={10}
-                type="date"
+              <DateInputRu
                 min={expiryDateBounds.min}
                 max={expiryDateBounds.max}
                 value={cert.expiry_date}
-                onChange={(e) =>
-                  handleUpdate(index, { expiry_date: e.target.value })
-                }
+                onChange={(expiry_date) => handleUpdate(index, { expiry_date })}
                 className={wizardInputClass}
               />
             </WizardField>

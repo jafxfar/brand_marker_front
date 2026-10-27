@@ -4,6 +4,7 @@ import type { ChangeEvent, RefObject } from "react"
 import { Paperclip, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { DateInputRu } from "@/components/ui/date-input-ru"
 import type { ReactNode } from "react"
 
 export type ProductLineItem = {
@@ -471,13 +472,12 @@ export const ProductConditionsStep = ({
         <label htmlFor="w-deadline" className={labelClass}>
           Принимать КП до
         </label>
-        <input
+        <DateInputRu
           id="w-deadline"
-          type="date"
           min={dateMin}
           max={dateMax}
           value={deadline}
-          onChange={(e) => onDeadlineChange(e.target.value)}
+          onChange={onDeadlineChange}
           className={inputClass("deadline")}
           aria-invalid={!!errors.deadline}
         />

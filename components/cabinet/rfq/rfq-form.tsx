@@ -9,6 +9,7 @@ import { isValidIsoDate, isoDateBounds } from "@/lib/iso-date"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
+import { DateInputRu } from "@/components/ui/date-input-ru"
 import { InlineHint } from "@/components/process"
 import type { RfqCreate, RfqWithRelations } from "@/types"
 import { budgetTypeMeta } from "@/lib/rfq-display"
@@ -763,14 +764,12 @@ export const RfqForm = ({
             <label htmlFor="deadline" className={labelClass}>
               Принимать предложения до
             </label>
-            <input
-              maxLength={10}
+            <DateInputRu
               id="deadline"
-              type="date"
               min={DATE_INPUT_MIN}
               max={DATE_INPUT_MAX}
               value={values.deadline}
-              onChange={(e) => handleDateChange("deadline", e.target.value)}
+              onChange={(v) => handleDateChange("deadline", v)}
               className={inputClass("deadline")}
               aria-invalid={!!errors.deadline}
             />
@@ -780,14 +779,12 @@ export const RfqForm = ({
             <label htmlFor="start-date" className={labelClass}>
               Когда начать работу
             </label>
-            <input
-              maxLength={10}
+            <DateInputRu
               id="start-date"
-              type="date"
               min={DATE_INPUT_MIN}
               max={DATE_INPUT_MAX}
               value={values.start_date}
-              onChange={(e) => handleDateChange("start_date", e.target.value)}
+              onChange={(v) => handleDateChange("start_date", v)}
               className={inputClass("start_date")}
               aria-invalid={!!errors.start_date}
             />
