@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, Search, LogOut, User, ChevronDown, ShoppingBag } from "lucide-react"
+import { Search, LogOut, User, ChevronDown, ShoppingBag } from "lucide-react"
+import { NotificationsPopover } from "@/components/notifications/notifications-popover"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -13,7 +14,6 @@ import { BrandLogo } from "@/components/bm"
 import SupplierSidebar from "@/components/supplier/sidebar"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { getUserDisplayName, getUserInitials } from "@/lib/auth-display"
-import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
 
 export default function SupplierTopbar({
@@ -31,7 +31,6 @@ export default function SupplierTopbar({
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const switchSessionRole = useAuthStore((s) => s.switchSessionRole)
-  const unread = useUnreadNotificationsCount("supplier")
   const displayName = hydrated && user ? getUserDisplayName(user) : "Гость"
   const initials = hydrated && user ? getUserInitials(user) : ""
 
@@ -59,16 +58,7 @@ export default function SupplierTopbar({
             />
           </label>
           <span className="flex-1" />
-          <Link
-            href="/supplier/notifications"
-            className="relative grid size-10 place-items-center rounded-[10px] hover:bg-canvas"
-            aria-label="Уведомления"
-          >
-            <Bell className="size-5" />
-            {hydrated && unread > 0 ? (
-              <span className="absolute top-2 right-2.5 size-2 rounded-full bg-red-500 ring-2 ring-white" />
-            ) : null}
-          </Link>
+          <NotificationsPopover role="supplier" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button

@@ -3,7 +3,10 @@
 import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
-import { useNotificationsQuery } from "@/hooks/api/use-notifications-query"
+import {
+  useNotificationsQuery,
+  type NotificationFilterKey,
+} from "@/hooks/api/use-notifications-query"
 import type { NotificationRole } from "@/lib/api/notifications"
 import type { ApiNotification, Notification, NotificationType } from "@/types/notification"
 
@@ -39,14 +42,36 @@ const mapLocalNotification = (n: Notification): NotificationListItem => ({
   createdAt: n.createdAt,
 })
 
-export const useNotificationItems = (role: NotificationRole) => {
+export const useNotificationItems = (
+  role: NotificationRole,
+  options: {
+    page?: number
+    pageSize?: number
+    filter?: NotificationFilterKey
+  } = {},
+) => {
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
-  const { data: apiItems, isLoading } = useNotificationsQuery(role, hydrated && useApi)
+  const page = options.page ?? 1
+  const pageSize = options.pageSize ?? 20
+  const filter = options.filter ?? "all"
+
+  const { data: apiItems, isLoading } = useNotificationsQuery(
+    role,
+    hydrated && useApi,
+    { page, pageSize, filter },
+  )
   const localItems = useNotificationsStore((s) => s.items)
 
   if (!hydrated) {
-    return { items: [] as NotificationListItem[], isLoading: true, useApi }
+    return {
+      items: [] as NotificationListItem[],
+      isLoading: true,
+      useApi,
+      total: 0,
+      totalPages: 0,
+      page: 1,
+    }
   }
 
   if (useApi) {
@@ -54,20 +79,45 @@ export const useNotificationItems = (role: NotificationRole) => {
       items: (apiItems?.items ?? []).map(mapApiNotification),
       isLoading,
       useApi,
+      total: apiItems?.total ?? 0,
       totalPages: apiItems?.total_pages ?? 0,
-      page: apiItems?.page ?? 1,
+      page: apiItems?.page ?? page,
     }
   }
 
+  let items = localItems.map(mapLocalNotification)
+  if (filter === "unread") items = items.filter((n) => !n.read)
+  if (filter === "read") items = items.filter((n) => n.read)
+  items = [...items].sort((a, b) => b.createdAt - a.createdAt)
+  const total = items.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1)
+  const start = (page - 1) * pageSize
   return {
-    items: localItems.map(mapLocalNotification),
+    items: items.slice(start, start + pageSize),
     isLoading: false,
     useApi,
+    total,
+    totalPages,
+    page,
   }
 }
 
 export const useUnreadNotificationsCount = (role: NotificationRole) => {
-  const { items, isLoading } = useNotificationItems(role)
-  if (isLoading) return 0
-  return items.filter((n) => !n.read).length
+  const hydrated = useHydrated()
+  const useApi = isApiEnabled()
+  const { data, isLoading } = useNotificationsQuery(role, hydrated && useApi, {
+    page: 1,
+    pageSize: 1,
+    filter: "unread",
+  })
+  const localItems = useNotificationsStore((s) => s.items)
+
+  if (!hydrated || isLoading) {
+    if (!useApi && hydrated) {
+      return localItems.filter((n) => !n.read).length
+    }
+    return 0
+  }
+  if (useApi) return data?.total ?? 0
+  return localItems.filter((n) => !n.read).length
 }

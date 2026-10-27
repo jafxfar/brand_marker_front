@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, Search, LogOut, User, ChevronDown, Store, ShoppingCart } from "lucide-react"
+import { Search, LogOut, User, ChevronDown, Store, ShoppingCart } from "lucide-react"
+import { NotificationsPopover } from "@/components/notifications/notifications-popover"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -12,7 +13,6 @@ import {
 import { BrandLogo } from "@/components/bm"
 import CustomerSidebar from "@/components/cabinet/sidebar"
 import { useAuthStore } from "@/lib/store/auth-store"
-import { useUnreadNotificationsCount } from "@/hooks/use-notifications"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getUserDisplayName, getUserInitials } from "@/lib/auth-display"
 
@@ -31,7 +31,6 @@ export default function CustomerTopbar({
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const switchSessionRole = useAuthStore((s) => s.switchSessionRole)
-  const unread = useUnreadNotificationsCount("buyer")
   const displayName = hydrated && user ? getUserDisplayName(user) : "Гость"
   const initials = hydrated && user ? getUserInitials(user) : ""
 
@@ -66,16 +65,7 @@ export default function CustomerTopbar({
             <ShoppingCart className="size-[18px]" />
             Каталог
           </Link>
-          <Link
-            href="/customer/notifications"
-            className="relative grid size-10 place-items-center rounded-[10px] hover:bg-canvas"
-            aria-label="Уведомления"
-          >
-            <Bell className="size-5" />
-            {hydrated && unread > 0 ? (
-              <span className="absolute top-2 right-2.5 size-2 rounded-full bg-red-500 ring-2 ring-white" />
-            ) : null}
-          </Link>
+          <NotificationsPopover role="buyer" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
