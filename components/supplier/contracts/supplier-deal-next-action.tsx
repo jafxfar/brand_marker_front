@@ -170,6 +170,7 @@ export const SupplierDealNextAction = ({
             onOpenChange={setReviewOpen}
             counterpartName={buyerName}
             counterpartLabel="заказчиком"
+            variant="about_buyer"
             onConfirm={onSubmitReview}
           />
         ) : null}

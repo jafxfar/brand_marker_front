@@ -26,6 +26,9 @@ export const publicKeys = {
       filters.verified ? "1" : "0",
     ] as const,
   supplier: (id: number) => [...publicKeys.all, "supplier", id] as const,
+  buyer: (id: number) => [...publicKeys.all, "buyer", id] as const,
+  buyerReviews: (id: number, page = 1) =>
+    [...publicKeys.all, "buyer-reviews", id, page] as const,
   supplierCatalog: (id: number, page = 1) =>
     [...publicKeys.all, "supplier-catalog", id, page] as const,
   supplierReviews: (id: number, page = 1) =>
@@ -89,6 +92,24 @@ export const usePublicSupplierQuery = (id: number, enabled = true) =>
   useQuery({
     queryKey: publicKeys.supplier(id),
     queryFn: () => publicApi.supplier(id),
+    enabled: enabled && isApiEnabled() && id > 0,
+  })
+
+export const usePublicBuyerQuery = (id: number, enabled = true) =>
+  useQuery({
+    queryKey: publicKeys.buyer(id),
+    queryFn: () => publicApi.buyer(id),
+    enabled: enabled && isApiEnabled() && id > 0,
+  })
+
+export const usePublicBuyerReviewsQuery = (
+  id: number,
+  enabled = true,
+  params: PageParams = {},
+) =>
+  useQuery({
+    queryKey: publicKeys.buyerReviews(id, params.page ?? 1),
+    queryFn: () => publicApi.buyerReviews(id, params),
     enabled: enabled && isApiEnabled() && id > 0,
   })
 

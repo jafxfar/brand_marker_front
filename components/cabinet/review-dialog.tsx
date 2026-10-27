@@ -17,26 +17,50 @@ export type ReviewAxisRatings = {
   comment: string
 }
 
-const AXES = [
-  { key: "service_rating" as const, label: "Сервис" },
-  { key: "delivery_rating" as const, label: "Сроки" },
-  { key: "quality_rating" as const, label: "Качество" },
-]
+/** about_supplier: buyer rates performer; about_buyer: supplier rates customer */
+export type ReviewDialogVariant = "about_supplier" | "about_buyer"
 
-const TAG_OPTIONS = [
-  "Надёжный",
-  "Вежливый",
-  "Быстро",
-  "Качественно",
-  "Рекомендую",
-  "Дорого",
-]
+const VARIANT_CONFIG: Record<
+  ReviewDialogVariant,
+  {
+    axes: Array<{ key: "service_rating" | "delivery_rating" | "quality_rating"; label: string }>
+    tags: string[]
+    defaultLabel: string
+  }
+> = {
+  about_supplier: {
+    axes: [
+      { key: "service_rating", label: "Сервис" },
+      { key: "delivery_rating", label: "Сроки" },
+      { key: "quality_rating", label: "Качество" },
+    ],
+    tags: ["Надёжный", "Вежливый", "Быстро", "Качественно", "Рекомендую", "Дорого"],
+    defaultLabel: "исполнителем",
+  },
+  about_buyer: {
+    axes: [
+      { key: "service_rating", label: "Коммуникация" },
+      { key: "delivery_rating", label: "Оплата" },
+      { key: "quality_rating", label: "ТЗ и ясность" },
+    ],
+    tags: [
+      "Пунктуальный",
+      "Понятное ТЗ",
+      "Быстрая оплата",
+      "Вежливый",
+      "Рекомендую",
+      "Сложный клиент",
+    ],
+    defaultLabel: "заказчиком",
+  },
+}
 
 interface ReviewDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   counterpartName: string
   counterpartLabel?: string
+  variant?: ReviewDialogVariant
   onConfirm: (payload: ReviewAxisRatings) => void
 }
 
@@ -78,9 +102,11 @@ export default function ReviewDialog({
   open,
   onOpenChange,
   counterpartName,
-  counterpartLabel = "исполнителем",
+  counterpartLabel,
+  variant = "about_supplier",
   onConfirm,
 }: ReviewDialogProps) {
+  const config = VARIANT_CONFIG[variant]
   const [service, setService] = useState(5)
   const [delivery, setDelivery] = useState(5)
   const [quality, setQuality] = useState(5)
@@ -88,6 +114,7 @@ export default function ReviewDialog({
   const [text, setText] = useState("")
 
   const average = Math.round((service + delivery + quality) / 3)
+  const label = counterpartLabel ?? config.defaultLabel
 
   const toggleTag = (tag: string) => {
     setTags((prev) =>
@@ -118,12 +145,12 @@ export default function ReviewDialog({
         <DialogHeader>
           <DialogTitle>Оставить отзыв</DialogTitle>
           <DialogDescription>
-            Поделитесь опытом работы с {counterpartLabel} «{counterpartName}»
+            Поделитесь опытом работы с {label} «{counterpartName}»
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 py-1">
-          {AXES.map((axis) => (
+          {config.axes.map((axis) => (
             <AxisStars
               key={axis.key}
               label={axis.label}
@@ -149,7 +176,7 @@ export default function ReviewDialog({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {TAG_OPTIONS.map((tag) => (
+          {config.tags.map((tag) => (
             <button
               key={tag}
               type="button"

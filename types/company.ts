@@ -210,3 +210,23 @@ export type PublicSupplier = {
   disputed_contracts?: number
   success_rate?: number | null
 }
+
+export type PublicBuyer = {
+  actor_id: number
+  kind: "individual" | "company"
+  display_name: string
+  company_id: number | null
+  city: string | null
+  country: string | null
+  description: string | null
+  website: string | null
+  legal_name?: string | null
+  rating: number
+  verification_status: VerificationStatus
+  reviews_count: number
+  trust_level: string
+  completed_contracts?: number
+  active_contracts?: number
+  disputed_contracts?: number
+  success_rate?: number | null
+}

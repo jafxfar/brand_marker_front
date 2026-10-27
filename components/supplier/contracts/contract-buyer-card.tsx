@@ -1,40 +1,59 @@
+import Link from "next/link"
 import { Building2, MapPin, ShieldCheck } from "lucide-react"
-import type { CompanyWithRelations } from "@/types"
+import type { PublicBuyer } from "@/types"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 import { formatCount } from "@/lib/format"
 
 type ContractBuyerCardProps = {
-  buyer: CompanyWithRelations | undefined
+  buyer: PublicBuyer | null | undefined
+  loading?: boolean
 }
 
-const verificationLabel = {
+const verificationLabel: Record<string, string> = {
   verified: "Верифицирован",
   pending: "На проверке",
   rejected: "Отклонён",
-} as const
+  needs_documents: "Нужны документы",
+}
 
-export const ContractBuyerCard = ({ buyer }: ContractBuyerCardProps) => {
+export const ContractBuyerCard = ({ buyer, loading }: ContractBuyerCardProps) => {
+  if (loading) {
+    return (
+      <section className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-3 text-sm font-semibold text-foreground">Заказчик</h2>
+        <div className="h-20 animate-pulse rounded-lg bg-secondary" />
+      </section>
+    )
+  }
+
   if (!buyer) {
     return (
-      <section className="bg-card border border-border rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-foreground mb-3">Заказчик</h2>
+      <section className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-3 text-sm font-semibold text-foreground">Заказчик</h2>
         <p className="text-sm text-muted-foreground">Данные недоступны</p>
       </section>
     )
   }
 
   return (
-    <section className="bg-card border border-border rounded-xl p-6">
-      <h2 className="text-sm font-semibold text-foreground mb-4">Заказчик</h2>
+    <section className="rounded-xl border border-border bg-card p-6">
+      <h2 className="mb-4 text-sm font-semibold text-foreground">Заказчик</h2>
 
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+      <div className="mb-4 flex items-start gap-3">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-secondary">
           <Building2 size={22} className="text-primary" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-foreground">{buyer.title}</p>
+          <Link
+            href={`/supplier/customers/${buyer.actor_id}`}
+            className="text-sm font-bold text-foreground hover:text-primary hover:underline"
+          >
+            {buyer.display_name}
+          </Link>
           {buyer.legal_name && (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{buyer.legal_name}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {buyer.legal_name}
+            </p>
           )}
           <div className="mt-2">
             <BuyerRating rating={buyer.rating} />
@@ -51,11 +70,19 @@ export const ContractBuyerCard = ({ buyer }: ContractBuyerCardProps) => {
         )}
         <div className="flex items-center gap-2 text-muted-foreground">
           <ShieldCheck size={14} className="flex-shrink-0" />
-          <span>{verificationLabel[buyer.verification_status]}</span>
+          <span>
+            {verificationLabel[buyer.verification_status] ?? buyer.verification_status}
+          </span>
         </div>
-        {buyer.stats && (
-          <p className="text-xs text-muted-foreground pt-1">
-            {formatCount(buyer.stats.completed_contracts, "завершённая сделка", "завершённые сделки", "завершённых сделок")} на платформе
+        {(buyer.completed_contracts ?? 0) > 0 && (
+          <p className="pt-1 text-xs text-muted-foreground">
+            {formatCount(
+              buyer.completed_contracts ?? 0,
+              "завершённая сделка",
+              "завершённые сделки",
+              "завершённых сделок",
+            )}{" "}
+            на платформе
           </p>
         )}
       </div>

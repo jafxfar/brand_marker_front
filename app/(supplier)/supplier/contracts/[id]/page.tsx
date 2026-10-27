@@ -9,8 +9,8 @@ import { SupplierDealNextAction } from "@/components/supplier/contracts/supplier
 import { statusPillClass } from "@/components/ui/status-badge"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
-import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { usePublicBuyerQuery } from "@/hooks/api/use-public-query"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
 import {
@@ -61,7 +61,6 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const addMessageLocal = useContractsStore((s) => s.addMessage)
   const markConversationReadLocal = useContractsStore((s) => s.markConversationRead)
   const addFileLocal = useContractsStore((s) => s.addFile)
-  const getCompany = useCompaniesStore((s) => s.getCompany)
   const [disputeOpen, setDisputeOpen] = useState(false)
   const [isUploadingFiles, setIsUploadingFiles] = useState(false)
   const searchParams = useSearchParams()
@@ -87,6 +86,12 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
     ? (apiContract as ContractWithRelations | undefined)
     : localContract
 
+  const buyerActorId = contract?.buyer_actor_id ?? 0
+  const buyerQuery = usePublicBuyerQuery(
+    buyerActorId,
+    hydrated && useApi && buyerActorId > 0,
+  )
+
   if (!hydrated || (useApi && isLoading)) {
     return (
       <PageFrame className="animate-pulse">
@@ -105,8 +110,8 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   }
 
   const meta = contractStatusMeta[contract.status]
-  const buyer = getCompany(contract.buyer_actor_id)
-  const buyerName = buyer?.title ?? "Заказчик"
+  const buyer = buyerQuery.data
+  const buyerName = buyer?.display_name ?? "Заказчик"
   const hasReview = Boolean(
     givenReviews?.items?.some((review) => review.contract_id === contractId),
   )
@@ -285,7 +290,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
               <ContractMilestonesPanel contract={contract} />
             </div>
             <div className="space-y-5 lg:sticky lg:top-24">
-              <ContractBuyerCard buyer={buyer} />
+              <ContractBuyerCard buyer={buyer} loading={buyerQuery.isLoading} />
               <ContractEscrowCard contract={contract} showPayout />
             </div>
           </div>

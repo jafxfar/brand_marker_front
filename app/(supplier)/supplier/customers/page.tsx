@@ -1,14 +1,16 @@
 "use client"
 
 import Link from "next/link"
+import { useQueries } from "@tanstack/react-query"
 import { ChevronRight, Star, Users } from "lucide-react"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useContractsStore } from "@/lib/store/contracts-store"
-import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
 import { useSupplierReviewsQuery } from "@/hooks/api/use-reviews-query"
+import { publicKeys } from "@/hooks/api/use-public-query"
+import { publicApi } from "@/lib/api/public"
 import { getActorId } from "@/lib/auth-display"
 import { formatCount, formatPrice } from "@/lib/format"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
@@ -32,13 +34,13 @@ const avgRating = (reviews: Review[]) => {
 
 const groupCustomers = (
   contracts: ContractWithRelations[],
-  getName: (buyerActorId: number) => string,
-  reviewsAboutBuyer: Map<number, Review[]>,
-): CustomerGroup[] => {
-  const groups = new Map<number, CustomerGroup>()
+): Omit<CustomerGroup, "name" | "rating" | "reviewsCount">[] => {
+  const groups = new Map<
+    number,
+    Omit<CustomerGroup, "name" | "rating" | "reviewsCount">
+  >()
 
   for (const contract of contracts) {
-    const buyerReviews = reviewsAboutBuyer.get(contract.buyer_actor_id) ?? []
     const existing = groups.get(contract.buyer_actor_id)
     if (existing) {
       existing.contractCount += 1
@@ -51,12 +53,9 @@ const groupCustomers = (
 
     groups.set(contract.buyer_actor_id, {
       id: contract.buyer_actor_id,
-      name: getName(contract.buyer_actor_id),
       contractCount: 1,
       totalAmount: contract.agreed_amount,
       latestContractId: contract.id,
-      rating: avgRating(buyerReviews),
-      reviewsCount: buyerReviews.length,
     })
   }
 
@@ -69,15 +68,11 @@ export default function SupplierCustomersPage() {
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const getContractsForSupplier = useContractsStore((s) => s.getContractsForSupplier)
-  const getCompany = useCompaniesStore((s) => s.getCompany)
   const { data: apiContracts, isLoading } = useSupplierContractsQuery(
     hydrated && useApi,
     { pageSize: 100 },
   )
   const { data: givenReviewsPage } = useSupplierReviewsQuery(hydrated && useApi)
-
-  const getBuyerName = (buyerActorId: number): string =>
-    getCompany(buyerActorId)?.title ?? `Заказчик #${buyerActorId}`
 
   const contracts: ContractWithRelations[] = useApi
     ? ((apiContracts?.items ?? []) as ContractWithRelations[])
@@ -85,7 +80,18 @@ export default function SupplierCustomersPage() {
       ? getContractsForSupplier(actorId)
       : []
 
-  // Рейтинг: ваши отзывы о заказчике; иначе rating компании, если есть в сторе.
+  const groups = groupCustomers(contracts)
+  const buyerIds = groups.map((g) => g.id)
+
+  const buyerQueries = useQueries({
+    queries: buyerIds.map((id) => ({
+      queryKey: publicKeys.buyer(id),
+      queryFn: () => publicApi.buyer(id),
+      enabled: hydrated && useApi && id > 0,
+      staleTime: 5 * 60 * 1000,
+    })),
+  })
+
   const reviewsAboutBuyer = new Map<number, Review[]>()
   for (const review of givenReviewsPage?.items ?? []) {
     const list = reviewsAboutBuyer.get(review.target_actor_id) ?? []
@@ -93,17 +99,19 @@ export default function SupplierCustomersPage() {
     reviewsAboutBuyer.set(review.target_actor_id, list)
   }
 
-  const customers = groupCustomers(
-    contracts,
-    getBuyerName,
-    reviewsAboutBuyer,
-  ).map((customer) => {
-    if (customer.rating != null) return customer
-    const companyRating = getCompany(customer.id)?.rating
-    if (companyRating && companyRating > 0) {
-      return { ...customer, rating: companyRating }
+  const customers: CustomerGroup[] = groups.map((group, index) => {
+    const fromApi = buyerQueries[index]?.data
+    const myReviews = reviewsAboutBuyer.get(group.id) ?? []
+    const rating =
+      fromApi && fromApi.rating > 0
+        ? fromApi.rating
+        : avgRating(myReviews)
+    return {
+      ...group,
+      name: fromApi?.display_name ?? `Заказчик #${group.id}`,
+      rating,
+      reviewsCount: fromApi?.reviews_count ?? myReviews.length,
     }
-    return customer
   })
 
   if (!hydrated || (useApi && isLoading)) {
@@ -133,9 +141,10 @@ export default function SupplierCustomersPage() {
       ) : (
         <div className="space-y-3">
           {customers.map((customer) => (
-            <div
+            <Link
               key={customer.id}
-              className="flex items-center gap-4 rounded-xl border border-border bg-card p-4"
+              href={`/supplier/customers/${customer.id}`}
+              className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-secondary/20"
             >
               <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-secondary">
                 <Users size={18} className="text-primary" />
@@ -166,14 +175,10 @@ export default function SupplierCustomersPage() {
                   )}
                 </div>
               </div>
-              <Link
-                href={`/supplier/contracts/${customer.latestContractId}`}
-                className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                aria-label={`Открыть сделки с ${customer.name}`}
-              >
-                Сделки <ChevronRight size={14} />
-              </Link>
-            </div>
+              <span className="flex items-center gap-1 text-xs font-semibold text-primary">
+                Профиль <ChevronRight size={14} />
+              </span>
+            </Link>
           ))}
         </div>
       )}

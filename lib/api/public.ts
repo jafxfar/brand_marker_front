@@ -3,6 +3,7 @@ import type { CatalogSort } from "@/lib/marketplace-routes"
 import type {
   CatalogItemWithRelations,
   CompanyWithRelations,
+  PublicBuyer,
   PublicSupplier,
   Review,
   RfqWithRelations,
@@ -55,6 +56,9 @@ export const publicApi = {
   supplier: (actorId: number) =>
     apiFetch<PublicSupplier>(`/public/suppliers/${actorId}`),
 
+  buyer: (actorId: number) =>
+    apiFetch<PublicBuyer>(`/public/buyers/${actorId}`),
+
   supplierCatalog: (actorId: number, params: PageParams = {}) =>
     apiFetch<Page<CatalogItemWithRelations>>(
       `/public/suppliers/${actorId}/catalog${buildPageQuery(params)}`,
@@ -63,6 +67,11 @@ export const publicApi = {
   supplierReviews: (actorId: number, params: PageParams = {}) =>
     apiFetch<Page<Review>>(
       `/public/suppliers/${actorId}/reviews${buildPageQuery(params)}`,
+    ),
+
+  buyerReviews: (actorId: number, params: PageParams = {}) =>
+    apiFetch<Page<Review>>(
+      `/public/buyers/${actorId}/reviews${buildPageQuery(params)}`,
     ),
 
   company: (id: number) => apiFetch<CompanyWithRelations>(`/public/companies/${id}`),
