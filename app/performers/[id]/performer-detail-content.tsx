@@ -27,8 +27,9 @@ import {
   mapCatalogItemToService,
   mapPublicSupplierToPerformer,
 } from "@/lib/marketplace-hybrid"
-import { performersUrl } from "@/lib/marketplace-routes"
+import { loginRedirect, performersUrl } from "@/lib/marketplace-routes"
 import { createRfqHref } from "@/lib/create-rfq-href"
+import { useAuthStore } from "@/lib/store/auth-store"
 import { resolveFileUrl } from "@/lib/file-url"
 import { cn } from "@/lib/utils"
 import type { MarketplacePerformer } from "@/types/marketplace"
@@ -52,7 +53,19 @@ export const PerformerDetailContent = ({
   const searchParams = useSearchParams()
   const guestPreview = searchParams.get("guest") === "1"
   const useApi = isApiEnabled()
+  const authUser = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [tab, setTab] = useState<StoreTab>("goods")
+
+  const contactHref = (() => {
+    const messagesPath = `/customer/messages?counterpart=${performerId}`
+    if (!isAuthenticated || !authUser) {
+      return loginRedirect(messagesPath)
+    }
+    if (authUser.role === "customer") return messagesPath
+    if (authUser.role === "supplier") return "/supplier/messages"
+    return loginRedirect(messagesPath)
+  })()
 
   const { data: apiSupplier, isLoading } = usePublicSupplierQuery(
     performerId,
@@ -234,9 +247,7 @@ export const PerformerDetailContent = ({
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="flex-1 lg:w-full">
-              <Link
-                href={`/login?next=${encodeURIComponent(`/performers/${performer.id}`)}`}
-              >
+              <Link href={contactHref}>
                 <MessageSquare className="size-4" aria-hidden />
                 Написать
               </Link>

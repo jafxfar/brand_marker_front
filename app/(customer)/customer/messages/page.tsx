@@ -33,12 +33,14 @@ import {
   type InboxProject,
 } from "@/lib/chat-conversations"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { createRfqHref } from "@/lib/create-rfq-href"
 import type { ContractWithRelations, ProposalMessageThread } from "@/types"
 
 export default function BuyerMessagesPage() {
   const hydrated = useHydrated()
   const searchParams = useSearchParams()
   const proposalParam = Number(searchParams.get("proposal") || 0)
+  const counterpartParam = Number(searchParams.get("counterpart") || 0)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const userId = user?.userId ?? 0
@@ -172,12 +174,21 @@ export default function BuyerMessagesPage() {
       }
       return
     }
+    if (counterpartParam > 0) {
+      const group = groups.find((g) => g.counterpartId === counterpartParam)
+      if (group) {
+        const project = pickDefaultProject(group)
+        setSelectedCounterpartId(group.counterpartId)
+        setSelectedProjectKey(project?.key ?? null)
+      }
+      return
+    }
     if (selectedCounterpartId == null && groups[0]) {
       const project = pickDefaultProject(groups[0])
       setSelectedCounterpartId(groups[0].counterpartId)
       setSelectedProjectKey(project?.key ?? null)
     }
-  }, [proposalParam, groups, deepThread, userId, selectedCounterpartId])
+  }, [proposalParam, counterpartParam, groups, deepThread, userId, selectedCounterpartId])
 
   const selectedGroup = groups.find((g) => g.counterpartId === selectedCounterpartId)
   const selected: InboxProject | undefined = selectedGroup
@@ -221,8 +232,22 @@ export default function BuyerMessagesPage() {
           <PageEmptyState
             icon={<MessageSquare size={32} />}
             title="Сообщений пока нет"
-            description="Чат появится, когда вы обсудите предложение или начнётся сделка"
+            description={
+              counterpartParam > 0
+                ? "С этим исполнителем ещё нет переписки. Создайте заявку — чат откроется после предложения или сделки."
+                : "Чат появится, когда вы обсудите предложение или начнётся сделка"
+            }
           />
+          {counterpartParam > 0 ? (
+            <div className="mt-4 flex justify-center">
+              <Link
+                href={createRfqHref({ supplierId: counterpartParam, performer: counterpartParam })}
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Создать заявку для исполнителя
+              </Link>
+            </div>
+          ) : null}
         </PageSurface>
       ) : (
         <div className="grid md:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-220px)] min-h-[420px]">
@@ -278,6 +303,22 @@ export default function BuyerMessagesPage() {
                   <ChevronRight size={14} />
                 </Link>
               </>
+            ) : counterpartParam > 0 && !groups.some((g) => g.counterpartId === counterpartParam) ? (
+              <PageSurface className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  С этим исполнителем ещё нет переписки. Создайте заявку — чат откроется после
+                  предложения или сделки.
+                </p>
+                <Link
+                  href={createRfqHref({
+                    supplierId: counterpartParam,
+                    performer: counterpartParam,
+                  })}
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  Создать заявку для исполнителя
+                </Link>
+              </PageSurface>
             ) : (
               <PageSurface className="flex flex-1 items-center justify-center">
                 <p className="text-sm text-muted-foreground">Выберите диалог</p>

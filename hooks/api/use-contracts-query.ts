@@ -141,6 +141,8 @@ export const useRejectSubmissionMutation = () => {
     onSuccess: (_d, { contractId }) => {
       qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: contractKeys.list() })
+      qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+      qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
     },
     meta: {
       successMessage: "Сдача отклонена",
@@ -208,6 +210,8 @@ export const useSupplierSubmitWorkMutation = () => {
     onSuccess: (_d, { contractId }) => {
       qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
       qc.invalidateQueries({ queryKey: supplierContractKeys.list() })
+      qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+      qc.invalidateQueries({ queryKey: contractKeys.list() })
     },
     meta: {
       successMessage: "Работа отправлена",

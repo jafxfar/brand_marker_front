@@ -1,7 +1,7 @@
 "use client"
 
 import { use, useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -41,6 +41,7 @@ type PageProps = {
 export default function SupplierProfilePage({ params }: PageProps) {
   const { id } = use(params)
   const supplierActorId = Number(id)
+  const router = useRouter()
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
   const actorId = getActorId(useAuthStore((s) => s.user))
@@ -125,12 +126,7 @@ export default function SupplierProfilePage({ params }: PageProps) {
   }
 
   const handleContact = () => {
-    notify({
-      type: "order",
-      title: "Запрос отправлен",
-      body: `Исполнитель «${supplier.display_name}» получит уведомление о вашем интересе.`,
-      href: `/customer/suppliers/${supplier.actor_id}`,
-    })
+    router.push(`/customer/messages?counterpart=${supplier.actor_id}`)
   }
 
   const handleInviteExisting = (rfqId: string) => {
