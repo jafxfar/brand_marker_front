@@ -51,14 +51,14 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
               href: "/customer/rfqs?status=quotes",
               label: "Заявки",
               Icon: FileText,
-              badge: hydrated ? counts.rfqs : 0,
+              badge: hydrated ? counts.rfqs_new : 0,
               match: (p) => p.startsWith("/customer/rfqs"),
             },
             {
               href: "/customer/contracts?tab=active",
               label: "Сделки",
               Icon: FileCheck,
-              badge: hydrated ? counts.deals : 0,
+              badge: hydrated ? counts.deals_new : 0,
               match: (p) => p.startsWith("/customer/contracts"),
             },
             {

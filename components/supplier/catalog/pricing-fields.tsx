@@ -1,9 +1,13 @@
 "use client"
 
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { PricingType } from "@/types"
-import { pricingTypeMeta } from "@/lib/item-display"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  parseBoundedInt,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 
 export type PricingTierRow = {
   min_qty: number
@@ -25,13 +29,38 @@ type PricingFieldsProps = {
   errors?: Record<string, string>
 }
 
-const pricingTypes = Object.entries(pricingTypeMeta) as [PricingType, string][]
+const MODE_CARDS: Array<{
+  type: PricingType
+  title: string
+  subtitle: string
+}> = [
+  {
+    type: "tiered",
+    title: "Цена за объём",
+    subtitle: "чем больше — тем дешевле",
+  },
+  {
+    type: "fixed",
+    title: "Одна цена",
+    subtitle: "для любого количества",
+  },
+  {
+    type: "hourly",
+    title: "Почасовая",
+    subtitle: "ставка за час работы",
+  },
+  {
+    type: "monthly",
+    title: "Ежемесячная",
+    subtitle: "ставка за месяц",
+  },
+]
 
 export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) => {
   const inputClass = (field: string) =>
     cn(
-      "w-full h-10 px-3 rounded-xl border bg-card text-sm outline-none transition-all focus:ring-2 focus:ring-primary/20",
-      errors?.[field] ? "border-destructive" : "border-input focus:border-primary",
+      "h-11 w-full rounded-[10px] border bg-white px-3 text-[14.5px] outline-none transition-all focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15",
+      errors?.[field] ? "border-red-400" : "border-line",
     )
 
   const handleTierUpdate = (index: number, patch: Partial<PricingTierRow>) => {
@@ -44,29 +73,31 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {pricingTypes.map(([type, label]) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => onChange({ ...values, pricing_type: type })}
-            className={cn(
-              "h-10 px-3 rounded-xl border text-xs font-semibold transition-colors",
-              values.pricing_type === type
-                ? "bg-primary text-primary-foreground border-primary"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {label}
-          </button>
-        ))}
+    <div className="grid gap-5">
+      <div className="grid gap-2">
+        <span className="text-[14px] font-semibold">Как указать цену</span>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {MODE_CARDS.map((mode) => (
+            <button
+              key={mode.type}
+              type="button"
+              onClick={() => onChange({ ...values, pricing_type: mode.type })}
+              className={cn(
+                "rounded-xl border-2 p-3.5 text-left transition-colors",
+                values.pricing_type === mode.type
+                  ? "border-ink"
+                  : "border-line hover:border-[#C9CED6]",
+              )}
+            >
+              <b className="block text-[15px]">{mode.title}</b>
+              <span className="text-[13px] text-mute">{mode.subtitle}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="max-w-xs">
-        <label className="block text-sm font-medium text-foreground mb-1.5">
-          Валюта
-        </label>
+      <div className="max-w-[220px]">
+        <label className="mb-1.5 block text-[13.5px] font-semibold">Валюта</label>
         <select
           value={values.currency}
           onChange={(e) => onChange({ ...values, currency: e.target.value })}
@@ -79,132 +110,159 @@ export const PricingFields = ({ values, onChange, errors }: PricingFieldsProps) 
       </div>
 
       {values.pricing_type === "fixed" && (
-        <div className="max-w-xs">
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Цена
+        <div className="max-w-[220px]">
+          <label className="mb-1.5 block text-[13.5px] font-semibold">
+            Цена, {values.currency} *
           </label>
           <input
             type="text"
             inputMode="numeric"
-            maxLength={12}
-            value={values.fixed_price ?? ""}
+            maxLength={MAX_NUMERIC_INPUT_LENGTH}
+            value={values.fixed_price}
             onChange={(e) => {
-              const raw = e.currentTarget.value
-
-              // Только цифры, максимум 12 символов
-              if (!/^\d{0,15}$/.test(raw)) return
-
-              // Максимальная цена: 100 миллиардов
-              if (raw !== "" && Number(raw) > 100_000_000_000) return
-
-              onChange({
-                ...values,
-                fixed_price: raw,
-              })
+              const next = sanitizeDigitInput(e.currentTarget.value)
+              if (next === null) return
+              onChange({ ...values, fixed_price: next })
             }}
             className={inputClass("fixed_price")}
           />
-          {errors?.fixed_price && (
-            <p className="text-xs text-destructive mt-1">{errors.fixed_price}</p>
-          )}
+          {errors?.fixed_price ? (
+            <p className="mt-1 text-[13px] text-red-600">{errors.fixed_price}</p>
+          ) : null}
         </div>
       )}
 
       {values.pricing_type === "hourly" && (
-        <div className="max-w-xs">
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Ставка в час
+        <div className="max-w-[220px]">
+          <label className="mb-1.5 block text-[13.5px] font-semibold">
+            Ставка в час, {values.currency} *
           </label>
           <input
-            maxLength={10}
-            type="number"
-            min={0}
-            max={100_000_000_000}
-            value={values.fixed_price}
-            onChange={(e) => onChange({ ...values, fixed_price: e.target.value })}
-            className={inputClass("fixed_price")}
+            type="text"
+            inputMode="numeric"
+            maxLength={MAX_NUMERIC_INPUT_LENGTH}
+            value={values.hourly_rate}
+            onChange={(e) => {
+              const next = sanitizeDigitInput(e.currentTarget.value)
+              if (next === null) return
+              onChange({ ...values, hourly_rate: next })
+            }}
+            className={inputClass("hourly_rate")}
           />
-          {errors?.hourly_rate && (
-            <p className="text-xs text-destructive mt-1">{errors.hourly_rate}</p>
-          )}
+          {errors?.hourly_rate ? (
+            <p className="mt-1 text-[13px] text-red-600">{errors.hourly_rate}</p>
+          ) : null}
         </div>
       )}
 
       {values.pricing_type === "monthly" && (
-        <div className="max-w-xs">
-          <label className="block text-sm font-medium text-foreground mb-1.5">
-            Ставка в месяц
+        <div className="max-w-[220px]">
+          <label className="mb-1.5 block text-[13.5px] font-semibold">
+            Ставка в месяц, {values.currency} *
           </label>
           <input
-            maxLength={10}
-            type="number"
-            min={0}
-            max={100_000_000_000}
-            value={values.fixed_price}
-            onChange={(e) => onChange({ ...values, fixed_price: e.target.value })}
-            className={inputClass("fixed_price")}
+            type="text"
+            inputMode="numeric"
+            maxLength={MAX_NUMERIC_INPUT_LENGTH}
+            value={values.monthly_rate}
+            onChange={(e) => {
+              const next = sanitizeDigitInput(e.currentTarget.value)
+              if (next === null) return
+              onChange({ ...values, monthly_rate: next })
+            }}
+            className={inputClass("monthly_rate")}
           />
-          {errors?.monthly_rate && (
-            <p className="text-xs text-destructive mt-1">{errors.monthly_rate}</p>
-          )}
+          {errors?.monthly_rate ? (
+            <p className="mt-1 text-[13px] text-red-600">{errors.monthly_rate}</p>
+          ) : null}
         </div>
       )}
 
       {values.pricing_type === "tiered" && (
-        <div className="space-y-3">
-          {values.tiers.map((tier, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <input
-                maxLength={10}
-                type="number"
-                min={1}
-                value={tier.min_qty}
-                onChange={(e) =>
-                  handleTierUpdate(index, { min_qty: Number(e.target.value) })
-                }
-                placeholder="От кол-ва"
-                className={cn(inputClass(`tier-qty-${index}`), "max-w-[120px]")}
-              />
-              <input
-                maxLength={10}
-                type="number"
-                min={0}
-                value={tier.price}
-                onChange={(e) =>
-                  handleTierUpdate(index, { price: Number(e.target.value) })
-                }
-                placeholder="Цена"
-                className={cn(inputClass(`tier-price-${index}`), "flex-1")}
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  onChange({
-                    ...values,
-                    tiers: values.tiers.filter((_, i) => i !== index),
-                  })
-                }
-                className="h-10 w-10 rounded-xl border border-border text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center flex-shrink-0"
-                aria-label="Удалить ступень"
-              >
-                <Trash2 size={15} />
-              </button>
+        <div className="grid gap-2">
+          <div className="overflow-hidden rounded-xl border border-line">
+            <div className="grid grid-cols-[1fr_1fr_40px] gap-2 bg-canvas px-3 py-2 text-[13px] font-semibold text-mute">
+              <span>От, шт</span>
+              <span>Цена, {values.currency}</span>
+              <span />
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                ...values,
-                tiers: [...values.tiers, { min_qty: 1, price: 0 }],
-              })
-            }
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-dashed border-border text-sm font-semibold text-muted-foreground hover:text-primary transition-colors"
-          >
-            <Plus size={15} /> Добавить ступень
-          </button>
-          {errors?.tiers && (
-            <p className="text-xs text-destructive">{errors.tiers}</p>
+            {values.tiers.map((tier, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-[1fr_1fr_40px] gap-2 border-t border-line px-3 py-2"
+              >
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={MAX_NUMERIC_INPUT_LENGTH}
+                  value={tier.min_qty || ""}
+                  onChange={(e) => {
+                    const next = parseBoundedInt(e.currentTarget.value, {
+                      min: 1,
+                      emptyAs: 1,
+                    })
+                    if (next === null) return
+                    handleTierUpdate(index, { min_qty: next })
+                  }}
+                  className={cn(inputClass(`tier-qty-${index}`), "!h-10")}
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={MAX_NUMERIC_INPUT_LENGTH}
+                  value={tier.price || ""}
+                  onChange={(e) => {
+                    const next = parseBoundedInt(e.currentTarget.value, {
+                      min: 0,
+                      emptyAs: 0,
+                    })
+                    if (next === null) return
+                    handleTierUpdate(index, { price: next })
+                  }}
+                  className={cn(inputClass(`tier-price-${index}`), "!h-10")}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      ...values,
+                      tiers: values.tiers.filter((_, i) => i !== index),
+                    })
+                  }
+                  className={cn(
+                    "grid place-items-center text-mute hover:text-red-600",
+                    values.tiers.length < 2 && "invisible",
+                  )}
+                  aria-label="Удалить ступень"
+                >
+                  <X className="size-4" aria-hidden />
+                </button>
+              </div>
+            ))}
+            {values.tiers.length < 5 ? (
+              <div className="border-t border-line px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({
+                      ...values,
+                      tiers: [...values.tiers, { min_qty: 1, price: 0 }],
+                    })
+                  }
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[14px] font-semibold text-brand-700 hover:bg-brand-50"
+                >
+                  <Plus className="size-4" aria-hidden />
+                  Добавить ступень
+                </button>
+              </div>
+            ) : null}
+          </div>
+          {errors?.tiers ? (
+            <p className="text-[13px] text-red-600">{errors.tiers}</p>
+          ) : (
+            <p className="text-[13px] text-mute">
+              До 5 ступеней. Каждая следующая — больше количество и не выше цена.
+            </p>
           )}
         </div>
       )}

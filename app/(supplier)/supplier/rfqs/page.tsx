@@ -31,6 +31,7 @@ import {
 } from "@/hooks/api/use-supplier-rfqs-query"
 import {
   emptySupplierNavCounts,
+  useMarkNavSectionSeen,
   useSupplierNavCounts,
 } from "@/hooks/api/use-nav-counts-query"
 import { RfqBoardTable } from "@/components/supplier/rfq/rfq-board-table"
@@ -73,6 +74,7 @@ const SupplierRfqsContent = () => {
 
   const useApi = isApiEnabled()
   const navCounts = useSupplierNavCounts(useApi).data ?? emptySupplierNavCounts()
+  useMarkNavSectionSeen("supplier", "rfqs")
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 300)

@@ -8,6 +8,10 @@ import { usePlatformSettingsQuery } from "@/hooks/api/use-public-query"
 import { calculateCommission, exceedsContractLimit } from "@/lib/commission"
 import { cn } from "@/lib/utils"
 import { formatCurrency, formatRfqBudget } from "@/lib/format"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 import type { BudgetType, Currency } from "@/types"
 
 export type ProposalFormValues = {
@@ -128,13 +132,16 @@ export const ProposalForm = ({
           Цена, {currency}
         </label>
         <input
-          maxLength={10}
+          maxLength={MAX_NUMERIC_INPUT_LENGTH}
           id="pf-price"
-          type="number"
-          min={0}
-          max={1_000_000_000}
+          type="text"
+          inputMode="numeric"
           value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          onChange={(e) => {
+            const next = sanitizeDigitInput(e.currentTarget.value)
+            if (next === null) return
+            setPrice(next)
+          }}
           className={inputClass("price")}
         />
         {errors.price ? (
@@ -151,13 +158,19 @@ export const ProposalForm = ({
             Срок, дней
           </label>
           <input
-            maxLength={10}
+            maxLength={4}
             id="pf-delivery"
-            type="number"
-            min={1}
-            max={3650}
+            type="text"
+            inputMode="numeric"
             value={deliveryTime}
-            onChange={(e) => setDeliveryTime(e.target.value)}
+            onChange={(e) => {
+              const next = sanitizeDigitInput(e.currentTarget.value, {
+                max: 3650,
+                maxLength: 4,
+              })
+              if (next === null) return
+              setDeliveryTime(next)
+            }}
             placeholder="14"
             className={inputClass("delivery_time")}
           />

@@ -2,6 +2,7 @@
 
 import { use, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -32,6 +33,7 @@ import { SupplierStatsPanel } from "@/components/cabinet/suppliers/supplier-stat
 import { SupplierCatalogGrid } from "@/components/cabinet/suppliers/supplier-catalog-grid"
 import { SupplierReviewsList } from "@/components/cabinet/suppliers/supplier-reviews-list"
 import { InviteRfqDialog } from "@/components/cabinet/suppliers/invite-rfq-dialog"
+import { useOpenDirectChatMutation } from "@/hooks/api/use-direct-chats-query"
 import type { PublicSupplier } from "@/types"
 
 type PageProps = {
@@ -43,7 +45,9 @@ export default function SupplierProfilePage({ params }: PageProps) {
   const supplierActorId = Number(id)
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
+  const router = useRouter()
   const actorId = getActorId(useAuthStore((s) => s.user))
+  const openDirectChat = useOpenDirectChatMutation("buyer")
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const getItemsBySupplier = useItemsStore((s) => s.getItemsBySupplier)
   const inviteSupplierToRfq = useRfqsStore((s) => s.inviteSupplierToRfq)
@@ -125,12 +129,17 @@ export default function SupplierProfilePage({ params }: PageProps) {
   }
 
   const handleContact = () => {
-    notify({
-      type: "order",
-      title: "Запрос отправлен",
-      body: `Исполнитель «${supplier.display_name}» получит уведомление о вашем интересе.`,
-      href: `/customer/suppliers/${supplier.actor_id}`,
-    })
+    const messagesHref = `/customer/messages?supplier=${supplier.actor_id}`
+    if (useApi) {
+      openDirectChat.mutate(supplier.actor_id, {
+        onSuccess: () => router.push(messagesHref),
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : "Не удалось открыть чат")
+        },
+      })
+      return
+    }
+    router.push(messagesHref)
   }
 
   const handleInviteExisting = (rfqId: string) => {

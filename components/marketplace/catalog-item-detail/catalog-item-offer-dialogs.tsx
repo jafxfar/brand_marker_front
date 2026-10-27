@@ -18,6 +18,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { catalogApi } from "@/lib/api/catalog"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { formatCurrency } from "@/lib/format"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 
 type BuyDialogProps = {
   open: boolean
@@ -189,13 +193,16 @@ export const CatalogNegotiateOfferDialog = ({
               Ваша цена ({currency})
             </label>
             <Input
-              maxLength={15}
+              maxLength={MAX_NUMERIC_INPUT_LENGTH}
               id="negotiate-price"
-              type="number"
-              min={0}
-              step="0.01"
+              type="text"
+              inputMode="numeric"
               value={price}
-              onChange={(event) => setPrice(event.target.value)}
+              onChange={(event) => {
+                const next = sanitizeDigitInput(event.currentTarget.value)
+                if (next === null) return
+                setPrice(next)
+              }}
               placeholder={listPrice != null ? String(listPrice) : "0"}
             />
           </div>

@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, ShoppingCart, Briefcase, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 import { useCategoryOptions } from "@/hooks/use-category-options"
 import type { Listing, OrderKind } from "@/types"
 import type { ListingInput } from "@/lib/store/listings-store"
@@ -134,13 +138,39 @@ export default function ListingForm({ initial, onSubmit, submitLabel }: ListingF
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-foreground mb-1.5">Цена, TJS</label>
-              <input maxLength={10} id="price" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="50000" className={inputClass("price")} />
+              <input
+                maxLength={MAX_NUMERIC_INPUT_LENGTH}
+                id="price"
+                type="text"
+                inputMode="numeric"
+                value={price}
+                onChange={(e) => {
+                  const next = sanitizeDigitInput(e.currentTarget.value)
+                  if (next === null) return
+                  setPrice(next)
+                }}
+                placeholder="50000"
+                className={inputClass("price")}
+              />
               {errors.price && <p className="text-xs text-destructive mt-1">{errors.price}</p>}
             </div>
             {kind === "product" && (
               <div>
                 <label htmlFor="inStock" className="block text-sm font-medium text-foreground mb-1.5">Количество в наличии</label>
-                <input maxLength={10} id="inStock" type="number" min={0} value={inStock} onChange={(e) => setInStock(e.target.value)} placeholder="100" className={inputClass("inStock")} />
+                <input
+                  maxLength={MAX_NUMERIC_INPUT_LENGTH}
+                  id="inStock"
+                  type="text"
+                  inputMode="numeric"
+                  value={inStock}
+                  onChange={(e) => {
+                    const next = sanitizeDigitInput(e.currentTarget.value)
+                    if (next === null) return
+                    setInStock(next)
+                  }}
+                  placeholder="100"
+                  className={inputClass("inStock")}
+                />
                 {errors.inStock && <p className="text-xs text-destructive mt-1">{errors.inStock}</p>}
               </div>
             )}

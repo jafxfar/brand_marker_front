@@ -1,6 +1,7 @@
 "use client"
 
 import { Fragment, useEffect, useMemo, useRef, type KeyboardEvent } from "react"
+import { useDocumentVisible } from "@/hooks/use-document-visible"
 import { Check, CheckCheck, FileIcon, Paperclip, Send, X } from "lucide-react"
 import { toast } from "sonner"
 import { resolveFileUrl } from "@/lib/file-url"
@@ -151,6 +152,7 @@ export const SupportMessageList = ({
   const listRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const markedReadRef = useRef<string | null>(null)
+  const documentVisible = useDocumentVisible()
 
   useEffect(() => {
     const el = listRef.current
@@ -159,7 +161,7 @@ export const SupportMessageList = ({
   }, [messages.length, messages[messages.length - 1]?.status])
 
   useEffect(() => {
-    if (!onMarkRead || disabled) return
+    if (!onMarkRead || disabled || !documentVisible || document.visibilityState !== "visible") return
     const unreadIds = messages
       .filter((m) => m.sender_id !== currentUserId && m.status !== "viewed")
       .map((m) => m.id)
@@ -168,7 +170,7 @@ export const SupportMessageList = ({
     if (markedReadRef.current === unreadIds) return
     markedReadRef.current = unreadIds
     onMarkRead()
-  }, [currentUserId, disabled, messages, onMarkRead])
+  }, [currentUserId, disabled, documentVisible, messages, onMarkRead])
 
   const rows = useMemo(() => {
     const result: Array<

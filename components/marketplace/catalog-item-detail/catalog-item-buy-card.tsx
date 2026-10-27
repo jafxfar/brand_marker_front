@@ -22,6 +22,11 @@ import {
   priceForQty,
 } from "@/lib/item-display"
 import {
+  MAX_NUMERIC_INPUT,
+  MAX_NUMERIC_INPUT_LENGTH,
+  parseBoundedInt,
+} from "@/lib/bounded-number-input"
+import {
   CatalogBuyOfferDialog,
   CatalogNegotiateOfferDialog,
 } from "@/components/marketplace/catalog-item-detail/catalog-item-offer-dialogs"
@@ -79,7 +84,8 @@ export const CatalogItemBuyCard = ({
     return `Количество: ${qty} ${unit}. Цена за единицу: ${formatCurrency(unitPrice, currency)}. Итого: ${formatCurrency(total, currency)}.`
   }, [qty, unit, unitPrice, total, currency])
 
-  const clampQty = (next: number) => Math.max(moq, Math.floor(next) || moq)
+  const clampQty = (next: number) =>
+    Math.min(MAX_NUMERIC_INPUT, Math.max(moq, Math.floor(next) || moq))
 
   return (
     <aside className="grid content-start gap-4 self-start lg:sticky lg:top-[88px] lg:col-start-2 lg:row-span-2 lg:row-start-1">
@@ -102,15 +108,20 @@ export const CatalogItemBuyCard = ({
                     <Minus size={16} aria-hidden />
                   </button>
                   <input
-                    maxLength={10}
-                    type="number"
-                    min={moq}
+                    maxLength={MAX_NUMERIC_INPUT_LENGTH}
+                    type="text"
+                    inputMode="numeric"
                     value={qty}
                     aria-label="Количество"
                     className="w-16 text-center text-[16px] font-bold tnum outline-none"
-                    onChange={(e) =>
-                      onQtyChange(clampQty(Number(e.target.value)))
-                    }
+                    onChange={(e) => {
+                      const next = parseBoundedInt(e.currentTarget.value, {
+                        min: moq,
+                        emptyAs: moq,
+                      })
+                      if (next === null) return
+                      onQtyChange(clampQty(next))
+                    }}
                   />
                   <button
                     type="button"

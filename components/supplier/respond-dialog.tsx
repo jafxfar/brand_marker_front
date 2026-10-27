@@ -8,6 +8,10 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { formatPrice } from "@/lib/format"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 
 export interface RespondValues {
   price: number
@@ -66,12 +70,39 @@ export default function RespondDialog({
         <div className="grid grid-cols-2 gap-3 py-1">
           <div>
             <label htmlFor="r-price" className="block text-sm font-medium text-foreground mb-1.5">Ваша цена, TJS</label>
-            <input maxLength={15} id="r-price" type="number" min={0} max={1_000_000_000_000} value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass("price")} />
+            <input
+              maxLength={MAX_NUMERIC_INPUT_LENGTH}
+              id="r-price"
+              type="text"
+              inputMode="numeric"
+              value={price}
+              onChange={(e) => {
+                const next = sanitizeDigitInput(e.currentTarget.value)
+                if (next === null) return
+                setPrice(next)
+              }}
+              className={inputClass("price")}
+            />
             {errors.price && <p className="text-xs text-destructive mt-1">{errors.price}</p>}
           </div>
           <div>
             <label htmlFor="r-days" className="block text-sm font-medium text-foreground mb-1.5">Срок, дней</label>
-            <input maxLength={10} id="r-days" type="number" min={1} max={3650} value={days} onChange={(e) => setDays(e.target.value)} className={inputClass("days")} />
+            <input
+              maxLength={4}
+              id="r-days"
+              type="text"
+              inputMode="numeric"
+              value={days}
+              onChange={(e) => {
+                const next = sanitizeDigitInput(e.currentTarget.value, {
+                  max: 3650,
+                  maxLength: 4,
+                })
+                if (next === null) return
+                setDays(next)
+              }}
+              className={inputClass("days")}
+            />
             {errors.days && <p className="text-xs text-destructive mt-1">{errors.days}</p>}
           </div>
         </div>

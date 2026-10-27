@@ -2,7 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { contractsApi } from "@/lib/api/contracts"
 import { supplierContractsApi } from "@/lib/api/supplier/contracts"
 import { isApiEnabled } from "@/lib/api/config"
-import { replaceContractInCache, updateContractMessageStatusInCache } from "@/lib/contract-chat-cache"
+import { navCountsKeys } from "@/hooks/api/use-nav-counts-query"
+import {
+  markIncomingMessagesViewedInCache,
+  replaceContractInCache,
+  updateContractMessageStatusInCache,
+} from "@/lib/contract-chat-cache"
+import { useAuthStore } from "@/lib/store/auth-store"
 import type { PageParams } from "@/lib/pagination"
 import type { ContractWithRelations } from "@/types"
 
@@ -90,18 +96,26 @@ export const useSupplierSendMessageMutation = () => {
 
 export const useMarkMessagesReadMutation = (role: "buyer" | "supplier") => {
   const qc = useQueryClient()
+  const currentUserId = useAuthStore((s) => s.user?.userId ?? 0)
   return useMutation({
     mutationFn: (contractId: number) =>
       role === "buyer"
         ? contractsApi.markMessagesRead(contractId)
         : supplierContractsApi.markMessagesRead(contractId),
+    onMutate: (contractId) => {
+      markIncomingMessagesViewedInCache(qc, contractId, currentUserId)
+    },
     onSuccess: (result, contractId) => {
       if (result.messages?.length) {
         updateContractMessageStatusInCache(qc, contractId, result.messages)
       } else {
-        qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
-        qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+        markIncomingMessagesViewedInCache(qc, contractId, currentUserId)
       }
+      qc.invalidateQueries({ queryKey: ["contracts", "list"] })
+      qc.invalidateQueries({ queryKey: ["supplier-contracts", "list"] })
+      qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+      qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+      qc.invalidateQueries({ queryKey: navCountsKeys.all })
     },
     meta: { silent: true },
   })

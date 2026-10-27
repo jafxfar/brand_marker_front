@@ -12,6 +12,7 @@ import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierCatalogQuery } from "@/hooks/api/use-supplier-catalog-query"
 import {
   emptySupplierNavCounts,
+  useMarkNavSectionSeen,
   useSupplierNavCounts,
 } from "@/hooks/api/use-nav-counts-query"
 import { CatalogProductRow } from "@/components/supplier/catalog/catalog-product-row"
@@ -60,6 +61,7 @@ function SupplierCatalogContent() {
   const [tab, setTab] = useUrlTab<Tab>("status", TAB_VALUES, "all")
   const useApi = isApiEnabled()
   const navCounts = useSupplierNavCounts(useApi).data ?? emptySupplierNavCounts()
+  useMarkNavSectionSeen("supplier", "catalog")
 
   const apiStatus: ItemStatus | undefined = tab === "all" ? undefined : tab
   const { data: apiItems, isLoading } = useSupplierCatalogQuery(

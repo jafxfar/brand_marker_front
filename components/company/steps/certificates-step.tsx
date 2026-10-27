@@ -2,7 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react"
 import type { CompanyWizardCertificate, CompanyWizardInput } from "@/types"
-import { isoDateBounds } from "@/lib/iso-date"
+import { isoDateBounds, sanitizeIsoDateInput } from "@/lib/iso-date"
 import { WizardField, wizardInputClass } from "@/components/company/wizard-field"
 
 const emptyCertificate = (): CompanyWizardCertificate => ({
@@ -116,9 +116,14 @@ export const CertificatesStep = ({
                 min={issueDateBounds.min}
                 max={issueDateBounds.max}
                 value={cert.issue_date}
-                onChange={(e) =>
-                  handleUpdate(index, { issue_date: e.target.value })
-                }
+                onChange={(e) => {
+                  const next = sanitizeIsoDateInput(e.currentTarget.value, {
+                    minYear: 1900,
+                    maxYear: certYear,
+                  })
+                  if (next === null) return
+                  handleUpdate(index, { issue_date: next })
+                }}
                 className={wizardInputClass}
               />
             </WizardField>
@@ -133,9 +138,14 @@ export const CertificatesStep = ({
                 min={expiryDateBounds.min}
                 max={expiryDateBounds.max}
                 value={cert.expiry_date}
-                onChange={(e) =>
-                  handleUpdate(index, { expiry_date: e.target.value })
-                }
+                onChange={(e) => {
+                  const next = sanitizeIsoDateInput(e.currentTarget.value, {
+                    minYear: 1900,
+                    maxYear: certYear + 50,
+                  })
+                  if (next === null) return
+                  handleUpdate(index, { expiry_date: next })
+                }}
                 className={wizardInputClass}
               />
             </WizardField>

@@ -84,7 +84,11 @@ export const ChatProjectSwitcher = ({
             )}
           >
             <span className="truncate">
-              {project.kind === "proposal" ? `Заявка: ${project.title}` : project.title}
+              {project.kind === "proposal"
+                ? `Заявка: ${project.title}`
+                : project.kind === "direct"
+                  ? "Личные сообщения"
+                  : project.title}
             </span>
             {hasUnread && (
               <span

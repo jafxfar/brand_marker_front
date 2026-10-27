@@ -30,6 +30,7 @@ import {
   supportKeys,
   updateSupportMessageStatusInCache,
 } from "@/lib/support-chat-cache"
+import { directChatKeys } from "@/hooks/api/use-direct-chats-query"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { NotificationToast } from "@/components/notifications/notification-toast"
 import type { ApiNotification } from "@/types/notification"
@@ -157,6 +158,7 @@ export const useNotificationsSocket = (
               void queryClient.invalidateQueries({ queryKey: supplierContractKeys.all })
               void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.all })
               void queryClient.invalidateQueries({ queryKey: supplierRfqKeys.proposals() })
+              void queryClient.invalidateQueries({ queryKey: directChatKeys.all })
             }
             if (notification.type === "support") {
               void queryClient.invalidateQueries({ queryKey: supportKeys.all })
@@ -171,6 +173,15 @@ export const useNotificationsSocket = (
             if (userId > 0 && data.message.sender_id !== userId) {
               void ackContractDelivered(data.contract_id, data.message.id)
             }
+            return
+          }
+          if (
+            (payload.event === "direct.message" || payload.event === "direct.message.status") &&
+            payload.data &&
+            role !== "admin"
+          ) {
+            void queryClient.invalidateQueries({ queryKey: directChatKeys.all })
+            void queryClient.invalidateQueries({ queryKey: navCountsKeys.all })
             return
           }
           if (payload.event === "contract.message.status" && payload.data && role !== "admin") {

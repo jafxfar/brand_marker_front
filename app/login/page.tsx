@@ -67,7 +67,7 @@ function LoginContent() {
       router.push("/admin")
       return
     }
-    const redirect = searchParams.get("redirect")
+    const redirect = searchParams.get("redirect") || searchParams.get("next")
     const roleHome = sessionRole === "customer" ? "/customer" : "/supplier"
     const marketplaceRedirect =
       redirect &&
@@ -95,7 +95,7 @@ function LoginContent() {
     }
     if (user.role !== "customer" && user.role !== "supplier") return
     const roleHome = user.role === "supplier" ? "/supplier" : "/customer"
-    const redirect = searchParams.get("redirect")
+    const redirect = searchParams.get("redirect") || searchParams.get("next")
     const safeRedirect =
       redirect
       && !redirect.startsWith("/admin")

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Check, Plus, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/lib/format"
+import { parseBoundedInt } from "@/lib/bounded-number-input"
 import { TermHint } from "@/components/ui/term-hint"
 import {
   PAYMENT_TYPE_ORDER,
@@ -163,13 +164,20 @@ export const PaymentTermsBuilder = ({ price, currency, onChange }: PaymentTermsB
                 <div className="flex items-center gap-1.5 w-24">
                   <input
                     maxLength={3}
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={Number.isFinite(milestone.percentage) ? milestone.percentage : 0}
-                    onChange={(e) =>
-                      updateMilestone(index, { percentage: Number(e.target.value) })
+                    type="text"
+                    inputMode="numeric"
+                    value={
+                      Number.isFinite(milestone.percentage) ? milestone.percentage : 0
                     }
+                    onChange={(e) => {
+                      const next = parseBoundedInt(e.currentTarget.value, {
+                        min: 0,
+                        max: 100,
+                        emptyAs: 0,
+                      })
+                      if (next === null) return
+                      updateMilestone(index, { percentage: next })
+                    }}
                     aria-label={`Процент этапа ${index + 1}`}
                     className="w-16 h-9 px-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   />

@@ -17,6 +17,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminDisputeActionMutation } from "@/hooks/api/use-admin-disputes-query"
 import type { AdminDisputeAction } from "@/lib/api/admin"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 
 const actionMetadata: Record<
   AdminDisputeAction,
@@ -135,13 +139,16 @@ export const DisputeActionDialog = ({
               Сумма возврата покупателю
             </label>
             <Input
-              maxLength={10}
+              maxLength={MAX_NUMERIC_INPUT_LENGTH}
               id="dispute-partial-amount"
-              type="number"
-              min={0}
-              step="0.01"
+              type="text"
+              inputMode="numeric"
               value={amount}
-              onChange={(event) => setAmount(event.target.value)}
+              onChange={(event) => {
+                const next = sanitizeDigitInput(event.currentTarget.value)
+                if (next === null) return
+                setAmount(next)
+              }}
               className="mt-2"
               aria-required="true"
             />

@@ -5,6 +5,10 @@ import { ArrowDownToLine, Building2, Wallet } from "lucide-react"
 import type { SupplierBalanceSummary, WithdrawalDestination } from "@/types"
 import { destinationTypeLabel } from "@/lib/finance-display"
 import { formatCurrency } from "@/lib/format"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 
 type WithdrawalFormProps = {
   destinations: WithdrawalDestination[]
@@ -96,19 +100,28 @@ export const WithdrawalForm = ({
         </label>
         <div className="mt-2 flex gap-2">
           <input
-            maxLength={10}
+            maxLength={MAX_NUMERIC_INPUT_LENGTH}
             id="withdrawal-amount"
-            type="number"
-            inputMode="decimal"
+            type="text"
+            inputMode="numeric"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              const next = sanitizeDigitInput(e.currentTarget.value)
+              if (next === null) return
+              setAmount(next)
+            }}
             placeholder="0"
             aria-label="Сумма вывода"
             className="flex-1 h-11 px-4 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
           <button
             type="button"
-            onClick={() => setAmount(String(balances.available))}
+            onClick={() => {
+              const capped = sanitizeDigitInput(
+                String(Math.floor(Math.max(0, balances.available))),
+              )
+              if (capped !== null) setAmount(capped)
+            }}
             className="h-11 px-3 rounded-xl border border-border text-xs font-semibold hover:bg-secondary transition-colors whitespace-nowrap"
           >
             Максимум

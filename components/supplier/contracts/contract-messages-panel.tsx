@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react"
+import { useDocumentVisible } from "@/hooks/use-document-visible"
 import { Check, CheckCheck, MessageSquare, Send, ShieldAlert } from "lucide-react"
 import { formatIsoDate } from "@/lib/format"
 import type { ContractWithRelations, MessageDeliveryStatus } from "@/types"
@@ -85,7 +86,10 @@ export const ContractMessagesPanel = ({
   const [text, setText] = useState("")
   const listRef = useRef<HTMLDivElement>(null)
   const messages = contract.conversation?.messages ?? []
+  const documentVisible = useDocumentVisible()
   const markedReadRef = useRef<string | null>(null)
+  const onMarkReadRef = useRef(onMarkRead)
+  onMarkReadRef.current = onMarkRead
 
   useEffect(() => {
     const el = listRef.current
@@ -94,7 +98,8 @@ export const ContractMessagesPanel = ({
   }, [messages.length, messages[messages.length - 1]?.status])
 
   useEffect(() => {
-    if (!onMarkRead) return
+    const markRead = onMarkReadRef.current
+    if (!markRead || !documentVisible || document.visibilityState !== "visible") return
     const unreadIds = messages
       .filter(
         (message) =>
@@ -102,15 +107,19 @@ export const ContractMessagesPanel = ({
       )
       .map((message) => message.id)
       .join(",")
-    if (!unreadIds) return
-    if (markedReadRef.current === `${contract.id}:${unreadIds}`) return
-    markedReadRef.current = `${contract.id}:${unreadIds}`
-    onMarkRead(contract.id)
-  }, [contract.id, currentUserId, messages, onMarkRead])
-
-  useEffect(() => {
-    markedReadRef.current = null
-  }, [contract.id])
+    if (!unreadIds) {
+      markedReadRef.current = null
+      return
+    }
+    const key = `${contract.id}:${unreadIds}`
+    if (markedReadRef.current === key) return
+    markedReadRef.current = key
+    markRead(contract.id)
+    const retry = window.setTimeout(() => {
+      if (markedReadRef.current === key) markedReadRef.current = null
+    }, 1500)
+    return () => window.clearTimeout(retry)
+  }, [contract.id, currentUserId, documentVisible, messages])
 
   const handleSubmit = () => {
     const trimmed = text.trim()

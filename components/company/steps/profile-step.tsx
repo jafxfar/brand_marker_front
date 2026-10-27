@@ -1,9 +1,15 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 import { useCategoryOptions } from "@/hooks/use-category-options"
 import type { CompanyWizardInput } from "@/types"
 import { WizardField, wizardInputClass } from "@/components/company/wizard-field"
+
+const CURRENT_YEAR = new Date().getFullYear()
 
 const LANGUAGE_OPTIONS = [
   { value: "ru", label: "Русский" },
@@ -56,25 +62,35 @@ export const ProfileStep = ({ data, errors, onChange }: ProfileStepProps) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <WizardField label="Год основания" error={errors.founded_year}>
           <input
-            maxLength={5}
-            type="number"
+            maxLength={4}
+            type="text"
+            inputMode="numeric"
             value={data.founded_year}
-            onChange={(e) => onChange({ founded_year: e.target.value })}
+            onChange={(e) => {
+              const next = sanitizeDigitInput(e.currentTarget.value, {
+                max: CURRENT_YEAR,
+                maxLength: 4,
+              })
+              if (next === null) return
+              onChange({ founded_year: next })
+            }}
             placeholder="2015"
-            min={1800}
-            max={new Date().getFullYear()}
             className={wizardInputClass}
           />
         </WizardField>
 
         <WizardField label="Число сотрудников" error={errors.employees_count}>
           <input
-            maxLength={10}
-            type="number"
+            maxLength={MAX_NUMERIC_INPUT_LENGTH}
+            type="text"
+            inputMode="numeric"
             value={data.employees_count}
-            onChange={(e) => onChange({ employees_count: e.target.value })}
+            onChange={(e) => {
+              const next = sanitizeDigitInput(e.currentTarget.value)
+              if (next === null) return
+              onChange({ employees_count: next })
+            }}
             placeholder="50"
-            min={1}
             className={wizardInputClass}
           />
         </WizardField>

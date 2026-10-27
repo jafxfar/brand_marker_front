@@ -19,6 +19,7 @@ import {
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { useMarkNavSectionSeen } from "@/hooks/api/use-nav-counts-query"
 import {
   useApprovalsQuery,
   useDecideApprovalMutation,
@@ -51,6 +52,7 @@ const mapApiApproval = (a: PurchaseApproval): BuyerApproval => ({
 export default function CustomerApprovalsPage() {
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
+  useMarkNavSectionSeen("buyer", "approvals")
   const [tab, setTab] = useState<Tab>("wait")
   const [localItems, setLocalItems] = useState<BuyerApproval[]>(MOCK_BUYER_APPROVALS)
 

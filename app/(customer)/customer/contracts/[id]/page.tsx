@@ -154,7 +154,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
       return
     }
     addMessageLocal(contractId, userId, text, user?.name)
-    markConversationReadLocal(contractId)
+    markConversationReadLocal(contractId, userId)
   }
 
   const handleSubmitReview = (rating: number, text: string) => {
@@ -458,6 +458,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
             onSendMessage={handleSendMessage}
             onMarkRead={(id) => {
               if (useApi) markMessagesReadMutation.mutate(id)
+              else markConversationReadLocal(id, userId)
             }}
           />
         </TabsContent>

@@ -116,7 +116,7 @@ interface ContractsState {
     getCompanyName: (id: number) => string,
   ) => IncomingMessage[]
   getUnreadMessageCount: (actorId: number, currentUserId: number) => number
-  markConversationRead: (contractId: number) => void
+  markConversationRead: (contractId: number, currentUserId?: number) => void
   getEscrowSummary: (contract: ContractWithRelations) => EscrowSummary
   fundMilestone: (
     contractId: number,
@@ -527,16 +527,44 @@ export const useContractsStore = create<ContractsState>()(
         }).length
       },
 
-      markConversationRead: (contractId) =>
+      markConversationRead: (contractId, currentUserId) =>
         set((state) => {
           const contract = state.contracts.find((c) => c.id === contractId)
-          const lastMessage = contract?.conversation?.messages.at(-1)
+          const messages = contract?.conversation?.messages ?? []
+          const lastMessage = messages.at(-1)
           if (!lastMessage) return state
+          const viewedAt = new Date().toISOString()
           return {
             lastReadAt: {
               ...state.lastReadAt,
               [contractId]: String(lastMessage.id),
             },
+            contracts:
+              currentUserId && currentUserId > 0
+                ? state.contracts.map((item) => {
+                    if (item.id !== contractId || !item.conversation) return item
+                    return {
+                      ...item,
+                      conversation: {
+                        ...item.conversation,
+                        messages: item.conversation.messages.map((message) => {
+                          if (
+                            message.sender_id === currentUserId ||
+                            message.status === "viewed"
+                          ) {
+                            return message
+                          }
+                          return {
+                            ...message,
+                            status: "viewed" as const,
+                            viewed_at: viewedAt,
+                            delivered_at: message.delivered_at ?? viewedAt,
+                          }
+                        }),
+                      },
+                    }
+                  })
+                : state.contracts,
           }
         }),
 

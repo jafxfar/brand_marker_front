@@ -33,3 +33,22 @@ export const isoDateBounds = (minYear: number, maxYear: number) => ({
   min: `${minYear}-01-01`,
   max: `${maxYear}-12-31`,
 })
+
+/**
+ * Keep at most YYYY-MM-DD; reject completed dates outside year bounds.
+ * Empty string and incomplete values while typing are allowed.
+ */
+export const sanitizeIsoDateInput = (
+  value: string,
+  options: IsoDateOptions = {},
+): string | null => {
+  const clipped = value.length > 10 ? value.slice(0, 10) : value
+  if (!clipped) return ""
+  if (!ISO_DATE_RE.test(clipped)) {
+    // Allow incomplete draft while the browser date picker is filling the value
+    if (clipped.length < 10) return clipped
+    return null
+  }
+  if (!isValidIsoDate(clipped, options)) return null
+  return clipped
+}

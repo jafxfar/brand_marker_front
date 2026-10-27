@@ -16,6 +16,11 @@ import type { AdminPlatformSettings } from "@/lib/api/admin"
 import type { PlatformSettingsInput } from "@/lib/api/public"
 import { calculateCommission, COMMISSION_CURRENCY, exceedsContractLimit } from "@/lib/commission"
 import { formatCurrency } from "@/lib/format"
+import {
+  MAX_NUMERIC_INPUT,
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 
 const EXAMPLE_AMOUNTS = [1_000, 10_000, 100_000]
 
@@ -56,8 +61,17 @@ const parseForm = (form: SettingsForm): ParsedSettings => {
   if (!Number.isFinite(minimum) || minimum < 0) {
     errors.minimum = "Минимум не может быть отрицательным"
   }
-  if (limit !== null && (!Number.isFinite(limit) || limit <= 0)) {
-    errors.limit = "Лимит должен быть больше нуля"
+  if (
+    limit !== null &&
+    (!Number.isFinite(limit) || limit <= 0 || limit > MAX_NUMERIC_INPUT)
+  ) {
+    errors.limit =
+      limit != null && limit > MAX_NUMERIC_INPUT
+        ? `Лимит не больше ${MAX_NUMERIC_INPUT.toLocaleString("ru-RU")}`
+        : "Лимит должен быть больше нуля"
+  }
+  if (Number.isFinite(minimum) && minimum > MAX_NUMERIC_INPUT) {
+    errors.minimum = `Минимум не больше ${MAX_NUMERIC_INPUT.toLocaleString("ru-RU")}`
   }
   if (Object.keys(errors).length > 0) return { value: null, errors }
   return {
@@ -164,8 +178,15 @@ const SettingsFormCard = ({ settings }: { settings: AdminPlatformSettings }) => 
   }, [settings])
 
   const handleChange = (field: "percent" | "minimum" | "limit") =>
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((current) => ({ ...current, [field]: event.target.value }))
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = event.currentTarget.value
+      const next =
+        field === "percent"
+          ? sanitizeDigitInput(raw, { max: 100, maxLength: 3 })
+          : sanitizeDigitInput(raw)
+      if (next === null) return
+      setForm((current) => ({ ...current, [field]: next }))
+    }
 
   const handleLimitToggle = (checked: boolean) =>
     setForm((current) => ({ ...current, hasLimit: checked }))
@@ -207,7 +228,8 @@ const SettingsFormCard = ({ settings }: { settings: AdminPlatformSettings }) => 
             <Input
               maxLength={3}
               id="commission-percent"
-              inputMode="decimal"
+              type="text"
+              inputMode="numeric"
               value={form.percent}
               onChange={handleChange("percent")}
               disabled={readOnly}
@@ -221,9 +243,10 @@ const SettingsFormCard = ({ settings }: { settings: AdminPlatformSettings }) => 
           <div className="space-y-2">
             <Label htmlFor="commission-min">Минимальная комиссия, {COMMISSION_CURRENCY}</Label>
             <Input
-              maxLength={3}
+              maxLength={MAX_NUMERIC_INPUT_LENGTH}
               id="commission-min"
-              inputMode="decimal"
+              type="text"
+              inputMode="numeric"
               value={form.minimum}
               onChange={handleChange("minimum")}
               disabled={readOnly}
@@ -252,9 +275,10 @@ const SettingsFormCard = ({ settings }: { settings: AdminPlatformSettings }) => 
                   Лимит суммы договора, {COMMISSION_CURRENCY}
                 </Label>
                 <Input
-                  maxLength={10}
+                  maxLength={MAX_NUMERIC_INPUT_LENGTH}
                   id="contract-limit"
-                  inputMode="decimal"
+                  type="text"
+                  inputMode="numeric"
                   value={form.limit}
                   onChange={handleChange("limit")}
                   disabled={readOnly}

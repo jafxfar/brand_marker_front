@@ -5,8 +5,12 @@ import Link from "next/link"
 import { ArrowLeft, ArrowRight, ShoppingCart, Briefcase, Paperclip, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { validateRfqForm, type RfqFormValues } from "@/lib/schemas/rfq-form"
-import { isValidIsoDate, isoDateBounds } from "@/lib/iso-date"
+import { isoDateBounds, sanitizeIsoDateInput } from "@/lib/iso-date"
 import { formatIsoDate, formatRfqBudget } from "@/lib/format"
+import {
+  MAX_NUMERIC_INPUT_LENGTH,
+  sanitizeDigitInput,
+} from "@/lib/bounded-number-input"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { InlineHint } from "@/components/process"
@@ -65,8 +69,6 @@ const { min: DATE_INPUT_MIN, max: DATE_INPUT_MAX } = isoDateBounds(
   rfqDateYear - 1,
   rfqDateYear + 10,
 )
-
-const clipDateValue = (value: string) => (value.length > 10 ? value.slice(0, 10) : value)
 
 const defaultValues = (
   initial?: RfqWithRelations,
@@ -301,18 +303,12 @@ export const RfqForm = ({
     key: "deadline" | "delivery_date" | "start_date",
     value: string,
   ) => {
-    const clipped = clipDateValue(value)
-    if (
-      clipped &&
-      !isValidIsoDate(clipped, {
-        minYear: rfqDateYear - 1,
-        maxYear: rfqDateYear + 10,
-      })
-    ) {
-      setField(key, "")
-      return
-    }
-    setField(key, clipped)
+    const next = sanitizeIsoDateInput(value, {
+      minYear: rfqDateYear - 1,
+      maxYear: rfqDateYear + 10,
+    })
+    if (next === null) return
+    setField(key, next)
   }
 
   const inputClass = (field: string) =>
@@ -486,12 +482,16 @@ export const RfqForm = ({
               Количество
             </label>
             <input
-              maxLength={10}
+              maxLength={MAX_NUMERIC_INPUT_LENGTH}
               id="quantity"
-              type="number"
-              min={1}
+              type="text"
+              inputMode="numeric"
               value={values.quantity}
-              onChange={(e) => setField("quantity", e.target.value)}
+              onChange={(e) => {
+                const next = sanitizeDigitInput(e.currentTarget.value)
+                if (next === null) return
+                setField("quantity", next)
+              }}
               className={cn(inputClass("quantity"), "tnum")}
               aria-invalid={!!errors.quantity}
             />
@@ -603,12 +603,16 @@ export const RfqForm = ({
                 {values.budget_type === "range" ? "От" : "Сумма"}
               </label>
               <input
-                maxLength={10}
+                maxLength={MAX_NUMERIC_INPUT_LENGTH}
                 id="budget-from"
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
                 value={values.budget_from}
-                onChange={(e) => setField("budget_from", e.target.value)}
+                onChange={(e) => {
+                  const next = sanitizeDigitInput(e.currentTarget.value)
+                  if (next === null) return
+                  setField("budget_from", next)
+                }}
                 className={cn(inputClass("budget_from"), "tnum")}
                 aria-invalid={!!errors.budget_from}
               />
@@ -620,12 +624,16 @@ export const RfqForm = ({
                   До
                 </label>
                 <input
-                  maxLength={10}
+                  maxLength={MAX_NUMERIC_INPUT_LENGTH}
                   id="budget-to"
-                  type="number"
-                  min={0}
+                  type="text"
+                  inputMode="numeric"
                   value={values.budget_to}
-                  onChange={(e) => setField("budget_to", e.target.value)}
+                  onChange={(e) => {
+                    const next = sanitizeDigitInput(e.currentTarget.value)
+                    if (next === null) return
+                    setField("budget_to", next)
+                  }}
                   className={cn(inputClass("budget_to"), "tnum")}
                   aria-invalid={!!errors.budget_to}
                 />

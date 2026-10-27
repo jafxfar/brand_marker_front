@@ -1,17 +1,26 @@
 import { apiFetch } from "./client"
 
+export type BuyerNavSection = "rfqs" | "deals" | "approvals"
+export type SupplierNavSection = "rfqs" | "deals" | "catalog"
+
 export type BuyerNavCounts = {
   rfqs: number
+  rfqs_new: number
   deals: number
+  deals_new: number
   messages: number
   approvals: number
+  approvals_new: number
 }
 
 export type SupplierNavCounts = {
   rfqs: number
+  rfqs_new: number
   deals: number
+  deals_new: number
   messages: number
   catalog: number
+  catalog_new: number
 }
 
 export type AdminNavCounts = {
@@ -40,4 +49,10 @@ const PATH: Record<NavCountsRole, string> = {
 export const navCountsApi = {
   get: <R extends NavCountsRole>(role: R) =>
     apiFetch<NavCountsForRole<R>>(PATH[role]),
+
+  markSeen: (role: "buyer" | "supplier", section: string) =>
+    apiFetch<{ ok: boolean }>(`/${role}/nav-seen`, {
+      method: "POST",
+      body: JSON.stringify({ section }),
+    }),
 }

@@ -41,6 +41,7 @@ import { proposalKeys } from "@/hooks/api/use-proposals-query"
 import {
   emptyBuyerNavCounts,
   useBuyerNavCounts,
+  useMarkNavSectionSeen,
 } from "@/hooks/api/use-nav-counts-query"
 
 const MyRfqsContent = () => {
@@ -64,6 +65,7 @@ const MyRfqsContent = () => {
   const getProposalsForRfq = useProposalsStore((s) => s.getProposalsForRfq)
   const useApi = isApiEnabled()
   const navCounts = useBuyerNavCounts(useApi).data ?? emptyBuyerNavCounts()
+  useMarkNavSectionSeen("buyer", "rfqs")
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 300)

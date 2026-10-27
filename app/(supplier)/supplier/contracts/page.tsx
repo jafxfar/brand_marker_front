@@ -18,6 +18,7 @@ import { isApiEnabled } from "@/lib/api/config"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
 import {
   emptySupplierNavCounts,
+  useMarkNavSectionSeen,
   useSupplierNavCounts,
 } from "@/hooks/api/use-nav-counts-query"
 import { filterDealsByTab, type DealListTab } from "@/lib/process/deal-stages"
@@ -44,6 +45,7 @@ const SupplierContractsContent = () => {
   const [tab, setTab] = useUrlTab<SupplierDealTab>("tab", TAB_VALUES, "active")
   const useApi = isApiEnabled()
   const navCounts = useSupplierNavCounts(useApi).data ?? emptySupplierNavCounts()
+  useMarkNavSectionSeen("supplier", "deals")
   const { data: apiContracts, isLoading } = useSupplierContractsQuery(hydrated && useApi, {
     page,
   })

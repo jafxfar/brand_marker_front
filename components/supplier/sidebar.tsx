@@ -75,7 +75,11 @@ export default function SupplierSidebar({ onNavigate }: { onNavigate?: () => voi
 
   const getBadge = (item: NavItem): number => {
     if (!hydrated || !item.badge) return 0
-    return counts[item.badge] ?? 0
+    if (item.badge === "messages") return counts.messages
+    if (item.badge === "rfqs") return counts.rfqs_new
+    if (item.badge === "deals") return counts.deals_new
+    if (item.badge === "catalog") return counts.catalog_new
+    return 0
   }
 
   const isActive = (href: string): boolean => {

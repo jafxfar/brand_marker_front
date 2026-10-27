@@ -1,5 +1,6 @@
 import type {
   ContractWithRelations,
+  DirectChatThread,
   Message,
   ProposalMessageThread,
   ProposalStatus,
@@ -15,7 +16,7 @@ export type InboxLastMessage = {
 
 export type InboxProject = {
   key: string
-  kind: "contract" | "proposal"
+  kind: "contract" | "proposal" | "direct"
   id: number
   title: string
   counterpartId: number
@@ -187,9 +188,12 @@ export const groupInboxProjects = (projects: InboxProject[]): CounterpartChatGro
 
   const groups: CounterpartChatGroup[] = []
   byCounterpart.forEach((items, counterpartId) => {
-    // Hide empty contract chats; keep proposal threads (incl. deep-linked empty ones)
+    // Hide empty contract chats; keep proposal/direct threads (incl. deep-linked empty ones)
     const visible = items.filter(
-      (project) => project.kind === "proposal" || Boolean(project.lastMessage),
+      (project) =>
+        project.kind === "proposal" ||
+        project.kind === "direct" ||
+        Boolean(project.lastMessage),
     )
     if (visible.length === 0) return
 
@@ -221,6 +225,43 @@ export const groupInboxProjects = (projects: InboxProject[]): CounterpartChatGro
   })
 }
 
+export const toDirectProject = (
+  thread: DirectChatThread,
+  currentUserId: number,
+  hrefBase: "customer" | "supplier",
+): InboxProject => {
+  const last = thread.last_message
+  const lastMessage: InboxLastMessage | null = last
+    ? {
+        id: last.id,
+        text: last.text,
+        sender_id: last.sender_id,
+        sender_name: last.sender_name ?? "",
+        created_at: last.created_at ?? "",
+      }
+    : null
+  const senderName = !lastMessage
+    ? ""
+    : lastMessage.sender_id === currentUserId
+      ? "Вы"
+      : (lastMessage.sender_name?.trim() || thread.counterpart_name)
+  return {
+    key: `direct:${thread.id}`,
+    kind: "direct",
+    id: thread.id,
+    title: "Личные сообщения",
+    counterpartId: thread.counterpart_actor_id,
+    counterpartName: thread.counterpart_name,
+    lastMessage,
+    senderName,
+    unreadCount: thread.unread_count,
+    href:
+      hrefBase === "customer"
+        ? `/customer/messages?supplier=${thread.supplier_actor_id}`
+        : `/supplier/messages?buyer=${thread.buyer_actor_id}`,
+  }
+}
+
 export const mergeContractAndProposalChats = (
   contracts: ContractWithRelations[],
   threads: ProposalMessageThread[],
@@ -228,6 +269,7 @@ export const mergeContractAndProposalChats = (
   getCounterpartId: (contract: ContractWithRelations) => number,
   getCounterpartName: (contract: ContractWithRelations) => string,
   hrefBase: "customer" | "supplier",
+  directs: DirectChatThread[] = [],
 ): CounterpartChatGroup[] => {
   const contractProjects = contracts.map((contract) =>
     toContractProject(
@@ -241,7 +283,10 @@ export const mergeContractAndProposalChats = (
   const proposalProjects = threads.map((thread) =>
     toProposalProject(thread, currentUserId, hrefBase),
   )
-  return groupInboxProjects([...contractProjects, ...proposalProjects])
+  const directProjects = directs.map((thread) =>
+    toDirectProject(thread, currentUserId, hrefBase),
+  )
+  return groupInboxProjects([...contractProjects, ...proposalProjects, ...directProjects])
 }
 
 export const pickDefaultProject = (

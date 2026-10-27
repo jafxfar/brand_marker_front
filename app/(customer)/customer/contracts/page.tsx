@@ -21,6 +21,7 @@ import { useContractsQuery } from "@/hooks/api/use-contracts-query"
 import {
   emptyBuyerNavCounts,
   useBuyerNavCounts,
+  useMarkNavSectionSeen,
 } from "@/hooks/api/use-nav-counts-query"
 import {
   PageEmptyState,
@@ -44,6 +45,7 @@ const BuyerContractsContent = () => {
   )
   const useApi = isApiEnabled()
   const navCounts = useBuyerNavCounts(useApi).data ?? emptyBuyerNavCounts()
+  useMarkNavSectionSeen("buyer", "deals")
   const { data: apiContracts, isLoading } = useContractsQuery(hydrated && useApi, { page })
 
   const allContracts: ContractWithRelations[] = useApi

@@ -130,6 +130,41 @@ export const appendContractMessageToCache = (
   )
 }
 
+export const markIncomingMessagesViewedInCache = (
+  queryClient: QueryClient,
+  contractId: number,
+  currentUserId: number,
+  viewedAt = new Date().toISOString(),
+) => {
+  if (currentUserId <= 0) return
+  const markViewed = (messages: Message[]) =>
+    messages.map((message) => {
+      if (message.sender_id === currentUserId || message.status === "viewed") {
+        return message
+      }
+      return {
+        ...message,
+        status: "viewed" as const,
+        viewed_at: message.viewed_at ?? viewedAt,
+        delivered_at: message.delivered_at ?? viewedAt,
+      }
+    })
+
+  for (const key of detailKeysFor(contractId)) {
+    queryClient.setQueryData<ContractWithRelations>(key, (current) => {
+      if (!current?.conversation) return current
+      return patchContractMessages(current, markViewed)
+    })
+  }
+
+  mapListPage(queryClient, (list) =>
+    list.map((contract) => {
+      if (contract.id !== contractId || !contract.conversation) return contract
+      return patchContractMessages(contract, markViewed)
+    }),
+  )
+}
+
 export const updateContractMessageStatusInCache = (
   queryClient: QueryClient,
   contractId: number,

@@ -55,6 +55,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const submitWorkLocal = useContractsStore((s) => s.submitWork)
   const openDisputeLocal = useContractsStore((s) => s.openDispute)
   const addMessageLocal = useContractsStore((s) => s.addMessage)
+  const markConversationReadLocal = useContractsStore((s) => s.markConversationRead)
   const addFileLocal = useContractsStore((s) => s.addFile)
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const [disputeOpen, setDisputeOpen] = useState(false)
@@ -286,6 +287,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             onSendMessage={handleSendMessage}
             onMarkRead={(id) => {
               if (useApi) markMessagesReadMutation.mutate(id)
+              else markConversationReadLocal(id, userId)
             }}
           />
         </TabsContent>

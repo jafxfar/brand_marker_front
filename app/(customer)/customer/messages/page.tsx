@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { MessageSquare, ChevronRight } from "lucide-react"
@@ -22,7 +22,12 @@ import {
   useProposalMessageThreadsQuery,
 } from "@/hooks/api/use-proposals-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
+import {
+  useDirectChatsQuery,
+  useOpenDirectChatMutation,
+} from "@/hooks/api/use-direct-chats-query"
 import { ContractMessagesPanel } from "@/components/supplier/contracts/contract-messages-panel"
+import { DirectMessagesPanel } from "@/components/contracts/direct-messages-panel"
 import { ProposalMessagesPanel } from "@/components/cabinet/rfq/proposal-messages-panel"
 import { ConversationsSidebar } from "@/components/contracts/conversations-sidebar"
 import { ChatProjectSwitcher } from "@/components/contracts/chat-project-switcher"
@@ -33,12 +38,13 @@ import {
   type InboxProject,
 } from "@/lib/chat-conversations"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
-import type { ContractWithRelations, ProposalMessageThread } from "@/types"
+import type { ContractWithRelations, DirectChatThread, ProposalMessageThread } from "@/types"
 
 export default function BuyerMessagesPage() {
   const hydrated = useHydrated()
   const searchParams = useSearchParams()
   const proposalParam = Number(searchParams.get("proposal") || 0)
+  const supplierParam = Number(searchParams.get("supplier") || 0)
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
   const userId = user?.userId ?? 0
@@ -63,6 +69,9 @@ export default function BuyerMessagesPage() {
   )
   const sendMessageMutation = useSendMessageMutation()
   const markMessagesReadMutation = useMarkMessagesReadMutation("buyer")
+  const { data: apiDirectChats } = useDirectChatsQuery("buyer", hydrated && useApi)
+  const openDirectChat = useOpenDirectChatMutation("buyer")
+  const openedSupplierRef = useRef<number | null>(null)
 
   const contracts = useApi
     ? ((apiContracts?.items ?? []) as ContractWithRelations[])
@@ -143,6 +152,14 @@ export default function BuyerMessagesPage() {
     proposalMessages,
   ])
 
+  const directs: DirectChatThread[] = useMemo(() => {
+    const base = useApi ? (apiDirectChats ?? []) : []
+    const extra = openDirectChat.data
+    if (!extra) return base
+    if (base.some((thread) => thread.id === extra.id)) return base
+    return [extra, ...base]
+  }, [useApi, apiDirectChats, openDirectChat.data])
+
   const groups = useMemo(
     () =>
       mergeContractAndProposalChats(
@@ -152,9 +169,31 @@ export default function BuyerMessagesPage() {
         (contract) => contract.supplier_actor_id,
         (contract) => getSupplierName(contract.supplier_actor_id),
         "customer",
+        directs,
       ),
-    [contracts, threads, userId, useApi, resolveSupplierName],
+    [contracts, threads, userId, useApi, resolveSupplierName, directs],
   )
+
+  useEffect(() => {
+    if (!useApi || supplierParam <= 0) return
+    const existing = directs.find((thread) => thread.counterpart_actor_id === supplierParam)
+    if (existing) {
+      setSelectedCounterpartId(existing.counterpart_actor_id)
+      setSelectedProjectKey(`direct:${existing.id}`)
+      return
+    }
+    if (openedSupplierRef.current === supplierParam) return
+    openedSupplierRef.current = supplierParam
+    openDirectChat.mutate(supplierParam, {
+      onSuccess: (thread) => {
+        setSelectedCounterpartId(thread.counterpart_actor_id)
+        setSelectedProjectKey(`direct:${thread.id}`)
+      },
+      onError: () => {
+        openedSupplierRef.current = null
+      },
+    })
+  }, [useApi, supplierParam, directs, openDirectChat])
 
   useEffect(() => {
     if (proposalParam > 0) {
@@ -170,14 +209,8 @@ export default function BuyerMessagesPage() {
         setSelectedCounterpartId(project.counterpartId)
         setSelectedProjectKey(project.key)
       }
-      return
     }
-    if (selectedCounterpartId == null && groups[0]) {
-      const project = pickDefaultProject(groups[0])
-      setSelectedCounterpartId(groups[0].counterpartId)
-      setSelectedProjectKey(project?.key ?? null)
-    }
-  }, [proposalParam, groups, deepThread, userId, selectedCounterpartId])
+  }, [proposalParam, groups, deepThread, userId])
 
   const selectedGroup = groups.find((g) => g.counterpartId === selectedCounterpartId)
   const selected: InboxProject | undefined = selectedGroup
@@ -187,9 +220,11 @@ export default function BuyerMessagesPage() {
 
   const handleSelectProject = (projectKey: string) => {
     setSelectedProjectKey(projectKey)
-    const project = selectedGroup?.projects.find((p) => p.key === projectKey)
+    const project =
+      selectedGroup?.projects.find((p) => p.key === projectKey) ??
+      groups.flatMap((group) => group.projects).find((p) => p.key === projectKey)
     if (project?.kind === "contract" && !useApi) {
-      markConversationRead(project.id)
+      markConversationRead(project.id, userId)
     }
   }
 
@@ -200,7 +235,7 @@ export default function BuyerMessagesPage() {
     if (project) handleSelectProject(project.key)
   }
 
-  if (useApi && isLoading) {
+  if (useApi && (isLoading || (supplierParam > 0 && openDirectChat.isPending && groups.length === 0))) {
     return (
       <PageFrame className="animate-pulse">
         <div className="h-10 w-1/3 rounded-xl bg-secondary" />
@@ -213,7 +248,7 @@ export default function BuyerMessagesPage() {
     <PageFrame>
       <PageHeader
         title="Сообщения"
-        description="Переписка по заявкам и сделкам с исполнителями"
+        description="Переписка с исполнителями по заявкам, сделкам и личным сообщениям"
       />
 
       {groups.length === 0 ? (
@@ -221,7 +256,7 @@ export default function BuyerMessagesPage() {
           <PageEmptyState
             icon={<MessageSquare size={32} />}
             title="Сообщений пока нет"
-            description="Чат появится, когда вы обсудите предложение или начнётся сделка"
+            description="Чат появится, когда вы напишете исполнителю, обсудите предложение или начнётся сделка"
           />
         </PageSurface>
       ) : (
@@ -249,6 +284,14 @@ export default function BuyerMessagesPage() {
                     side="buyer"
                     peerName={selected.counterpartName}
                   />
+                ) : selected.kind === "direct" ? (
+                  <DirectMessagesPanel
+                    key={selected.key}
+                    chatId={selected.id}
+                    role="buyer"
+                    currentUserId={userId}
+                    counterpartName={selected.counterpartName}
+                  />
                 ) : selected.contract ? (
                   <ContractMessagesPanel
                     key={selected.key}
@@ -267,16 +310,19 @@ export default function BuyerMessagesPage() {
                     }}
                     onMarkRead={(id) => {
                       if (useApi) markMessagesReadMutation.mutate(id)
+                      else markConversationRead(id, userId)
                     }}
                   />
                 ) : null}
-                <Link
-                  href={selected.href}
-                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 px-1"
-                >
-                  {selected.kind === "proposal" ? "Открыть заявку" : "Открыть сделку"}{" "}
-                  <ChevronRight size={14} />
-                </Link>
+                {selected.kind !== "direct" ? (
+                  <Link
+                    href={selected.href}
+                    className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 px-1"
+                  >
+                    {selected.kind === "proposal" ? "Открыть заявку" : "Открыть сделку"}{" "}
+                    <ChevronRight size={14} />
+                  </Link>
+                ) : null}
               </>
             ) : (
               <PageSurface className="flex flex-1 items-center justify-center">

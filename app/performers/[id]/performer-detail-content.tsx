@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import {
   ArrowLeft,
   BadgeCheck,
@@ -30,6 +31,8 @@ import {
 import { performersUrl } from "@/lib/marketplace-routes"
 import { createRfqHref } from "@/lib/create-rfq-href"
 import { resolveFileUrl } from "@/lib/file-url"
+import { useAuthStore } from "@/lib/store/auth-store"
+import { useOpenDirectChatMutation } from "@/hooks/api/use-direct-chats-query"
 import { cn } from "@/lib/utils"
 import type { MarketplacePerformer } from "@/types/marketplace"
 
@@ -50,8 +53,12 @@ export const PerformerDetailContent = ({
   performerId,
 }: PerformerDetailContentProps) => {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const guestPreview = searchParams.get("guest") === "1"
   const useApi = isApiEnabled()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const user = useAuthStore((s) => s.user)
+  const openDirectChat = useOpenDirectChatMutation("buyer")
   const [tab, setTab] = useState<StoreTab>("goods")
 
   const { data: apiSupplier, isLoading } = usePublicSupplierQuery(
@@ -233,13 +240,44 @@ export const PerformerDetailContent = ({
                 Запросить цену
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="flex-1 lg:w-full">
-              <Link
-                href={`/login?next=${encodeURIComponent(`/performers/${performer.id}`)}`}
-              >
-                <MessageSquare className="size-4" aria-hidden />
-                Написать
-              </Link>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="flex-1 lg:w-full"
+              disabled={openDirectChat.isPending}
+              onClick={() => {
+                const messagesHref = `/customer/messages?supplier=${performer.id}`
+                if (guestPreview) {
+                  toast.message("Это предпросмотр витрины — чат отсюда не создаётся")
+                  return
+                }
+                if (!isAuthenticated) {
+                  router.push(`/login?redirect=${encodeURIComponent(messagesHref)}`)
+                  return
+                }
+                if (user?.role !== "customer" && !user?.capabilities.buyer) {
+                  toast.error("Написать исполнителю можно из кабинета покупателя")
+                  return
+                }
+                if (useApi) {
+                  openDirectChat.mutate(performer.id, {
+                    onSuccess: () => router.push(messagesHref),
+                    onError: (error) => {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "Не удалось открыть чат",
+                      )
+                    },
+                  })
+                  return
+                }
+                router.push(messagesHref)
+              }}
+            >
+              <MessageSquare className="size-4" aria-hidden />
+              Написать
             </Button>
           </div>
 
