@@ -55,6 +55,16 @@ export const supplierContractsApi = {
       body: JSON.stringify(data),
     }),
 
+  uploadDisputeEvidence: (id: number, file: File, note?: string) => {
+    const form = new FormData()
+    form.append("file", file)
+    if (note?.trim()) form.append("note", note.trim())
+    return apiFetch<ContractWithRelations>(`${PREFIX}/${id}/dispute/evidence`, {
+      method: "POST",
+      body: form,
+    })
+  },
+
   openDispute: (id: number, reason: string) =>
     apiFetch<unknown>(`${PREFIX}/${id}/dispute`, {
       method: "POST",

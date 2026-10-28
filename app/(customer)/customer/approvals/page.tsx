@@ -19,7 +19,12 @@ import {
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { useMarkNavSectionSeen } from "@/hooks/api/use-nav-counts-query"
+import { ListPagination } from "@/components/list-pagination"
+import {
+  emptyBuyerNavCounts,
+  useBuyerNavCounts,
+  useMarkNavSectionSeen,
+} from "@/hooks/api/use-nav-counts-query"
 import {
   useApprovalsQuery,
   useDecideApprovalMutation,
@@ -54,19 +59,25 @@ export default function CustomerApprovalsPage() {
   const useApi = isApiEnabled()
   useMarkNavSectionSeen("buyer", "approvals")
   const [tab, setTab] = useState<Tab>("wait")
+  const [page, setPage] = useState(1)
   const [localItems, setLocalItems] = useState<BuyerApproval[]>(MOCK_BUYER_APPROVALS)
 
   const { data: apiPage, isLoading } = useApprovalsQuery(
-    "all",
+    tab,
     hydrated && useApi,
+    { page },
   )
+  const navCounts = useBuyerNavCounts(hydrated && useApi).data ?? emptyBuyerNavCounts()
   const decideMutation = useDecideApprovalMutation()
 
   const items: BuyerApproval[] = useApi
     ? (apiPage?.items ?? []).map(mapApiApproval)
     : localItems
+  const totalPages = useApi ? (apiPage?.total_pages ?? 0) : 1
 
-  const waitCount = items.filter((a) => a.status === "wait").length
+  const waitCount = useApi
+    ? navCounts.approvals
+    : items.filter((a) => a.status === "wait").length
   const list = useMemo(
     () =>
       items.filter((a) =>
@@ -74,6 +85,11 @@ export default function CustomerApprovalsPage() {
       ),
     [items, tab],
   )
+
+  const handleTabChange = (next: Tab) => {
+    setTab(next)
+    setPage(1)
+  }
 
   const decide = async (id: string, status: "approved" | "rejected") => {
     if (useApi) {
@@ -102,7 +118,7 @@ export default function CustomerApprovalsPage() {
 
       <SegmentedControl
         value={tab}
-        onChange={setTab}
+        onChange={handleTabChange}
         ariaLabel="Фильтр согласований"
         options={[
           { value: "wait", label: "Ждут решения", count: waitCount },
@@ -184,6 +200,8 @@ export default function CustomerApprovalsPage() {
           ))}
         </div>
       )}
+
+      <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </PageFrame>
   )
 }

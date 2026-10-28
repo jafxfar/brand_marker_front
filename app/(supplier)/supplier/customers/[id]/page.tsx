@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { use, useState } from "react"
 import Link from "next/link"
 import {
   Building2,
@@ -9,6 +9,7 @@ import {
   Star,
   Users,
 } from "lucide-react"
+import { ListPagination } from "@/components/list-pagination"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 import { useHydrated } from "@/hooks/use-hydrated"
@@ -25,6 +26,8 @@ type PageProps = {
   params: Promise<{ id: string }>
 }
 
+const DEALS_PAGE_SIZE = 20
+
 const verificationLabel: Record<string, string> = {
   verified: "Верифицирован",
   pending: "На проверке",
@@ -37,11 +40,14 @@ export default function SupplierCustomerDetailPage({ params }: PageProps) {
   const actorId = Number(id)
   const hydrated = useHydrated()
   const useApi = isApiEnabled()
+  const [reviewsPage, setReviewsPage] = useState(1)
+  const [dealsPage, setDealsPage] = useState(1)
 
   const buyerQuery = usePublicBuyerQuery(actorId, hydrated && useApi && actorId > 0)
   const reviewsQuery = usePublicBuyerReviewsQuery(
     actorId,
     hydrated && useApi && actorId > 0,
+    { page: reviewsPage },
   )
   const contractsQuery = useSupplierContractsQuery(hydrated && useApi, {
     pageSize: 100,
@@ -49,8 +55,15 @@ export default function SupplierCustomerDetailPage({ params }: PageProps) {
 
   const buyer = buyerQuery.data
   const reviews = reviewsQuery.data?.items ?? []
+  const reviewsTotalPages = reviewsQuery.data?.total_pages ?? 0
   const deals = ((contractsQuery.data?.items ?? []) as ContractWithRelations[]).filter(
     (c) => c.buyer_actor_id === actorId,
+  )
+  const dealsTotalPages = Math.ceil(deals.length / DEALS_PAGE_SIZE)
+  const dealsCurrentPage = Math.min(dealsPage, Math.max(dealsTotalPages, 1))
+  const pagedDeals = deals.slice(
+    (dealsCurrentPage - 1) * DEALS_PAGE_SIZE,
+    dealsCurrentPage * DEALS_PAGE_SIZE,
   )
 
   if (!Number.isInteger(actorId) || actorId <= 0) {
@@ -139,7 +152,7 @@ export default function SupplierCustomerDetailPage({ params }: PageProps) {
               <p className="text-sm text-muted-foreground">Сделок пока нет</p>
             ) : (
               <ul className="divide-y divide-border">
-                {deals.map((deal) => (
+                {pagedDeals.map((deal) => (
                   <li key={deal.id} className="flex items-center justify-between gap-3 py-3">
                     <div className="min-w-0">
                       <Link
@@ -159,6 +172,11 @@ export default function SupplierCustomerDetailPage({ params }: PageProps) {
                 ))}
               </ul>
             )}
+            <ListPagination
+              page={dealsCurrentPage}
+              totalPages={dealsTotalPages}
+              onPageChange={setDealsPage}
+            />
           </PageSurface>
 
           <PageSurface className="p-5">
@@ -186,6 +204,11 @@ export default function SupplierCustomerDetailPage({ params }: PageProps) {
                 ))}
               </ul>
             )}
+            <ListPagination
+              page={reviewsPage}
+              totalPages={reviewsTotalPages}
+              onPageChange={setReviewsPage}
+            />
           </PageSurface>
         </div>
 

@@ -1,9 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Check, ChevronDown, FileText, Search } from "lucide-react"
+import { ListPagination } from "@/components/list-pagination"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { ServiceCard } from "@/components/marketplace/service-card"
 import { PerformerCard } from "@/components/marketplace/performer-card"
@@ -47,18 +48,29 @@ export const ServicesPageContent = () => {
     sortParam === "cheap" || sortParam === "rating" ? sortParam : "pop"
 
   const useApi = isApiEnabled()
+  const filterKey = [query, category, view, verified, invoice, sort].join("|")
+  const [pageState, setPageState] = useState({ key: filterKey, page: 1 })
+  // Reset to page 1 whenever filters, view, or sort change.
+  const page = pageState.key === filterKey ? pageState.page : 1
+  const setPage = (next: number) => setPageState({ key: filterKey, page: next })
+
   const { data: apiCatalog } = usePublicCatalogQuery(
     query || undefined,
     category || undefined,
     useApi && view === "items",
-    { verified, invoice, sort },
+    { verified, invoice, sort, page },
   )
   const { data: apiSuppliers } = usePublicSuppliersQuery(
     query || undefined,
     category || undefined,
     useApi && view === "suppliers",
-    { verified },
+    { verified, page },
   )
+  const totalPages = !useApi
+    ? 1
+    : view === "items"
+      ? (apiCatalog?.total_pages ?? 0)
+      : (apiSuppliers?.total_pages ?? 0)
   const { data: apiCategories } = usePublicCategoriesQuery(useApi)
 
   const categories = useMemo(() => {
@@ -247,6 +259,7 @@ export const ServicesPageContent = () => {
                 ))}
               </div>
             )}
+            <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
 
           <div className="mt-10 flex flex-wrap items-center gap-4 rounded-2xl border border-line bg-white p-6">

@@ -107,7 +107,7 @@ export type DisputeEvidence = {
   file_url: string
   file_type: string
   note: string | null
-  uploaded_by_actor_id: number
+  uploaded_by_actor_id: number | null
   created_at: string
 }
 

@@ -1,9 +1,12 @@
 "use client"
 
+import { useRef } from "react"
 import { AdminLink } from "@/components/admin/admin-link"
 import { formatCurrency } from "@/lib/format"
-import { FileText } from "lucide-react"
+import { FileText, Paperclip } from "lucide-react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import type { AdminDisputeDetail, AdminParty } from "@/lib/api/admin"
 import {
   adminActorKindLabels,
@@ -92,11 +95,33 @@ const PartySection = ({
   </section>
 )
 
+const MAX_FILE_SIZE_MB = 10
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+const ACCEPTED_FILE_TYPES = ".pdf,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.doc,.docx,.zip"
+
 export const AdminDisputeDetailSections = ({
   dispute,
+  onUploadEvidence,
+  uploadingEvidence = false,
 }: {
   dispute: AdminDisputeDetail
+  onUploadEvidence?: (file: File) => void | Promise<void>
+  uploadingEvidence?: boolean
 }) => {
+  const evidenceInputRef = useRef<HTMLInputElement>(null)
+  const canUploadEvidence = Boolean(onUploadEvidence) && dispute.status !== "resolved"
+
+  const handleEvidenceChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file || !onUploadEvidence) return
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`Файл «${file.name}» больше ${MAX_FILE_SIZE_MB} МБ`)
+      return
+    }
+    await onUploadEvidence(file)
+  }
+
   const statusMeta = adminDisputeStatusMeta[dispute.status] || {
     label: dispute.status,
     className: "bg-muted text-muted-foreground",
@@ -202,7 +227,31 @@ export const AdminDisputeDetailSections = ({
       <PartySection id="supplier" title="Исполнитель" party={dispute.supplier} />
 
       <section id="evidence" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-bold">Доказательства</h2>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Доказательства</h2>
+          {canUploadEvidence && (
+            <>
+              <input
+                ref={evidenceInputRef}
+                type="file"
+                accept={ACCEPTED_FILE_TYPES}
+                className="hidden"
+                onChange={handleEvidenceChange}
+                aria-label="Выбрать файл-доказательство"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={uploadingEvidence}
+                onClick={() => evidenceInputRef.current?.click()}
+              >
+                <Paperclip size={14} aria-hidden="true" />
+                {uploadingEvidence ? "Загрузка..." : "Добавить файл"}
+              </Button>
+            </>
+          )}
+        </div>
         {dispute.evidence.length ? (
           <div className="space-y-2">
             {dispute.evidence.map((item) => (

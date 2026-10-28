@@ -16,7 +16,10 @@ import { DisputeActionDialog } from "@/components/admin/disputes/dispute-action-
 import { AdminDisputeDetailSections } from "@/components/admin/disputes/dispute-detail-sections"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useAdminDisputeQuery } from "@/hooks/api/use-admin-disputes-query"
+import {
+  useAdminDisputeQuery,
+  useAdminUploadDisputeEvidenceMutation,
+} from "@/hooks/api/use-admin-disputes-query"
 import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminDisputeAction } from "@/lib/api/admin"
 import { adminDisputeStatusMeta } from "@/lib/admin-display"
@@ -56,6 +59,15 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
   const disputeQuery = useAdminDisputeQuery(disputeId)
   const [selectedAction, setSelectedAction] = useState<AdminDisputeAction | null>(null)
   const canManage = useAdminPermission("admin_disputes.update")
+  const uploadEvidenceMutation = useAdminUploadDisputeEvidenceMutation()
+
+  const handleUploadEvidence = async (file: File) => {
+    try {
+      await uploadEvidenceMutation.mutateAsync({ disputeId, file })
+    } catch {
+      // error toast comes from the mutation meta
+    }
+  }
 
   if (!Number.isInteger(disputeId) || disputeId <= 0) {
     return (
@@ -211,7 +223,11 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
         ))}
       </nav>
 
-      <AdminDisputeDetailSections dispute={dispute} />
+      <AdminDisputeDetailSections
+        dispute={dispute}
+        onUploadEvidence={canManage ? handleUploadEvidence : undefined}
+        uploadingEvidence={uploadEvidenceMutation.isPending}
+      />
 
       <DisputeActionDialog
         disputeId={dispute.id}

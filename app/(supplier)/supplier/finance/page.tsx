@@ -7,6 +7,7 @@ import { AddPayoutDestinationDialog } from "@/components/supplier/finance/add-pa
 import { PayoutAccountCard } from "@/components/supplier/finance/payout-account-card"
 import { formatCurrency, formatIsoDate } from "@/lib/format"
 import { PageFrame, PageHeader } from "@/components/layout"
+import { ListPagination } from "@/components/list-pagination"
 import { MetricTile } from "@/components/process"
 import { StatusBadge } from "@/components/bm"
 import { useAuthStore } from "@/lib/store/auth-store"
@@ -47,6 +48,8 @@ export default function SupplierFinancePage() {
   const useApi = isApiEnabled()
   const payoutRef = useRef<HTMLDivElement>(null)
   const [addDestinationOpen, setAddDestinationOpen] = useState(false)
+  const [historyPage, setHistoryPage] = useState(1)
+  const [invoicesPage, setInvoicesPage] = useState(1)
 
   const getDestinations = useFinanceStore((s) => s.getDestinations)
   const getWithdrawals = useFinanceStore((s) => s.getWithdrawals)
@@ -59,13 +62,25 @@ export default function SupplierFinancePage() {
   const { data: apiBalance } = useSupplierBalanceQuery(hydrated && useApi)
   const { data: paymentHistoryPage } = useSupplierPaymentHistoryQuery(
     hydrated && useApi,
+    { page: historyPage },
   )
   const paymentHistory = paymentHistoryPage?.items ?? []
   const { data: apiDestinations } = useSupplierFinanceDestinationsQuery(
     hydrated && useApi,
   )
-  const { data: apiWithdrawals } = useSupplierWithdrawalsQuery(hydrated && useApi)
-  const { data: apiInvoices } = useSupplierInvoicesQuery(hydrated && useApi)
+  const { data: apiWithdrawals } = useSupplierWithdrawalsQuery(hydrated && useApi, {
+    page: historyPage,
+  })
+  const { data: apiInvoices } = useSupplierInvoicesQuery(hydrated && useApi, {
+    page: invoicesPage,
+  })
+  const historyTotalPages = useApi
+    ? Math.max(
+        paymentHistoryPage?.total_pages ?? 0,
+        apiWithdrawals?.total_pages ?? 0,
+      )
+    : 1
+  const invoicesTotalPages = useApi ? (apiInvoices?.total_pages ?? 0) : 1
   const withdrawalMutation = useRequestWithdrawalMutation()
   const createDestinationMutation = useCreateDestinationMutation()
 
@@ -311,6 +326,11 @@ export default function SupplierFinancePage() {
               </table>
             )}
           </div>
+          <ListPagination
+            page={historyPage}
+            totalPages={historyTotalPages}
+            onPageChange={setHistoryPage}
+          />
         </div>
 
         <PayoutAccountCard
@@ -342,6 +362,11 @@ export default function SupplierFinancePage() {
         <InvoicesTable
           invoices={invoiceList}
           getContractTitle={getContractTitle}
+        />
+        <ListPagination
+          page={invoicesPage}
+          totalPages={invoicesTotalPages}
+          onPageChange={setInvoicesPage}
         />
       </div>
 

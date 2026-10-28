@@ -1,7 +1,10 @@
 "use client"
 
-import { AlertTriangle, FileText } from "lucide-react"
+import { useRef } from "react"
+import { AlertTriangle, FileText, Paperclip } from "lucide-react"
+import { toast } from "sonner"
 import { FilePreviewLink } from "@/components/shared/file-preview-link"
+import { Button } from "@/components/ui/button"
 import { formatIsoDate } from "@/lib/format"
 import type { ContractDispute, DisputeStatus } from "@/types"
 
@@ -12,11 +15,37 @@ const disputeStatusLabel: Record<DisputeStatus, string> = {
   appealed: "Апелляция",
 }
 
+const MAX_FILE_SIZE_MB = 10
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+const ACCEPTED_FILE_TYPES = ".pdf,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.doc,.docx,.zip"
+
 type ContractDisputePanelProps = {
   dispute: ContractDispute
+  canUpload?: boolean
+  uploading?: boolean
+  onUpload?: (file: File) => void | Promise<void>
 }
 
-export const ContractDisputePanel = ({ dispute }: ContractDisputePanelProps) => {
+export const ContractDisputePanel = ({
+  dispute,
+  canUpload = false,
+  uploading = false,
+  onUpload,
+}: ContractDisputePanelProps) => {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const showUpload = canUpload && Boolean(onUpload)
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file || !onUpload) return
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`Файл «${file.name}» больше ${MAX_FILE_SIZE_MB} МБ`)
+      return
+    }
+    await onUpload(file)
+  }
+
   const statusLabel = disputeStatusLabel[dispute.status] || dispute.status
   const showInstructions =
     Boolean(dispute.admin_instructions?.trim()) ||
@@ -98,6 +127,28 @@ export const ContractDisputePanel = ({ dispute }: ContractDisputePanelProps) => 
               </li>
             ))}
           </ul>
+        )}
+        {showUpload && (
+          <div className="mt-4">
+            <input
+              ref={inputRef}
+              type="file"
+              accept={ACCEPTED_FILE_TYPES}
+              className="hidden"
+              onChange={handleFileChange}
+              aria-label="Выбрать файл-доказательство"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploading}
+              onClick={() => inputRef.current?.click()}
+            >
+              <Paperclip size={14} />
+              {uploading ? "Загрузка..." : "Добавить файл"}
+            </Button>
+          </div>
         )}
       </div>
     </section>

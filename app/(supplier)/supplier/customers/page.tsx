@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { useQueries } from "@tanstack/react-query"
 import { ChevronRight, Star, Users } from "lucide-react"
@@ -13,8 +14,11 @@ import { publicKeys } from "@/hooks/api/use-public-query"
 import { publicApi } from "@/lib/api/public"
 import { getActorId } from "@/lib/auth-display"
 import { formatCount, formatPrice } from "@/lib/format"
+import { ListPagination } from "@/components/list-pagination"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import type { ContractWithRelations, Review } from "@/types"
+
+const CUSTOMERS_PAGE_SIZE = 20
 
 interface CustomerGroup {
   id: number
@@ -67,6 +71,7 @@ export default function SupplierCustomersPage() {
   const useApi = isApiEnabled()
   const user = useAuthStore((s) => s.user)
   const actorId = getActorId(user)
+  const [page, setPage] = useState(1)
   const getContractsForSupplier = useContractsStore((s) => s.getContractsForSupplier)
   const { data: apiContracts, isLoading } = useSupplierContractsQuery(
     hydrated && useApi,
@@ -80,7 +85,13 @@ export default function SupplierCustomersPage() {
       ? getContractsForSupplier(actorId)
       : []
 
-  const groups = groupCustomers(contracts)
+  const allGroups = groupCustomers(contracts)
+  const totalPages = Math.ceil(allGroups.length / CUSTOMERS_PAGE_SIZE)
+  const currentPage = Math.min(page, Math.max(totalPages, 1))
+  const groups = allGroups.slice(
+    (currentPage - 1) * CUSTOMERS_PAGE_SIZE,
+    currentPage * CUSTOMERS_PAGE_SIZE,
+  )
   const buyerIds = groups.map((g) => g.id)
 
   const buyerQueries = useQueries({
@@ -182,6 +193,12 @@ export default function SupplierCustomersPage() {
           ))}
         </div>
       )}
+
+      <ListPagination
+        page={currentPage}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
     </PageFrame>
   )
 }

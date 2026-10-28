@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { Star } from "lucide-react"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { ListPagination } from "@/components/list-pagination"
 import { ReviewsReceivedTable } from "@/components/supplier/finance/reviews-received-table"
 import { useHydrated } from "@/hooks/use-hydrated"
 import {
@@ -98,15 +100,21 @@ export default function SupplierReviewsPage() {
   const useApi = isApiEnabled()
   const getCompany = useCompaniesStore((s) => s.getCompany)
 
+  const [givenPageNum, setGivenPageNum] = useState(1)
+  const [receivedPageNum, setReceivedPageNum] = useState(1)
+
   const { data: givenPage, isLoading: givenLoading } = useSupplierReviewsQuery(
     hydrated && useApi,
+    { page: givenPageNum },
   )
   const { data: receivedPage, isLoading: receivedLoading } =
-    useSupplierReceivedReviewsQuery(hydrated && useApi)
+    useSupplierReceivedReviewsQuery(hydrated && useApi, { page: receivedPageNum })
   const { data: contractsPage } = useSupplierContractsQuery(hydrated && useApi, {
     pageSize: 100,
   })
 
+  const givenTotalPages = givenPage?.total_pages ?? 0
+  const receivedTotalPages = receivedPage?.total_pages ?? 0
   const given = givenPage?.items ?? []
   const received = receivedPage?.items ?? []
   const contracts = (contractsPage?.items ?? []) as ContractWithRelations[]
@@ -145,6 +153,11 @@ export default function SupplierReviewsPage() {
               getContractTitle={getContractTitle}
             />
           )}
+          <ListPagination
+            page={receivedPageNum}
+            totalPages={receivedTotalPages}
+            onPageChange={setReceivedPageNum}
+          />
         </section>
 
         <section>
@@ -160,6 +173,11 @@ export default function SupplierReviewsPage() {
               getContractTitle={getContractTitle}
             />
           )}
+          <ListPagination
+            page={givenPageNum}
+            totalPages={givenTotalPages}
+            onPageChange={setGivenPageNum}
+          />
         </section>
       </PageSurface>
     </PageFrame>

@@ -91,7 +91,11 @@ export const useAdminSupportTicketsQuery = (
 ) => {
   const status = params.status ?? "open"
   return useQuery({
-    queryKey: [...supportKeys.adminList(status), params.page ?? 1],
+    queryKey: [
+      ...supportKeys.adminList(status),
+      params.page ?? 1,
+      params.pageSize ?? "",
+    ],
     queryFn: () => adminSupportApi.list(params),
     enabled: enabled && isApiEnabled(),
   })

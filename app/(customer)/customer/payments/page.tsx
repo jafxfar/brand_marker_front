@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
+import { ListPagination } from "@/components/list-pagination"
 import { ConfirmActionDialog } from "@/components/process"
 import {
   ALIF_CONFIRM_LABEL,
@@ -44,6 +45,7 @@ const BuyerPaymentsContent = () => {
   const hydrated = useHydrated()
   const actorId = getActorId(useAuthStore((s) => s.user))
   const [tab, setTab] = useUrlTab<BuyerPaymentsTab>("tab", BUYER_PAYMENTS_TAB_VALUES, "outgoing")
+  const [historyPage, setHistoryPage] = useState(1)
 
   const getOutgoingPayments = useBuyerPaymentsStore((s) => s.getOutgoingPayments)
   const getEscrowFundingQueue = useBuyerPaymentsStore((s) => s.getEscrowFundingQueue)
@@ -60,11 +62,16 @@ const BuyerPaymentsContent = () => {
   const refunds = hydrated ? getBuyerRefunds(actorId) : []
   const buyerContracts = hydrated ? getContractsForBuyer(actorId) : []
   const useApi = isApiEnabled()
-  const { data: paymentHistoryPage } = usePaymentHistoryQuery(hydrated && useApi)
+  const { data: paymentHistoryPage } = usePaymentHistoryQuery(hydrated && useApi, {
+    page: historyPage,
+  })
   const { data: pendingPayments } = usePendingPaymentsQuery(hydrated && useApi)
-  const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
+  const { data: apiContractsPage } = useContractsQuery(hydrated && useApi, {
+    pageSize: 100,
+  })
   const apiContracts = apiContractsPage?.items ?? []
   const paymentHistoryItems = paymentHistoryPage?.items ?? []
+  const historyTotalPages = useApi ? (paymentHistoryPage?.total_pages ?? 0) : 1
   const fundMutation = useFundAndConfirmMilestoneMutation()
   const { viaAlif, currency: alifCurrency } = useAlifPayment(hydrated && useApi)
   const [pendingFund, setPendingFund] = useState<EscrowFundingRow | null>(null)
@@ -159,6 +166,13 @@ const BuyerPaymentsContent = () => {
           <OutgoingPaymentsTable
             payments={effectiveOutgoing}
             getSupplierName={(id) => getCompany(id)?.title ?? "Исполнитель"}
+          />
+        )}
+        {tab === "outgoing" && (
+          <ListPagination
+            page={historyPage}
+            totalPages={historyTotalPages}
+            onPageChange={setHistoryPage}
           />
         )}
         {tab === "escrow" && (

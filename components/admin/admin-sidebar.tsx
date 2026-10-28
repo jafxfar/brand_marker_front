@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   Building2,
+  Cable,
   ChevronDown,
   CircleDollarSign,
   FolderTree,
@@ -111,6 +112,7 @@ const adminNavSections: AdminNavSection[] = [
     items: [
       { label: "Пользователи", href: "/admin/users", Icon: Users },
       { label: "Журнал действий", href: "/admin/logs", Icon: ScrollText },
+      { label: "Логи шлюза", href: "/admin/gateway-logs", Icon: Cable },
       { label: "Категории", href: "/admin/categories", Icon: FolderTree },
     ],
   },

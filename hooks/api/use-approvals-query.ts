@@ -20,7 +20,7 @@ export const useApprovalsQuery = (
 ) =>
   useQuery({
     queryKey: approvalKeys.list(status, params.page ?? 1),
-    queryFn: () => approvalsApi.list({ ...params, status, pageSize: 100 }),
+    queryFn: () => approvalsApi.list({ ...params, status }),
     enabled: enabled && isApiEnabled(),
   })
 

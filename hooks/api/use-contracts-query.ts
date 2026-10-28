@@ -14,19 +14,25 @@ import type { ContractWithRelations } from "@/types"
 
 export const contractKeys = {
   all: ["contracts"] as const,
-  list: (page = 1) => [...contractKeys.all, "list", page] as const,
+  list: (page = 1, pageSize?: number) =>
+    (pageSize
+      ? [...contractKeys.all, "list", page, pageSize]
+      : [...contractKeys.all, "list", page]) as readonly unknown[],
   detail: (id: number) => [...contractKeys.all, "detail", id] as const,
 }
 
 export const supplierContractKeys = {
   all: ["supplier-contracts"] as const,
-  list: (page = 1) => [...supplierContractKeys.all, "list", page] as const,
+  list: (page = 1, pageSize?: number) =>
+    (pageSize
+      ? [...supplierContractKeys.all, "list", page, pageSize]
+      : [...supplierContractKeys.all, "list", page]) as readonly unknown[],
   detail: (id: number) => [...supplierContractKeys.all, "detail", id] as const,
 }
 
 export const useContractsQuery = (enabled = true, params: PageParams = {}) =>
   useQuery({
-    queryKey: contractKeys.list(params.page ?? 1),
+    queryKey: contractKeys.list(params.page ?? 1, params.pageSize),
     queryFn: () => contractsApi.list(params),
     enabled: enabled && isApiEnabled(),
   })
@@ -244,6 +250,50 @@ export const useUploadContractFileMutation = () => {
     },
     meta: {
       successMessage: "Файл загружен",
+      errorMessage: "Не удалось загрузить файл",
+    },
+  })
+}
+
+export const useUploadDisputeEvidenceMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      contractId,
+      file,
+      note,
+    }: {
+      contractId: number
+      file: File
+      note?: string
+    }) => contractsApi.uploadDisputeEvidence(contractId, file, note),
+    onSuccess: (_d, { contractId }) => {
+      qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+    },
+    meta: {
+      successMessage: "Файл добавлен к спору",
+      errorMessage: "Не удалось загрузить файл",
+    },
+  })
+}
+
+export const useSupplierUploadDisputeEvidenceMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      contractId,
+      file,
+      note,
+    }: {
+      contractId: number
+      file: File
+      note?: string
+    }) => supplierContractsApi.uploadDisputeEvidence(contractId, file, note),
+    onSuccess: (_d, { contractId }) => {
+      qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+    },
+    meta: {
+      successMessage: "Файл добавлен к спору",
       errorMessage: "Не удалось загрузить файл",
     },
   })

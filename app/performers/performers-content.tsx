@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Award } from "lucide-react"
+import { ListPagination } from "@/components/list-pagination"
 import { PageShell } from "@/components/marketplace/page-shell"
 import { PerformerCard } from "@/components/marketplace/performer-card"
 import { filterPerformers } from "@/lib/mock/marketplace-performers"
@@ -17,11 +18,19 @@ export const PerformersPageContent = () => {
   const featured = searchParams.get("featured") === "true"
   const scope = searchParams.get("scope")
   const useApi = isApiEnabled()
+  const filterKey = [query, verified, featured, scope ?? ""].join("|")
+  const [pageState, setPageState] = useState({ key: filterKey, page: 1 })
+  // Reset to page 1 whenever filters change.
+  const page = pageState.key === filterKey ? pageState.page : 1
+  const setPage = (next: number) => setPageState({ key: filterKey, page: next })
+
   const { data: apiSuppliers } = usePublicSuppliersQuery(
     query || undefined,
     undefined,
     useApi,
+    { page, verified },
   )
+  const totalPages = useApi ? (apiSuppliers?.total_pages ?? 0) : 1
 
   const performers = useMemo(() => {
     if (!useApi) return filterPerformers({ q: query, verified, featured, scope: scope ?? undefined })
@@ -76,6 +85,8 @@ export const PerformersPageContent = () => {
               ))}
             </div>
           )}
+
+          <ListPagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </section>
     </PageShell>

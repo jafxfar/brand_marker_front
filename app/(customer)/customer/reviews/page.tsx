@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+import { ListPagination } from "@/components/list-pagination"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
@@ -24,8 +26,17 @@ export default function BuyerReviewsPage() {
   const getCompany = useCompaniesStore((s) => s.getCompany)
   const getContractLocal = useContractsStore((s) => s.getContract)
 
-  const { data: apiReviewsPage, isLoading } = useBuyerReviewsQuery(hydrated && useApi)
-  const { data: receivedPage } = useBuyerReceivedReviewsQuery(hydrated && useApi)
+  const [givenPageNum, setGivenPageNum] = useState(1)
+  const [receivedPageNum, setReceivedPageNum] = useState(1)
+
+  const { data: apiReviewsPage, isLoading } = useBuyerReviewsQuery(hydrated && useApi, {
+    page: givenPageNum,
+  })
+  const { data: receivedPage } = useBuyerReceivedReviewsQuery(hydrated && useApi, {
+    page: receivedPageNum,
+  })
+  const givenTotalPages = useApi ? (apiReviewsPage?.total_pages ?? 0) : 1
+  const receivedTotalPages = receivedPage?.total_pages ?? 0
   const apiReviews = apiReviewsPage?.items ?? []
   const receivedReviews = receivedPage?.items ?? []
   const { data: apiContractsPage } = useContractsQuery(hydrated && useApi)
@@ -76,6 +87,11 @@ export default function BuyerReviewsPage() {
               getContractTitle={getContractTitle}
             />
           )}
+          <ListPagination
+            page={givenPageNum}
+            totalPages={givenTotalPages}
+            onPageChange={setGivenPageNum}
+          />
         </div>
         {useApi && (
           <div>
@@ -96,6 +112,11 @@ export default function BuyerReviewsPage() {
                 getContractTitle={getContractTitle}
               />
             )}
+            <ListPagination
+              page={receivedPageNum}
+              totalPages={receivedTotalPages}
+              onPageChange={setReceivedPageNum}
+            />
           </div>
         )}
       </PageSurface>

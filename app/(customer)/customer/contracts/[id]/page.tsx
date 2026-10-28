@@ -23,6 +23,7 @@ import {
   useRejectSubmissionMutation,
   useSendMessageMutation,
   useUploadContractFileMutation,
+  useUploadDisputeEvidenceMutation,
 } from "@/hooks/api/use-contracts-query"
 import { useCreateReviewMutation, useBuyerReviewsQuery } from "@/hooks/api/use-reviews-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
@@ -103,6 +104,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const approveSubmissionMutation = useApproveSubmissionMutation()
   const rejectSubmissionMutation = useRejectSubmissionMutation()
   const uploadFileMutation = useUploadContractFileMutation()
+  const uploadDisputeEvidenceMutation = useUploadDisputeEvidenceMutation()
 
   const supplierActorId =
     (useApi ? apiContract?.supplier_actor_id : getContractLocal(contractId)?.supplier_actor_id) ?? 0
@@ -251,10 +253,23 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     }
   }
 
+  const handleUploadDisputeEvidence = async (file: File) => {
+    try {
+      await uploadDisputeEvidenceMutation.mutateAsync({ contractId, file })
+    } catch {
+      // error toast comes from the mutation meta
+    }
+  }
+
   const messageCount = contract.conversation?.messages?.length ?? 0
   const fileCount = contract.files?.length ?? 0
   const submissionCount = contract.submissions?.length ?? 0
   const activeDispute = contract.dispute ?? null
+  const canUploadDisputeEvidence =
+    useApi &&
+    (activeDispute?.status === "open" ||
+      activeDispute?.status === "under_review" ||
+      activeDispute?.status === "appealed")
   const showDisputeTab =
     Boolean(activeDispute) || contract.status === "disputed"
   const defaultTab =
@@ -455,7 +470,12 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         {showDisputeTab && (
           <TabsContent value="dispute">
             {activeDispute ? (
-              <ContractDisputePanel dispute={activeDispute} />
+              <ContractDisputePanel
+                dispute={activeDispute}
+                canUpload={canUploadDisputeEvidence}
+                uploading={uploadDisputeEvidenceMutation.isPending}
+                onUpload={handleUploadDisputeEvidence}
+              />
             ) : (
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5">
                 <p className="text-sm font-semibold text-destructive">Спор открыт</p>

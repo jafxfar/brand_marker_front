@@ -2,7 +2,8 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { SupportMessageList } from "@/components/support/support-message-list"
 import "@/components/support/support-chat.css"
 import {
@@ -21,6 +22,8 @@ import {
 import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
 import type { SupportTicketStatus } from "@/types/support"
+
+const SUPPORT_PAGE_SIZE = 30
 
 const statusFilters: Array<{ value: SupportTicketStatus | "all"; label: string }> = [
   { value: "open", label: "Открытые" },
@@ -68,12 +71,18 @@ const AdminSupportContent = () => {
       ? statusParam
       : "open"
   const ticketIdParam = Number(searchParams.get("ticket")) || null
+  const page = Math.max(1, Number(searchParams.get("page")) || 1)
 
   const [text, setText] = useState("")
   const [file, setFile] = useState<File | null>(null)
 
-  const listQuery = useAdminSupportTicketsQuery({ status, page: 1, pageSize: 50 })
+  const listQuery = useAdminSupportTicketsQuery({
+    status,
+    page,
+    pageSize: SUPPORT_PAGE_SIZE,
+  })
   const items = listQuery.data?.items ?? []
+  const totalPages = listQuery.data?.total_pages ?? 0
 
   const selectedId = useMemo(() => {
     if (ticketIdParam && items.some((t) => t.id === ticketIdParam)) return ticketIdParam
@@ -104,6 +113,9 @@ const AdminSupportContent = () => {
       setParams({ ticket: String(selectedId) })
     }
   }, [selectedId, setParams, ticketIdParam])
+
+  const handlePageChange = (target: number) =>
+    setParams({ page: target <= 1 ? null : String(target), ticket: null })
 
   const ticket = detailQuery.data
   const messages = ticket?.messages ?? []
@@ -141,7 +153,7 @@ const AdminSupportContent = () => {
           <div className="border-b border-black/[0.06] px-3 py-2.5">
             <SegmentedControl
               value={status}
-              onChange={(value) => setParams({ status: value, ticket: null })}
+              onChange={(value) => setParams({ status: value, ticket: null, page: null })}
               options={statusFilters}
             />
           </div>
@@ -202,6 +214,36 @@ const AdminSupportContent = () => {
               })
             )}
           </div>
+          {totalPages > 1 ? (
+            <nav
+              className="flex items-center justify-between gap-2 border-t border-line p-2"
+              aria-label="Страницы обращений"
+            >
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => handlePageChange(page - 1)}
+              >
+                <ChevronLeft aria-hidden="true" />
+                Назад
+              </Button>
+              <span className="text-xs text-mute tabular-nums">
+                {page} / {totalPages}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => handlePageChange(page + 1)}
+              >
+                Далее
+                <ChevronRight aria-hidden="true" />
+              </Button>
+            </nav>
+          ) : null}
         </aside>
 
         <section className="flex max-h-[min(72vh,740px)] min-h-0 flex-col bg-white">

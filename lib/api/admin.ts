@@ -842,7 +842,7 @@ export type AdminDisputeDetail = AdminDispute & {
     file_url: string
     file_type: string
     note: string | null
-    uploaded_by_actor_id: number
+    uploaded_by_actor_id: number | null
     created_at: string
   }>
   files: Array<{
@@ -1135,6 +1135,15 @@ export const adminApi = {
         partial_buyer_amount: partialBuyerAmount ?? null,
       }),
     }),
+  uploadDisputeEvidence: (disputeId: number, file: File, note?: string) => {
+    const form = new FormData()
+    form.append("file", file)
+    if (note?.trim()) form.append("note", note.trim())
+    return apiFetch<AdminDisputeDetail>(`/admin/disputes/${disputeId}/evidence`, {
+      method: "POST",
+      body: form,
+    })
+  },
   getFinance: ({ page, pageSize, view, query }: AdminFinanceParams) => {
     const searchParams = new URLSearchParams({
       page: String(page),
@@ -1316,6 +1325,30 @@ export const adminApi = {
     return apiFetch<AdminLogListResponse>(`/admin/logs?${searchParams.toString()}`)
   },
   getLog: (logId: number) => apiFetch<AdminLogDetail>(`/admin/logs/${logId}`),
+  getGatewayLogs: ({
+    page,
+    pageSize,
+    orderId,
+    gateway,
+    operation,
+    direction,
+    period,
+    query,
+  }: AdminGatewayLogParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      period,
+    })
+    if (orderId.trim()) searchParams.set("order_id", orderId.trim())
+    if (gateway) searchParams.set("gateway", gateway)
+    if (operation) searchParams.set("operation", operation)
+    if (direction) searchParams.set("direction", direction)
+    if (query?.trim()) searchParams.set("query", query.trim())
+    return apiFetch<AdminGatewayLogListResponse>(`/admin/gateway-logs?${searchParams.toString()}`)
+  },
+  getGatewayLog: (logId: number) =>
+    apiFetch<AdminGatewayLogDetail>(`/admin/gateway-logs/${logId}`),
 }
 
 export type AdminLogAudience = "users" | "staff"
@@ -1389,6 +1422,55 @@ export type AdminLogListResponse = {
   page_size: number
   pages: number
   audience_counts: Record<AdminLogAudience, number>
+}
+
+export type AdminGatewayLogDirection = "outbound" | "inbound"
+
+export type AdminGatewayPaymentKind = "milestone" | "subscription" | "unknown"
+
+export type AdminGatewayLogParams = {
+  page: number
+  pageSize: number
+  orderId: string
+  gateway: string | null
+  operation: string | null
+  direction: AdminGatewayLogDirection | null
+  period: AdminLogPeriod
+  query?: string
+}
+
+export type AdminGatewayLogItem = {
+  id: number
+  created_at: string
+  responded_at: string | null
+  gateway: string
+  direction: AdminGatewayLogDirection
+  operation: string
+  order_id: string | null
+  method: string | null
+  url: string | null
+  response_status: number | null
+  error: string | null
+}
+
+export type AdminGatewayLogDetail = AdminGatewayLogItem & {
+  request_headers: unknown
+  request_body: unknown
+  response_body: unknown
+  response_raw: string | null
+  payment_kind: AdminGatewayPaymentKind
+  milestone_id: number | null
+  contract_id: number | null
+  subscription_user_id: number | null
+  plan: string | null
+}
+
+export type AdminGatewayLogListResponse = {
+  items: AdminGatewayLogItem[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
 }
 
 export type AdminRole = {

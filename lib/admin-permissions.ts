@@ -23,6 +23,7 @@ export const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{ href: string; permission: 
   { href: "/admin/escrow", permission: "admin_finance.view" },
   { href: "/admin/users", permission: "admin_users.view" },
   { href: "/admin/logs", permission: "audit_logs.view" },
+  { href: "/admin/gateway-logs", permission: "admin_finance.view" },
   { href: "/admin/categories", permission: "admin_catalog.view" },
   { href: "/admin/staff", permission: "admin_staff.view" },
   { href: "/admin/roles", permission: "roles.manage" },

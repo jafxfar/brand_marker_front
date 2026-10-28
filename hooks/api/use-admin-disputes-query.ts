@@ -28,6 +28,31 @@ export const useAdminDisputeQuery = (disputeId: number) =>
     enabled: Number.isInteger(disputeId) && disputeId > 0,
   })
 
+export const useAdminUploadDisputeEvidenceMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      disputeId,
+      file,
+      note,
+    }: {
+      disputeId: number
+      file: File
+      note?: string
+    }) => adminApi.uploadDisputeEvidence(disputeId, file, note),
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: adminDisputeKeys.detail(variables.disputeId),
+      })
+    },
+    meta: {
+      successMessage: "Файл добавлен к спору",
+      errorMessage: "Не удалось загрузить файл",
+    },
+  })
+}
+
 export const useAdminDisputeActionMutation = () => {
   const queryClient = useQueryClient()
 
