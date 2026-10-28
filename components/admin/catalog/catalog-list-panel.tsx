@@ -90,7 +90,9 @@ export function AdminCatalogContent({ embedded = true }: { embedded?: boolean } 
   const searchParams = useSearchParams()
   const view = isViewFilter(searchParams.get("view"))
     ? (searchParams.get("view") as AdminCatalogView)
-    : "all"
+    : embedded
+      ? "draft"
+      : "all"
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const query = searchParams.get("query") ?? ""
   const [searchInput, setSearchInput] = useState(query)

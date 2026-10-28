@@ -6,7 +6,7 @@ import { MessageSquare, Upload } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
 import { Button } from "@/components/ui/button"
 import { NextActionCard } from "@/components/process"
-import ReviewDialog from "@/components/cabinet/review-dialog"
+import ReviewDialog, { type ReviewAxisRatings } from "@/components/cabinet/review-dialog"
 import {
   DEAL_NEXT_STEP,
   getDealPhase,
@@ -22,14 +22,8 @@ type SupplierDealNextActionProps = {
   buyerName: string
   hasReview?: boolean
   onOpenTab: (tab: SupplierDealTab) => void
-  onSubmitReview?: (payload: {
-    rating: number
-    service_rating: number
-    delivery_rating: number
-    quality_rating: number
-    tags: string[]
-    comment: string
-  }) => void
+  onSubmitReview?: (payload: ReviewAxisRatings) => void
+  onUploadReviewPhoto?: (file: File) => Promise<{ file_name: string; file_url: string }>
 }
 
 const getLatestSubmission = (contract: ContractWithRelations) =>
@@ -43,6 +37,7 @@ export const SupplierDealNextAction = ({
   hasReview = false,
   onOpenTab,
   onSubmitReview,
+  onUploadReviewPhoto,
 }: SupplierDealNextActionProps) => {
   const [reviewOpen, setReviewOpen] = useState(false)
   const phase = getDealPhase(contract)
@@ -171,6 +166,7 @@ export const SupplierDealNextAction = ({
             counterpartName={buyerName}
             counterpartLabel="заказчиком"
             variant="about_buyer"
+            onUploadPhoto={onUploadReviewPhoto}
             onConfirm={onSubmitReview}
           />
         ) : null}

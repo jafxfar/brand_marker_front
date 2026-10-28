@@ -64,6 +64,13 @@ export type CompanyUser = {
   email?: string
 }
 
+export type ReviewPhoto = {
+  id?: number | null
+  file_name: string
+  file_url: string
+  sort_order?: number
+}
+
 export type Review = {
   id: number
   contract_id: number
@@ -76,6 +83,9 @@ export type Review = {
   tags?: string[]
   comment: string | null
   created_at: string
+  photos?: ReviewPhoto[]
+  helpful_count?: number
+  viewer_voted?: boolean
 }
 
 export type Company = {

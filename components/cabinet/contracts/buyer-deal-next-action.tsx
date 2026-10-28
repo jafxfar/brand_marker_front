@@ -5,7 +5,7 @@ import { AlertTriangle, Check, MessageSquare } from "lucide-react"
 import type { ContractWithRelations } from "@/types"
 import { Button } from "@/components/ui/button"
 import { NextActionCard } from "@/components/process"
-import ReviewDialog from "@/components/cabinet/review-dialog"
+import ReviewDialog, { type ReviewAxisRatings } from "@/components/cabinet/review-dialog"
 import {
   AlifCurrencyWarning,
   AlifPaymentNote,
@@ -37,14 +37,8 @@ type BuyerDealNextActionProps = {
   onRequestChanges: (submissionId: number) => void
   onOpenDispute: () => void
   onOpenTab: (tab: "messages" | "dispute") => void
-  onSubmitReview: (payload: {
-    rating: number
-    service_rating: number
-    delivery_rating: number
-    quality_rating: number
-    tags: string[]
-    comment: string
-  }) => void
+  onSubmitReview: (payload: ReviewAxisRatings) => void
+  onUploadReviewPhoto?: (file: File) => Promise<{ file_name: string; file_url: string }>
 }
 
 const getPendingSubmission = (contract: ContractWithRelations) =>
@@ -66,6 +60,7 @@ export const BuyerDealNextAction = ({
   onOpenDispute,
   onOpenTab,
   onSubmitReview,
+  onUploadReviewPhoto,
 }: BuyerDealNextActionProps) => {
   const [reviewOpen, setReviewOpen] = useState(false)
   const phase = getDealPhase(contract)
@@ -237,6 +232,7 @@ export const BuyerDealNextAction = ({
           onOpenChange={setReviewOpen}
           counterpartName={supplierName}
           counterpartLabel="исполнителем"
+          onUploadPhoto={onUploadReviewPhoto}
           onConfirm={onSubmitReview}
         />
       </NextActionCard>

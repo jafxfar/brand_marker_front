@@ -38,3 +38,16 @@ export const useAdminSendChatMessageMutation = () => {
     meta: { successMessage: "Сообщение отправлено" },
   })
 }
+
+export const useAdminDeleteChatMessageMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ chatId, messageId }: { chatId: string; messageId: number }) =>
+      adminChatsApi.deleteMessage(chatId, messageId),
+    onSuccess: (detail) => {
+      void qc.invalidateQueries({ queryKey: adminChatsKeys.all })
+      qc.setQueryData(adminChatsKeys.detail(detail.id), detail)
+    },
+    meta: { successMessage: "Сообщение удалено" },
+  })
+}

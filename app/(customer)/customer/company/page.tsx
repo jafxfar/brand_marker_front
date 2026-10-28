@@ -16,6 +16,8 @@ import {
   useRemoveBuyerTeamMemberMutation,
   useUpdateBuyerTeamMemberMutation,
 } from "@/hooks/api/use-buyer-companies-query"
+import { buyerCompaniesApi } from "@/lib/api/companies"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { EmployeeList } from "@/components/cabinet/company/employee-list"
@@ -161,6 +163,22 @@ export default function CustomerCompanyPage() {
     ])
   }
 
+  const queryClient = useQueryClient()
+  const pendingChangeQuery = useQuery({
+    queryKey: ["buyer-company-change-pending", company?.id],
+    queryFn: () => buyerCompaniesApi.pendingChangeRequest(company!.id),
+    enabled: useApi && hydrated && Boolean(company?.id),
+  })
+  const submitChangeMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof buyerCompaniesApi.submitChangeRequest>[1]) =>
+      buyerCompaniesApi.submitChangeRequest(company!.id, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["buyer-company-change-pending", company?.id],
+      })
+    },
+  })
+
   const requisites: CompanyRequisites = useMemo(() => {
     if (useApi) {
       return {
@@ -171,6 +189,9 @@ export default function CustomerCompanyPage() {
         city: company?.city?.trim() || "—",
         bank: "—",
         account: "—",
+        legalName: company?.legal_name?.trim() || "",
+        address: company?.address?.trim() || "",
+        country: company?.country?.trim() || "",
       }
     }
     const fromStore = company
@@ -182,6 +203,8 @@ export default function CustomerCompanyPage() {
       city: fromStore?.city?.trim() || "Душанбе",
       bank: "Амонатбонк",
       account: "20202 972 0 0000 012345",
+      legalName: fromStore?.legal_name?.trim() || "",
+      address: fromStore?.address?.trim() || "",
     }
   }, [useApi, company, user?.company])
 
@@ -382,7 +405,18 @@ export default function CustomerCompanyPage() {
           <PurchaseRulesCard rules={rules} onChange={handleRuleChange} />
         </div>
 
-        <CompanyRequisitesCard company={requisites} />
+        <CompanyRequisitesCard
+          company={requisites}
+          companyId={company?.id}
+          pendingRequest={Boolean(pendingChangeQuery.data)}
+          onSubmitChangeRequest={
+            useApi && company
+              ? async (payload) => {
+                  await submitChangeMutation.mutateAsync(payload)
+                }
+              : undefined
+          }
+        />
       </div>
 
       {!canManage ? (

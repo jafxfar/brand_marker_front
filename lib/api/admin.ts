@@ -318,6 +318,30 @@ export type AdminPendingVerificationParams = {
   pageSize: number
 }
 
+export type AdminCompanyChangeRequest = {
+  id: number
+  company_id: number
+  company_title?: string | null
+  requested_by_user_id: number
+  status: string
+  proposed: Record<string, string>
+  current_snapshot: Record<string, string | null>
+  reason_from_user: string | null
+  admin_reason: string | null
+  reviewed_by_user_id: number | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+  field_labels?: Record<string, string>
+}
+
+export type AdminCompanyChangeRequestsParams = {
+  page: number
+  pageSize: number
+  status?: "pending" | "approved" | "rejected"
+  query?: string
+}
+
 export type AdminVerifyCompanyResponse = {
   id: number
   action: AdminCompanyAction
@@ -800,6 +824,8 @@ export type AdminDisputeDetail = AdminDispute & {
   resolved_at: string | null
   buyer: AdminParty | null
   supplier: AdminParty | null
+  chat_id?: string | null
+  conversation_id?: number | null
   contract: {
     id: number
     title: string
@@ -944,6 +970,38 @@ export const adminApi = {
       `/admin/companies/pending-verification?${searchParams.toString()}`,
     )
   },
+  getCompanyChangeRequests: ({
+    page,
+    pageSize,
+    status = "pending",
+    query = "",
+  }: AdminCompanyChangeRequestsParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      status,
+    })
+    if (query.trim()) searchParams.set("query", query.trim())
+    return apiFetch<Page<AdminCompanyChangeRequest>>(
+      `/admin/companies/change-requests?${searchParams.toString()}`,
+    )
+  },
+  getCompanyChangeRequest: (requestId: number) =>
+    apiFetch<AdminCompanyChangeRequest>(
+      `/admin/companies/change-requests/${requestId}`,
+    ),
+  applyCompanyChangeRequestAction: (
+    requestId: number,
+    action: "approve" | "reject",
+    reason?: string,
+  ) =>
+    apiFetch<AdminCompanyChangeRequest>(
+      `/admin/companies/change-requests/${requestId}/action`,
+      {
+        method: "POST",
+        body: JSON.stringify({ action, reason: reason?.trim() || null }),
+      },
+    ),
   applyCompanyAction: (
     companyId: number,
     action: AdminCompanyAction,

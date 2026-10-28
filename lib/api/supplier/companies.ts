@@ -8,6 +8,8 @@ import type {
 import type {
   CertificateCreatePayload,
   CertificateUpdatePayload,
+  CompanyChangeRequest,
+  CompanyChangeRequestPayload,
   TeamMemberPayload,
   TeamMemberUpdatePayload,
 } from "../companies"
@@ -149,4 +151,18 @@ export const supplierCompaniesApi = {
     apiFetch<void>(`${PREFIX}/${companyId}/team/${targetUserId}`, {
       method: "DELETE",
     }),
+
+  submitChangeRequest: (companyId: number, data: CompanyChangeRequestPayload) =>
+    apiFetch<CompanyChangeRequest>(`${PREFIX}/${companyId}/change-requests`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  listChangeRequests: (companyId: number) =>
+    apiFetch<CompanyChangeRequest[]>(`${PREFIX}/${companyId}/change-requests`),
+
+  pendingChangeRequest: (companyId: number) =>
+    apiFetch<CompanyChangeRequest | null>(
+      `${PREFIX}/${companyId}/change-requests/pending`,
+    ),
 }

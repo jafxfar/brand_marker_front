@@ -25,6 +25,33 @@ export type CertificateUpdatePayload = {
   file_url?: string | null
 }
 
+export type CompanyChangeRequestPayload = {
+  title?: string
+  legal_name?: string
+  tax_number?: string
+  address?: string
+  city?: string
+  country?: string
+  reason?: string
+}
+
+export type CompanyChangeRequest = {
+  id: number
+  company_id: number
+  company_title?: string | null
+  requested_by_user_id: number
+  status: string
+  proposed: Record<string, string>
+  current_snapshot: Record<string, string | null>
+  reason_from_user: string | null
+  admin_reason: string | null
+  reviewed_by_user_id: number | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+  field_labels?: Record<string, string>
+}
+
 const PREFIX = "/buyer/companies"
 
 type CompanyUpdatePayload = {
@@ -146,6 +173,20 @@ export const buyerCompaniesApi = {
     apiFetch<void>(`${PREFIX}/${companyId}/certificates/${certificateId}`, {
       method: "DELETE",
     }),
+
+  submitChangeRequest: (companyId: number, data: CompanyChangeRequestPayload) =>
+    apiFetch<CompanyChangeRequest>(`${PREFIX}/${companyId}/change-requests`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  listChangeRequests: (companyId: number) =>
+    apiFetch<CompanyChangeRequest[]>(`${PREFIX}/${companyId}/change-requests`),
+
+  pendingChangeRequest: (companyId: number) =>
+    apiFetch<CompanyChangeRequest | null>(
+      `${PREFIX}/${companyId}/change-requests/pending`,
+    ),
 }
 
 export const companiesApi = {
@@ -168,6 +209,7 @@ export type ReviewCreatePayload = {
   quality_rating?: number | null
   tags?: string[]
   comment?: string | null
+  photos?: Array<{ file_name: string; file_url: string }>
 }
 
 export const reviewsApi = {
@@ -182,6 +224,18 @@ export const reviewsApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  uploadMedia: (file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<{ file_name: string; file_url: string }>("/buyer/reviews/media", {
+      method: "POST",
+      body: form,
+    })
+  },
+
+  voteHelpful: (reviewId: number) =>
+    apiFetch<Review>(`/buyer/reviews/${reviewId}/helpful`, { method: "POST" }),
 }
 
 export const supplierReviewsApi = {
@@ -198,4 +252,16 @@ export const supplierReviewsApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  uploadMedia: (file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<{ file_name: string; file_url: string }>(
+      "/supplier/reviews/media",
+      { method: "POST", body: form },
+    )
+  },
+
+  voteHelpful: (reviewId: number) =>
+    apiFetch<Review>(`/supplier/reviews/${reviewId}/helpful`, { method: "POST" }),
 }

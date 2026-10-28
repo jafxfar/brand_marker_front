@@ -13,6 +13,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { usePublicBuyerQuery } from "@/hooks/api/use-public-query"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
+import { supplierReviewsApi } from "@/lib/api/companies"
 import {
   useMarkMessagesReadMutation,
   useSupplierContractQuery,
@@ -243,8 +244,12 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
             quality_rating: payload.quality_rating,
             tags: payload.tags,
             comment: payload.comment || null,
+            photos: payload.photos,
           })
         }}
+        onUploadReviewPhoto={
+          useApi ? (file) => supplierReviewsApi.uploadMedia(file) : undefined
+        }
       />
 
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">

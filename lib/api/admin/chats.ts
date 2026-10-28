@@ -29,6 +29,7 @@ export type AdminChatMessage = {
   text: string
   created_at: string
   flagged: boolean
+  deleted?: boolean
 }
 
 export type AdminChatDetail = {
@@ -74,4 +75,10 @@ export const adminChatsApi = {
       method: "POST",
       body: JSON.stringify({ text }),
     }),
+
+  deleteMessage: (chatId: string, messageId: number) =>
+    apiFetch<AdminChatDetail>(
+      `${PREFIX}/${encodeURIComponent(chatId)}/messages/${messageId}`,
+      { method: "DELETE" },
+    ),
 }

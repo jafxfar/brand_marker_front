@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Star } from "lucide-react"
+import { useRef, useState } from "react"
+import { ImagePlus, Star, X } from "lucide-react"
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
+import { resolveFileUrl } from "@/lib/file-url"
 import { cn } from "@/lib/utils"
 
 export type ReviewAxisRatings = {
@@ -15,6 +16,7 @@ export type ReviewAxisRatings = {
   quality_rating: number
   tags: string[]
   comment: string
+  photos: Array<{ file_name: string; file_url: string }>
 }
 
 /** about_supplier: buyer rates performer; about_buyer: supplier rates customer */
@@ -55,12 +57,15 @@ const VARIANT_CONFIG: Record<
   },
 }
 
+const MAX_PHOTOS = 5
+
 interface ReviewDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   counterpartName: string
   counterpartLabel?: string
   variant?: ReviewDialogVariant
+  onUploadPhoto?: (file: File) => Promise<{ file_name: string; file_url: string }>
   onConfirm: (payload: ReviewAxisRatings) => void
 }
 
@@ -104,6 +109,7 @@ export default function ReviewDialog({
   counterpartName,
   counterpartLabel,
   variant = "about_supplier",
+  onUploadPhoto,
   onConfirm,
 }: ReviewDialogProps) {
   const config = VARIANT_CONFIG[variant]
@@ -112,6 +118,9 @@ export default function ReviewDialog({
   const [quality, setQuality] = useState(5)
   const [tags, setTags] = useState<string[]>([])
   const [text, setText] = useState("")
+  const [photos, setPhotos] = useState<Array<{ file_name: string; file_url: string }>>([])
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const average = Math.round((service + delivery + quality) / 3)
   const label = counterpartLabel ?? config.defaultLabel
@@ -122,6 +131,15 @@ export default function ReviewDialog({
     )
   }
 
+  const reset = () => {
+    setText("")
+    setService(5)
+    setDelivery(5)
+    setQuality(5)
+    setTags([])
+    setPhotos([])
+  }
+
   const handleConfirm = () => {
     onConfirm({
       rating: average,
@@ -130,13 +148,29 @@ export default function ReviewDialog({
       quality_rating: quality,
       tags,
       comment: text.trim(),
+      photos,
     })
-    setText("")
-    setService(5)
-    setDelivery(5)
-    setQuality(5)
-    setTags([])
+    reset()
     onOpenChange(false)
+  }
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files?.length || !onUploadPhoto) return
+    const remaining = MAX_PHOTOS - photos.length
+    const batch = Array.from(files).slice(0, remaining)
+    if (!batch.length) return
+    setUploading(true)
+    try {
+      const uploaded: Array<{ file_name: string; file_url: string }> = []
+      for (const file of batch) {
+        if (!file.type.startsWith("image/")) continue
+        uploaded.push(await onUploadPhoto(file))
+      }
+      if (uploaded.length) setPhotos((prev) => [...prev, ...uploaded].slice(0, MAX_PHOTOS))
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ""
+    }
   }
 
   return (
@@ -200,6 +234,54 @@ export default function ReviewDialog({
           placeholder="Что понравилось, что можно улучшить"
           className="w-full px-4 py-3 rounded-xl border border-input bg-card text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
         />
+
+        {onUploadPhoto ? (
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {photos.map((photo) => (
+                <div
+                  key={photo.file_url}
+                  className="relative size-16 overflow-hidden rounded-lg border border-border"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resolveFileUrl(photo.file_url)}
+                    alt=""
+                    className="size-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white"
+                    onClick={() =>
+                      setPhotos((prev) => prev.filter((p) => p.file_url !== photo.file_url))
+                    }
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+              {photos.length < MAX_PHOTOS ? (
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => fileRef.current?.click()}
+                  className="flex size-16 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-[10px] font-semibold text-muted-foreground hover:bg-secondary"
+                >
+                  <ImagePlus size={16} />
+                  Фото
+                </button>
+              ) : null}
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => void handleFiles(e.target.files)}
+            />
+          </div>
+        ) : null}
 
         <DialogFooter>
           <button

@@ -73,7 +73,7 @@ const ModerationHub = () => {
     <PageFrame>
       <PageHeader
         title="Модерация"
-        description="Товары, жалобы, заявки и коммерческие предложения"
+        description="Новые товары и услуги публикуются только после одобрения модератора"
       />
 
       <SegmentedControl

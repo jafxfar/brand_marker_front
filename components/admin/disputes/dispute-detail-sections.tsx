@@ -254,7 +254,17 @@ export const AdminDisputeDetailSections = ({
       </section>
 
       <section id="chat" className={sectionClassName}>
-        <h2 className="mb-5 text-lg font-bold">Чат</h2>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-bold">Чат</h2>
+          {dispute.chat_id ? (
+            <AdminLink
+              href={`/admin/chats?chat=${encodeURIComponent(dispute.chat_id)}&filter=disp`}
+              className="text-sm font-semibold text-primary hover:underline"
+            >
+              Открыть в переписках
+            </AdminLink>
+          ) : null}
+        </div>
         {dispute.messages.length ? (
           <div className="space-y-3">
             {dispute.messages.map((message) => (
@@ -274,6 +284,11 @@ export const AdminDisputeDetailSections = ({
         ) : (
           <EmptyState>Сообщений нет.</EmptyState>
         )}
+        {dispute.chat_id ? (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Написать или удалить сообщения можно в разделе «Все переписки».
+          </p>
+        ) : null}
       </section>
 
       <section id="escrow" className={sectionClassName}>

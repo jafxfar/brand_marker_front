@@ -4,6 +4,7 @@ import {
   adminApi,
   type AdminCompaniesParams,
   type AdminCompanyAction,
+  type AdminCompanyChangeRequestsParams,
   type AdminPendingVerificationParams,
 } from "@/lib/api/admin"
 
@@ -14,6 +15,10 @@ export const adminCompaniesKeys = {
     [...adminCompaniesKeys.lists(), params] as const,
   pendingVerification: (params: AdminPendingVerificationParams) =>
     [...adminCompaniesKeys.all, "pending-verification", params] as const,
+  changeRequests: (params: AdminCompanyChangeRequestsParams) =>
+    [...adminCompaniesKeys.all, "change-requests", params] as const,
+  changeRequest: (requestId: number) =>
+    [...adminCompaniesKeys.all, "change-request", requestId] as const,
   details: () => [...adminCompaniesKeys.all, "detail"] as const,
   detail: (companyId: number) =>
     [...adminCompaniesKeys.details(), companyId] as const,
@@ -42,6 +47,22 @@ export const useAdminCompanyQuery = (companyId: number) =>
     enabled: Number.isInteger(companyId) && companyId > 0,
   })
 
+export const useAdminCompanyChangeRequestsQuery = (
+  params: AdminCompanyChangeRequestsParams,
+) =>
+  useQuery({
+    queryKey: adminCompaniesKeys.changeRequests(params),
+    queryFn: () => adminApi.getCompanyChangeRequests(params),
+    placeholderData: keepPreviousData,
+  })
+
+export const useAdminCompanyChangeRequestQuery = (requestId: number) =>
+  useQuery({
+    queryKey: adminCompaniesKeys.changeRequest(requestId),
+    queryFn: () => adminApi.getCompanyChangeRequest(requestId),
+    enabled: Number.isInteger(requestId) && requestId > 0,
+  })
+
 const invalidateCompanyQueries = async (
   queryClient: ReturnType<typeof useQueryClient>,
   companyId?: number,
@@ -51,6 +72,9 @@ const invalidateCompanyQueries = async (
     queryClient.invalidateQueries({
       queryKey: [...adminCompaniesKeys.all, "pending-verification"],
     }),
+    queryClient.invalidateQueries({
+      queryKey: [...adminCompaniesKeys.all, "change-requests"],
+    }),
     companyId != null
       ? queryClient.invalidateQueries({
           queryKey: adminCompaniesKeys.detail(companyId),
@@ -58,6 +82,30 @@ const invalidateCompanyQueries = async (
       : queryClient.invalidateQueries({ queryKey: adminCompaniesKeys.details() }),
     queryClient.invalidateQueries({ queryKey: adminDashboardKeys.all }),
   ])
+}
+
+export const useAdminCompanyChangeRequestActionMutation = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      requestId,
+      action,
+      reason,
+    }: {
+      requestId: number
+      action: "approve" | "reject"
+      reason?: string
+    }) => adminApi.applyCompanyChangeRequestAction(requestId, action, reason),
+    onSuccess: async (data) => {
+      await invalidateCompanyQueries(queryClient, data.company_id)
+      await queryClient.invalidateQueries({
+        queryKey: adminCompaniesKeys.changeRequest(data.id),
+      })
+    },
+    meta: {
+      errorMessage: "Не удалось обработать заявку",
+    },
+  })
 }
 
 export const useAdminCompanyActionMutation = () => {

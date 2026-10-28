@@ -51,6 +51,13 @@ export const SupplierReviewsList = ({ reviews }: SupplierReviewsListProps) => {
                 {review.comment}
               </p>
             )}
+            {(review.photos?.length || review.helpful_count) ? (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                {review.photos?.length ? `Фото: ${review.photos.length}` : null}
+                {review.photos?.length && review.helpful_count ? " · " : null}
+                {review.helpful_count ? `Полезно: ${review.helpful_count}` : null}
+              </p>
+            ) : null}
           </div>
         ))}
       </div>

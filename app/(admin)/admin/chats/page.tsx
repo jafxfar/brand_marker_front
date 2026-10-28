@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { AlertTriangle, Loader2, MessageSquare, Send } from "lucide-react"
+import { AlertTriangle, Loader2, MessageSquare, Send, Trash2 } from "lucide-react"
 import {
   PageEmptyState,
   PageFrame,
@@ -13,8 +13,10 @@ import {
 import {
   useAdminChatQuery,
   useAdminChatsQuery,
+  useAdminDeleteChatMessageMutation,
   useAdminSendChatMessageMutation,
 } from "@/hooks/api/use-admin-chats-query"
+import { useAdminPermission } from "@/hooks/use-admin-permission"
 import type { AdminChatFilter } from "@/lib/api/admin/chats"
 import { cn } from "@/lib/utils"
 
@@ -78,6 +80,10 @@ const AdminChatsContent = () => {
 
   const detailQuery = useAdminChatQuery(selectedId)
   const sendMessage = useAdminSendChatMessageMutation()
+  const deleteMessage = useAdminDeleteChatMessageMutation()
+  const canManageChat =
+    useAdminPermission("admin_contracts.update") ||
+    useAdminPermission("admin_proposals.update")
 
   const setParams = useCallback(
     (patch: Record<string, string | null>) => {
@@ -201,7 +207,7 @@ const AdminChatsContent = () => {
                     {chat.party_a} ↔ {chat.party_b}
                   </b>
                   <div className="text-[12.5px] text-mute">
-                    {chat.about} · {chat.ref_label} · просмотр для модерации
+                    {chat.about} · {chat.ref_label} · модерация переписки
                   </div>
                 </div>
                 {entityHref ? (
@@ -218,17 +224,19 @@ const AdminChatsContent = () => {
                 {messages.map((msg) => {
                   const isAdmin = msg.side === "admin"
                   const isBuyer = msg.side === "buyer"
+                  const deleted = Boolean(msg.deleted)
                   return (
                     <div
                       key={msg.id}
                       className={cn(
-                        "max-w-[85%] rounded-xl px-3.5 py-2.5 text-[14px]",
+                        "group relative max-w-[85%] rounded-xl px-3.5 py-2.5 text-[14px]",
                         isAdmin && "justify-self-center bg-ink text-white",
                         !isAdmin && isBuyer && "justify-self-start border border-line bg-white",
                         !isAdmin &&
                           !isBuyer &&
                           "justify-self-end border border-[#CFE7DA] bg-[#E6F2EC]",
-                        msg.flagged && "!border-2 !border-red-400",
+                        msg.flagged && !deleted && "!border-2 !border-red-400",
+                        deleted && "opacity-60 italic",
                       )}
                     >
                       <span
@@ -240,7 +248,7 @@ const AdminChatsContent = () => {
                         {msg.sender_name}
                       </span>
                       {msg.text}
-                      {msg.flagged ? (
+                      {msg.flagged && !deleted ? (
                         <span className="mt-1 flex items-center gap-1 text-[12px] font-semibold text-red-700">
                           <AlertTriangle className="size-3.5" aria-hidden />
                           Подозрительное сообщение
@@ -248,11 +256,32 @@ const AdminChatsContent = () => {
                       ) : null}
                       <div
                         className={cn(
-                          "mt-1 text-[11px]",
+                          "mt-1 flex items-center justify-between gap-2 text-[11px]",
                           isAdmin ? "text-white/60" : "text-mute",
                         )}
                       >
-                        {formatListTime(msg.created_at)}
+                        <span>{formatListTime(msg.created_at)}</span>
+                        {canManageChat && !deleted && selectedId ? (
+                          <button
+                            type="button"
+                            title="Удалить сообщение"
+                            disabled={deleteMessage.isPending}
+                            onClick={() =>
+                              void deleteMessage.mutateAsync({
+                                chatId: selectedId,
+                                messageId: msg.id,
+                              })
+                            }
+                            className={cn(
+                              "rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
+                              isAdmin
+                                ? "text-white/70 hover:bg-white/15"
+                                : "text-mute hover:bg-canvas hover:text-destructive",
+                            )}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   )
@@ -260,39 +289,47 @@ const AdminChatsContent = () => {
               </div>
 
               <div className="grid gap-2 border-t border-line p-3">
-                <div className="flex gap-2">
-                  <input
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        void handleSend(text)
-                      }
-                    }}
-                    placeholder="Сообщение от администратора — увидят обе стороны"
-                    className="h-11 flex-1 rounded-[10px] border border-line bg-white px-3.5 text-[14px] outline-none focus:border-brand-600"
-                  />
-                  <button
-                    type="button"
-                    disabled={!text.trim() || sendMessage.isPending}
-                    onClick={() => void handleSend(text)}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-[10px] bg-ink text-white disabled:opacity-40"
-                    aria-label="Отправить"
-                  >
-                    <Send className="size-4" />
-                  </button>
-                </div>
-                {chat.flagged ? (
-                  <button
-                    type="button"
-                    disabled={sendMessage.isPending}
-                    onClick={() => void handleSend(WARN_TEXT)}
-                    className="justify-self-start text-[13px] font-semibold text-mute hover:text-ink"
-                  >
-                    Предупредить нарушителя
-                  </button>
-                ) : null}
+                {canManageChat ? (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault()
+                            void handleSend(text)
+                          }
+                        }}
+                        placeholder="Сообщение от модератора — увидят обе стороны"
+                        className="h-11 flex-1 rounded-[10px] border border-line bg-white px-3.5 text-[14px] outline-none focus:border-brand-600"
+                      />
+                      <button
+                        type="button"
+                        disabled={!text.trim() || sendMessage.isPending}
+                        onClick={() => void handleSend(text)}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-[10px] bg-ink text-white disabled:opacity-40"
+                        aria-label="Отправить"
+                      >
+                        <Send className="size-4" />
+                      </button>
+                    </div>
+                    {chat.flagged ? (
+                      <button
+                        type="button"
+                        disabled={sendMessage.isPending}
+                        onClick={() => void handleSend(WARN_TEXT)}
+                        className="justify-self-start text-[13px] font-semibold text-mute hover:text-ink"
+                      >
+                        Предупредить нарушителя
+                      </button>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-[13px] text-mute">
+                    Нет права писать в чат. Нужны права на обновление сделок или КП.
+                  </p>
+                )}
               </div>
             </>
           )}

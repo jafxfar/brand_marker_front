@@ -14,6 +14,7 @@ import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
+import { reviewsApi } from "@/lib/api/companies"
 import {
   useApproveSubmissionMutation,
   useContractQuery,
@@ -164,6 +165,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
     quality_rating: number
     tags: string[]
     comment: string
+    photos: Array<{ file_name: string; file_url: string }>
   }) => {
     if (useApi) {
       createReviewMutation.mutate({
@@ -175,6 +177,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         quality_rating: payload.quality_rating,
         tags: payload.tags,
         comment: payload.comment || null,
+        photos: payload.photos,
       })
       return
     }
@@ -375,6 +378,9 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
         onOpenDispute={() => setDisputeOpen(true)}
         onOpenTab={setTab}
         onSubmitReview={handleSubmitReview}
+        onUploadReviewPhoto={
+          useApi ? (file) => reviewsApi.uploadMedia(file) : undefined
+        }
       />
 
       <Tabs value={activeTab} onValueChange={setTab} className="space-y-4">

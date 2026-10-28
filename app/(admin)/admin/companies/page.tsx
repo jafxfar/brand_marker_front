@@ -2,14 +2,12 @@
 
 import { Suspense, useCallback } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Building2 } from "lucide-react"
 import { AdminCompaniesContent } from "@/components/admin/companies/companies-list-panel"
+import { CompanyChangesQueuePanel } from "@/components/admin/companies/company-changes-queue-panel"
 import { AdminVerificationContent } from "@/components/admin/companies/verification-queue-panel"
 import {
-  PageEmptyState,
   PageFrame,
   PageHeader,
-  PageSurface,
   SegmentedControl,
 } from "@/components/layout"
 import { useAdminDashboardQuery } from "@/hooks/api/use-admin-dashboard-query"
@@ -83,18 +81,7 @@ const CompaniesHub = () => {
       {tab === "verification" ? (
         <AdminVerificationContent embedded />
       ) : tab === "changes" ? (
-        // No company change-request API yet — pending_company_changes is always 0 on the backend.
-        <PageSurface>
-          <PageEmptyState
-            icon={<Building2 />}
-            title={changesCount > 0 ? "Очередь изменений" : "Изменений нет"}
-            description={
-              changesCount > 0
-                ? `В обработке ${changesCount}. Откройте карточку компании в списке «Все компании», чтобы проверить реквизиты.`
-                : "Смена названия, директора или адреса появится здесь после подачи заявки."
-            }
-          />
-        </PageSurface>
+        <CompanyChangesQueuePanel embedded />
       ) : (
         <AdminCompaniesContent embedded />
       )}

@@ -1,20 +1,36 @@
 "use client"
 
-import { Crown, Check, ShieldCheck } from "lucide-react"
+import { useState } from "react"
+import { Crown, Check, ShieldCheck, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { cn } from "@/lib/utils"
 import { useSubscriptionStore } from "@/lib/store/subscription-store"
 import { useNotificationsStore } from "@/lib/store/notifications-store"
 import { useHydrated } from "@/hooks/use-hydrated"
+import { getApiErrorMessage } from "@/lib/api/client"
 import { isApiEnabled } from "@/lib/api/config"
 import {
   useActivateSubscriptionMutation,
   useCancelSubscriptionMutation,
+  useSubscriptionPaymentConfigQuery,
   useSupplierSubscriptionQuery,
 } from "@/hooks/api/use-supplier-subscription-query"
 import { formatPrice } from "@/lib/format"
 import { plans, planName } from "@/lib/subscription"
 import type { SubscriptionPlan } from "@/lib/store/subscription-store"
+import type { SubscriptionPaymentMethodId } from "@/lib/api/supplier/subscription"
+
+const FALLBACK_METHODS: {
+  id: SubscriptionPaymentMethodId
+  label: string
+  supported: boolean
+  hint: string
+}[] = [
+  { id: "alif", label: "Alif", supported: true, hint: "Оплата картой через Alif" },
+  { id: "dc", label: "DC", supported: false, hint: "Пока не поддерживается" },
+  { id: "eskhata", label: "Eskhata", supported: false, hint: "Пока не поддерживается" },
+]
 
 export default function SubscriptionPage() {
   const hydrated = useHydrated()
@@ -25,27 +41,59 @@ export default function SubscriptionPage() {
   const cancel = useSubscriptionStore((s) => s.cancel)
   const isActive = useSubscriptionStore((s) => s.isActive)
   const notify = useNotificationsStore((s) => s.add)
+  const [method, setMethod] = useState<SubscriptionPaymentMethodId>("alif")
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null)
 
   const { data: apiSub } = useSupplierSubscriptionQuery(hydrated && useApi)
+  const { data: payConfig } = useSubscriptionPaymentConfigQuery(hydrated && useApi)
   const activateMutation = useActivateSubscriptionMutation()
   const cancelMutation = useCancelSubscriptionMutation()
 
   const plan = (useApi ? (apiSub?.plan ?? "none") : localPlan) as SubscriptionPlan
   const active = useApi ? Boolean(apiSub?.is_active) : hydrated && isActive()
   const until = useApi ? apiSub?.active_until : activeUntil
+  const methods = payConfig?.methods?.length ? payConfig.methods : FALLBACK_METHODS
+  const isAlifLive = payConfig?.provider === "alif"
 
   const handleActivate = async (planId: (typeof plans)[number]["id"], name: string) => {
-    if (useApi) {
-      await activateMutation.mutateAsync(planId)
-    } else {
-      activate(planId)
+    const selected = methods.find((m) => m.id === method)
+    if (selected && !selected.supported) {
+      toast.error(selected.hint || "Пока не поддерживается")
+      return
     }
-    notify({
-      type: "payment",
-      title: "Подписка оформлена",
-      body: `Тариф «${name}» активирован на 30 дней. Ваши предложения продвигаются.`,
-      href: "/supplier/subscription",
-    })
+
+    if (!useApi) {
+      activate(planId)
+      notify({
+        type: "payment",
+        title: "Подписка оформлена",
+        body: `Тариф «${name}» активирован на 30 дней.`,
+        href: "/supplier/subscription",
+      })
+      return
+    }
+
+    setPendingPlan(planId)
+    try {
+      const result = await activateMutation.mutateAsync({ plan: planId, method })
+      if (result.payment_url) {
+        window.location.assign(result.payment_url)
+        return
+      }
+      if (result.is_active || result.payment_status === "paid") {
+        toast.success(result.message || `Тариф «${name}» активирован`)
+        notify({
+          type: "payment",
+          title: "Подписка оформлена",
+          body: `Тариф «${name}» активирован на 30 дней.`,
+          href: "/supplier/subscription",
+        })
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Не удалось оформить подписку"))
+    } finally {
+      setPendingPlan(null)
+    }
   }
 
   const handleCancel = async () => {
@@ -93,9 +141,36 @@ export default function SubscriptionPage() {
         )}
       </div>
 
+      <div className="mb-5 rounded-xl border border-border bg-card p-4">
+        <p className="text-sm font-semibold text-foreground mb-2">Способ оплаты</p>
+        <div className="flex flex-wrap gap-2">
+          {methods.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => setMethod(m.id)}
+              className={cn(
+                "h-10 px-3 rounded-xl text-sm font-semibold border transition-colors",
+                method === m.id
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-secondary",
+                !m.supported && "opacity-70",
+              )}
+            >
+              {m.label}
+              {!m.supported ? " · скоро" : ""}
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-[12px] text-muted-foreground">
+          {methods.find((m) => m.id === method)?.hint}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {plans.map((p) => {
           const current = hydrated && active && plan === p.id
+          const busy = pendingPlan === p.id && activateMutation.isPending
           return (
             <div
               key={p.id}
@@ -126,9 +201,9 @@ export default function SubscriptionPage() {
               <button
                 type="button"
                 onClick={() => handleActivate(p.id, p.name)}
-                disabled={current}
+                disabled={current || busy}
                 className={cn(
-                  "mt-6 h-11 rounded-xl text-sm font-bold transition-colors",
+                  "mt-6 h-11 rounded-xl text-sm font-bold transition-colors inline-flex items-center justify-center gap-2",
                   current
                     ? "bg-secondary text-primary cursor-default"
                     : p.highlighted
@@ -136,6 +211,7 @@ export default function SubscriptionPage() {
                       : "border border-primary text-primary hover:bg-secondary",
                 )}
               >
+                {busy ? <Loader2 size={16} className="animate-spin" /> : null}
                 {current ? "Текущий тариф" : "Оформить"}
               </button>
             </div>
@@ -145,7 +221,9 @@ export default function SubscriptionPage() {
 
       <div className="flex items-center gap-2 mt-5 text-[11px] text-muted-foreground">
         <ShieldCheck size={14} className="text-primary flex-shrink-0" />
-        Демо-оплата: реальное списание не выполняется. Подписка действует 30 дней.
+        {isAlifLive
+          ? "Оплата через Alif. Подписка активируется после успешного платежа на 30 дней."
+          : "Демо-оплата: реальное списание не выполняется. Подписка действует 30 дней."}
       </div>
     </PageFrame>
   )
