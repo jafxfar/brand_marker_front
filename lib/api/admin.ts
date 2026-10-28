@@ -882,6 +882,7 @@ export type AdminDisputeActionResponse = {
   status: string
   resolution: string | null
   contract_status: string
+  partial_buyer_amount?: number | null
 }
 
 export const adminApi = {

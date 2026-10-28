@@ -1,12 +1,13 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { AdminLink } from "@/components/admin/admin-link"
 import { formatCurrency } from "@/lib/format"
 import { FileText, Paperclip } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import type { AdminDisputeDetail, AdminParty } from "@/lib/api/admin"
 import {
   adminActorKindLabels,
@@ -103,13 +104,31 @@ export const AdminDisputeDetailSections = ({
   dispute,
   onUploadEvidence,
   uploadingEvidence = false,
+  canSendChat = false,
+  sendingChat = false,
+  onSendChat,
 }: {
   dispute: AdminDisputeDetail
   onUploadEvidence?: (file: File) => void | Promise<void>
   uploadingEvidence?: boolean
+  canSendChat?: boolean
+  sendingChat?: boolean
+  onSendChat?: (text: string) => void | Promise<void>
 }) => {
   const evidenceInputRef = useRef<HTMLInputElement>(null)
+  const [chatText, setChatText] = useState("")
   const canUploadEvidence = Boolean(onUploadEvidence) && dispute.status !== "resolved"
+
+  const handleSendChat = async () => {
+    const text = chatText.trim()
+    if (!text || !onSendChat) return
+    try {
+      await onSendChat(text)
+      setChatText("")
+    } catch {
+      // error toast comes from the mutation meta; keep the draft
+    }
+  }
 
   const handleEvidenceChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -333,10 +352,30 @@ export const AdminDisputeDetailSections = ({
         ) : (
           <EmptyState>Сообщений нет.</EmptyState>
         )}
-        {dispute.chat_id ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            Написать или удалить сообщения можно в разделе «Все переписки».
-          </p>
+        {dispute.chat_id && canSendChat && onSendChat ? (
+          <div className="mt-4 space-y-2">
+            <label htmlFor="dispute-chat-message" className="text-sm font-semibold">
+              Сообщение в чат спора
+            </label>
+            <Textarea
+              id="dispute-chat-message"
+              value={chatText}
+              onChange={(event) => setChatText(event.target.value)}
+              placeholder="Написать сообщение сторонам"
+              className="min-h-24"
+              disabled={sendingChat}
+            />
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                disabled={sendingChat || !chatText.trim()}
+                onClick={handleSendChat}
+              >
+                {sendingChat ? "Отправка..." : "Отправить"}
+              </Button>
+            </div>
+          </div>
         ) : null}
       </section>
 

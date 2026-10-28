@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
+import { ChangePasswordCard } from "@/components/auth/change-password-card"
 import { TwoFactorSettings } from "@/components/auth/two-factor-settings"
 import { authApi } from "@/lib/api/auth"
 import { getApiErrorMessage } from "@/lib/api/client"
@@ -154,6 +155,7 @@ export default function SupplierProfilePage() {
           </Button>
         </div>
       </form>
+      <ChangePasswordCard />
       <TwoFactorSettings />
       </div>
     </PageFrame>

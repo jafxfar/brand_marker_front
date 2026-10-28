@@ -19,6 +19,7 @@ import {
   useSupplierContractQuery,
   useSupplierOpenDisputeMutation,
   useSupplierSendMessageMutation,
+  useSupplierSubmitDisputeStatementMutation,
   useSupplierSubmitWorkMutation,
   useSupplierUploadContractFileMutation,
   useSupplierUploadDisputeEvidenceMutation,
@@ -81,6 +82,7 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const submitWorkMutation = useSupplierSubmitWorkMutation()
   const uploadFileMutation = useSupplierUploadContractFileMutation()
   const uploadDisputeEvidenceMutation = useSupplierUploadDisputeEvidenceMutation()
+  const submitDisputeStatementMutation = useSupplierSubmitDisputeStatementMutation()
   const createReviewMutation = useCreateSupplierReviewMutation()
   const { data: givenReviews } = useSupplierReviewsQuery(hydrated && useApi)
 
@@ -163,6 +165,14 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
   const handleUploadDisputeEvidence = async (file: File) => {
     try {
       await uploadDisputeEvidenceMutation.mutateAsync({ contractId, file })
+    } catch {
+      // error toast comes from the mutation meta
+    }
+  }
+
+  const handleSubmitDisputeStatement = async (text: string) => {
+    try {
+      await submitDisputeStatementMutation.mutateAsync({ contractId, text })
     } catch {
       // error toast comes from the mutation meta
     }
@@ -324,6 +334,10 @@ export default function SupplierContractDetailPage({ params }: PageProps) {
                 canUpload={canUploadDisputeEvidence}
                 uploading={uploadDisputeEvidenceMutation.isPending}
                 onUpload={handleUploadDisputeEvidence}
+                viewerSide="supplier"
+                canSubmitStatement={canUploadDisputeEvidence}
+                submittingStatement={submitDisputeStatementMutation.isPending}
+                onSubmitStatement={handleSubmitDisputeStatement}
               />
             ) : (
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5">

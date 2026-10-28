@@ -299,6 +299,36 @@ export const useSupplierUploadDisputeEvidenceMutation = () => {
   })
 }
 
+export const useSubmitDisputeStatementMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ contractId, text }: { contractId: number; text: string }) =>
+      contractsApi.submitDisputeStatement(contractId, text),
+    onSuccess: (_d, { contractId }) => {
+      qc.invalidateQueries({ queryKey: contractKeys.detail(contractId) })
+    },
+    meta: {
+      successMessage: "Заявление сохранено",
+      errorMessage: "Не удалось сохранить заявление",
+    },
+  })
+}
+
+export const useSupplierSubmitDisputeStatementMutation = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ contractId, text }: { contractId: number; text: string }) =>
+      supplierContractsApi.submitDisputeStatement(contractId, text),
+    onSuccess: (_d, { contractId }) => {
+      qc.invalidateQueries({ queryKey: supplierContractKeys.detail(contractId) })
+    },
+    meta: {
+      successMessage: "Заявление сохранено",
+      errorMessage: "Не удалось сохранить заявление",
+    },
+  })
+}
+
 export const useSupplierUploadContractFileMutation = () => {
   const qc = useQueryClient()
   return useMutation({

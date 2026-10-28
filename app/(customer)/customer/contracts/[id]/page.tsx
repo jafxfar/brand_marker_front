@@ -22,6 +22,7 @@ import {
   useOpenDisputeMutation,
   useRejectSubmissionMutation,
   useSendMessageMutation,
+  useSubmitDisputeStatementMutation,
   useUploadContractFileMutation,
   useUploadDisputeEvidenceMutation,
 } from "@/hooks/api/use-contracts-query"
@@ -105,6 +106,7 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const rejectSubmissionMutation = useRejectSubmissionMutation()
   const uploadFileMutation = useUploadContractFileMutation()
   const uploadDisputeEvidenceMutation = useUploadDisputeEvidenceMutation()
+  const submitDisputeStatementMutation = useSubmitDisputeStatementMutation()
 
   const supplierActorId =
     (useApi ? apiContract?.supplier_actor_id : getContractLocal(contractId)?.supplier_actor_id) ?? 0
@@ -256,6 +258,14 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
   const handleUploadDisputeEvidence = async (file: File) => {
     try {
       await uploadDisputeEvidenceMutation.mutateAsync({ contractId, file })
+    } catch {
+      // error toast comes from the mutation meta
+    }
+  }
+
+  const handleSubmitDisputeStatement = async (text: string) => {
+    try {
+      await submitDisputeStatementMutation.mutateAsync({ contractId, text })
     } catch {
       // error toast comes from the mutation meta
     }
@@ -475,6 +485,10 @@ export default function BuyerContractDetailPage({ params }: PageProps) {
                 canUpload={canUploadDisputeEvidence}
                 uploading={uploadDisputeEvidenceMutation.isPending}
                 onUpload={handleUploadDisputeEvidence}
+                viewerSide="buyer"
+                canSubmitStatement={canUploadDisputeEvidence}
+                submittingStatement={submitDisputeStatementMutation.isPending}
+                onSubmitStatement={handleSubmitDisputeStatement}
               />
             ) : (
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-5">

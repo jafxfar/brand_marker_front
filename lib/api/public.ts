@@ -2,8 +2,8 @@ import { buildPageQuery, type Page, type PageParams } from "@/lib/pagination"
 import type { CatalogSort } from "@/lib/marketplace-routes"
 import type {
   CatalogItemWithRelations,
-  CompanyWithRelations,
   PublicBuyer,
+  PublicCompanyDetail,
   PublicSupplier,
   Review,
   RfqWithRelations,
@@ -74,7 +74,7 @@ export const publicApi = {
       `/public/buyers/${actorId}/reviews${buildPageQuery(params)}`,
     ),
 
-  company: (id: number) => apiFetch<CompanyWithRelations>(`/public/companies/${id}`),
+  company: (id: number) => apiFetch<PublicCompanyDetail>(`/public/companies/${id}`),
 
   companyReviews: (id: number, params: PageParams = {}) =>
     apiFetch<Page<Review>>(

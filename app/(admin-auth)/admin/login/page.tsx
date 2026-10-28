@@ -189,6 +189,14 @@ const AdminLoginContent = () => {
                   Доступ только для сотрудников платформы.
                 </p>
               )}
+              <div className="text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-[13px] font-semibold text-brand-700 hover:underline"
+                >
+                  Забыли пароль?
+                </Link>
+              </div>
             </div>
 
             <Button

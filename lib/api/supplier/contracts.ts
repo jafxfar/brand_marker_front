@@ -65,6 +65,12 @@ export const supplierContractsApi = {
     })
   },
 
+  submitDisputeStatement: (id: number, text: string) =>
+    apiFetch<ContractWithRelations>(`${PREFIX}/${id}/dispute/statement`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+
   openDispute: (id: number, reason: string) =>
     apiFetch<unknown>(`${PREFIX}/${id}/dispute`, {
       method: "POST",

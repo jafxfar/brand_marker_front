@@ -41,14 +41,14 @@ const actionMetadata: Record<
   refund_buyer: {
     title: "Вернуть средства покупателю?",
     description:
-      "Held и disputed этапы будут возвращены покупателю, спор закрыт, контракт отменён.",
+      "Оплаченные и disputed этапы будут возвращены покупателю, неоплаченные отменены, спор закрыт, контракт отменён.",
     success: "Средства возвращены",
     destructive: true,
   },
   partial_refund: {
     title: "Частичный возврат?",
     description:
-      "Укажите сумму возврата покупателю. Остаток escrow будет выплачен исполнителю.",
+      "Укажите сумму возврата покупателю. Возврат выполняется целыми этапами: этап возвращается, только если помещается в сумму полностью. Остальные этапы будут выплачены исполнителю.",
     success: "Частичный возврат выполнен",
     needsAmount: true,
     destructive: true,
@@ -60,7 +60,8 @@ const actionMetadata: Record<
   },
   close_case: {
     title: "Закрыть дело?",
-    description: "Спор будет закрыт без движения escrow. Контракт станет завершённым.",
+    description:
+      "Закрыть дело можно только при пустом escrow. Если средства ещё удерживаются, сначала выплатите, верните или частично верните их — иначе сервер отклонит закрытие. Контракт станет завершённым.",
     success: "Спор закрыт",
   },
 }
@@ -107,13 +108,17 @@ export const DisputeActionDialog = ({
     }
 
     try {
-      await actionMutation.mutateAsync({
+      const result = await actionMutation.mutateAsync({
         disputeId,
         action,
         reason: reason.trim(),
         partialBuyerAmount,
       })
-      toast.success(metadata.success)
+      toast.success(
+        action === "partial_refund" && result?.partial_buyer_amount != null
+          ? `${metadata.success}. Фактически возвращено: ${result.partial_buyer_amount}`
+          : metadata.success,
+      )
       onOpenChange(false)
       router.refresh()
     } catch {

@@ -1,6 +1,7 @@
 "use client"
 
 import { use, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { formatCurrency } from "@/lib/format"
 import Link from "next/link"
 import {
@@ -16,7 +17,9 @@ import { DisputeActionDialog } from "@/components/admin/disputes/dispute-action-
 import { AdminDisputeDetailSections } from "@/components/admin/disputes/dispute-detail-sections"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useAdminSendChatMessageMutation } from "@/hooks/api/use-admin-chats-query"
 import {
+  adminDisputeKeys,
   useAdminDisputeQuery,
   useAdminUploadDisputeEvidenceMutation,
 } from "@/hooks/api/use-admin-disputes-query"
@@ -59,7 +62,13 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
   const disputeQuery = useAdminDisputeQuery(disputeId)
   const [selectedAction, setSelectedAction] = useState<AdminDisputeAction | null>(null)
   const canManage = useAdminPermission("admin_disputes.update")
+  const canChatDisputes = useAdminPermission("admin_disputes.update")
+  const canChatContracts = useAdminPermission("admin_contracts.update")
+  const canChatProposals = useAdminPermission("admin_proposals.update")
+  const canChat = canChatDisputes || canChatContracts || canChatProposals
+  const queryClient = useQueryClient()
   const uploadEvidenceMutation = useAdminUploadDisputeEvidenceMutation()
+  const sendChatMutation = useAdminSendChatMessageMutation()
 
   const handleUploadEvidence = async (file: File) => {
     try {
@@ -67,6 +76,13 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
     } catch {
       // error toast comes from the mutation meta
     }
+  }
+
+  const handleSendChat = async (chatId: string, text: string) => {
+    await sendChatMutation.mutateAsync({ chatId, text })
+    await queryClient.invalidateQueries({
+      queryKey: adminDisputeKeys.detail(disputeId),
+    })
   }
 
   if (!Number.isInteger(disputeId) || disputeId <= 0) {
@@ -111,6 +127,8 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
     className: "bg-muted text-muted-foreground",
   }
   const isResolved = dispute.status === "resolved"
+  const escrowPool = dispute.escrow.held + dispute.escrow.disputed
+  const canCloseCase = escrowPool <= 0
   const buyerName =
     dispute.buyer?.company_title ||
     dispute.buyer?.name ||
@@ -148,10 +166,7 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
               </Badge>
               <Badge variant="outline">
                 Escrow:{" "}
-                {formatMoney(
-                  dispute.escrow.held + dispute.escrow.disputed,
-                  dispute.escrow.currency,
-                )}
+                {formatMoney(escrowPool, dispute.escrow.currency)}
               </Badge>
             </div>
           </div>
@@ -198,6 +213,12 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
                 type="button"
                 size="sm"
                 variant="outline"
+                disabled={!canCloseCase}
+                title={
+                  canCloseCase
+                    ? undefined
+                    : "Сначала урегулируйте escrow: выплата, возврат или частичный возврат"
+                }
                 onClick={() => setSelectedAction("close_case")}
               >
                 <XCircle aria-hidden="true" />
@@ -227,6 +248,11 @@ export default function AdminDisputeDetailPage({ params }: PageProps) {
         dispute={dispute}
         onUploadEvidence={canManage ? handleUploadEvidence : undefined}
         uploadingEvidence={uploadEvidenceMutation.isPending}
+        canSendChat={canChat}
+        sendingChat={sendChatMutation.isPending}
+        onSendChat={
+          dispute.chat_id ? (text) => handleSendChat(dispute.chat_id as string, text) : undefined
+        }
       />
 
       <DisputeActionDialog

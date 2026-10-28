@@ -4,6 +4,7 @@ import type {
   CompanyUser,
   CompanyWizardInput,
   CompanyWithRelations,
+  PublicCompanyDetail,
   Review,
 } from "@/types"
 import { apiFetch } from "./client"
@@ -192,7 +193,7 @@ export const buyerCompaniesApi = {
 export const companiesApi = {
   mine: (params?: PageParams) => buyerCompaniesApi.mine(params),
 
-  get: (id: number) => apiFetch<CompanyWithRelations>(`/public/companies/${id}`),
+  get: (id: number) => apiFetch<PublicCompanyDetail>(`/public/companies/${id}`),
 
   suppliers: (q?: string, category?: string, params: PageParams = {}) =>
     apiFetch<Page<CompanyWithRelations>>(

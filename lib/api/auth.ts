@@ -133,6 +133,36 @@ export const authApi = {
     return data
   },
 
+  forgotPassword: (email: string) =>
+    apiFetch<{ detail: string }>("/auth/password/forgot", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      skipAuth: true,
+    }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    apiFetch<{ detail: string }>("/auth/password/reset", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password: newPassword }),
+      skipAuth: true,
+    }),
+
+  changePassword: async (
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<TokenPair> => {
+    const data = await apiFetch<TokenPair>("/auth/password/change", {
+      method: "POST",
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    })
+    // Keep the active actor/company: only the token pair is replaced.
+    tokenStorage.setTokens(data)
+    return data
+  },
+
   me: () => apiFetch<MeResponse>("/auth/me"),
 
   logout: async () => {

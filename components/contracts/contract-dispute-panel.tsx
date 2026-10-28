@@ -1,10 +1,11 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { AlertTriangle, FileText, Paperclip } from "lucide-react"
 import { toast } from "sonner"
 import { FilePreviewLink } from "@/components/shared/file-preview-link"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { formatIsoDate } from "@/lib/format"
 import type { ContractDispute, DisputeStatus } from "@/types"
 
@@ -24,16 +25,44 @@ type ContractDisputePanelProps = {
   canUpload?: boolean
   uploading?: boolean
   onUpload?: (file: File) => void | Promise<void>
+  viewerSide?: "buyer" | "supplier"
+  canSubmitStatement?: boolean
+  submittingStatement?: boolean
+  onSubmitStatement?: (text: string) => void | Promise<void>
 }
+
+const MIN_STATEMENT_LENGTH = 10
+const MAX_STATEMENT_LENGTH = 5000
 
 export const ContractDisputePanel = ({
   dispute,
   canUpload = false,
   uploading = false,
   onUpload,
+  viewerSide,
+  canSubmitStatement = false,
+  submittingStatement = false,
+  onSubmitStatement,
 }: ContractDisputePanelProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
   const showUpload = canUpload && Boolean(onUpload)
+  const ownStatement =
+    (viewerSide === "buyer" ? dispute.buyer_statement : dispute.supplier_statement) ?? ""
+  const [statementDraft, setStatementDraft] = useState<string | null>(null)
+  const statementText = statementDraft ?? ownStatement
+  const showStatementForm = canSubmitStatement && Boolean(viewerSide) && Boolean(onSubmitStatement)
+  const trimmedStatement = statementText.trim()
+  const statementChanged = trimmedStatement !== ownStatement.trim()
+
+  const handleSubmitStatement = async () => {
+    if (!onSubmitStatement) return
+    if (trimmedStatement.length < MIN_STATEMENT_LENGTH) {
+      toast.error(`Заявление должно содержать не менее ${MIN_STATEMENT_LENGTH} символов`)
+      return
+    }
+    await onSubmitStatement(trimmedStatement)
+    setStatementDraft(null)
+  }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -103,6 +132,36 @@ export const ContractDisputePanel = ({
             {dispute.supplier_statement?.trim() || "Заявление не предоставлено"}
           </p>
         </div>
+        {showStatementForm && (
+          <div className="space-y-2 border-t border-border pt-4">
+            <label
+              htmlFor="dispute-statement"
+              className="text-xs font-medium text-muted-foreground"
+            >
+              {ownStatement.trim() ? "Изменить своё заявление" : "Ваше заявление"}
+            </label>
+            <Textarea
+              id="dispute-statement"
+              value={statementText}
+              maxLength={MAX_STATEMENT_LENGTH}
+              rows={4}
+              placeholder="Опишите вашу позицию по спору"
+              onChange={(event) => setStatementDraft(event.target.value)}
+            />
+            <Button
+              type="button"
+              size="sm"
+              disabled={
+                submittingStatement ||
+                !statementChanged ||
+                trimmedStatement.length < MIN_STATEMENT_LENGTH
+              }
+              onClick={handleSubmitStatement}
+            >
+              {submittingStatement ? "Сохранение..." : "Сохранить заявление"}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5">

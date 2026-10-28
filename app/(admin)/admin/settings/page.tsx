@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react"
 import { Loader2, Lock, RefreshCcw, Settings } from "lucide-react"
+import { ChangePasswordCard } from "@/components/auth/change-password-card"
 import { TwoFactorSettings } from "@/components/auth/two-factor-settings"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 import { Button } from "@/components/ui/button"
@@ -355,6 +356,7 @@ export default function AdminSettingsPage() {
         description="Комиссия за договор и максимальная сумма договора"
       />
       <div className="space-y-6">
+        <ChangePasswordCard />
         <TwoFactorSettings />
         <SettingsFormCard settings={settingsQuery.data} />
       </div>

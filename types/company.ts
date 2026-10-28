@@ -122,6 +122,30 @@ export type CompanyWithRelations = Company & {
 
 export type CompanyPublic = Company
 
+export type PublicCompanyDetail = Pick<
+  Company,
+  | "id"
+  | "title"
+  | "actor_type"
+  | "actor_types"
+  | "legal_name"
+  | "website"
+  | "description"
+  | "logo"
+  | "country"
+  | "city"
+  | "verification_status"
+  | "rating"
+  | "created_at"
+  | "updated_at"
+> & {
+  has_tax_number: boolean
+  profile: CompanyProfile | null
+  categories: CompanyCategory[]
+  stats: CompanyStats | null
+  certificates: CompanyCertificate[]
+}
+
 export type CompanyCreate = Omit<
   Company,
   "id" | "rating" | "created_at" | "updated_at"
