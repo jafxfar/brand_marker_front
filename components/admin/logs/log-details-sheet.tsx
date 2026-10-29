@@ -10,14 +10,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { LogEventDetailsBody, LogResourceLink } from "@/components/admin/logs/log-event-details"
 import { useAdminLogQuery } from "@/hooks/api/use-admin-logs-query"
 import {
+  getLogEventCategoryLabel,
+  getLogEventLabel,
   getLogFieldLabel,
   getLogUserRoleLabel,
   LOG_KIND_LABELS,
   LOG_SECTION_LABELS,
   LOG_STATUS_META,
 } from "@/lib/admin-log-labels"
+import type { AdminLogEventDetail, AdminLogUser } from "@/lib/api/admin"
 
 type LogDetailsSheetProps = {
   logId: number | null
@@ -38,6 +42,53 @@ const DetailRow = ({ label, children }: { label: string; children: React.ReactNo
   <div className="grid grid-cols-[140px_1fr] gap-3 py-2.5 text-sm">
     <dt className="text-muted-foreground">{label}</dt>
     <dd className="min-w-0 wrap-break-word text-foreground">{children}</dd>
+  </div>
+)
+
+const LogUserCell = ({ user, guestEmail }: { user: AdminLogUser | null; guestEmail?: string | null }) =>
+  user ? (
+    <>
+      <p className="font-semibold">{user.name}</p>
+      <p className="text-muted-foreground">{user.email}</p>
+      <p className="text-muted-foreground">{getLogUserRoleLabel(user.role)}</p>
+    </>
+  ) : (
+    <>
+      <p className="font-semibold">{guestEmail === undefined ? "Система" : "Гость"}</p>
+      {guestEmail && <p className="text-muted-foreground">Указан email: {guestEmail}</p>}
+    </>
+  )
+
+const EventLogDetails = ({ log }: { log: AdminLogEventDetail }) => (
+  <div className="space-y-6">
+    <div className="rounded-xl border border-border p-4">
+      <p className="text-base font-bold text-foreground">{getLogEventLabel(log.action)}</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {getLogEventCategoryLabel(log.category)} · <code className="text-xs">{log.action}</code>
+      </p>
+    </div>
+
+    <dl className="divide-y divide-border">
+      <DetailRow label="Когда">{formatLogDateTime(log.created_at)}</DetailRow>
+      <DetailRow label="Кто">
+        <LogUserCell user={log.user} />
+        {log.actor_id && <p className="text-muted-foreground">Профиль № {log.actor_id}</p>}
+      </DetailRow>
+      <DetailRow label="Объект">
+        <LogResourceLink resourceType={log.resource_type} resourceId={log.resource_id} />
+      </DetailRow>
+      {log.company_id && (
+        <DetailRow label="Компания">
+          <LogResourceLink resourceType="company" resourceId={String(log.company_id)} />
+        </DetailRow>
+      )}
+      <DetailRow label="IP-адрес">{log.ip_address || "—"}</DetailRow>
+      <DetailRow label="Браузер">
+        {log.user_agent ? <span className="text-xs">{log.user_agent}</span> : "—"}
+      </DetailRow>
+    </dl>
+
+    <LogEventDetailsBody details={log.details} />
   </div>
 )
 
@@ -74,7 +125,9 @@ export const LogDetailsSheet = ({ logId, onClose }: LogDetailsSheetProps) => {
             </div>
           )}
 
-          {log && (
+          {log && log.source === "event" && <EventLogDetails log={log} />}
+
+          {log && log.source !== "event" && (
             <div className="space-y-6">
               <div className="rounded-xl border border-border p-4">
                 <Badge variant="outline" className={LOG_STATUS_META[log.status].className}>
@@ -88,20 +141,7 @@ export const LogDetailsSheet = ({ logId, onClose }: LogDetailsSheetProps) => {
               <dl className="divide-y divide-border">
                 <DetailRow label="Когда">{formatLogDateTime(log.created_at)}</DetailRow>
                 <DetailRow label="Кто">
-                  {log.user ? (
-                    <>
-                      <p className="font-semibold">{log.user.name}</p>
-                      <p className="text-muted-foreground">{log.user.email}</p>
-                      <p className="text-muted-foreground">{getLogUserRoleLabel(log.user.role)}</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-semibold">Гость</p>
-                      {log.guest_email && (
-                        <p className="text-muted-foreground">Указан email: {log.guest_email}</p>
-                      )}
-                    </>
-                  )}
+                  <LogUserCell user={log.user} guestEmail={log.guest_email} />
                 </DetailRow>
                 <DetailRow label="Действие">{LOG_KIND_LABELS[log.kind]}</DetailRow>
                 <DetailRow label="Раздел">{LOG_SECTION_LABELS[log.section]}</DetailRow>

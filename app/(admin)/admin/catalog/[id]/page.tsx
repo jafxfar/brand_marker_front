@@ -8,12 +8,17 @@ import {
   CheckCircle2,
   EyeOff,
   Package,
+  Pencil,
   RefreshCcw,
+  RotateCcw,
   Trash2,
   XCircle,
 } from "lucide-react"
+import { AdminLink } from "@/components/admin/admin-link"
 import { CatalogActionDialog } from "@/components/admin/catalog/catalog-action-dialog"
 import { AdminCatalogDetailSections } from "@/components/admin/catalog/catalog-detail-sections"
+import { CatalogEditDialog } from "@/components/admin/catalog/catalog-edit-dialog"
+import { CatalogMediaManager } from "@/components/admin/catalog/catalog-media-manager"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAdminCatalogItemQuery } from "@/hooks/api/use-admin-catalog-query"
@@ -51,6 +56,7 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
   const itemId = Number(id)
   const itemQuery = useAdminCatalogItemQuery(itemId)
   const [selectedAction, setSelectedAction] = useState<AdminCatalogAction | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
   const canUpdate = useAdminPermission("admin_catalog.update")
   const canDelete = useAdminPermission("admin_catalog.delete")
 
@@ -95,6 +101,9 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
     label: item.status,
     className: "bg-muted text-muted-foreground",
   }
+  const isDeleted = item.status === "deleted"
+  const canRestore = item.status === "hidden" || item.status === "archived" || isDeleted
+  const editable = canUpdate && !isDeleted
 
   return (
     <PageFrame>
@@ -102,12 +111,21 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
         title={item.title}
         description={
           <>
-            {item.owner?.company_title || item.owner?.name || "Без владельца"}
+            {item.owner?.company_id ? (
+              <AdminLink
+                href={`/admin/companies/${item.owner.company_id}`}
+                className="hover:text-primary hover:underline"
+              >
+                {item.owner.company_title || item.owner.name}
+              </AdminLink>
+            ) : (
+              item.owner?.name || "Без владельца"
+            )}
             {item.category_name ? ` · ${item.category_name}` : ""}
           </>
         }
         backHref="/admin/catalog"
-        backLabel="Весь каталог"
+        backLabel="Товары и услуги"
       />
       <PageSurface className="p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
@@ -142,7 +160,19 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
           </div>
 
           <div className="flex flex-wrap gap-2 xl:max-w-xl xl:justify-end">
-            {canUpdate && item.status !== "active" && (
+            {editable && (
+              <Button type="button" size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil aria-hidden="true" />
+                Редактировать
+              </Button>
+            )}
+            {canUpdate && canRestore && (
+              <Button type="button" size="sm" onClick={() => setSelectedAction("restore")}>
+                <RotateCcw aria-hidden="true" />
+                {isDeleted ? "Восстановить" : "Вернуть в каталог"}
+              </Button>
+            )}
+            {canUpdate && !isDeleted && item.status !== "active" && !canRestore && (
               <Button type="button" size="sm" onClick={() => setSelectedAction("approve")}>
                 <CheckCircle2 aria-hidden="true" />
                 Одобрить
@@ -174,7 +204,7 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
                 Отклонить
               </Button>
             )}
-            {canDelete && (
+            {canDelete && !isDeleted && (
               <Button
                 type="button"
                 size="sm"
@@ -205,7 +235,10 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
         ))}
       </nav>
 
-      <AdminCatalogDetailSections item={item} />
+      <AdminCatalogDetailSections
+        item={item}
+        mediaEditor={editable ? <CatalogMediaManager item={item} /> : undefined}
+      />
 
       <CatalogActionDialog
         itemId={item.id}
@@ -215,6 +248,9 @@ export default function AdminCatalogDetailPage({ params }: PageProps) {
           if (!open) setSelectedAction(null)
         }}
       />
+      {editable && (
+        <CatalogEditDialog item={item} open={editOpen} onOpenChange={setEditOpen} />
+      )}
     </PageFrame>
   )
 }

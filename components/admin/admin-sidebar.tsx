@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  BadgeCheck,
   Building2,
   Cable,
   ChevronDown,
@@ -13,6 +14,7 @@ import {
   Headphones,
   LayoutDashboard,
   MessageSquare,
+  Package,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -65,10 +67,10 @@ const adminNavSections: AdminNavSection[] = [
     title: "Операции",
     items: [
       {
-        label: "Проверка компаний",
-        href: "/admin/companies",
-        hotHref: "/admin/companies?tab=verification",
-        Icon: Building2,
+        label: "Проверка клиентов",
+        href: "/admin/verification",
+        hotHref: "/admin/verification?tab=queue",
+        Icon: BadgeCheck,
         badge: "companies",
       },
       {
@@ -111,6 +113,8 @@ const adminNavSections: AdminNavSection[] = [
     title: "Справочники",
     items: [
       { label: "Пользователи", href: "/admin/users", Icon: Users },
+      { label: "Компании", href: "/admin/companies", Icon: Building2 },
+      { label: "Товары и услуги", href: "/admin/catalog", Icon: Package },
       { label: "Журнал действий", href: "/admin/logs", Icon: ScrollText },
       { label: "Логи шлюза", href: "/admin/gateway-logs", Icon: Cable },
       { label: "Категории", href: "/admin/categories", Icon: FolderTree },
@@ -127,18 +131,10 @@ const adminNavSections: AdminNavSection[] = [
 
 const itemMatchesPath = (href: string, pathname: string) => {
   if (href === "/admin") return pathname === href
-  if (href === "/admin/companies") {
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`) ||
-      pathname.startsWith("/admin/verification")
-    )
-  }
   if (href === "/admin/moderation") {
     return (
       pathname === href ||
       pathname.startsWith(`${href}/`) ||
-      pathname.startsWith("/admin/catalog") ||
       pathname.startsWith("/admin/rfqs") ||
       pathname.startsWith("/admin/proposals")
     )

@@ -204,8 +204,12 @@ export const PerformerDetailContent = ({
                 {performer.verified ? (
                   <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-brand-700">
                     <Check className="size-4" aria-hidden />
-                    Проверенная компания
+                    {apiSupplier?.kind === "individual"
+                      ? "Личность подтверждена"
+                      : "Проверенная компания"}
                   </span>
+                ) : performer.verificationStatus === "unverified" ? (
+                  <span className="text-[13px] font-medium text-mute">Не проверен</span>
                 ) : performer.verificationStatus === "rejected" ? (
                   <span className="text-[13px] font-semibold text-destructive">
                     Проверка отклонена

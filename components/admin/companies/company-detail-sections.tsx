@@ -1,24 +1,32 @@
 "use client"
 
 import { type ReactNode, useState } from "react"
+import Link from "next/link"
+import { toast } from "sonner"
 import { formatCurrency } from "@/lib/format"
 import {
   Check,
   ExternalLink,
-  FileText,
+  Eye,
+  EyeOff,
   Package,
   Star,
-  UserRound,
+  Tags,
   Wrench,
   X,
 } from "lucide-react"
+import { CompanyConfirmDialog } from "@/components/admin/companies/company-confirm-dialog"
+import { CompanyDocumentsManager } from "@/components/admin/companies/company-documents-manager"
+import { CompanyMembersManager } from "@/components/admin/companies/company-members-manager"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { useAdminCompanyCatalogItemMutation } from "@/hooks/api/use-admin-companies-query"
 import type {
   AdminCompanyCatalogItem,
   AdminCompanyDetail,
 } from "@/lib/api/admin"
-import { resolveFileUrl } from "@/lib/file-url"
 
 const formatMoney = (value: number | null | undefined, currency?: string | null) =>
   value == null ? "—" : formatCurrency(value, currency || "TJS")
@@ -102,39 +110,158 @@ const EmptyState = ({ children }: { children: ReactNode }) => (
   </div>
 )
 
-const CatalogList = ({ items }: { items: AdminCompanyCatalogItem[] }) => {
+const CATALOG_STATUS_LABELS: Record<string, string> = {
+  active: "Активна",
+  hidden: "Скрыта",
+  draft: "Черновик",
+  pending_review: "На модерации",
+  changes_requested: "На доработке",
+  archived: "В архиве",
+}
+
+const HIDEABLE_STATUSES = new Set(["active", "pending_review", "changes_requested"])
+
+const CatalogList = ({
+  companyId,
+  items,
+  canModerate,
+}: {
+  companyId: number
+  items: AdminCompanyCatalogItem[]
+  canModerate: boolean
+}) => {
+  const mutation = useAdminCompanyCatalogItemMutation()
+  const [hideTarget, setHideTarget] = useState<AdminCompanyCatalogItem | null>(null)
+  const [reason, setReason] = useState("")
+
   if (!items.length) return <EmptyState>Позиций этого типа пока нет.</EmptyState>
 
+  const closeHide = () => {
+    setHideTarget(null)
+    setReason("")
+  }
+
+  const handleHide = async () => {
+    if (!hideTarget || !reason.trim()) return
+    try {
+      await mutation.mutateAsync({
+        companyId,
+        itemId: hideTarget.id,
+        action: "hide",
+        reason,
+      })
+      toast.success("Позиция скрыта")
+      closeHide()
+    } catch {
+      // MutationCache toast
+    }
+  }
+
+  const handleUnhide = async (item: AdminCompanyCatalogItem) => {
+    try {
+      await mutation.mutateAsync({ companyId, itemId: item.id, action: "approve" })
+      toast.success("Позиция снова опубликована")
+    } catch {
+      // MutationCache toast
+    }
+  }
+
   return (
-    <ExpandableCollection total={items.length}>
-      {(limit) => (
-        <div className="divide-y divide-border">
-          {items.slice(0, limit).map((item) => (
-            <div key={item.id} className="grid gap-2 py-4 first:pt-0 last:pb-0 sm:grid-cols-[1fr_auto]">
-              <div>
-                <p className="font-bold">{item.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {[item.category, `ID ${item.id}`].filter(Boolean).join(" · ")}
-                </p>
+    <>
+      <ExpandableCollection total={items.length}>
+        {(limit) => (
+          <div className="divide-y divide-border">
+            {items.slice(0, limit).map((item) => (
+              <div
+                key={item.id}
+                className="grid gap-2 py-4 first:pt-0 last:pb-0 sm:grid-cols-[1fr_auto]"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/admin/catalog/${item.id}`}
+                    className="font-bold hover:text-primary hover:underline"
+                  >
+                    {item.title}
+                  </Link>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {[item.category, `ID ${item.id}`].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 sm:justify-end sm:text-right">
+                  <Badge variant="outline">{CATALOG_STATUS_LABELS[item.status] ?? item.status}</Badge>
+                  <span className="text-sm font-bold">
+                    {item.price ? formatMoney(item.price, item.currency || "TJS") : "Цена не указана"}
+                  </span>
+                  {canModerate && HIDEABLE_STATUSES.has(item.status) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={mutation.isPending}
+                      onClick={() => setHideTarget(item)}
+                    >
+                      <EyeOff aria-hidden="true" />
+                      Скрыть
+                    </Button>
+                  )}
+                  {canModerate && item.status === "hidden" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={mutation.isPending}
+                      onClick={() => void handleUnhide(item)}
+                    >
+                      <Eye aria-hidden="true" />
+                      Показать
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-3 sm:text-right">
-                <Badge variant="outline">{item.status}</Badge>
-                <span className="text-sm font-bold">
-                  {item.price ? formatMoney(item.price, item.currency || "TJS") : "Цена не указана"}
-                </span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        )}
+      </ExpandableCollection>
+      <CompanyConfirmDialog
+        open={Boolean(hideTarget)}
+        onOpenChange={(open) => {
+          if (!open) closeHide()
+        }}
+        title="Скрыть позицию?"
+        description={hideTarget ? `«${hideTarget.title}» пропадёт из каталога.` : ""}
+        confirmLabel="Скрыть"
+        destructive
+        pending={mutation.isPending}
+        confirmDisabled={!reason.trim()}
+        onConfirm={() => void handleHide()}
+      >
+        <div className="space-y-2">
+          <Label htmlFor="company-catalog-hide-reason" className="text-sm font-semibold">
+            Причина <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            id="company-catalog-hide-reason"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            rows={3}
+            maxLength={2000}
+          />
         </div>
-      )}
-    </ExpandableCollection>
+      </CompanyConfirmDialog>
+    </>
   )
 }
 
 export const AdminCompanyDetailSections = ({
   company,
+  canManage = false,
+  canModerateCatalog = false,
+  onEditCategories,
 }: {
   company: AdminCompanyDetail
+  canManage?: boolean
+  canModerateCatalog?: boolean
+  onEditCategories?: () => void
 }) => {
   return (
     <div className="space-y-5">
@@ -189,7 +316,7 @@ export const AdminCompanyDetailSections = ({
       <Section
         id="documents"
         title="Документы для верификации"
-        description="Отдельные verification-файлы пока не загружаются в текущей модели"
+        description="Чеклист заполненности данных для проверки"
       >
         <div className="grid gap-3 sm:grid-cols-2">
           {Object.entries(company.verification_checklist).map(([key, complete]) => (
@@ -211,73 +338,54 @@ export const AdminCompanyDetailSections = ({
         </p>
       </Section>
 
-      <Section id="certificates" title="Сертификаты">
-        {company.certificates.length ? (
-          <ExpandableCollection total={company.certificates.length}>
-            {(limit) => (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {company.certificates.slice(0, limit).map((certificate) => (
-                  <a
-                    key={certificate.id}
-                    href={resolveFileUrl(certificate.file_url)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-start gap-3 rounded-xl border border-border p-4 hover:border-primary/30"
-                  >
-                    <FileText className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
-                    <span className="min-w-0">
-                      <span className="block truncate font-bold">{certificate.title}</span>
-                      <span className="mt-1 block text-xs text-muted-foreground">
-                        {certificate.issuer} · {certificate.issue_date}
-                      </span>
-                    </span>
-                  </a>
-                ))}
-              </div>
-            )}
-          </ExpandableCollection>
+      <Section id="certificates" title="Документы и сертификаты">
+        <CompanyDocumentsManager company={company} canManage={canManage} />
+      </Section>
+
+      <Section id="categories" title={`Категории (${company.categories?.length ?? 0})`}>
+        {company.categories?.length ? (
+          <div className="flex flex-wrap gap-2">
+            {company.categories.map((category) => (
+              <Badge key={category.id} variant="secondary">
+                {category.name}
+              </Badge>
+            ))}
+          </div>
         ) : (
-          <EmptyState>Сертификаты не добавлены.</EmptyState>
+          <EmptyState>Категории не выбраны.</EmptyState>
+        )}
+        {canManage && onEditCategories && (
+          <Button type="button" variant="outline" size="sm" className="mt-4" onClick={onEditCategories}>
+            <Tags aria-hidden="true" />
+            Изменить категории
+          </Button>
         )}
       </Section>
 
       <Section id="members" title={`Участники (${company.members.length})`}>
-        {company.members.length ? (
-          <ExpandableCollection total={company.members.length}>
-            {(limit) => (
-              <div className="divide-y divide-border">
-                {company.members.slice(0, limit).map((member) => (
-                  <div key={member.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary">
-                      <UserRound size={17} aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-bold">{member.name || member.email}</p>
-                      <p className="truncate text-xs text-muted-foreground">{member.email}</p>
-                    </div>
-                    <Badge variant="outline">{member.role}</Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ExpandableCollection>
-        ) : (
-          <EmptyState>Участники не найдены.</EmptyState>
-        )}
+        <CompanyMembersManager company={company} canManage={canManage} />
       </Section>
 
       <Section id="products" title={`Товары (${company.products.length})`}>
         <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Package size={16} aria-hidden="true" /> Товарные позиции компании
         </div>
-        <CatalogList items={company.products} />
+        <CatalogList
+          companyId={company.id}
+          items={company.products}
+          canModerate={canModerateCatalog}
+        />
       </Section>
 
       <Section id="services" title={`Услуги (${company.services.length})`}>
         <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Wrench size={16} aria-hidden="true" /> Сервисные позиции компании
         </div>
-        <CatalogList items={company.services} />
+        <CatalogList
+          companyId={company.id}
+          items={company.services}
+          canModerate={canModerateCatalog}
+        />
       </Section>
 
       <Section id="contracts" title={`Контракты (${company.contracts.length})`}>

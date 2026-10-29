@@ -11,6 +11,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
 import { ChangePasswordCard } from "@/components/auth/change-password-card"
 import { TwoFactorSettings } from "@/components/auth/two-factor-settings"
+import { IdentityVerificationCard } from "@/components/verification/identity-verification-card"
 import { authApi } from "@/lib/api/auth"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { toast } from "sonner"
@@ -22,6 +23,8 @@ export default function SupplierProfilePage() {
   const updateProfile = useAuthStore((s) => s.updateProfile)
   const logout = useAuthStore((s) => s.logout)
   const useApi = isApiEnabled()
+  const actsAsIndividual =
+    user?.actors?.find((actor) => actor.id === user.activeActorId)?.kind === "individual"
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -155,6 +158,7 @@ export default function SupplierProfilePage() {
           </Button>
         </div>
       </form>
+      <IdentityVerificationCard enabled={useApi && actsAsIndividual} />
       <ChangePasswordCard />
       <TwoFactorSettings />
       </div>

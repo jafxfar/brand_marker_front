@@ -26,7 +26,12 @@ import {
   useAdminCompanyQuery,
 } from "@/hooks/api/use-admin-companies-query"
 import { useAdminPermission } from "@/hooks/use-admin-permission"
-import type { AdminCompany, AdminCompanyAction, AdminCompanyDetail } from "@/lib/api/admin"
+import type {
+  AdminCompany,
+  AdminCompanyAction,
+  AdminCompanyDetail,
+  AdminCompanySide,
+} from "@/lib/api/admin"
 import { resolveFileUrl } from "@/lib/file-url"
 import { cn } from "@/lib/utils"
 import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
@@ -240,7 +245,16 @@ const CompanyReviewPanel = ({ companyId }: { companyId: number }) => {
   )
 }
 
-export function AdminVerificationContent({ embedded = true }: { embedded?: boolean } = {}) {
+type AdminVerificationContentProps = {
+  embedded?: boolean
+  /** Restrict the queue to one side; omitted shows every pending company. */
+  actorType?: AdminCompanySide | null
+}
+
+export function AdminVerificationContent({
+  embedded = true,
+  actorType = null,
+}: AdminVerificationContentProps = {}) {
   const Frame = embedded ? Fragment : PageFrame
   const router = useRouter()
   const pathname = usePathname()
@@ -249,7 +263,13 @@ export function AdminVerificationContent({ embedded = true }: { embedded?: boole
   const query = searchParams.get("query") ?? ""
   const selectedParam = Number(searchParams.get("company")) || null
   const [searchInput, setSearchInput] = useState(query)
-  const queueQuery = useAdminCompaniesQuery({ page, pageSize: DEFAULT_PAGE_SIZE, status: "pending", query })
+  const queueQuery = useAdminCompaniesQuery({
+    page,
+    pageSize: DEFAULT_PAGE_SIZE,
+    status: "pending",
+    query,
+    actorType,
+  })
 
   const replaceSearchParams = useCallback(
     (updates: Record<string, string | null>) => {

@@ -1,3 +1,4 @@
+import type { VerificationStatus } from "./company"
 import type { ProposalStatus } from "./proposal"
 
 export const RFQ_TYPES = ["product", "service"] as const
@@ -41,7 +42,7 @@ export type RfqBuyerSummary = {
   kind: "individual" | "company"
   display_name: string
   rating: number
-  verification_status: "pending" | "verified" | "rejected" | null
+  verification_status: VerificationStatus | null
   city: string | null
   country: string | null
   legal_name?: string | null

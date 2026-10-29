@@ -44,6 +44,7 @@ export const ADMIN_HUB_ANY_PERMISSIONS: Readonly<Record<string, readonly string[
   "/admin/staff": ["admin_staff.view", "roles.manage"],
   "/admin/finance": ["admin_finance.view"],
   "/admin/companies": ["admin_companies.view"],
+  "/admin/verification": ["admin_companies.view"],
 }
 
 /** Sidebar order for landing + visibility (hubs use any-of permissions). */
@@ -52,7 +53,7 @@ export const ADMIN_NAV_LANDING_ORDER: ReadonlyArray<{
   permissions: readonly string[]
 }> = [
   { href: "/admin", permissions: ["admin_dashboard.view"] },
-  { href: "/admin/companies", permissions: ["admin_companies.view"] },
+  { href: "/admin/verification", permissions: ["admin_companies.view"] },
   {
     href: "/admin/moderation",
     permissions: [
@@ -67,6 +68,8 @@ export const ADMIN_NAV_LANDING_ORDER: ReadonlyArray<{
   { href: "/admin/disputes", permissions: ["admin_disputes.view", "admin_contracts.view"] },
   { href: "/admin/finance", permissions: ["admin_finance.view"] },
   { href: "/admin/users", permissions: ["admin_users.view"] },
+  { href: "/admin/companies", permissions: ["admin_companies.view"] },
+  { href: "/admin/catalog", permissions: ["admin_catalog.view"] },
   { href: "/admin/logs", permissions: ["audit_logs.view"] },
   { href: "/admin/categories", permissions: ["admin_catalog.view"] },
   { href: "/admin/staff", permissions: ["admin_staff.view", "roles.manage"] },

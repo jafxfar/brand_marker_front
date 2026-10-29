@@ -9,11 +9,13 @@ type SupplierProposalInfoProps = {
   supplierName: string
 }
 
-const verificationLabel = {
+const verificationLabel: Record<string, string> = {
   verified: "Верифицирован",
   pending: "На проверке",
+  needs_documents: "На проверке",
   rejected: "Отклонён",
-} as const
+  unverified: "Не проверен",
+}
 
 export const SupplierProposalInfo = ({
   supplier,

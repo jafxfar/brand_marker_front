@@ -42,7 +42,7 @@ const buildQueues = (m: AdminDashboardMetrics): QueueTile[] => [
     label: "Компании",
     hint: "документы на проверке",
     count: m.pending_verifications ?? 0,
-    href: "/admin/companies?tab=verification",
+    href: "/admin/verification",
     Icon: QUEUE_ICONS.companies,
   },
   {
@@ -66,7 +66,7 @@ const buildQueues = (m: AdminDashboardMetrics): QueueTile[] => [
     label: "Изменения данных",
     hint: "название, директор, адрес",
     count: m.pending_company_changes ?? 0,
-    href: "/admin/companies?tab=changes",
+    href: "/admin/verification?tab=changes",
     Icon: QUEUE_ICONS.changes,
   },
   {

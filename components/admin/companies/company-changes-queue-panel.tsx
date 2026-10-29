@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Building2, Check, Loader2, X } from "lucide-react"
 import { toast } from "sonner"
-import { PageEmptyState, PageSurface } from "@/components/layout"
+import { PageEmptyState, PageSurface, SegmentedControl } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -52,9 +52,24 @@ type CompanyChangesQueuePanelProps = {
   embedded?: boolean
 }
 
+type ChangeRequestStatus = "pending" | "approved" | "rejected"
+
+const STATUS_OPTIONS: Array<{ value: ChangeRequestStatus; label: string }> = [
+  { value: "pending", label: "Ожидают" },
+  { value: "approved", label: "Одобренные" },
+  { value: "rejected", label: "Отклонённые" },
+]
+
+const EMPTY_DESCRIPTIONS: Record<ChangeRequestStatus, string> = {
+  pending: "Смена названия, ИНН или адреса появится здесь после подачи заявки.",
+  approved: "Одобренных заявок пока нет.",
+  rejected: "Отклонённых заявок пока нет.",
+}
+
 export const CompanyChangesQueuePanel = ({
   embedded = false,
 }: CompanyChangesQueuePanelProps) => {
+  const [status, setStatus] = useState<ChangeRequestStatus>("pending")
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [rejectReason, setRejectReason] = useState("")
@@ -63,7 +78,7 @@ export const CompanyChangesQueuePanel = ({
   const listQuery = useAdminCompanyChangeRequestsQuery({
     page,
     pageSize: DEFAULT_PAGE_SIZE,
-    status: "pending",
+    status,
   })
   const actionMutation = useAdminCompanyChangeRequestActionMutation()
 
@@ -107,7 +122,15 @@ export const CompanyChangesQueuePanel = ({
     }
   }
 
-  const body = (
+  const handleStatusChange = (next: ChangeRequestStatus) => {
+    setStatus(next)
+    setPage(1)
+    setSelectedId(null)
+    setRejectOpen(false)
+    setRejectReason("")
+  }
+
+  const queue = (
     <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
       <PageSurface className="p-0 overflow-hidden">
         {listQuery.isLoading ? (
@@ -118,7 +141,7 @@ export const CompanyChangesQueuePanel = ({
           <PageEmptyState
             icon={<Building2 />}
             title="Изменений нет"
-            description="Смена названия, ИНН или адреса появится здесь после подачи заявки."
+            description={EMPTY_DESCRIPTIONS[status]}
           />
         ) : (
           <ul className="divide-y divide-border max-h-[70vh] overflow-y-auto">
@@ -175,7 +198,7 @@ export const CompanyChangesQueuePanel = ({
           <PageEmptyState
             icon={<Building2 />}
             title="Выберите заявку"
-            description="Слева список ожидающих изменений реквизитов."
+            description="Слева список заявок на изменение реквизитов."
           />
         ) : (
           <div className="space-y-5">
@@ -212,7 +235,17 @@ export const CompanyChangesQueuePanel = ({
               ))}
             </div>
 
-            {rejectOpen ? (
+            {selected.status !== "pending" ? (
+              <div className="space-y-1 rounded-xl border border-border p-4 text-sm">
+                <p className="font-semibold">
+                  {selected.status === "approved" ? "Заявка одобрена" : "Заявка отклонена"}
+                  {selected.reviewed_at ? ` · ${formatDate(selected.reviewed_at)}` : ""}
+                </p>
+                {selected.admin_reason ? (
+                  <p className="text-muted-foreground">Причина: {selected.admin_reason}</p>
+                ) : null}
+              </div>
+            ) : rejectOpen ? (
               <div className="space-y-3 rounded-xl border border-border p-4">
                 <p className="text-sm font-semibold">Причина отклонения</p>
                 <Textarea
@@ -266,6 +299,18 @@ export const CompanyChangesQueuePanel = ({
           </div>
         )}
       </PageSurface>
+    </div>
+  )
+
+  const body = (
+    <div className="space-y-4">
+      <SegmentedControl
+        value={status}
+        options={STATUS_OPTIONS}
+        onChange={handleStatusChange}
+        ariaLabel="Статус заявок"
+      />
+      {queue}
     </div>
   )
 

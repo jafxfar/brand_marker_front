@@ -28,10 +28,22 @@ const EmptyState = ({ children }: { children: string }) => (
   </div>
 )
 
+const changedFieldLabels: Record<string, string> = {
+  type: "тип",
+  category_id: "категория",
+  title: "название",
+  description: "описание",
+  invoice: "работа по счёту",
+  pricing: "цена",
+  attributes: "характеристики",
+}
+
 export const AdminCatalogDetailSections = ({
   item,
+  mediaEditor,
 }: {
   item: AdminCatalogDetail
+  mediaEditor?: React.ReactNode
 }) => {
   const images = item.media.filter((media) => media.media_type === "image")
   const otherMedia = item.media.filter((media) => media.media_type !== "image")
@@ -41,7 +53,7 @@ export const AdminCatalogDetailSections = ({
     <div className="space-y-5">
       <section id="images" className={sectionClassName}>
         <h2 className="mb-5 text-lg font-bold">Изображения</h2>
-        {images.length ? (
+        {mediaEditor ? mediaEditor : images.length ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {images.map((media) => (
               <div
@@ -68,7 +80,7 @@ export const AdminCatalogDetailSections = ({
         ) : (
           <EmptyState>Изображения не загружены.</EmptyState>
         )}
-        {otherMedia.length > 0 && (
+        {!mediaEditor && otherMedia.length > 0 && (
           <div className="mt-4 space-y-2">
             {otherMedia.map((media) => (
               <a
@@ -204,6 +216,9 @@ export const AdminCatalogDetailSections = ({
             {item.history.map((entry) => {
               const previousStatus = String(entry.details.previous_status || "")
               const nextStatus = String(entry.details.status || "")
+              const changedFields = Array.isArray(entry.details.fields)
+                ? entry.details.fields.map((field) => changedFieldLabels[String(field)] || String(field))
+                : []
               return (
                 <article key={entry.id} className="rounded-xl border border-border p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -220,6 +235,12 @@ export const AdminCatalogDetailSections = ({
                       ? ` · ${itemStatusMeta[previousStatus as ItemStatus]?.label || previousStatus} → ${itemStatusMeta[nextStatus as ItemStatus]?.label || nextStatus}`
                       : ""}
                   </p>
+                  {changedFields.length > 0 && (
+                    <p className="mt-2 text-sm">Изменено: {changedFields.join(", ")}</p>
+                  )}
+                  {Boolean(entry.details.file_name) && (
+                    <p className="mt-2 text-sm">Файл: {String(entry.details.file_name)}</p>
+                  )}
                   {Boolean(entry.details.reason) && (
                     <p className="mt-2 text-sm">Причина: {String(entry.details.reason)}</p>
                   )}

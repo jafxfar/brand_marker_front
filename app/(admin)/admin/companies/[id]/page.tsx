@@ -7,27 +7,44 @@ import {
   Ban,
   Building2,
   CheckCircle2,
+  ChevronDown,
   Crown,
   FileQuestion,
   PauseCircle,
+  Pencil,
   RefreshCcw,
   RotateCcw,
+  ShieldCheck,
   Star,
   XCircle,
 } from "lucide-react"
 import { toast } from "sonner"
 import { CompanyActionDialog } from "@/components/admin/companies/company-action-dialog"
+import { CompanyCategoriesDialog } from "@/components/admin/companies/company-categories-dialog"
 import { AdminCompanyDetailSections } from "@/components/admin/companies/company-detail-sections"
+import { CompanyEditDialog } from "@/components/admin/companies/company-edit-dialog"
 import {
   CompanyOperationalBadge,
   CompanyVerificationBadge,
 } from "@/components/admin/companies/company-status-badges"
+import {
+  CompanyVerificationDialog,
+  VERIFICATION_STATUS_LABELS,
+} from "@/components/admin/companies/company-verification-dialog"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   useAdminCompanyQuery,
   useAdminCompanyVipMutation,
 } from "@/hooks/api/use-admin-companies-query"
-import type { AdminCompanyAction } from "@/lib/api/admin"
+import type { AdminCompanyAction, AdminCompanyVerificationStatus } from "@/lib/api/admin"
 import { useAdminPermission } from "@/hooks/use-admin-permission"
 import { resolveFileUrl } from "@/lib/file-url"
 import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
@@ -35,14 +52,22 @@ import { PageFrame, PageHeader, PageSurface } from "@/components/layout"
 const sections = [
   ["overview", "Обзор"],
   ["legal", "Юр. информация"],
-  ["documents", "Документы"],
-  ["certificates", "Сертификаты"],
+  ["documents", "Чеклист"],
+  ["certificates", "Документы"],
+  ["categories", "Категории"],
   ["members", "Участники"],
   ["products", "Товары"],
   ["services", "Услуги"],
   ["contracts", "Контракты"],
   ["reviews", "Отзывы"],
 ] as const
+
+const VERIFICATION_STATUSES: AdminCompanyVerificationStatus[] = [
+  "verified",
+  "pending",
+  "needs_documents",
+  "rejected",
+]
 
 const DetailSkeleton = () => (
   <PageFrame className="animate-pulse space-y-5">
@@ -63,8 +88,13 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
   const companyQuery = useAdminCompanyQuery(companyId)
   const vipMutation = useAdminCompanyVipMutation()
   const [selectedAction, setSelectedAction] = useState<AdminCompanyAction | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [categoriesOpen, setCategoriesOpen] = useState(false)
+  const [verificationTarget, setVerificationTarget] =
+    useState<AdminCompanyVerificationStatus | null>(null)
   const canVerify = useAdminPermission("admin_companies.update")
   const canBlock = useAdminPermission("admin_companies.block")
+  const canModerateCatalog = useAdminPermission("admin_catalog.update")
 
   if (!Number.isInteger(companyId) || companyId <= 0) {
     return (
@@ -142,7 +172,7 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
           </>
         }
         backHref="/admin/companies"
-        backLabel="Все компании"
+        backLabel="Компании"
       />
       <PageSurface className="p-5 sm:p-6">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
@@ -207,6 +237,37 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
                 <Crown aria-hidden="true" />
                 {company.vip ? "Снять VIP" : "Дать VIP"}
               </Button>
+            )}
+            {canVerify && (
+              <Button type="button" size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil aria-hidden="true" />
+                Редактировать
+              </Button>
+            )}
+            {canVerify && (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" size="sm" variant="outline">
+                    <ShieldCheck aria-hidden="true" />
+                    Статус проверки
+                    <ChevronDown aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Установить вручную</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {VERIFICATION_STATUSES.map((status) => (
+                    <DropdownMenuItem
+                      key={status}
+                      disabled={status === company.verification_status}
+                      onSelect={() => setVerificationTarget(status)}
+                    >
+                      {VERIFICATION_STATUS_LABELS[status]}
+                      {status === company.verification_status ? " · текущий" : ""}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             {canVerify && company.verification_status !== "verified" && (
               <Button type="button" size="sm" onClick={() => setSelectedAction("approve")}>
@@ -301,7 +362,26 @@ export default function AdminCompanyDetailPage({ params }: PageProps) {
         ))}
       </nav>
 
-      <AdminCompanyDetailSections company={company} />
+      <AdminCompanyDetailSections
+        company={company}
+        canManage={canVerify}
+        canModerateCatalog={canModerateCatalog}
+        onEditCategories={() => setCategoriesOpen(true)}
+      />
+
+      <CompanyEditDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
+      <CompanyCategoriesDialog
+        company={company}
+        open={categoriesOpen}
+        onOpenChange={setCategoriesOpen}
+      />
+      <CompanyVerificationDialog
+        company={company}
+        status={verificationTarget}
+        onOpenChange={(open) => {
+          if (!open) setVerificationTarget(null)
+        }}
+      />
 
       <CompanyActionDialog
         companyId={company.id}

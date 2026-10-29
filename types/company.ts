@@ -9,6 +9,8 @@ export const VERIFICATION_STATUSES = [
   "verified",
   "rejected",
   "needs_documents",
+  /** Individual actor that never applied for identity verification. */
+  "unverified",
 ] as const
 
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number]

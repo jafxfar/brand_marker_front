@@ -207,13 +207,25 @@ export type AdminCompany = {
   vip?: boolean
   vip_until?: string | null
   created_at: string
+  members_count?: number
+  products_count?: number
+  contracts_count?: number
 }
+
+export type AdminCompanySide = "buyer" | "supplier"
+export type AdminCompanySort = "created_at" | "title" | "rating"
 
 export type AdminCompaniesParams = {
   page: number
   pageSize: number
   status: AdminCompanyStatusFilter
   query: string
+  actorType?: AdminCompanySide | null
+  verificationStatus?: AdminCompanyVerificationStatus | null
+  operationalStatus?: AdminCompanyOperationalStatus | null
+  vip?: boolean | null
+  sort?: AdminCompanySort
+  order?: "asc" | "desc"
 }
 
 export type AdminCompaniesResponse = {
@@ -262,7 +274,9 @@ export type AdminCompanyDetail = AdminCompany & {
     email: string
     name: string
     status: string
+    is_owner?: boolean
   }>
+  categories?: Array<{ id: number; name: string }>
   certificates: Array<{
     id: number
     title: string
@@ -362,6 +376,102 @@ export type AdminCatalogAction =
   | "hide"
   | "reject"
   | "delete"
+  | "restore"
+
+export type AdminCatalogItemStatus =
+  | "draft"
+  | "pending_review"
+  | "changes_requested"
+  | "active"
+  | "hidden"
+  | "archived"
+  | "deleted"
+
+export type AdminCatalogSort =
+  | "created_at"
+  | "updated_at"
+  | "price"
+  | "title"
+  | "views"
+  | "reports"
+
+export type AdminCatalogItemsParams = {
+  page: number
+  pageSize: number
+  type?: "product" | "service"
+  status?: AdminCatalogItemStatus[]
+  companyId?: number
+  actorId?: number
+  supplier?: string
+  categoryId?: number
+  priceMin?: number
+  priceMax?: number
+  hasReports?: boolean
+  query?: string
+  sort?: AdminCatalogSort
+  order?: "asc" | "desc"
+  includeDeleted?: boolean
+}
+
+export type AdminCatalogManageItem = {
+  id: number
+  title: string
+  type: "product" | "service"
+  status: AdminCatalogItemStatus
+  category_id: number | null
+  category_name: string | null
+  preview_url: string | null
+  open_reports_count: number
+  reports_count: number
+  owner: AdminCatalogOwner | null
+  pricing_type: string | null
+  currency: string | null
+  price: number | null
+  created_at: string
+  updated_at: string | null
+  views: number
+  leads: number
+}
+
+export type AdminCatalogStatusCounts = Record<AdminCatalogItemStatus | "all", number>
+
+export type AdminCatalogItemsResponse = {
+  items: AdminCatalogManageItem[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+  status_counts: AdminCatalogStatusCounts
+}
+
+export type AdminCatalogPricingInput = {
+  pricing_type: "fixed" | "tiered" | "hourly" | "monthly"
+  currency: string
+  fixed_price?: number | null
+  hourly_rate?: number | null
+  monthly_rate?: number | null
+  tiers?: Array<{ min_qty: number; price: number }>
+}
+
+export type AdminCatalogItemUpdate = {
+  type?: "product" | "service"
+  category_id?: number
+  title?: string
+  description?: string
+  invoice?: boolean
+  pricing?: AdminCatalogPricingInput
+  attributes?: Array<{ name: string; value: string; value_type?: string }>
+  reason?: string
+  notify_owner?: boolean
+}
+
+export type AdminCatalogBulkAction = "approve" | "hide" | "reject" | "delete" | "restore"
+
+export type AdminCatalogBulkActionResponse = {
+  action: AdminCatalogBulkAction
+  succeeded: number[]
+  failed: Array<{ id: number; error: string }>
+}
 
 export type AdminCatalogOwner = {
   actor_id: number
@@ -407,6 +517,7 @@ export type AdminCatalogListResponse = {
 export type AdminCatalogDetail = AdminCatalogItem & {
   description: string | null
   updated_at: string
+  invoice: boolean
   category: { id: number; name: string; slug: string } | null
   attributes: Array<{
     id: number
@@ -944,7 +1055,18 @@ export const adminApi = {
         }),
       },
     ),
-  getCompanies: ({ page, pageSize, status, query }: AdminCompaniesParams) => {
+  getCompanies: ({
+    page,
+    pageSize,
+    status,
+    query,
+    actorType,
+    verificationStatus,
+    operationalStatus,
+    vip,
+    sort,
+    order,
+  }: AdminCompaniesParams) => {
     const searchParams = new URLSearchParams({
       page: String(page),
       page_size: String(pageSize),
@@ -953,6 +1075,12 @@ export const adminApi = {
     if (query.trim()) {
       searchParams.set("query", query.trim())
     }
+    if (actorType) searchParams.set("actor_type", actorType)
+    if (verificationStatus) searchParams.set("verification_status", verificationStatus)
+    if (operationalStatus) searchParams.set("operational_status", operationalStatus)
+    if (vip != null) searchParams.set("vip", String(vip))
+    if (sort) searchParams.set("sort", sort)
+    if (order) searchParams.set("order", order)
     return apiFetch<AdminCompaniesResponse>(
       `/admin/companies?${searchParams.toString()}`,
     )
@@ -1041,6 +1169,55 @@ export const adminApi = {
     apiFetch<AdminCatalogActionResponse>(`/admin/catalog/${itemId}/action`, {
       method: "POST",
       body: JSON.stringify({ action, reason: reason?.trim() || null }),
+    }),
+  getCatalogItems: (params: AdminCatalogItemsParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(params.page),
+      page_size: String(params.pageSize),
+    })
+    if (params.type) searchParams.set("type", params.type)
+    params.status?.forEach((status) => searchParams.append("status", status))
+    if (params.companyId) searchParams.set("company_id", String(params.companyId))
+    if (params.actorId) searchParams.set("actor_id", String(params.actorId))
+    if (params.supplier?.trim()) searchParams.set("supplier", params.supplier.trim())
+    if (params.categoryId) searchParams.set("category_id", String(params.categoryId))
+    if (params.priceMin != null) searchParams.set("price_min", String(params.priceMin))
+    if (params.priceMax != null) searchParams.set("price_max", String(params.priceMax))
+    if (params.hasReports != null) searchParams.set("has_reports", String(params.hasReports))
+    if (params.query?.trim()) searchParams.set("query", params.query.trim())
+    if (params.sort) searchParams.set("sort", params.sort)
+    if (params.order) searchParams.set("order", params.order)
+    if (params.includeDeleted) searchParams.set("include_deleted", "true")
+    return apiFetch<AdminCatalogItemsResponse>(
+      `/admin/catalog/items?${searchParams.toString()}`,
+    )
+  },
+  updateCatalogItem: (itemId: number, data: AdminCatalogItemUpdate) =>
+    apiFetch<AdminCatalogDetail>(`/admin/catalog/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  uploadCatalogMedia: (itemId: number, file: File) => {
+    const form = new FormData()
+    form.append("file", file)
+    return apiFetch<AdminCatalogDetail>(`/admin/catalog/${itemId}/media`, {
+      method: "POST",
+      body: form,
+    })
+  },
+  deleteCatalogMedia: (itemId: number, mediaId: number) =>
+    apiFetch<AdminCatalogDetail>(`/admin/catalog/${itemId}/media/${mediaId}`, {
+      method: "DELETE",
+    }),
+  reorderCatalogMedia: (itemId: number, mediaIds: number[]) =>
+    apiFetch<AdminCatalogDetail>(`/admin/catalog/${itemId}/media/order`, {
+      method: "PUT",
+      body: JSON.stringify({ media_ids: mediaIds }),
+    }),
+  bulkCatalogAction: (ids: number[], action: AdminCatalogBulkAction, reason?: string) =>
+    apiFetch<AdminCatalogBulkActionResponse>("/admin/catalog/bulk-action", {
+      method: "POST",
+      body: JSON.stringify({ ids, action, reason: reason?.trim() || null }),
     }),
   getRfqs: ({ page, pageSize, view, query }: AdminRfqParams) => {
     const searchParams = new URLSearchParams({
@@ -1312,20 +1489,53 @@ export const adminApi = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
-  getLogs: ({ page, pageSize, audience, kind, section, status, period, query }: AdminLogParams) => {
+  getLogs: ({
+    page,
+    pageSize,
+    audience,
+    source = "http",
+    kind,
+    section,
+    status,
+    category,
+    action,
+    resourceType,
+    resourceId,
+    userId,
+    period,
+    query,
+  }: AdminLogParams) => {
     const searchParams = new URLSearchParams({
       page: String(page),
       page_size: String(pageSize),
       audience,
+      source,
       period,
     })
-    if (kind) searchParams.set("kind", kind)
-    if (section) searchParams.set("section", section)
-    if (status) searchParams.set("status", status)
+    if (source === "http") {
+      if (kind) searchParams.set("kind", kind)
+      if (section) searchParams.set("section", section)
+      if (status) searchParams.set("status", status)
+    } else {
+      if (category) searchParams.set("category", category)
+      if (action?.trim()) searchParams.set("action", action.trim())
+    }
+    if (resourceType?.trim()) searchParams.set("resource_type", resourceType.trim())
+    if (resourceId?.trim()) searchParams.set("resource_id", resourceId.trim())
+    if (userId) searchParams.set("user_id", String(userId))
     if (query.trim()) searchParams.set("query", query.trim())
     return apiFetch<AdminLogListResponse>(`/admin/logs?${searchParams.toString()}`)
   },
-  getLog: (logId: number) => apiFetch<AdminLogDetail>(`/admin/logs/${logId}`),
+  getLog: (logId: number) => apiFetch<AnyAdminLogDetail>(`/admin/logs/${logId}`),
+  getEntityLogs: ({ resourceType, resourceId, page, pageSize }: AdminEntityLogParams) => {
+    const searchParams = new URLSearchParams({
+      resource_type: resourceType,
+      resource_id: String(resourceId),
+      page: String(page),
+      page_size: String(pageSize),
+    })
+    return apiFetch<AdminLogEntityResponse>(`/admin/logs/entity?${searchParams.toString()}`)
+  },
   getGatewayLogs: ({
     page,
     pageSize,
@@ -1388,22 +1598,63 @@ export type AdminLogSection =
 
 export type AdminLogPeriod = "24h" | "7d" | "30d" | "all"
 
+export type AdminLogSource = "events" | "http"
+
+export type AdminLogEventCategory =
+  | "auth"
+  | "admin.company"
+  | "admin.user"
+  | "admin.catalog"
+  | "admin.contract"
+  | "admin.dispute"
+  | "admin.finance"
+  | "admin.rfq"
+  | "admin.proposal"
+  | "admin.report"
+  | "admin.staff"
+  | "rfq"
+  | "proposal"
+  | "contract"
+  | "payment"
+  | "catalog"
+  | "company"
+  | "review"
+  | "dispute"
+  | "finance"
+  | "other"
+
 export type AdminLogParams = {
   page: number
   pageSize: number
   audience: AdminLogAudience
+  source?: AdminLogSource
   kind: AdminLogKind | null
   section: AdminLogSection | null
   status: AdminLogStatus | null
+  category?: AdminLogEventCategory | null
+  action?: string | null
+  resourceType?: string | null
+  resourceId?: string | null
+  userId?: number | null
   period: AdminLogPeriod
   query: string
 }
 
+export type AdminEntityLogParams = {
+  resourceType: string
+  resourceId: string | number
+  page: number
+  pageSize: number
+}
+
+export type AdminLogUser = { id: number; email: string; name: string; role: string }
+
 export type AdminLogItem = {
+  source: "http"
   id: number
   created_at: string
   audience: AdminLogAudience
-  user: { id: number; email: string; name: string; role: string } | null
+  user: AdminLogUser | null
   guest_email: string | null
   kind: AdminLogKind
   section: AdminLogSection
@@ -1416,8 +1667,40 @@ export type AdminLogDetail = AdminLogItem & {
   fields: Array<{ key: string; value: string; hidden: boolean }>
 }
 
+export type AdminLogEventItem = {
+  source: "event"
+  id: number
+  created_at: string
+  audience: AdminLogAudience
+  user: AdminLogUser | null
+  action: string
+  category: AdminLogEventCategory
+  resource_type: string
+  resource_id: string
+  actor_id: number | null
+  company_id: number | null
+  details: Record<string, unknown>
+  ip_address: string | null
+}
+
+export type AdminLogEventDetail = AdminLogEventItem & {
+  user_agent: string | null
+}
+
+export type AnyAdminLogItem = AdminLogItem | AdminLogEventItem
+
+export type AnyAdminLogDetail = AdminLogDetail | AdminLogEventDetail
+
+export type AdminLogEntityResponse = {
+  items: AdminLogEventItem[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
 export type AdminLogListResponse = {
-  items: AdminLogItem[]
+  items: AnyAdminLogItem[]
   total: number
   page: number
   page_size: number

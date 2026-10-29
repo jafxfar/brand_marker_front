@@ -10,7 +10,9 @@ type ContractSupplierCardProps = {
 const verificationLabel = {
   verified: "Верифицирован",
   pending: "На проверке",
+  needs_documents: "На проверке",
   rejected: "Отклонён",
+  unverified: "Не проверен",
 } as const
 
 export const ContractSupplierCard = ({ supplier, supplierTitle }: ContractSupplierCardProps) => {

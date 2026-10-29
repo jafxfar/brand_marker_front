@@ -58,6 +58,12 @@ const actionMetadata: Record<
     destructive: true,
     reasonPlaceholder: "Почему позиция удалена",
   },
+  restore: {
+    title: "Восстановить позицию?",
+    description: "Позиция снова станет активной и появится в публичном каталоге.",
+    success: "Позиция восстановлена",
+    confirm: "Восстановить",
+  },
 }
 
 const actionsRequiringReason = new Set<AdminCatalogAction>([

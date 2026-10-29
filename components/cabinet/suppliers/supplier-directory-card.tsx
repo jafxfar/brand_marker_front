@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
-import { Clock, ShieldCheck, Star } from "lucide-react"
+import { Clock, ShieldCheck, ShieldOff, Star } from "lucide-react"
 import type { PublicSupplier } from "@/types"
 import { formatCount } from "@/lib/format"
 import { cn } from "@/lib/utils"
@@ -80,6 +80,9 @@ export const SupplierDirectoryCard = ({
       ? `${Math.round(supplier.success_rate)}%`
       : "—"
   const verified = supplier.verification_status === "verified"
+  const underReview =
+    supplier.verification_status === "pending" ||
+    supplier.verification_status === "needs_documents"
 
   return (
     <article className="grid content-start gap-4 rounded-2xl border border-line bg-white p-5">
@@ -113,10 +116,15 @@ export const SupplierDirectoryCard = ({
                 <ShieldCheck className="size-4" aria-hidden />
                 Проверен
               </span>
-            ) : (
+            ) : underReview ? (
               <span className="inline-flex items-center gap-1 font-semibold text-amber-700">
                 <Clock className="size-4" aria-hidden />
                 На проверке
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 font-medium text-mute">
+                <ShieldOff className="size-4" aria-hidden />
+                Не проверен
               </span>
             )}
           </div>

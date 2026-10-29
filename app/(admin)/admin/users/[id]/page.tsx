@@ -2,6 +2,7 @@
 
 import { use, useMemo, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import {
   AlertTriangle,
   Ban,
@@ -19,6 +20,7 @@ import {
   PageSurface,
   SegmentedControl,
 } from "@/components/layout"
+import { UserDossierTab } from "@/components/admin/clients/user-dossier-tab"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -55,7 +57,9 @@ import { resolveFileUrl } from "@/lib/file-url"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { cn } from "@/lib/utils"
 
-type DetailTab = "deals" | "hist" | "chats" | "docs"
+type DetailTab = "dossier" | "deals" | "hist" | "chats" | "docs"
+
+const DETAIL_TABS: readonly DetailTab[] = ["dossier", "deals", "hist", "chats", "docs"]
 
 const roleLabels: Record<AdminUserRole, string> = {
   buyer: "Покупатель",
@@ -165,7 +169,11 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   const revokeSessionsMutation = useRevokeAdminUserSessionsMutation()
   const canUpdateUsers = useAdminPermission("admin_users.update")
   const currentUser = useAuthStore((state) => state.user)
-  const [tab, setTab] = useState<DetailTab>("deals")
+  const searchParams = useSearchParams()
+  const requestedTab = searchParams.get("tab") as DetailTab | null
+  const [tab, setTab] = useState<DetailTab>(
+    requestedTab && DETAIL_TABS.includes(requestedTab) ? requestedTab : "deals",
+  )
   const [blockOpen, setBlockOpen] = useState(false)
   const [unblockOpen, setUnblockOpen] = useState(false)
   const [reason, setReason] = useState("")
@@ -447,6 +455,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         <SegmentedControl
           value={tab}
           options={[
+            { value: "dossier" as const, label: "Досье" },
             { value: "deals" as const, label: "Сделки", count: user.contracts.length },
             { value: "hist" as const, label: "История", count: user.history.length },
             { value: "chats" as const, label: "Переписки", count: user.chats.length },
@@ -457,6 +466,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           className="w-full max-w-full"
         />
 
+        {tab === "dossier" && <UserDossierTab userId={user.id} />}
         {tab === "deals" && <DealsTab user={user} />}
         {tab === "hist" && <HistoryTab items={user.history} />}
         {tab === "chats" && <ChatsTab user={user} />}

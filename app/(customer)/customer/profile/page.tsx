@@ -12,6 +12,7 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { isApiEnabled } from "@/lib/api/config"
 import { ChangePasswordCard } from "@/components/auth/change-password-card"
 import { TwoFactorSettings } from "@/components/auth/two-factor-settings"
+import { IdentityVerificationCard } from "@/components/verification/identity-verification-card"
 import { authApi } from "@/lib/api/auth"
 
 export default function ProfilePage() {
@@ -29,6 +30,8 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const useApi = isApiEnabled()
+  const actsAsIndividual =
+    user?.actors?.find((actor) => actor.id === user.activeActorId)?.kind === "individual"
 
   useEffect(() => {
     if (user) {
@@ -150,6 +153,7 @@ export default function ProfilePage() {
           </Button>
         </div>
       </form>
+      <IdentityVerificationCard enabled={useApi && actsAsIndividual} />
       <ChangePasswordCard />
       <TwoFactorSettings />
       </div>

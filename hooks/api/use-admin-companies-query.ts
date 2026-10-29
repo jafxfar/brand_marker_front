@@ -5,8 +5,16 @@ import {
   type AdminCompaniesParams,
   type AdminCompanyAction,
   type AdminCompanyChangeRequestsParams,
+  type AdminCompanyDetail,
+  type AdminCompanyVerificationStatus,
   type AdminPendingVerificationParams,
 } from "@/lib/api/admin"
+import {
+  adminCompaniesApi,
+  type AdminCompanyDocumentInput,
+  type AdminCompanyMemberRole,
+  type AdminCompanyUpdateInput,
+} from "@/lib/api/admin-companies"
 
 export const adminCompaniesKeys = {
   all: ["admin-companies"] as const,
@@ -151,6 +159,152 @@ export const useAdminCompanyVipMutation = () => {
     meta: {
       errorMessage: "Не удалось изменить VIP",
     },
+  })
+}
+
+const useCompanyDetailMutation = <TVariables>(
+  mutationFn: (variables: TVariables) => Promise<AdminCompanyDetail>,
+  errorMessage: string,
+) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn,
+    onSuccess: async (detail) => {
+      queryClient.setQueryData(adminCompaniesKeys.detail(detail.id), detail)
+      await invalidateCompanyQueries(queryClient, detail.id)
+    },
+    meta: { errorMessage },
+  })
+}
+
+export const useAdminCompanyUpdateMutation = () =>
+  useCompanyDetailMutation(
+    ({ companyId, data }: { companyId: number; data: AdminCompanyUpdateInput }) =>
+      adminCompaniesApi.update(companyId, data),
+    "Не удалось сохранить данные компании",
+  )
+
+export const useAdminCompanyLogoMutation = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ companyId, file }: { companyId: number; file: File }) =>
+      adminCompaniesApi.uploadLogo(companyId, file),
+    onSuccess: async (_, variables) => {
+      await invalidateCompanyQueries(queryClient, variables.companyId)
+    },
+    meta: { errorMessage: "Не удалось загрузить логотип" },
+  })
+}
+
+export const useAdminCompanyAddMemberMutation = () =>
+  useCompanyDetailMutation(
+    ({
+      companyId,
+      email,
+      role,
+    }: {
+      companyId: number
+      email: string
+      role: AdminCompanyMemberRole
+    }) => adminCompaniesApi.addMember(companyId, email, role),
+    "Не удалось добавить участника",
+  )
+
+export const useAdminCompanyUpdateMemberMutation = () =>
+  useCompanyDetailMutation(
+    ({
+      companyId,
+      userId,
+      role,
+    }: {
+      companyId: number
+      userId: number
+      role: AdminCompanyMemberRole
+    }) => adminCompaniesApi.updateMember(companyId, userId, role),
+    "Не удалось изменить роль участника",
+  )
+
+export const useAdminCompanyRemoveMemberMutation = () =>
+  useCompanyDetailMutation(
+    ({ companyId, userId }: { companyId: number; userId: number }) =>
+      adminCompaniesApi.removeMember(companyId, userId),
+    "Не удалось удалить участника",
+  )
+
+export const useAdminCompanyChangeOwnerMutation = () =>
+  useCompanyDetailMutation(
+    ({
+      companyId,
+      userId,
+      email,
+      reason,
+    }: {
+      companyId: number
+      userId?: number
+      email?: string
+      reason?: string
+    }) => adminCompaniesApi.changeOwner(companyId, { userId, email, reason }),
+    "Не удалось сменить владельца",
+  )
+
+export const useAdminCompanyCategoriesMutation = () =>
+  useCompanyDetailMutation(
+    ({ companyId, categoryIds }: { companyId: number; categoryIds: number[] }) =>
+      adminCompaniesApi.setCategories(companyId, categoryIds),
+    "Не удалось сохранить категории",
+  )
+
+export const useAdminCompanyAddDocumentMutation = () =>
+  useCompanyDetailMutation(
+    ({ companyId, input }: { companyId: number; input: AdminCompanyDocumentInput }) =>
+      adminCompaniesApi.addDocument(companyId, input),
+    "Не удалось загрузить документ",
+  )
+
+export const useAdminCompanyDeleteDocumentMutation = () =>
+  useCompanyDetailMutation(
+    ({ companyId, documentId }: { companyId: number; documentId: number }) =>
+      adminCompaniesApi.deleteDocument(companyId, documentId),
+    "Не удалось удалить документ",
+  )
+
+export const useAdminCompanyVerificationStatusMutation = () =>
+  useCompanyDetailMutation(
+    ({
+      companyId,
+      status,
+      reason,
+    }: {
+      companyId: number
+      status: AdminCompanyVerificationStatus
+      reason?: string
+    }) => adminCompaniesApi.setVerificationStatus(companyId, status, reason),
+    "Не удалось изменить статус проверки",
+  )
+
+/** Hide / unhide a company's catalog item via the shared catalog moderation action. */
+export const useAdminCompanyCatalogItemMutation = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      itemId,
+      action,
+      reason,
+    }: {
+      companyId: number
+      itemId: number
+      action: "hide" | "approve"
+      reason?: string
+    }) => adminApi.applyCatalogAction(itemId, action, reason),
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: adminCompaniesKeys.detail(variables.companyId),
+        }),
+        queryClient.invalidateQueries({ queryKey: ["admin-catalog"] }),
+      ])
+    },
+    meta: { errorMessage: "Не удалось изменить статус позиции" },
   })
 }
 

@@ -1,10 +1,11 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { adminApi, type AdminLogParams } from "@/lib/api/admin"
+import { adminApi, type AdminEntityLogParams, type AdminLogParams } from "@/lib/api/admin"
 
 export const adminLogKeys = {
   all: ["admin-logs"] as const,
   list: (params: AdminLogParams) => [...adminLogKeys.all, "list", params] as const,
   detail: (logId: number) => [...adminLogKeys.all, "detail", logId] as const,
+  entity: (params: AdminEntityLogParams) => [...adminLogKeys.all, "entity", params] as const,
 }
 
 export const useAdminLogsQuery = (params: AdminLogParams) =>
@@ -19,4 +20,12 @@ export const useAdminLogQuery = (logId: number | null) =>
     queryKey: adminLogKeys.detail(logId ?? 0),
     queryFn: () => adminApi.getLog(logId as number),
     enabled: Boolean(logId),
+  })
+
+export const useAdminEntityLogsQuery = (params: AdminEntityLogParams, enabled = true) =>
+  useQuery({
+    queryKey: adminLogKeys.entity(params),
+    queryFn: () => adminApi.getEntityLogs(params),
+    placeholderData: keepPreviousData,
+    enabled: enabled && Boolean(params.resourceType) && String(params.resourceId) !== "",
   })

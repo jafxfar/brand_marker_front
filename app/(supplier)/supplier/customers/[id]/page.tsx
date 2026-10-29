@@ -33,6 +33,7 @@ const verificationLabel: Record<string, string> = {
   pending: "На проверке",
   rejected: "Отклонён",
   needs_documents: "Нужны документы",
+  unverified: "Не проверен",
 }
 
 export default function SupplierCustomerDetailPage({ params }: PageProps) {
