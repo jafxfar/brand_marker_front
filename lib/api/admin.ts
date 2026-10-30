@@ -1436,6 +1436,18 @@ export const adminApi = {
     }
     return apiFetch<AdminEscrowResponse>(`/admin/escrow?${searchParams.toString()}`)
   },
+  getMerchantBalances: ({ page, pageSize, query }: AdminMerchantBalancesParams) => {
+    const searchParams = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+    })
+    if (query.trim()) {
+      searchParams.set("query", query.trim())
+    }
+    return apiFetch<AdminMerchantBalancesResponse>(
+      `/admin/merchant-balances?${searchParams.toString()}`,
+    )
+  },
   getAnalytics: (period: AdminAnalyticsPeriod) =>
     apiFetch<AdminAnalyticsResponse>(`/admin/analytics?period=${period}`),
   getRoles: (params: { page?: number; pageSize?: number } = {}) => {
@@ -1895,6 +1907,67 @@ export type AdminEscrowResponse = {
   page: number
   page_size: number
   pages: number
+}
+
+export type AdminMerchantRole = "supplier_pool" | "platform"
+
+export type AdminMerchantCard = {
+  role: AdminMerchantRole
+  label: string
+  terminal_id: string | null
+  terminal_masked: string | null
+  held: number
+  released: number
+  refunded: number
+  net_released: number
+  currency: string
+  configured: boolean
+}
+
+export type AdminMerchantTotals = {
+  held: number
+  released: number
+  refunded: number
+  supplier_available: number
+  withdrawn: number
+  currency: string
+}
+
+export type AdminSupplierBalanceItem = {
+  actor_id: number
+  display_name: string | null
+  company_id: number | null
+  company_title: string | null
+  owner_email: string | null
+  available: number
+  pending: number
+  escrow_locked: number
+  released: number
+  withdrawn: number
+  currency: string
+}
+
+export type AdminMerchantBalancesResponse = {
+  source: "ledger"
+  note: string
+  gateway_configured: boolean
+  marketplace_enabled: boolean
+  currency: string
+  merchants: AdminMerchantCard[]
+  totals: AdminMerchantTotals
+  suppliers: {
+    items: AdminSupplierBalanceItem[]
+    total: number
+    page: number
+    page_size: number
+    total_pages: number
+  }
+}
+
+export type AdminMerchantBalancesParams = {
+  page: number
+  pageSize: number
+  query: string
 }
 
 export type AdminAnalyticsPeriod = "30d" | "90d" | "12m"

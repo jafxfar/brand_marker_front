@@ -4,14 +4,16 @@ import { Suspense, useCallback } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { AdminEscrowContent } from "@/components/admin/finance/escrow-list-panel"
 import { AdminFinanceContent } from "@/components/admin/finance/finance-list-panel"
+import { AdminMerchantBalancesContent } from "@/components/admin/finance/merchant-balances-panel"
 import { PageFrame, PageHeader, SegmentedControl } from "@/components/layout"
 import { pickHubTab } from "@/lib/admin-hub"
 
-type FinanceHubTab = "ledger" | "escrow"
+type FinanceHubTab = "ledger" | "escrow" | "merchants"
 
 const HUB_TABS: { value: FinanceHubTab; label: string }[] = [
   { value: "ledger", label: "Операции" },
   { value: "escrow", label: "Escrow" },
+  { value: "merchants", label: "Мерчанты" },
 ]
 
 const HubSkeleton = () => (
@@ -33,8 +35,8 @@ const FinanceHub = () => {
       const params = new URLSearchParams(searchParams.toString())
       params.delete("page")
       params.delete("query")
-      if (next === "escrow") {
-        params.set("tab", "escrow")
+      if (next === "escrow" || next === "merchants") {
+        params.set("tab", next)
         params.delete("view")
       } else {
         params.delete("tab")
@@ -49,7 +51,7 @@ const FinanceHub = () => {
     <PageFrame>
       <PageHeader
         title="Выплаты"
-        description="Выплаты поставщикам и средства на гарантии площадки"
+        description="Выплаты поставщикам, эскроу и балансы мерчантов Alif"
       />
 
       <SegmentedControl
@@ -61,6 +63,8 @@ const FinanceHub = () => {
 
       {tab === "escrow" ? (
         <AdminEscrowContent embedded />
+      ) : tab === "merchants" ? (
+        <AdminMerchantBalancesContent embedded />
       ) : (
         <AdminFinanceContent embedded />
       )}
