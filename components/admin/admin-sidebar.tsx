@@ -2,18 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  BadgeCheck,
-  CircleDollarSign,
-  FolderTree,
-  Gavel,
-  LayoutDashboard,
-  ScrollText,
-  Users,
-  type LucideIcon,
-} from "lucide-react"
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
+import type { BmIconName } from "@/lib/bm-icons"
 import {
   emptyAdminNavCounts,
   useAdminNavCounts,
@@ -27,14 +18,15 @@ import {
 import { ADMIN_HUBS, matchHub } from "@/lib/cabinet-nav"
 import { useAuthStore } from "@/lib/store/auth-store"
 
-const ICONS: Record<string, LucideIcon> = {
-  home: LayoutDashboard,
-  verif: BadgeCheck,
-  disputes: Gavel,
-  payouts: CircleDollarSign,
-  users: Users,
-  audit: ScrollText,
-  cats: FolderTree,
+/** CNAV icons — BrendMarket-v7.2 bank.js */
+const ICONS: Record<string, BmIconName> = {
+  home: "grid",
+  verif: "shieldok",
+  disputes: "scale",
+  payouts: "bank",
+  users: "users",
+  audit: "history",
+  cats: "settings",
 }
 
 const canSeeHref = (
@@ -48,23 +40,22 @@ const canSeeHref = (
   return !permission || hasPermission(user, permission)
 }
 
-type AdminSidebarProps = {
-  onNavigate?: () => void
-}
-
-export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
+export default function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
-  const user = useAuthStore((state) => state.user)
-  const countsQuery = useAdminNavCounts()
-  const counts = countsQuery.data ?? emptyAdminNavCounts()
+  const user = useAuthStore((s) => s.user)
+  const counts = useAdminNavCounts().data ?? emptyAdminNavCounts()
   const activeHub = matchHub(ADMIN_HUBS, pathname, "/admin")
 
   const badgeFor = (keys?: string[]) => {
     if (!keys?.length) return 0
     let n = 0
     for (const key of keys) {
-      const value = counts[key as keyof typeof counts]
-      if (typeof value === "number") n += value
+      if (key === "companies") n += counts.companies
+      if (key === "moderation") n += counts.moderation
+      if (key === "disputes") n += counts.disputes
+      if (key === "chats") n += counts.chats
+      if (key === "support") n += counts.support
+      if (key === "finance") n += counts.finance
     }
     return n
   }
@@ -81,22 +72,19 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
       </div>
 
       <ul className="grid gap-0.5">
-        {hubs.map((hub) => {
-          const Icon = ICONS[hub.id] ?? LayoutDashboard
-          return (
-            <li key={hub.id}>
-              <CabinetNavLink
-                href={hub.href}
-                label={hub.label}
-                Icon={Icon}
-                active={activeHub?.id === hub.id}
-                badge={badgeFor(hub.badgeKeys)}
-                badgeTone="danger"
-                onClick={onNavigate}
-              />
-            </li>
-          )
-        })}
+        {hubs.map((hub) => (
+          <li key={hub.id}>
+            <CabinetNavLink
+              href={hub.href}
+              label={hub.label}
+              icon={ICONS[hub.id] ?? "grid"}
+              active={activeHub?.id === hub.id}
+              badge={badgeFor(hub.badgeKeys)}
+              badgeTone="danger"
+              onClick={onNavigate}
+            />
+          </li>
+        ))}
       </ul>
 
       <div className="mt-auto border-t border-line pt-4">

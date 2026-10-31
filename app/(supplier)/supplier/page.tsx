@@ -61,7 +61,6 @@ import {
 import { TodoList, ProfileChecklist, type ChecklistItem } from "@/components/process"
 import { firstName, greet } from "@/lib/greet"
 import type { ContractWithRelations } from "@/types"
-import type { ReputationTier } from "@/lib/trust-levels"
 import type { SubscriptionPlan } from "@/lib/store/subscription-store"
 import { useMemo } from "react"
 
@@ -252,7 +251,7 @@ export default function SupplierDashboard() {
   const name = firstName(user?.name)
   const verified = myCompany?.verification_status === "verified"
   const tier = (myCompany as { reputation_tier?: string } | undefined)
-    ?.reputation_tier as ReputationTier | undefined
+    ?.reputation_tier
   const subPlan = (apiSub?.plan ?? "none") as SubscriptionPlan
   const incompleteChecklist = checklist.filter((c) => !c.done)
 

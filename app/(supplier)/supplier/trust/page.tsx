@@ -35,45 +35,46 @@ function conditionsFor(
     verified: boolean
     completed: number
     rating: number
-    success: number | null
+    onTime: number | null
   },
 ): CondItem[] {
   return [
     {
       key: "verified",
-      label: "Компания проверена",
-      value: stats.verified ? "да" : "нет",
+      label: "Компания проверена по документам",
+      value: stats.verified ? "проверена" : "на проверке",
       ok: stats.verified,
       pct: stats.verified ? 1 : 0,
     },
     {
       key: "deals",
-      label: `Сделки ≥ ${target.minCompleted}`,
-      value: String(stats.completed),
+      label: `Не меньше ${target.minCompleted} успешных сделок`,
+      value:
+        stats.completed >= target.minCompleted
+          ? `${stats.completed} сделок`
+          : `${stats.completed} из ${target.minCompleted}`,
       ok: stats.completed >= target.minCompleted,
       pct: Math.min(1, stats.completed / Math.max(1, target.minCompleted)),
     },
     {
       key: "rating",
-      label: `Рейтинг ≥ ${target.minRating.toFixed(1)}`,
-      value: stats.rating > 0 ? stats.rating.toFixed(1) : "—",
+      label: `Рейтинг от ${target.minRating.toFixed(1)}`,
+      value: stats.rating > 0 ? stats.rating.toFixed(1) : "нет оценок",
       ok: stats.rating >= target.minRating,
       pct: Math.min(1, stats.rating / Math.max(0.1, target.minRating)),
     },
-    ...(target.minSuccessRate != null
+    ...(target.minOnTime != null
       ? [
           {
-            key: "success",
-            label: `Успех ≥ ${target.minSuccessRate}%`,
+            key: "onTime",
+            label: `Поставки в срок от ${target.minOnTime}%`,
             value:
-              stats.success == null ? "—" : `${Math.round(stats.success)}%`,
-            ok:
-              stats.success != null &&
-              stats.success >= target.minSuccessRate,
+              stats.onTime == null ? "нет данных" : `${Math.round(stats.onTime)}%`,
+            ok: stats.onTime != null && stats.onTime >= target.minOnTime,
             pct:
-              stats.success == null
+              stats.onTime == null
                 ? 0
-                : Math.min(1, stats.success / target.minSuccessRate),
+                : Math.min(1, stats.onTime / target.minOnTime),
           } satisfies CondItem,
         ]
       : []),
@@ -97,20 +98,15 @@ export default function SupplierTrustPage() {
       myCompany?.stats?.average_rating ?? myCompany?.rating ?? 0,
     )
     const denom = completed + disputes
-    const success = denom > 0 ? (completed / denom) * 100 : null
-    return {
-      verified,
-      completed,
-      rating,
-      success,
-    }
+    const onTime = denom > 0 ? (completed / denom) * 100 : null
+    return { verified, completed, rating, onTime }
   }, [myCompany])
 
   const tier: ReputationTier = resolveReputationTier({
     verification_status: myCompany?.verification_status,
     completed_contracts: stats.completed,
     rating: stats.rating,
-    success_rate: stats.success,
+    success_rate: stats.onTime,
   })
 
   const currentMeta = TRUST_LEVELS.find((t) => t.id === tier)
@@ -133,17 +129,15 @@ export default function SupplierTrustPage() {
       <SurfaceCard className="grid items-center gap-6 lg:grid-cols-2">
         <div className="flex items-center gap-5">
           {tier !== "none" ? (
-            <TrustShieldIcon tier={tier} size={96} className="bm-shine" />
+            <TrustShieldIcon tier={tier} size={96} />
           ) : (
-            <span className="grid size-24 place-items-center rounded-3xl bg-canvas text-[13px] font-semibold text-mute">
-              Нет щита
-            </span>
+            <TrustShieldIcon tier="none" size={96} />
           )}
           <div>
             <span className="text-[13px] text-mute">Ваш уровень</span>
             <h2 className="flex flex-wrap items-center gap-2 text-[26px] font-extrabold leading-tight text-ink">
-              {currentMeta ? currentMeta.name : "Пока без щита"}
-              {tier !== "none" ? <ReputationBadge tier={tier} size={28} /> : null}
+              {currentMeta ? `${currentMeta.name} щит` : "Пока без щита"}
+              {tier !== "none" ? <ReputationBadge tier={tier} size={15} /> : null}
             </h2>
             <p className="mt-0.5 text-[14.5px] text-mute">
               {currentMeta
@@ -156,13 +150,14 @@ export default function SupplierTrustPage() {
         {nextMeta || tier === "none" ? (
           <div className="grid gap-3 rounded-xl bg-canvas p-4">
             <div className="flex items-center gap-3">
-              {nextMeta ? (
-                <TrustShieldIcon tier={nextMeta.id} size={36} />
-              ) : null}
+              <TrustShieldIcon
+                tier={nextMeta?.id ?? "silver"}
+                size={36}
+              />
               <b className="flex-1 text-[15px] text-ink">
                 {nextMeta
                   ? `До уровня «${nextMeta.name}»`
-                  : "До уровня «Проверенный»"}
+                  : "До уровня «Серебряный»"}
               </b>
               <span className="text-[13.5px] text-mute">
                 {nextPassed} из {nextConditions.length}

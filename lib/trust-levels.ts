@@ -1,87 +1,144 @@
-/** Free trust / reputation tiers — earned by activity, not paid. */
+/**
+ * Trust / reputation shields — BrendMarket-v7.2.
+ * Earned automatically; not sold. Levels: silver → gold → diamond.
+ */
 
 export const REPUTATION_TIERS = [
   "none",
-  "verified",
-  "shield",
   "silver",
   "gold",
+  "diamond",
 ] as const
 
 export type ReputationTier = (typeof REPUTATION_TIERS)[number]
 
+/** Legacy API / UI values remapped to v7.2 tiers. */
+export type LegacyReputationTier =
+  | ReputationTier
+  | "verified"
+  | "shield"
+
 export type TrustLevelMeta = {
   id: Exclude<ReputationTier, "none">
   name: string
-  /** Short condition line under the title (replaces price from the design). */
   condition: string
   description: string
   minCompleted: number
   minRating: number
-  minSuccessRate: number | null
+  /** On-time / success rate %, null = not required */
+  minOnTime: number | null
+  minMonths: number
+  glow: "" | "gold" | "diamond"
+  rim: [string, string]
+  body: [string, string]
+  fg: string
+  bg: string
+  bd: string
 }
 
 export const TRUST_LEVELS: TrustLevelMeta[] = [
   {
-    id: "verified",
-    name: "Проверенный",
-    condition: "бесплатно · верификация",
-    description: "Документы компании или исполнителя проверены платформой.",
-    minCompleted: 0,
-    minRating: 0,
-    minSuccessRate: null,
-  },
-  {
-    id: "shield",
-    name: "Щит",
-    condition: "от 5 сделок · рейтинг ≥ 4.0",
-    description: "Стабильная работа после верификации: первые успешные сделки.",
-    minCompleted: 5,
-    minRating: 4.0,
-    minSuccessRate: null,
-  },
-  {
     id: "silver",
-    name: "Серебряный щит",
-    condition: "от 20 сделок · рейтинг ≥ 4.5 · успех ≥ 90%",
-    description: "Высокий рейтинг и надёжность на дистанции.",
-    minCompleted: 20,
+    name: "Серебряный",
+    condition: "от 10 сделок · рейтинг ≥ 4.5 · в срок ≥ 90%",
+    description: "Первый щит: стабильные сделки после проверки документов.",
+    minCompleted: 10,
     minRating: 4.5,
-    minSuccessRate: 90,
+    minOnTime: 90,
+    minMonths: 3,
+    glow: "",
+    rim: ["#C7CDD6", "#7E8794"],
+    body: ["#FBFCFD", "#C5CBD4"],
+    fg: "#363C46",
+    bg: "linear-gradient(135deg,#F4F6F8,#D3D8DF)",
+    bd: "#C3C9D2",
   },
   {
     id: "gold",
-    name: "Золотой щит",
-    condition: "от 50 сделок · рейтинг ≥ 4.7 · успех ≥ 95%",
-    description: "Топ доверия: много сделок и почти без споров.",
-    minCompleted: 50,
+    name: "Золотой",
+    condition: "от 40 сделок · рейтинг ≥ 4.7 · в срок ≥ 95%",
+    description: "Высокий рейтинг и поставки в срок на дистанции.",
+    minCompleted: 40,
     minRating: 4.7,
-    minSuccessRate: 95,
+    minOnTime: 95,
+    minMonths: 12,
+    glow: "gold",
+    rim: ["#F0C04F", "#A8700C"],
+    body: ["#FFE98F", "#F2B12A"],
+    fg: "#2E1F00",
+    bg: "linear-gradient(135deg,#FFE38A,#E9A825)",
+    bd: "#D99A1E",
+  },
+  {
+    id: "diamond",
+    name: "Алмазный",
+    condition: "от 100 сделок · рейтинг ≥ 4.8 · в срок ≥ 98%",
+    description: "Лучшие на площадке: почти без срывов и споров.",
+    minCompleted: 100,
+    minRating: 4.8,
+    minOnTime: 98,
+    minMonths: 24,
+    glow: "diamond",
+    rim: ["#9F6BFF", "#4B1A9E"],
+    body: ["#EBDDFF", "#8B5CF6"],
+    fg: "#FFFFFF",
+    bg: "linear-gradient(135deg,#A779FF,#5B21B6)",
+    bd: "#6D35D9",
   },
 ]
 
-export const reputationTierLabel = (
-  tier: ReputationTier | string | null | undefined,
-): string => {
-  switch (tier) {
+export const normalizeReputationTier = (
+  tier: string | null | undefined,
+): ReputationTier => {
+  switch ((tier || "").toLowerCase()) {
+    case "silver":
+      return "silver"
+    case "gold":
+      return "gold"
+    case "diamond":
+      return "diamond"
+    // legacy ladder
     case "verified":
-      return "Проверенный"
     case "shield":
-      return "Щит"
+    case "none":
+    default:
+      return "none"
+  }
+}
+
+export const reputationTierLabel = (
+  tier: LegacyReputationTier | string | null | undefined,
+): string => {
+  const n = normalizeReputationTier(tier)
+  switch (n) {
     case "silver":
       return "Серебряный щит"
     case "gold":
       return "Золотой щит"
+    case "diamond":
+      return "Алмазный щит"
     default:
       return "Без уровня"
   }
+}
+
+export const trustLevelMeta = (
+  tier: ReputationTier | string | null | undefined,
+): TrustLevelMeta | null => {
+  const n = normalizeReputationTier(tier)
+  if (n === "none") return null
+  return TRUST_LEVELS.find((t) => t.id === n) ?? null
 }
 
 export type ReputationStats = {
   verification_status?: string | null
   completed_contracts?: number | null
   rating?: number | null
+  /** On-time / success %, 0–100 */
   success_rate?: number | null
+  /** Months on platform — optional */
+  months_on_platform?: number | null
+  disputes_lost?: number | null
 }
 
 export const resolveReputationTier = (stats: ReputationStats): ReputationTier => {
@@ -90,35 +147,32 @@ export const resolveReputationTier = (stats: ReputationStats): ReputationTier =>
 
   const completed = Math.max(0, Number(stats.completed_contracts) || 0)
   const rating = Number(stats.rating) || 0
-  const success =
+  const onTime =
     stats.success_rate == null || Number.isNaN(Number(stats.success_rate))
       ? null
       : Number(stats.success_rate)
+  const months = Math.max(0, Number(stats.months_on_platform) || 0)
+  const disputes = Math.max(0, Number(stats.disputes_lost) || 0)
 
-  const gold = TRUST_LEVELS.find((t) => t.id === "gold")!
-  if (
-    completed >= gold.minCompleted &&
-    rating >= gold.minRating &&
-    success != null &&
-    success >= (gold.minSuccessRate ?? 0)
-  ) {
-    return "gold"
+  const meets = (L: TrustLevelMeta) => {
+    if (completed < L.minCompleted) return false
+    if (rating < L.minRating) return false
+    // Skip when API has no on-time / tenure yet
+    if (
+      L.minOnTime != null &&
+      onTime != null &&
+      onTime < L.minOnTime
+    ) {
+      return false
+    }
+    if (months > 0 && months < L.minMonths) return false
+    if (disputes > 0) return false
+    return true
   }
 
-  const silver = TRUST_LEVELS.find((t) => t.id === "silver")!
-  if (
-    completed >= silver.minCompleted &&
-    rating >= silver.minRating &&
-    success != null &&
-    success >= (silver.minSuccessRate ?? 0)
-  ) {
-    return "silver"
+  // Highest first
+  for (const L of [...TRUST_LEVELS].reverse()) {
+    if (meets(L)) return L.id
   }
-
-  const shield = TRUST_LEVELS.find((t) => t.id === "shield")!
-  if (completed >= shield.minCompleted && rating >= shield.minRating) {
-    return "shield"
-  }
-
-  return "verified"
+  return "none"
 }

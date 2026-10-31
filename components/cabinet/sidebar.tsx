@@ -2,20 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  LayoutDashboard,
-  FileText,
-  ShoppingCart,
-  Store,
-  Plus,
-  Briefcase,
-  MessageSquare,
-  Building2,
-  Lock,
-  type LucideIcon,
-} from "lucide-react"
+import { Plus, Lock } from "lucide-react"
 import { BrandLogo } from "@/components/bm"
 import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
+import type { BmIconName } from "@/lib/bm-icons"
 import { Button } from "@/components/ui/button"
 import { useSupportChat } from "@/components/support/support-chat-context"
 import {
@@ -26,13 +16,14 @@ import { useHydrated } from "@/hooks/use-hydrated"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { BUYER_HUBS, matchHub } from "@/lib/cabinet-nav"
 
-const ICONS: Record<string, LucideIcon> = {
-  home: LayoutDashboard,
-  rfqs: FileText,
-  deals: Briefcase,
-  suppliers: Store,
-  messages: MessageSquare,
-  company: Building2,
+/** CNAV icons — BrendMarket-v7.2 bank.js */
+const ICONS: Record<string, BmIconName> = {
+  home: "home",
+  rfqs: "file",
+  deals: "briefcase",
+  suppliers: "building",
+  messages: "chat",
+  company: "users",
 }
 
 export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -105,28 +96,25 @@ export default function CustomerSidebar({ onNavigate }: { onNavigate?: () => voi
       </Button>
 
       <ul className="grid gap-0.5">
-        {BUYER_HUBS.map((hub) => {
-          const Icon = ICONS[hub.id] ?? LayoutDashboard
-          return (
-            <li key={hub.id}>
-              <CabinetNavLink
-                href={hub.href}
-                label={hub.label}
-                Icon={Icon}
-                active={activeHub?.id === hub.id}
-                badge={badgeFor(hub.badgeKeys)}
-                onClick={onNavigate}
-              />
-            </li>
-          )
-        })}
+        {BUYER_HUBS.map((hub) => (
+          <li key={hub.id}>
+            <CabinetNavLink
+              href={hub.href}
+              label={hub.label}
+              icon={ICONS[hub.id] ?? "home"}
+              active={activeHub?.id === hub.id}
+              badge={badgeFor(hub.badgeKeys)}
+              onClick={onNavigate}
+            />
+          </li>
+        ))}
       </ul>
 
       <div className="mt-4 border-t border-line pt-4">
         <CabinetNavLink
           href="/services"
           label="Купить в каталоге"
-          Icon={ShoppingCart}
+          icon="cart"
           onClick={onNavigate}
         />
       </div>

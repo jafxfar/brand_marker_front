@@ -1,22 +1,23 @@
 import Link from "next/link"
-import type { LucideIcon } from "lucide-react"
+import { BmIcon, type BmIconName } from "@/components/bm/bm-icon"
 import { cn } from "@/lib/utils"
 
 type CabinetNavLinkProps = {
   href: string
   label: string
-  Icon: LucideIcon
+  /** Phosphor icon name from BrendMarket-v7.2 CNAV */
+  icon: BmIconName
   active?: boolean
   badge?: number
   onClick?: () => void
   badgeTone?: "brand" | "danger"
 }
 
-/** CNAV item — BrendMarket-v7.1 white sidebar (`bg-brand-50` active). */
+/** CNAV item — white sidebar (`bg-brand-50` active), Phosphor icons. */
 export function CabinetNavLink({
   href,
   label,
-  Icon,
+  icon,
   active,
   badge,
   onClick,
@@ -34,7 +35,7 @@ export function CabinetNavLink({
           : "font-semibold text-ink/80 hover:bg-canvas hover:text-ink",
       )}
     >
-      <Icon className="size-5 shrink-0" aria-hidden />
+      <BmIcon name={icon} className="size-[18px]" />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {badge && badge > 0 ? (
         <span

@@ -3,7 +3,10 @@ import { cn } from "@/lib/utils"
 import { formatCount } from "@/lib/format"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
 import { ReputationBadge } from "@/components/bm/reputation-badge"
-import { resolveReputationTier } from "@/lib/trust-levels"
+import {
+  normalizeReputationTier,
+  resolveReputationTier,
+} from "@/lib/trust-levels"
 
 type SupplierTrustProps = {
   supplier: Pick<
@@ -20,11 +23,16 @@ type SupplierTrustProps = {
   className?: string
 }
 
-/** Shield ladder badge when the supplier has at least «Проверенный». */
+/** Shield badge when the supplier earned silver / gold / diamond. */
 export const SupplierVerifiedBadge = ({ supplier, className }: SupplierTrustProps) => {
-  const tier =
-    (supplier.reputation_tier as ReturnType<typeof resolveReputationTier> | undefined) ??
-    resolveReputationTier(supplier)
+  const fromApi = normalizeReputationTier(supplier.reputation_tier)
+  const computed = resolveReputationTier({
+    verification_status: supplier.verification_status,
+    completed_contracts: supplier.completed_contracts,
+    rating: supplier.rating,
+    success_rate: supplier.success_rate,
+  })
+  const tier = fromApi !== "none" ? fromApi : computed
   if (tier === "none") return null
   return <ReputationBadge tier={tier} className={className} />
 }

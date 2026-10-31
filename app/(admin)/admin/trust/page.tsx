@@ -13,13 +13,7 @@ import {
 } from "@/lib/trust-levels"
 import { cn } from "@/lib/utils"
 
-const TIER_ORDER: ReputationTier[] = [
-  "gold",
-  "silver",
-  "shield",
-  "verified",
-  "none",
-]
+const TIER_ORDER: ReputationTier[] = ["diamond", "gold", "silver", "none"]
 
 export default function AdminTrustPage() {
   const [query, setQuery] = useState("")
@@ -64,10 +58,9 @@ export default function AdminTrustPage() {
   const counts = useMemo(() => {
     const base: Record<ReputationTier, number> = {
       none: 0,
-      verified: 0,
-      shield: 0,
       silver: 0,
       gold: 0,
+      diamond: 0,
     }
     for (const r of rows) base[r.tier] += 1
     return base
@@ -77,23 +70,17 @@ export default function AdminTrustPage() {
     <PageFrame>
       <PageHeader
         title="Щит доверия"
-        description={`Серебро ${counts.silver} · золото ${counts.gold} · щит ${counts.shield} · проверенные ${counts.verified} · без щита ${counts.none}. Уровень считается автоматически по сделкам и рейтингу.`}
+        description={`Серебро ${counts.silver} · золото ${counts.gold} · алмаз ${counts.diamond} · без щита ${counts.none}. Выдаётся автоматически, пересчёт по правилам площадки.`}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {TIER_ORDER.map((tier) => (
           <SurfaceCard
             key={tier}
             className="flex items-center gap-3 p-4"
             padded={false}
           >
-            {tier === "none" ? (
-              <span className="grid size-9 place-items-center rounded-xl bg-canvas text-[11px] font-bold text-mute">
-                —
-              </span>
-            ) : (
-              <TrustShieldIcon tier={tier} size={36} />
-            )}
+            <TrustShieldIcon tier={tier === "none" ? "none" : tier} size={36} />
             <span>
               <b className="tnum block text-[20px] text-ink">{counts[tier]}</b>
               <span className="text-[12.5px] text-mute">
@@ -158,7 +145,7 @@ export default function AdminTrustPage() {
                       {row.tier !== "none" ? (
                         <ReputationBadge tier={row.tier} />
                       ) : (
-                        <span className="text-[13px] text-mute whitespace-nowrap">
+                        <span className="whitespace-nowrap text-[13px] text-mute">
                           нет щита
                         </span>
                       )}
@@ -184,12 +171,6 @@ export default function AdminTrustPage() {
           </div>
         )}
       </SurfaceCard>
-
-      <p className="text-[13px] text-mute">
-        Серебряный и золотой щит требуют показатель успеха сделок — без него в
-        таблице показываются уровни до «Щит» включительно. Пересчёт на стороне
-        площадки.
-      </p>
     </PageFrame>
   )
 }
