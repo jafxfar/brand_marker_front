@@ -188,7 +188,7 @@ export default function AdminDashboardPage() {
     .slice(0, 4)
 
   return (
-    <PageFrame>
+    <PageFrame className="max-w-none">
       <PageHeader
         title="Обзор площадки"
         description={today}

@@ -42,10 +42,10 @@ export default function CustomerTopbar({
   return (
     <>
       <header className="sticky top-0 z-30 h-[68px] border-b border-line bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-full max-w-[1400px] items-center gap-3 px-4 lg:gap-6 lg:px-8">
-          <BrandLogo small showWordmark className="shrink-0" />
+        <div className="flex h-full items-center gap-3 px-4 lg:gap-6 lg:px-8">
+          <BrandLogo small showWordmark className="shrink-0 lg:hidden" />
           <span className="hidden h-7 items-center rounded-md bg-canvas px-2.5 text-[13px] font-semibold text-mute md:inline-flex">
-            Закупки
+            Кабинет покупателя
           </span>
           <label className="relative ml-0 hidden max-w-md flex-1 sm:block lg:ml-6">
             <span className="sr-only">Поиск</span>

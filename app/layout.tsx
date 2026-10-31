@@ -1,20 +1,17 @@
 import type { Metadata } from 'next'
 
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Manrope } from 'next/font/google'
+import { Golos_Text } from 'next/font/google'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
-
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
-const manrope = Manrope({
+const golos = Golos_Text({
   subsets: ['latin', 'cyrillic'],
   weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-manrope',
+  variable: '--font-golos',
   display: 'swap',
 })
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://brand-marker-front.vercel.app"),
   title: "Brend Market — B2B маркетплейс для бизнеса",
@@ -61,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru" className={`bg-canvas ${manrope.variable}`}>
+    <html lang="ru" className={`bg-canvas ${golos.variable}`}>
       <body className="bg-canvas font-sans text-[15px] text-ink antialiased">
         <QueryProvider>
           {children}

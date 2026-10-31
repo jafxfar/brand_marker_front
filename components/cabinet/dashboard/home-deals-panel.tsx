@@ -19,12 +19,12 @@ export const HomeDealsPanel = ({
   return (
     <div className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-6">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-[13px] font-semibold text-mute">Сделки</span>
+        <span className="text-[13px] font-semibold text-mute">Сделки в работе</span>
         <Link
-          href="/customer/contracts"
+          href="/customer/contracts?tab=active"
           className="text-[13px] text-brand-700 hover:underline"
         >
-          Все →
+          Все сделки →
         </Link>
       </div>
 

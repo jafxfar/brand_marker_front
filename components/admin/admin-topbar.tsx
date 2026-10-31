@@ -39,7 +39,7 @@ export default function AdminTopbar() {
 
   return (
     <header className="sticky top-0 z-30 h-[68px] border-b border-line bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-full max-w-[1400px] items-center gap-4 px-4 lg:px-8">
+      <div className="flex h-full items-center gap-4 px-4 lg:px-8">
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
           <button

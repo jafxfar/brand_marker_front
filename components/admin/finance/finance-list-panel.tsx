@@ -33,6 +33,7 @@ import {
   adminFinanceTypeLabels,
   adminLabel,
 } from "@/lib/admin-display"
+import { AdminBillingSummaryPanel } from "@/components/admin/finance/billing-summary-panel"
 import { PageEmptyState, PageFrame, PageHeader, PageSurface, SegmentedControl } from "@/components/layout"
 import { Input } from "@/components/ui/input"
 import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
@@ -81,9 +82,13 @@ export function AdminFinanceContent({ embedded = true }: { embedded?: boolean } 
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const view = isViewFilter(searchParams.get("view"))
-    ? (searchParams.get("view") as AdminFinanceView)
-    : "platform_revenue"
+  const rawView = searchParams.get("view")
+  const isBilling = rawView === "billing"
+  const view: AdminFinanceView = isBilling
+    ? "subscriptions"
+    : isViewFilter(rawView)
+      ? rawView
+      : "platform_revenue"
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const query = searchParams.get("query") ?? ""
   const [searchInput, setSearchInput] = useState(query)
@@ -105,6 +110,10 @@ export function AdminFinanceContent({ embedded = true }: { embedded?: boolean } 
           nextParams.set(key, value)
         }
       })
+      // Leaving the billing hub: drop the billing alias so ledger filters apply.
+      if (updates.view && updates.view !== "billing" && updates.view !== "subscriptions") {
+        if (nextParams.get("view") === "billing") nextParams.delete("view")
+      }
       const nextQuery = nextParams.toString()
       router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname)
     },
@@ -175,8 +184,12 @@ export function AdminFinanceContent({ embedded = true }: { embedded?: boolean } 
     <Frame>
       {!embedded && (
         <PageHeader
-          title="Финансы"
-          description="Выручка, подписки, комиссии, возвраты и выплаты"
+          title={isBilling ? "Подписки и доходы" : "Финансы"}
+          description={
+            isBilling
+              ? "Тарифы поставщиков, услуги покупателям и комиссия площадки"
+              : "Выручка, подписки, комиссии, возвраты и выплаты"
+          }
           actions={
             <div className="flex items-center gap-3">
               <p className="text-sm text-muted-foreground">
@@ -197,6 +210,8 @@ export function AdminFinanceContent({ embedded = true }: { embedded?: boolean } 
         />
       )}
 
+      {isBilling ? <AdminBillingSummaryPanel /> : null}
+
       <PageSurface>
         <div className="border-b border-border p-4">
           <div className="relative">
@@ -215,17 +230,23 @@ export function AdminFinanceContent({ embedded = true }: { embedded?: boolean } 
             />
           </div>
         </div>
-        <div className="p-3">
-          <SegmentedControl
-            value={view}
-            options={viewFilters.map((filter) => ({
-              ...filter,
-              count: viewCounts[filter.value],
-            }))}
-            onChange={(next) => replaceSearchParams({ view: next, page: null })}
-            className="w-full max-w-full border-0 bg-transparent p-0"
-          />
-        </div>
+        {!isBilling ? (
+          <div className="p-3">
+            <SegmentedControl
+              value={view}
+              options={viewFilters.map((filter) => ({
+                ...filter,
+                count: viewCounts[filter.value],
+              }))}
+              onChange={(next) => replaceSearchParams({ view: next, page: null })}
+              className="w-full max-w-full border-0 bg-transparent p-0"
+            />
+          </div>
+        ) : (
+          <div className="border-b border-border px-4 py-3 text-[14px] text-mute">
+            Реестр платежей по подпискам поставщиков
+          </div>
+        )}
       </PageSurface>
 
       <PageSurface>

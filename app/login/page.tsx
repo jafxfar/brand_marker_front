@@ -8,9 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { ArrowRight } from "lucide-react"
 import { toast } from "sonner"
-import { BrandLogo } from "@/components/bm"
+import { BrandLogo, BmInput } from "@/components/bm"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { TwoFactorChallenge } from "@/components/auth/two-factor-challenge"
 import { useAuthStore } from "@/lib/store/auth-store"
 import type { MarketplaceSessionRole } from "@/lib/store/auth-store"
@@ -244,13 +243,13 @@ function LoginContent() {
               <label htmlFor="email" className="text-[14px] font-semibold text-ink">
                 Email
               </label>
-              <Input
+              <BmInput
                 maxLength={100}
                 id="email"
                 type="email"
                 autoComplete="email"
                 placeholder="you@company.tj"
-                aria-invalid={Boolean(errors.email)}
+                error={Boolean(errors.email)}
                 {...register("email")}
               />
               {errors.email ? (
@@ -262,12 +261,12 @@ function LoginContent() {
               <label htmlFor="password" className="text-[14px] font-semibold text-ink">
                 Пароль
               </label>
-              <Input
+              <BmInput
                 id="password"
                 type="password"
                 autoComplete="current-password"
                 placeholder="••••••••"
-                aria-invalid={Boolean(errors.password)}
+                error={Boolean(errors.password)}
                 {...register("password")}
               />
               {errors.password ? (

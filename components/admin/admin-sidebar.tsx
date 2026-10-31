@@ -1,197 +1,51 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   BadgeCheck,
-  Building2,
-  Cable,
-  ChevronDown,
   CircleDollarSign,
   FolderTree,
   Gavel,
-  Headphones,
   LayoutDashboard,
-  MessageSquare,
-  Package,
   ScrollText,
-  Settings,
-  ShieldCheck,
-  UserCog,
   Users,
   type LucideIcon,
 } from "lucide-react"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { BrandLogo } from "@/components/bm"
+import { CabinetNavLink } from "@/components/layout/cabinet-nav-link"
 import {
   emptyAdminNavCounts,
   useAdminNavCounts,
 } from "@/hooks/api/use-nav-counts-query"
-import type { AdminNavCounts } from "@/lib/api/nav-counts"
 import {
   ADMIN_HUB_ANY_PERMISSIONS,
   getAdminRoutePermission,
   hasAnyPermission,
   hasPermission,
 } from "@/lib/admin-permissions"
+import { ADMIN_HUBS, matchHub } from "@/lib/cabinet-nav"
 import { useAuthStore } from "@/lib/store/auth-store"
-import { cn } from "@/lib/utils"
 
-type AdminBadgeKey = keyof AdminNavCounts
-
-type AdminNavItem = {
-  label: string
-  href: string
-  Icon: LucideIcon
-  badge?: AdminBadgeKey
-  hotHref?: string
+const ICONS: Record<string, LucideIcon> = {
+  home: LayoutDashboard,
+  verif: BadgeCheck,
+  disputes: Gavel,
+  payouts: CircleDollarSign,
+  users: Users,
+  audit: ScrollText,
+  cats: FolderTree,
 }
 
-type AdminNavSection = {
-  title: string
-  items: AdminNavItem[]
-}
-
-const NAV_COLLAPSED_KEY = "bm-admin-nav-collapsed"
-
-const adminNavSections: AdminNavSection[] = [
-  {
-    title: "Обзор",
-    items: [{ label: "Обзор", href: "/admin", Icon: LayoutDashboard }],
-  },
-  {
-    title: "Операции",
-    items: [
-      {
-        label: "Проверка клиентов",
-        href: "/admin/verification",
-        hotHref: "/admin/verification?tab=queue",
-        Icon: BadgeCheck,
-        badge: "companies",
-      },
-      {
-        label: "Модерация",
-        href: "/admin/moderation",
-        hotHref: "/admin/moderation?tab=catalog&view=draft",
-        Icon: ShieldCheck,
-        badge: "moderation",
-      },
-      {
-        label: "Поддержка",
-        href: "/admin/support",
-        Icon: Headphones,
-        badge: "support",
-      },
-      {
-        label: "Все переписки",
-        href: "/admin/chats",
-        hotHref: "/admin/chats?filter=flag",
-        Icon: MessageSquare,
-        badge: "chats",
-      },
-      {
-        label: "Споры",
-        href: "/admin/disputes",
-        hotHref: "/admin/disputes?tab=disputes&view=open",
-        Icon: Gavel,
-        badge: "disputes",
-      },
-      {
-        label: "Выплаты",
-        href: "/admin/finance",
-        hotHref: "/admin/finance?view=payouts",
-        Icon: CircleDollarSign,
-        badge: "finance",
-      },
-    ],
-  },
-  {
-    title: "Справочники",
-    items: [
-      { label: "Пользователи", href: "/admin/users", Icon: Users },
-      { label: "Компании", href: "/admin/companies", Icon: Building2 },
-      { label: "Товары и услуги", href: "/admin/catalog", Icon: Package },
-      { label: "Журнал действий", href: "/admin/logs", Icon: ScrollText },
-      { label: "Логи шлюза", href: "/admin/gateway-logs", Icon: Cable },
-      { label: "Категории", href: "/admin/categories", Icon: FolderTree },
-    ],
-  },
-  {
-    title: "Система",
-    items: [
-      { label: "Доступ", href: "/admin/staff", Icon: UserCog },
-      { label: "Настройки", href: "/admin/settings", Icon: Settings },
-    ],
-  },
-]
-
-const itemMatchesPath = (href: string, pathname: string) => {
-  if (href === "/admin") return pathname === href
-  if (href === "/admin/moderation") {
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`) ||
-      pathname.startsWith("/admin/rfqs") ||
-      pathname.startsWith("/admin/proposals")
-    )
-  }
-  if (href === "/admin/disputes") {
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`) ||
-      pathname.startsWith("/admin/contracts")
-    )
-  }
-  if (href === "/admin/finance") {
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`) ||
-      pathname.startsWith("/admin/escrow")
-    )
-  }
-  if (href === "/admin/staff") {
-    return (
-      pathname === href ||
-      pathname.startsWith(`${href}/`) ||
-      pathname.startsWith("/admin/roles")
-    )
-  }
-  return pathname === href || pathname.startsWith(`${href}/`)
-}
-
-const canSeeNavItem = (
+const canSeeHref = (
   user: Parameters<typeof hasPermission>[0],
   href: string,
 ): boolean => {
-  const hub = ADMIN_HUB_ANY_PERMISSIONS[href]
+  const base = href.split("?")[0] ?? href
+  const hub = ADMIN_HUB_ANY_PERMISSIONS[base]
   if (hub) return hasAnyPermission(user, hub)
-  const permission = getAdminRoutePermission(href)
+  const permission = getAdminRoutePermission(base)
   return !permission || hasPermission(user, permission)
-}
-
-const readCollapsed = (): Record<string, boolean> => {
-  if (typeof window === "undefined") return {}
-  try {
-    const raw = localStorage.getItem(NAV_COLLAPSED_KEY)
-    if (!raw) return {}
-    const parsed = JSON.parse(raw) as unknown
-    if (!parsed || typeof parsed !== "object") return {}
-    return parsed as Record<string, boolean>
-  } catch {
-    return {}
-  }
-}
-
-const writeCollapsed = (value: Record<string, boolean>) => {
-  try {
-    localStorage.setItem(NAV_COLLAPSED_KEY, JSON.stringify(value))
-  } catch {
-    // ignore quota / private mode
-  }
 }
 
 type AdminSidebarProps = {
@@ -203,117 +57,71 @@ export default function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const user = useAuthStore((state) => state.user)
   const countsQuery = useAdminNavCounts()
   const counts = countsQuery.data ?? emptyAdminNavCounts()
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const activeHub = matchHub(ADMIN_HUBS, pathname, "/admin")
 
-  useEffect(() => {
-    setCollapsed(readCollapsed())
-  }, [])
-
-  const visibleSections = useMemo(
-    () =>
-      adminNavSections
-        .map((section) => ({
-          ...section,
-          items: section.items.filter((item) => canSeeNavItem(user, item.href)),
-        }))
-        .filter((section) => section.items.length > 0),
-    [user],
-  )
-
-  const activeSectionTitle = useMemo(
-    () =>
-      visibleSections.find((section) =>
-        section.items.some((item) => itemMatchesPath(item.href, pathname)),
-      )?.title ?? null,
-    [pathname, visibleSections],
-  )
-
-  useEffect(() => {
-    if (!activeSectionTitle) return
-    setCollapsed((prev) => {
-      if (!prev[activeSectionTitle]) return prev
-      const next = { ...prev, [activeSectionTitle]: false }
-      writeCollapsed(next)
-      return next
-    })
-  }, [activeSectionTitle])
-
-  const setSectionOpen = (title: string, open: boolean) => {
-    setCollapsed((prev) => {
-      const next = { ...prev, [title]: !open }
-      writeCollapsed(next)
-      return next
-    })
+  const badgeFor = (keys?: string[]) => {
+    if (!keys?.length) return 0
+    let n = 0
+    for (const key of keys) {
+      const value = counts[key as keyof typeof counts]
+      if (typeof value === "number") n += value
+    }
+    return n
   }
 
+  const hubs = ADMIN_HUBS.filter((hub) => canSeeHref(user, hub.href))
+
   return (
-    <div className="grid gap-1">
-      <div className="mb-3 px-1 text-[13px] font-semibold text-mute">
-        Панель администратора
+    <nav className="flex h-full flex-col gap-1 p-4" aria-label="Админ-навигация">
+      <div className="mb-3">
+        <BrandLogo />
+        <p className="mt-2 text-[13px] font-semibold text-mute">
+          Панель администратора
+        </p>
       </div>
 
-      <nav className="grid gap-2" aria-label="Админ-навигация">
-        {visibleSections.map((section) => {
-          const open = !collapsed[section.title]
+      <ul className="grid gap-0.5">
+        {hubs.map((hub) => {
+          const Icon = ICONS[hub.id] ?? LayoutDashboard
           return (
-            <Collapsible
-              key={section.title}
-              open={open}
-              onOpenChange={(nextOpen) => setSectionOpen(section.title, nextOpen)}
-            >
-              <CollapsibleTrigger
-                type="button"
-                className="flex h-8 w-full items-center gap-1.5 rounded-lg px-3 text-[11px] font-bold uppercase tracking-[.08em] text-mute transition-colors hover:bg-white/60 hover:text-ink"
-              >
-                <ChevronDown
-                  size={14}
-                  className={cn(
-                    "shrink-0 transition-transform duration-200",
-                    !open && "-rotate-90",
-                  )}
-                  aria-hidden="true"
-                />
-                <span className="truncate">{section.title}</span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="grid gap-1 pt-1">
-                {section.items.map((item) => {
-                  const isActive = itemMatchesPath(item.href, pathname)
-                  const badge = item.badge ? counts[item.badge] : 0
-                  const href =
-                    badge > 0 && item.hotHref ? item.hotHref : item.href
-                  return (
-                    <Link
-                      key={item.href}
-                      href={href}
-                      onClick={onNavigate}
-                      className={cn(
-                        "flex h-11 w-full items-center gap-3 rounded-[10px] px-3 text-[15px]",
-                        isActive &&
-                          "bg-white font-bold text-ink shadow-[0_1px_3px_rgba(16,24,40,.10)]",
-                        !isActive &&
-                          "font-semibold text-ink/75 hover:bg-white/70 hover:text-ink",
-                      )}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <item.Icon
-                        size={20}
-                        className={isActive ? "text-brand-600" : undefined}
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      {badge > 0 ? (
-                        <span className="grid h-[22px] min-w-[22px] place-items-center rounded-full bg-red-600 px-1.5 text-[12px] font-bold text-white">
-                          {badge > 99 ? "99+" : badge}
-                        </span>
-                      ) : null}
-                    </Link>
-                  )
-                })}
-              </CollapsibleContent>
-            </Collapsible>
+            <li key={hub.id}>
+              <CabinetNavLink
+                href={hub.href}
+                label={hub.label}
+                Icon={Icon}
+                active={activeHub?.id === hub.id}
+                badge={badgeFor(hub.badgeKeys)}
+                badgeTone="danger"
+                onClick={onNavigate}
+              />
+            </li>
           )
         })}
-      </nav>
-    </div>
+      </ul>
+
+      <div className="mt-auto border-t border-line pt-4">
+        <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-[.08em] text-mute">
+          Ещё
+        </p>
+        <div className="grid gap-1 text-[13.5px]">
+          {[
+            { href: "/admin/catalog", label: "Каталог" },
+            { href: "/admin/staff", label: "Доступ" },
+            { href: "/admin/gateway-logs", label: "Логи шлюза" },
+          ]
+            .filter((item) => canSeeHref(user, item.href))
+            .map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                className="rounded-lg px-3 py-2 font-semibold text-mute hover:bg-canvas hover:text-ink"
+              >
+                {item.label}
+              </Link>
+            ))}
+        </div>
+      </div>
+    </nav>
   )
 }

@@ -139,7 +139,7 @@ export const ServicesPageContent = () => {
   return (
     <PageShell>
       <section className="bg-canvas py-6 sm:py-8">
-        <div className="mx-auto max-w-[1440px] px-3 sm:px-4 lg:px-6">
+        <div className="mx-auto max-w-[1200px] px-4 lg:px-8">
           <h1 className="text-[28px] font-extrabold tracking-[-0.02em] text-ink sm:text-[32px]">
             {title}
           </h1>

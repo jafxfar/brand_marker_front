@@ -8,8 +8,8 @@ type PageShellProps = {
 
 export const PageShell = ({ children }: PageShellProps) => {
   return (
-    <main className="min-h-screen bg-background">
-      <Suspense fallback={<div className="h-[140px] bg-white border-b border-border" />}>
+    <main className="min-h-screen bg-canvas">
+      <Suspense fallback={<div className="h-16 border-b border-line bg-white" />}>
         <Header />
       </Suspense>
       {children}

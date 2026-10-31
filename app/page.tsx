@@ -5,9 +5,9 @@ import {
   LandingHero,
   LandingHowItWorks,
   LandingAbout,
-  LandingFaq,
+  LandingPopular,
   LandingPricing,
-  LandingCta,
+  LandingFaq,
 } from "@/components/landing"
 
 export default function Home() {
@@ -19,9 +19,9 @@ export default function Home() {
       <LandingHero />
       <LandingHowItWorks />
       <LandingAbout />
-      <LandingFaq />
+      <LandingPopular />
       <LandingPricing />
-      <LandingCta />
+      <LandingFaq />
       <Footer />
     </main>
   )

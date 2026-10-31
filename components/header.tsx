@@ -22,6 +22,7 @@ import { getUserDisplayName, getUserInitials } from "@/lib/auth-display"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { createRfqHref } from "@/lib/create-rfq-href"
 import {
+  forSuppliersUrl,
   guaranteeUrl,
   performersUrl,
   registerUrl,
@@ -57,8 +58,8 @@ const NAV = [
   },
   {
     label: "Продавцам",
-    href: "/#for-suppliers",
-    match: () => false,
+    href: forSuppliersUrl(),
+    match: (p: string) => p.startsWith("/for-suppliers"),
   },
 ]
 

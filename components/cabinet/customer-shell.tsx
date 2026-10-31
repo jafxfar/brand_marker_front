@@ -2,12 +2,13 @@
 
 import { Suspense, useState } from "react"
 import {
-  LayoutDashboard, FileText, FileCheck, MessageSquare, Menu, Loader2,
+  LayoutDashboard, FileText, Briefcase, MessageSquare, Menu, Loader2,
 } from "lucide-react"
 import CustomerSidebar from "@/components/cabinet/sidebar"
 import CustomerTopbar from "@/components/cabinet/topbar"
 import { CabinetShell } from "@/components/layout/cabinet-shell"
 import { CabinetMobileNav } from "@/components/layout/cabinet-mobile-nav"
+import { SectionHub } from "@/components/layout/section-hub"
 import { SupportChatProvider } from "@/components/support/support-chat-context"
 import { SupportChatWidget } from "@/components/support/support-chat-widget"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
@@ -39,6 +40,17 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
       <CabinetShell
         sidebar={<CustomerSidebar />}
         topbar={<CustomerTopbar moreOpen={moreOpen} onMoreOpenChange={setMoreOpen} />}
+        sectionHub={
+          <Suspense fallback={null}>
+            <SectionHub
+              role="buyer"
+              badges={{
+                rfqs: hydrated ? counts.rfqs_new : 0,
+                approvals: hydrated ? counts.approvals_new : 0,
+              }}
+            />
+          </Suspense>
+        }
         mobileNav={
           <CabinetMobileNav
             moreOpen={moreOpen}
@@ -51,17 +63,20 @@ export default function CustomerShell({ children }: { children: React.ReactNode 
               },
               {
                 href: "/customer/rfqs?status=quotes",
-                label: "Заявки",
+                label: "Закупки",
                 Icon: FileText,
-                badge: hydrated ? counts.rfqs_new : 0,
-                match: (p) => p.startsWith("/customer/rfqs"),
+                badge: hydrated ? counts.rfqs_new + counts.approvals_new : 0,
+                match: (p) =>
+                  p.startsWith("/customer/rfqs") || p.startsWith("/customer/approvals"),
               },
               {
                 href: "/customer/contracts?tab=active",
                 label: "Сделки",
-                Icon: FileCheck,
+                Icon: Briefcase,
                 badge: hydrated ? counts.deals_new : 0,
-                match: (p) => p.startsWith("/customer/contracts"),
+                match: (p) =>
+                  p.startsWith("/customer/contracts") ||
+                  p.startsWith("/customer/payments"),
               },
               {
                 href: "/customer/messages",

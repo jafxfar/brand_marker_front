@@ -2,7 +2,14 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
-import { Plus } from "lucide-react"
+import {
+  BadgeCheck,
+  Lock,
+  Plus,
+  ShoppingCart,
+  UserPlus,
+  Wallet,
+} from "lucide-react"
 import { useQueries } from "@tanstack/react-query"
 import { useAuthStore } from "@/lib/store/auth-store"
 import { useRfqsStore } from "@/lib/store/rfqs-store"
@@ -11,7 +18,7 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
-import { formatCurrency, formatPrice } from "@/lib/format"
+import { formatCurrency, formatIsoDateTime, formatPrice } from "@/lib/format"
 import { isApiEnabled } from "@/lib/api/config"
 import { useRfqsQuery } from "@/hooks/api/use-rfqs-query"
 import { useContractsQuery } from "@/hooks/api/use-contracts-query"
@@ -19,21 +26,33 @@ import { proposalsApi } from "@/lib/api/proposals"
 import { proposalKeys } from "@/hooks/api/use-proposals-query"
 import { useSupplierActorName } from "@/hooks/api/use-supplier-name"
 import { getBuyerUnreadMessageCount } from "@/lib/buyer-dashboard"
-import { getEscrowSummary } from "@/lib/contract-display"
 import { OPEN_RFQ_STATUSES } from "@/lib/rfq-display"
 import { isDealOpen } from "@/lib/process/deal-stages"
 import { buildBuyerTodo, type BuyerRfqProposalsSummary } from "@/lib/process/todo"
 import { MOCK_BUYER_APPROVALS } from "@/lib/mock/buyer-approvals"
 import { MOCK_BUYER_SPEND } from "@/lib/mock/buyer-spend"
 import { buildSpendSeriesFromHistory } from "@/lib/buyer-spend"
+import { mapApiPaymentHistoryEvent } from "@/lib/buyer-payments-display"
 import { useApprovalsQuery } from "@/hooks/api/use-approvals-query"
 import { usePaymentHistoryQuery } from "@/hooks/api/use-payments-query"
 import { Button } from "@/components/ui/button"
-import { PageFrame, PageHeader } from "@/components/layout"
+import { PageFrame } from "@/components/layout"
+import { HeroCard, VerifiedChip } from "@/components/bm"
 import { SpendChart } from "@/components/cabinet/dashboard/spend-chart"
 import { HomeDealsPanel } from "@/components/cabinet/dashboard/home-deals-panel"
+import { DashboardPanel } from "@/components/cabinet/dashboard/dashboard-panel"
+import { QuickActions } from "@/components/cabinet/dashboard/quick-actions"
+import {
+  OpsList,
+  type OpsItem,
+} from "@/components/cabinet/dashboard/ops-list"
 import { ActivateRoleBanner } from "@/components/company/activate-role-banner"
-import { MetricTile, TodoList } from "@/components/process"
+import { TodoList } from "@/components/process"
+import { firstName, greet } from "@/lib/greet"
+import {
+  sumAwaitingPayment,
+  sumEscrowHeld,
+} from "@/lib/dashboard-money"
 import type { ContractWithRelations, Proposal, RfqWithRelations } from "@/types"
 
 export default function CustomerDashboard() {
@@ -121,7 +140,7 @@ export default function CustomerDashboard() {
   )
   const { data: paymentHistoryPage } = usePaymentHistoryQuery(
     hydrated && useApi,
-    { page: 1, pageSize: 20 },
+    { page: 1, pageSize: 8 },
   )
 
   const pendingApprovals = (
@@ -154,10 +173,8 @@ export default function CustomerDashboard() {
   })
 
   const openDeals = contracts.filter(isDealOpen)
-  const heldAmount = contracts.reduce(
-    (sum, c) => sum + getEscrowSummary(c).held,
-    0,
-  )
+  const heldAmount = sumEscrowHeld(contracts)
+  const toPayAmount = sumAwaitingPayment(contracts)
   const loading = !hydrated || (useApi && (rfqsLoading || contractsLoading))
 
   const spendSeries = useMemo(() => {
@@ -165,89 +182,171 @@ export default function CustomerDashboard() {
     return buildSpendSeriesFromHistory(paymentHistoryPage?.items ?? [])
   }, [useApi, paymentHistoryPage?.items])
   const lastSpend = spendSeries[spendSeries.length - 1]?.[1] ?? 0
-  const prevSpend = spendSeries[spendSeries.length - 2]?.[1] ?? 0
-  const spendDeltaPct =
-    prevSpend > 0 ? Math.round(((lastSpend - prevSpend) / prevSpend) * 100) : 0
-  const lastMonthLabel = spendSeries[spendSeries.length - 1]?.[0] ?? ""
-  const prevMonthLabel = spendSeries[spendSeries.length - 2]?.[0] ?? ""
-  const companyLabel =
-    hydrated && user?.company
-      ? `${user.company} · закупки компании`
-      : "Закупки компании"
+
+  const ops: OpsItem[] = useMemo(() => {
+    const events = useApi
+      ? (paymentHistoryPage?.items ?? []).map(mapApiPaymentHistoryEvent)
+      : []
+    return events.slice(0, 8).map((e) => {
+      const tone =
+        e.type === "funding" ? "hold" : e.type === "release" ? "out" : "in"
+      return {
+        id: e.id,
+        title: e.title,
+        meta: `БМ‑${e.contractId} · ${formatIsoDateTime(e.at)}`,
+        amount:
+          e.type === "release"
+            ? formatPrice(e.amount)
+            : `−${formatPrice(e.amount)}`,
+        status:
+          e.type === "funding"
+            ? "на гарантии"
+            : e.type === "release"
+              ? "переведено поставщику"
+              : "возврат",
+        tone,
+      }
+    })
+  }, [useApi, paymentHistoryPage?.items])
+
+  const companyTitle = hydrated && user?.company ? user.company : "Покупатель"
+  const name = firstName(user?.name)
+  const verified = Boolean(user?.company)
 
   return (
-    <PageFrame>
+    <PageFrame className="max-w-none space-y-5">
       <ActivateRoleBanner
         targetSide="supplier"
         redirectTo="/supplier"
         label="Хотите продавать на платформе? Активируйте роль исполнителя на этом же аккаунте."
       />
-      <PageHeader
-        title="Обзор"
-        description={companyLabel}
-        actions={
-          <Button asChild size="lg" className="lg:hidden">
+
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[14.5px] text-mute">
+            {greet()}
+            {name ? `, ${name}` : ""}
+          </p>
+          <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-ink">
+            {companyTitle}
+          </h1>
+        </div>
+        <VerifiedChip verified={verified} />
+      </div>
+
+      <HeroCard>
+        <div className="grid items-end gap-6 md:grid-cols-[1fr_auto]">
+          <div>
+            <span className="inline-flex items-center gap-2 text-[14px] text-white/70">
+              <Lock className="size-4" aria-hidden />
+              На гарантии в банке‑партнёре
+            </span>
+            <div className="mt-1 tnum text-[40px] font-extrabold leading-tight tracking-[-0.02em]">
+              {loading ? "—" : formatPrice(heldAmount)}
+            </div>
+            <p className="mt-1 text-[14px] text-white/70">
+              Поставщики получат деньги только после вашей приёмки
+            </p>
+          </div>
+          <dl className="grid grid-cols-2 gap-3 md:min-w-[320px]">
+            <div className="rounded-xl bg-white/10 p-3">
+              <dt className="text-[12.5px] text-white/70">Ждёт оплаты</dt>
+              <dd className="tnum text-[17px] font-bold">
+                {loading ? "—" : formatPrice(toPayAmount)}
+              </dd>
+            </div>
+            <div className="rounded-xl bg-white/10 p-3">
+              <dt className="text-[12.5px] text-white/70">Расходы за месяц</dt>
+              <dd className="tnum text-[17px] font-bold">
+                {loading ? "—" : formatPrice(lastSpend)}
+              </dd>
+            </div>
+          </dl>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Button
+            asChild
+            variant="outline"
+            className="border-white bg-white text-ink hover:bg-canvas"
+          >
             <Link href="/customer/rfqs/new">
-              <Plus size={17} /> Новая заявка
+              <Plus className="size-4" />
+              Новая заявка
             </Link>
           </Button>
-        }
+          <Button
+            asChild
+            variant="outline"
+            className="border-white/25 bg-white/10 text-white hover:bg-white/20"
+          >
+            <Link href="/customer/payments">Оплатить</Link>
+          </Button>
+        </div>
+      </HeroCard>
+
+      <QuickActions
+        actions={[
+          {
+            href: "/customer/rfqs/new",
+            label: "Новая заявка",
+            Icon: Plus,
+          },
+          {
+            href: "/services",
+            label: "Купить в каталоге",
+            Icon: ShoppingCart,
+          },
+          {
+            href: "/customer/payments",
+            label: "Оплатить счёт",
+            Icon: Wallet,
+          },
+          {
+            href: "/customer/approvals",
+            label: "Согласовать",
+            Icon: BadgeCheck,
+          },
+          {
+            href: "/customer/company",
+            label: "Пригласить сотрудника",
+            Icon: UserPlus,
+          },
+        ]}
       />
 
-      <div className="grid gap-6">
-        <TodoList
-          items={todo}
-          loading={loading}
-          emptyText="Всё сделано."
-        />
-
-        <section
-          className="grid grid-cols-2 gap-3 lg:grid-cols-4"
-          aria-label="Сводка"
+      <div className="grid items-start gap-5 xl:grid-cols-[1.15fr_1fr]">
+        <DashboardPanel
+          title="Нужно сделать"
+          badge={
+            todo.length > 0 ? (
+              <span className="grid h-6 place-items-center rounded-full bg-amber-50 px-2 text-[12.5px] font-bold text-amber-800">
+                {todo.length}
+              </span>
+            ) : null
+          }
         >
-          <MetricTile
-            label="Открытые заявки"
-            value={loading ? "—" : String(openRfqs.length)}
-            hint="принимают КП"
-            href="/customer/rfqs?status=receiving_proposals"
-          />
-          <MetricTile
-            label="Сделки в работе"
-            value={loading ? "—" : String(openDeals.length)}
-            hint="от договора до приёмки"
-            href="/customer/contracts?tab=active"
-          />
-          <MetricTile
-            label="На гарантии"
-            value={loading ? "—" : formatPrice(heldAmount)}
-            hint="в банке‑партнёре до приёмки"
-            href="/customer/payments?tab=escrow"
-          />
-          <MetricTile
-            label={lastMonthLabel ? `Расходы · ${lastMonthLabel}` : "Расходы"}
-            value={loading ? "—" : formatPrice(lastSpend)}
-            hint={
-              spendDeltaPct > 0 && prevMonthLabel
-                ? `+${spendDeltaPct}% к ${prevMonthLabel.toLowerCase()}`
-                : spendDeltaPct < 0 && prevMonthLabel
-                  ? `${spendDeltaPct}% к ${prevMonthLabel.toLowerCase()}`
-                  : "за текущий месяц"
-            }
-            href="/customer/payments"
-          />
-        </section>
-
-        <section className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
-          <SpendChart
-            series={spendSeries}
-            note={useApi ? "По оплаченным этапам сделок" : undefined}
-          />
-          <HomeDealsPanel
-            contracts={contracts}
-            getSupplierName={getSupplierName}
+          <TodoList
+            items={todo}
             loading={loading}
+            emptyText="Всё сделано."
+            title=""
           />
-        </section>
+        </DashboardPanel>
+        <DashboardPanel title="Операции" href="/customer/payments">
+          <OpsList items={ops} />
+        </DashboardPanel>
+      </div>
+
+      <div className="grid items-start gap-5 xl:grid-cols-[1.15fr_1fr]">
+        <HomeDealsPanel
+          contracts={openDeals}
+          getSupplierName={getSupplierName}
+          loading={loading}
+        />
+        <SpendChart
+          series={spendSeries}
+          note={useApi ? "По оплаченным этапам сделок" : undefined}
+        />
       </div>
     </PageFrame>
   )

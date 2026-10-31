@@ -99,8 +99,10 @@ export const TodoList = ({
   title = "Требует вашего действия",
   compact = true,
 }: TodoListProps) => (
-  <section className="grid gap-2" aria-label={title}>
-    <span className="text-[13px] font-semibold text-mute">{title}</span>
+  <section className="grid gap-2" aria-label={title || "Задачи"}>
+    {title ? (
+      <span className="text-[13px] font-semibold text-mute">{title}</span>
+    ) : null}
     {loading ? (
       <div className="mt-0 h-20 animate-pulse rounded-xl border border-line bg-white" />
     ) : items.length === 0 ? (

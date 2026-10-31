@@ -1,6 +1,7 @@
 export { LandingHero } from "@/components/landing/landing-hero"
 export { LandingHowItWorks } from "@/components/landing/landing-how-it-works"
 export { LandingAbout } from "@/components/landing/landing-about"
+export { LandingPopular } from "@/components/landing/landing-popular"
 export { LandingFaq } from "@/components/landing/landing-faq"
 export { LandingPricing } from "@/components/landing/landing-pricing"
 export { LandingCta } from "@/components/landing/landing-cta"

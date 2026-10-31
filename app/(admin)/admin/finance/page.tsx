@@ -28,6 +28,7 @@ const FinanceHub = () => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const isBilling = searchParams.get("view") === "billing"
   const tab = pickHubTab(searchParams.get("tab"), HUB_TABS, () => true)
 
   const setTab = useCallback(
@@ -40,6 +41,11 @@ const FinanceHub = () => {
         params.delete("view")
       } else {
         params.delete("tab")
+        // Keep billing hub when switching back to ledger from escrow/merchants
+        // only if we arrived via billing; otherwise clear alias.
+        if (params.get("view") === "billing") {
+          /* stay on billing ledger */
+        }
       }
       const qs = params.toString()
       router.replace(qs ? `${pathname}?${qs}` : pathname)
@@ -50,18 +56,26 @@ const FinanceHub = () => {
   return (
     <PageFrame>
       <PageHeader
-        title="Выплаты"
-        description="Выплаты поставщикам, эскроу и балансы мерчантов Alif"
+        title={isBilling ? "Подписки и доходы" : "Выплаты"}
+        description={
+          isBilling
+            ? "Тарифы поставщиков, услуги покупателям и комиссия площадки"
+            : "Выплаты поставщикам, эскроу и балансы мерчантов Alif"
+        }
       />
 
-      <SegmentedControl
-        value={tab}
-        options={HUB_TABS}
-        onChange={setTab}
-        ariaLabel="Разделы выплат"
-      />
+      {!isBilling ? (
+        <SegmentedControl
+          value={tab}
+          options={HUB_TABS}
+          onChange={setTab}
+          ariaLabel="Разделы выплат"
+        />
+      ) : null}
 
-      {tab === "escrow" ? (
+      {isBilling ? (
+        <AdminFinanceContent embedded />
+      ) : tab === "escrow" ? (
         <AdminEscrowContent embedded />
       ) : tab === "merchants" ? (
         <AdminMerchantBalancesContent embedded />

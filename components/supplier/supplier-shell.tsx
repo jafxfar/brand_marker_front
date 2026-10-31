@@ -2,12 +2,13 @@
 
 import { Suspense, useState } from "react"
 import {
-  LayoutDashboard, Inbox, FileCheck, MessageSquare, Menu, Loader2,
+  LayoutDashboard, Inbox, Briefcase, MessageSquare, Menu, Loader2,
 } from "lucide-react"
 import SupplierSidebar from "@/components/supplier/sidebar"
 import SupplierTopbar from "@/components/supplier/topbar"
 import { CabinetShell } from "@/components/layout/cabinet-shell"
 import { CabinetMobileNav } from "@/components/layout/cabinet-mobile-nav"
+import { SectionHub } from "@/components/layout/section-hub"
 import { SupportChatProvider } from "@/components/support/support-chat-context"
 import { SupportChatWidget } from "@/components/support/support-chat-widget"
 import { useCabinetGate } from "@/hooks/use-cabinet-gate"
@@ -39,6 +40,16 @@ export default function SupplierShell({ children }: { children: React.ReactNode 
       <CabinetShell
         sidebar={<SupplierSidebar />}
         topbar={<SupplierTopbar moreOpen={moreOpen} onMoreOpenChange={setMoreOpen} />}
+        sectionHub={
+          <Suspense fallback={null}>
+            <SectionHub
+              role="supplier"
+              badges={{
+                leads: hydrated ? counts.rfqs_new : 0,
+              }}
+            />
+          </Suspense>
+        }
         mobileNav={
           <CabinetMobileNav
             moreOpen={moreOpen}
@@ -54,14 +65,17 @@ export default function SupplierShell({ children }: { children: React.ReactNode 
                 label: "Заявки",
                 Icon: Inbox,
                 badge: hydrated ? counts.rfqs_new : 0,
-                match: (p) => p.startsWith("/supplier/rfqs"),
+                match: (p) =>
+                  p.startsWith("/supplier/rfqs") || p.startsWith("/supplier/proposals"),
               },
               {
                 href: "/supplier/contracts?tab=active",
                 label: "Сделки",
-                Icon: FileCheck,
+                Icon: Briefcase,
                 badge: hydrated ? counts.deals_new : 0,
-                match: (p) => p.startsWith("/supplier/contracts"),
+                match: (p) =>
+                  p.startsWith("/supplier/contracts") ||
+                  p.startsWith("/supplier/finance"),
               },
               {
                 href: "/supplier/messages",

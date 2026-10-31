@@ -12,6 +12,7 @@ type CabinetNavLinkProps = {
   badgeTone?: "brand" | "danger"
 }
 
+/** CNAV item — BrendMarket-v7.1 white sidebar (`bg-brand-50` active). */
 export function CabinetNavLink({
   href,
   label,
@@ -27,19 +28,23 @@ export function CabinetNavLink({
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[15px] transition",
+        "flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] transition",
         active
-          ? "bg-white font-bold text-ink shadow-[0_1px_3px_rgba(16,24,40,.10)]"
-          : "font-semibold text-ink/75 hover:bg-white/70 hover:text-ink",
+          ? "bg-brand-50 font-bold text-brand-700"
+          : "font-semibold text-ink/80 hover:bg-canvas hover:text-ink",
       )}
     >
-      <Icon className={cn("size-5", active ? "text-brand-600" : undefined)} aria-hidden />
+      <Icon className="size-5 shrink-0" aria-hidden />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {badge && badge > 0 ? (
         <span
           className={cn(
             "grid h-[22px] min-w-[22px] place-items-center rounded-full px-1.5 text-[12px] font-bold text-white",
-            badgeTone === "danger" ? "bg-red-600" : "bg-brand-600",
+            badgeTone === "danger"
+              ? "bg-red-500"
+              : active
+                ? "bg-brand-600"
+                : "bg-red-500",
           )}
         >
           {badge}

@@ -29,7 +29,7 @@ export const QueueTiles = ({ tiles }: QueueTilesProps) => (
     <span className="text-[13px] font-semibold text-mute">
       Все проверки проходят через администратора
     </span>
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {tiles.map((tile) => {
         const hot = tile.count > 0
         return (

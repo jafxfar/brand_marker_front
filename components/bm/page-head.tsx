@@ -7,24 +7,65 @@ type PageHeadProps = {
   description?: React.ReactNode
   badge?: React.ReactNode
   actions?: React.ReactNode
+  /**
+   * Sub-mode (HTML `S._sub`): hide H1, show only description + actions —
+   * used when section title lives in the cabinet topbar.
+   */
+  sub?: boolean
   className?: string
 }
 
-export function PageHead({ title, description, badge, actions, className }: PageHeadProps) {
+/** Page title block matching HTML `pageHead`. */
+export function PageHead({
+  title,
+  description,
+  badge,
+  actions,
+  sub = false,
+  className,
+}: PageHeadProps) {
+  if (sub) {
+    if (!description && !actions) return null
+    return (
+      <div
+        className={cn(
+          "mb-5 flex flex-wrap items-center justify-between gap-3",
+          className,
+        )}
+      >
+        {description ? (
+          <p className="min-w-0 text-[15px] text-mute">{description}</p>
+        ) : (
+          <span />
+        )}
+        {actions ? (
+          <div className="flex flex-wrap gap-2">{actions}</div>
+        ) : null}
+      </div>
+    )
+  }
+
   return (
-    <div className={cn("mb-5 flex flex-wrap items-start justify-between gap-3", className)}>
-      <div className="min-w-0 grid gap-1.5">
+    <div
+      className={cn(
+        "mb-6 flex flex-wrap items-end justify-between gap-4",
+        className,
+      )}
+    >
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-[26px] font-extrabold tracking-[-0.02em] text-ink sm:text-[28px]">
+          <h1 className="text-[28px] leading-tight font-extrabold tracking-[-0.02em] text-balance text-ink">
             {title}
           </h1>
           {badge}
         </div>
         {description ? (
-          <p className="text-[14.5px] text-mute">{description}</p>
+          <p className="mt-1.5 text-[16px] text-mute">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap gap-2">{actions}</div>
+      ) : null}
     </div>
   )
 }

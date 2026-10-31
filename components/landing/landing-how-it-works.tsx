@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Briefcase, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { newRfqRedirect, registerUrl } from "@/lib/marketplace-routes"
+import { newRfqRedirect, registerUrl, tariffsUrl } from "@/lib/marketplace-routes"
 
 const BUYER_STEPS = [
   ["Найдите товар в каталоге или разместите заявку", "Поставщики сами пришлют цены"],
@@ -81,7 +81,7 @@ export const LandingHowItWorks = () => (
         steps={SELLER_STEPS}
         primaryHref={registerUrl()}
         primaryLabel="Стать поставщиком"
-        secondaryHref="/#for-suppliers"
+        secondaryHref={tariffsUrl()}
         secondaryLabel="Сколько стоит"
       />
     </div>

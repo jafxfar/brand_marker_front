@@ -57,6 +57,13 @@ export const ordersUrl = () => "/orders"
 
 export const helpUrl = () => "/help"
 
+/** Public seller marketing + tariffs (BrendMarket-v7.1 `forsup` / `tariffs`). */
+export const forSuppliersUrl = (hash?: "tariffs") =>
+  hash ? `/for-suppliers#${hash}` : "/for-suppliers"
+
+/** Alias — same page, tariffs section. */
+export const tariffsUrl = () => forSuppliersUrl("tariffs")
+
 export const registerUrl = () => "/register"
 
 export const loginRedirect = (path: string) =>

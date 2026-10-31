@@ -1,9 +1,10 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { registerUrl } from "@/lib/marketplace-routes"
+import { forSuppliersUrl, registerUrl, tariffsUrl } from "@/lib/marketplace-routes"
 
+/** Compact CTA — full seller story lives on `/for-suppliers`. */
 export const LandingCta = () => (
-  <section id="for-suppliers" className="mx-auto mt-16 mb-8 max-w-[1200px] px-4 lg:px-8">
+  <section className="mx-auto mt-16 mb-8 max-w-[1200px] px-4 lg:px-8">
     <div className="grid gap-6 rounded-2xl border border-line bg-white p-6 md:grid-cols-[1.2fr_auto] md:items-center md:p-8">
       <div className="grid gap-2">
         <h2 className="text-[26px] font-extrabold tracking-[-0.02em] text-ink">
@@ -19,7 +20,10 @@ export const LandingCta = () => (
           <Link href={registerUrl()}>Начать продавать</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/supplier">Кабинет продавца</Link>
+          <Link href={forSuppliersUrl()}>Подробнее</Link>
+        </Button>
+        <Button asChild variant="ghost">
+          <Link href={tariffsUrl()}>Тарифы</Link>
         </Button>
       </div>
     </div>

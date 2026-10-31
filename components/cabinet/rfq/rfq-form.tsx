@@ -888,11 +888,11 @@ export const RfqForm = ({
       />
 
       {invitedSupplierName && (
-        <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
-          <span className="font-semibold text-foreground">
+        <div className="mb-6 rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-3 text-sm">
+          <span className="font-semibold text-ink">
             {listingTitle ? "Отклик: " : "Приглашение: "}
           </span>
-          <span className="text-muted-foreground">
+          <span className="text-mute">
             {listingTitle
               ? `Отклик на «${listingTitle}» — заявка только для ${invitedSupplierName}`
               : `Заявка будет доступна только для ${invitedSupplierName}`}
@@ -908,17 +908,18 @@ export const RfqForm = ({
                 key={item.step}
                 className={cn(
                   "grid gap-2 text-[13px]",
-                  item.step === step
-                    ? "font-semibold text-foreground"
-                    : "text-muted-foreground",
+                  item.step === step ? "font-semibold text-ink" : "text-mute",
                 )}
                 aria-current={item.step === step ? "step" : undefined}
               >
                 <span
-                  className={cn("h-1", item.step <= step ? "bg-primary" : "bg-border")}
+                  className={cn(
+                    "h-1 rounded-full",
+                    item.step <= step ? "bg-brand-600" : "bg-line",
+                  )}
                 />
                 <span>
-                  <span className="mr-1 font-mono">{item.step}</span>
+                  <span className="mr-1 font-mono tnum">{item.step}</span>
                   {item.label}
                 </span>
               </li>
@@ -927,10 +928,10 @@ export const RfqForm = ({
         ) : (
           <div>
             <div className="mb-2 flex items-center justify-between text-sm">
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold text-ink">
                 {wizardSteps[step - 1].label}
               </span>
-              <span className="text-muted-foreground">Шаг {step} из 3</span>
+              <span className="text-mute">Шаг {step} из 3</span>
             </div>
             <ol className="grid grid-cols-3 gap-2" aria-label="Шаги создания заявки">
               {wizardSteps.map((item) => (
@@ -938,15 +939,13 @@ export const RfqForm = ({
                   <span
                     className={cn(
                       "block h-1.5 rounded-full transition-colors",
-                      item.step <= step ? "bg-primary" : "bg-line",
+                      item.step <= step ? "bg-brand-600" : "bg-line",
                     )}
                   />
                   <span
                     className={cn(
                       "mt-1.5 hidden text-xs sm:block",
-                      item.step === step
-                        ? "font-semibold text-foreground"
-                        : "text-muted-foreground",
+                      item.step === step ? "font-semibold text-ink" : "text-mute",
                     )}
                   >
                     {item.label}

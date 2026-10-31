@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { Suspense, useEffect, useRef } from "react"
 import { Loader2, ShieldOff } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import AdminTopbar from "@/components/admin/admin-topbar"
 import { CabinetShell } from "@/components/layout/cabinet-shell"
+import { SectionHub } from "@/components/layout/section-hub"
 import { PageEmptyState } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { useHydrated } from "@/hooks/use-hydrated"
@@ -81,7 +82,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <CabinetShell sidebar={<AdminSidebar />} topbar={<AdminTopbar />}>
+    <CabinetShell
+      sidebar={<AdminSidebar />}
+      topbar={<AdminTopbar />}
+      sectionHub={
+        <Suspense fallback={null}>
+          <SectionHub role="admin" />
+        </Suspense>
+      }
+    >
       {canAccessPath ? (
         children
       ) : (

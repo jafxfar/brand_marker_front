@@ -2,11 +2,13 @@ import Link from "next/link"
 import { Smartphone } from "lucide-react"
 import { BrandLogo } from "@/components/bm"
 import {
+  forSuppliersUrl,
   guaranteeUrl,
   helpUrl,
   newRfqRedirect,
   performersUrl,
   registerUrl,
+  tariffsUrl,
 } from "@/lib/marketplace-routes"
 
 export default function Footer() {
@@ -25,9 +27,9 @@ export default function Footer() {
           </span>
         </div>
 
-        <div>
-          <h3 className="mb-3 text-[14px] font-bold text-ink">Покупателям</h3>
-          <ul className="grid gap-2.5 text-[14px] text-mute">
+        <div className="grid content-start gap-3">
+          <b className="text-[14px] text-ink">Покупателям</b>
+          <ul className="grid gap-2.5 text-[14.5px] text-mute">
             <li>
               <Link href="/services" className="hover:text-ink">
                 Каталог
@@ -46,17 +48,17 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div>
-          <h3 className="mb-3 text-[14px] font-bold text-ink">Поставщикам</h3>
-          <ul className="grid gap-2.5 text-[14px] text-mute">
+        <div className="grid content-start gap-3">
+          <b className="text-[14px] text-ink">Поставщикам</b>
+          <ul className="grid gap-2.5 text-[14.5px] text-mute">
             <li>
-              <Link href="/#for-suppliers" className="hover:text-ink">
+              <Link href={forSuppliersUrl()} className="hover:text-ink">
                 Начать продавать
               </Link>
             </li>
             <li>
-              <Link href="/#for-suppliers" className="hover:text-ink">
-                Стоимость
+              <Link href={tariffsUrl()} className="hover:text-ink">
+                Тарифы для продавцов
               </Link>
             </li>
             <li>
@@ -67,9 +69,9 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div>
-          <h3 className="mb-3 text-[14px] font-bold text-ink">Помощь</h3>
-          <ul className="grid gap-2.5 text-[14px] text-mute">
+        <div className="grid content-start gap-3">
+          <b className="text-[14px] text-ink">Помощь</b>
+          <ul className="grid gap-2.5 text-[14.5px] text-mute">
             <li>
               <Link href={guaranteeUrl()} className="hover:text-ink">
                 Частые вопросы

@@ -3,22 +3,29 @@ type CabinetShellProps = {
   topbar: React.ReactNode
   children: React.ReactNode
   mobileNav?: React.ReactNode
+  /** Optional section hub (H1 + subtabs) rendered above page content */
+  sectionHub?: React.ReactNode
 }
 
+/** Full-height white rail layout from BrendMarket-v7.1 cabinet chrome. */
 export const CabinetShell = ({
   sidebar,
   topbar,
   children,
   mobileNav,
+  sectionHub,
 }: CabinetShellProps) => {
   return (
-    <div className="min-h-dvh bg-canvas pb-20 lg:pb-0">
-      {topbar}
-      <div className="mx-auto max-w-[1400px] lg:flex lg:gap-8 lg:px-8 lg:py-8">
-        <aside className="hidden w-[240px] shrink-0 lg:block">
-          <div className="sticky top-[92px]">{sidebar}</div>
-        </aside>
-        <main className="min-w-0 flex-1 px-4 py-6 lg:p-0">{children}</main>
+    <div className="min-h-dvh bg-canvas lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
+        {sidebar}
+      </aside>
+      <div className="flex min-w-0 flex-1 flex-col pb-20 lg:pb-0">
+        {topbar}
+        <main className="mx-auto w-full max-w-[1240px] flex-1 px-4 py-6 lg:px-8 lg:py-8">
+          {sectionHub}
+          {children}
+        </main>
       </div>
       {mobileNav}
     </div>

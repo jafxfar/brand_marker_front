@@ -1,46 +1,62 @@
+"use client"
+
 import Link from "next/link"
-import {
-  Monitor, FileText, BrickWall, Box, CupSoda, Shirt, Code2, Truck, Printer, Sparkles,
-} from "lucide-react"
-import { servicesUrl } from "@/lib/marketplace-routes"
+import { getIcon } from "@/lib/icon-map"
+import { useMarketplaceCategories } from "@/hooks/use-marketplace-categories"
+import { categoryUrl, servicesUrl } from "@/lib/marketplace-routes"
 
-const CATEGORIES = [
-  { name: "Компьютеры и оргтехника", Icon: Monitor, count: 24 },
-  { name: "Офис и канцелярия", Icon: FileText, count: 18 },
-  { name: "Стройматериалы", Icon: BrickWall, count: 31 },
-  { name: "Упаковка и тара", Icon: Box, count: 12 },
-  { name: "Продукты для HoReCa", Icon: CupSoda, count: 9 },
-  { name: "Спецодежда и СИЗ", Icon: Shirt, count: 15 },
-  { name: "ИТ‑услуги", Icon: Code2, count: 22 },
-  { name: "Логистика", Icon: Truck, count: 11 },
-  { name: "Реклама и печать", Icon: Printer, count: 8 },
-  { name: "Клининг", Icon: Sparkles, count: 7 },
-]
+export const LandingAbout = () => {
+  const { categories, isLoading } = useMarketplaceCategories()
+  const list = categories.slice(0, 10)
 
-export const LandingAbout = () => (
-  <section id="about" className="mx-auto mt-16 max-w-[1200px] px-4 lg:px-8">
-    <div className="mb-5 flex items-end justify-between gap-4">
-      <h2 className="text-[28px] font-extrabold tracking-[-0.02em] text-ink">Категории</h2>
-      <Link href="/services" className="text-[15px] font-semibold text-brand-700 hover:underline">
-        Весь каталог
-      </Link>
-    </div>
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      {CATEGORIES.map(({ name, Icon, count }) => (
+  return (
+    <section id="about" className="mx-auto mt-16 max-w-[1200px] px-4 lg:px-8">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <h2 className="text-[28px] font-extrabold tracking-[-0.02em] text-ink">
+          Категории
+        </h2>
         <Link
-          key={name}
-          href={servicesUrl({ q: name })}
-          className="grid gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:border-[#C9CED6] hover:shadow-[0_8px_24px_rgba(16,24,40,.06)]"
+          href={servicesUrl()}
+          className="text-[15px] font-semibold text-brand-700 hover:underline"
         >
-          <span className="grid size-11 place-items-center rounded-xl bg-canvas text-ink">
-            <Icon className="size-6" aria-hidden />
-          </span>
-          <span>
-            <b className="block text-[15px] leading-snug">{name}</b>
-            <span className="text-[13px] text-mute">{count} предложений</span>
-          </span>
+          Весь каталог
         </Link>
-      ))}
-    </div>
-  </section>
-)
+      </div>
+      {isLoading && list.length === 0 ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[128px] animate-pulse rounded-2xl border border-line bg-white"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {list.map((cat) => {
+            const Icon = getIcon(cat.icon)
+            return (
+              <Link
+                key={cat.id}
+                href={categoryUrl(cat.slug)}
+                className="grid gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:border-[#C9CED6] hover:shadow-[0_8px_24px_rgba(16,24,40,.06)]"
+              >
+                <span className="grid size-11 place-items-center rounded-xl bg-canvas text-ink">
+                  <Icon className="size-6" aria-hidden />
+                </span>
+                <span>
+                  <b className="block text-[15px] leading-snug">{cat.label}</b>
+                  <span className="text-[13px] text-mute">
+                    {cat.subcategories?.length
+                      ? `${cat.subcategories.length} подкатегорий`
+                      : "Смотреть предложения"}
+                  </span>
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
