@@ -1,26 +1,32 @@
 import Link from "next/link"
-import { BadgeCheck, FileCheck, Building2 } from "lucide-react"
+import { BadgeCheck, FileCheck, Building2, Shield } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
+import { TrustLevelsGrid } from "@/components/bm/trust-levels-grid"
+import { TRUST_LEVELS } from "@/lib/trust-levels"
 import { performersUrl } from "@/lib/marketplace-routes"
 
 export default function VerificationPage() {
   return (
     <PageShell>
       <section className="bg-background py-12">
-        <div className="max-w-[800px] mx-auto px-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
+        <div className="mx-auto max-w-[800px] px-6">
+          <div className="mb-8 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
               <BadgeCheck size={24} className="text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-foreground">Верификация исполнителей</h1>
-              <p className="text-sm text-muted-foreground mt-1">Проверенные юрлица и ИП на платформе</p>
+              <h1 className="text-3xl font-black text-foreground">
+                Доверие на платформе
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Уровни бесплатные — их дают за проверку и честную работу
+              </p>
             </div>
           </div>
 
-          <div className="bg-white border border-border rounded-2xl p-8 space-y-6">
+          <div className="mb-6 space-y-6 rounded-2xl border border-border bg-white p-8">
             <div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="mb-3 flex items-center gap-2">
                 <Building2 size={18} className="text-primary" />
                 <h2 className="text-lg font-bold text-foreground">Что мы проверяем</h2>
               </div>
@@ -33,22 +39,43 @@ export default function VerificationPage() {
             </div>
 
             <div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="mb-3 flex items-center gap-2">
                 <FileCheck size={18} className="text-primary" />
                 <h2 className="text-lg font-bold text-foreground">Значок верификации</h2>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Исполнители с синим значком прошли проверку документов. Это не гарантирует идеальный результат каждой сделки, но подтверждает, что компания реальна и соответствует требованиям платформы.
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                «Проверенный» — первый уровень: документы прошли проверку. Это не
+                гарантия каждой сделки, но подтверждение, что исполнитель реален.
               </p>
             </div>
-
-            <Link
-              href={performersUrl({ verified: true })}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-bold px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors"
-            >
-              Смотреть верифицированных исполнителей
-            </Link>
           </div>
+
+          <div className="mb-8">
+            <div className="mb-4 flex items-center gap-2">
+              <Shield size={18} className="text-primary" />
+              <h2 className="text-lg font-bold text-foreground">Уровни доверия</h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Дальше щиты открываются автоматически: рейтинг, число сделок и доля
+              успешных. Оплата не нужна.
+            </p>
+            <TrustLevelsGrid />
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              {TRUST_LEVELS.map((level) => (
+                <li key={level.id}>
+                  <span className="font-semibold text-foreground">{level.name}.</span>{" "}
+                  {level.description}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <Link
+            href={performersUrl({ verified: true })}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Смотреть проверенных исполнителей
+          </Link>
         </div>
       </section>
     </PageShell>

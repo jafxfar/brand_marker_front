@@ -4,10 +4,27 @@ import type {
   InvoiceStatus,
   SupplierBalanceSummary,
   Withdrawal,
+  WithdrawalBank,
   WithdrawalDestinationType,
   WithdrawalStatus,
 } from "@/types"
+import { WITHDRAWAL_BANKS } from "@/types"
 import { getEscrowSummary, PENDING_MILESTONE_STATUSES } from "@/lib/contract-display"
+
+export { WITHDRAWAL_BANKS }
+
+export const withdrawalBankLabel = (bank: WithdrawalBank | string | null | undefined): string => {
+  switch (bank) {
+    case "alif":
+      return "Alif"
+    case "dc":
+      return "DC"
+    case "eskhata":
+      return "Eskhata"
+    default:
+      return bank ? String(bank) : "Банк"
+  }
+}
 
 const RESERVED_WITHDRAWAL_STATUSES: WithdrawalStatus[] = [
   "pending",

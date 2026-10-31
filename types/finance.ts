@@ -14,6 +14,10 @@ export type WithdrawalDestination = {
   is_default: boolean
 }
 
+export const WITHDRAWAL_BANKS = ["alif", "dc", "eskhata"] as const
+
+export type WithdrawalBank = (typeof WITHDRAWAL_BANKS)[number]
+
 export const WITHDRAWAL_STATUSES = [
   "pending",
   "processing",
@@ -31,6 +35,7 @@ export type Withdrawal = {
   amount: number
   currency: Currency
   status: WithdrawalStatus
+  bank?: WithdrawalBank | null
   created_at: string
   completed_at: string | null
 }

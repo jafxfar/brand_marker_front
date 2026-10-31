@@ -58,8 +58,11 @@ export const useCreateDestinationMutation = () => {
 export const useRequestWithdrawalMutation = () => {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { destination_id: number; amount: number }) =>
-      supplierFinanceApi.requestWithdrawal(data),
+    mutationFn: (data: {
+      destination_id: number
+      amount: number
+      bank: "alif" | "dc" | "eskhata"
+    }) => supplierFinanceApi.requestWithdrawal(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supplierFinanceKeys.all })
       qc.invalidateQueries({ queryKey: supplierPaymentKeys.balance() })

@@ -18,12 +18,14 @@ import {
   useUpdateSupplierCompanyMutation,
   useUpdateSupplierTeamMemberMutation,
 } from "@/hooks/api/use-supplier-companies-query"
+import { useEnrichReviewParties } from "@/hooks/api/use-enrich-review-parties"
 import { supplierCompaniesApi } from "@/lib/api/supplier/companies"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { publicApi } from "@/lib/api/public"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ImageCropDialog } from "@/components/ui/image-crop-dialog"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { ProfileSectionCard } from "@/components/supplier/company/profile-section-card"
 import { ReviewsReceivedTable } from "@/components/supplier/finance/reviews-received-table"
@@ -137,14 +139,15 @@ export default function SupplierCompanyPage() {
     enabled: hydrated && useApi && Boolean(company?.id),
   })
 
-  const reviews = useApi
+  const rawReviews = useApi
     ? (apiReviewsPage?.items ?? [])
     : hydrated
       ? (company?.reviews ?? [])
       : []
+  const reviews = useEnrichReviewParties(rawReviews, hydrated && useApi)
 
   const getReviewerName = (reviewerActorId: number) =>
-    getCompany(reviewerActorId)?.title ?? `Заказчик #${reviewerActorId}`
+    getCompany(reviewerActorId)?.title ?? `Участник #${reviewerActorId}`
 
   const getContractTitle = (contractId: number) =>
     getContract(contractId)?.title ?? `Сделка #${contractId}`
@@ -155,6 +158,12 @@ export default function SupplierCompanyPage() {
     DEFAULT_SUPPLIER_PROFILE_EXTRA,
   )
   const [saving, setSaving] = useState(false)
+  const [photoCrop, setPhotoCrop] = useState<{
+    src: string
+    name: string
+    queue: File[]
+  } | null>(null)
+  const [photoUploading, setPhotoUploading] = useState(false)
 
   useEffect(() => {
     if (!company) return
@@ -305,35 +314,78 @@ export default function SupplierCompanyPage() {
     toast.success("Сотрудник добавлен")
   }
 
-  const handlePhotos = async (files: FileList | null) => {
+  const openPhotoCrop = (files: FileList | null) => {
     if (!files) return
-    const selected = Array.from(files).filter((f) => /^image\//.test(f.type))
-    if (!selected.length) return
-
-    if (useApi) {
-      try {
-        const uploaded: { src: string; name: string }[] = []
-        for (const file of selected) {
-          if (extra.photos.length + uploaded.length >= 12) break
-          const res = await supplierCompaniesApi.uploadLogo(file)
-          uploaded.push({ src: res.logo, name: file.name })
-        }
-        setExtra((prev) => ({
-          ...prev,
-          photos: [...prev.photos, ...uploaded].slice(0, 12),
-        }))
-      } catch (err) {
-        toast.error(getApiErrorMessage(err, "Не удалось загрузить фото"))
+    const remaining = Math.max(0, 12 - extra.photos.length)
+    const selected = Array.from(files)
+      .filter((f) => /^image\//.test(f.type))
+      .slice(0, remaining)
+    if (!selected.length) {
+      if (extra.photos.length >= 12) {
+        toast.error("Можно загрузить не больше 12 фото")
       }
       return
     }
-
-    const next = [...extra.photos]
-    selected.forEach((file) => {
-      if (next.length >= 12) return
-      next.push({ src: URL.createObjectURL(file), name: file.name })
+    const [first, ...rest] = selected
+    setPhotoCrop({
+      src: URL.createObjectURL(first),
+      name: first.name,
+      queue: rest,
     })
-    setExtra((prev) => ({ ...prev, photos: next }))
+  }
+
+  const appendCroppedPhoto = async (file: File) => {
+    setPhotoUploading(true)
+    try {
+      if (useApi) {
+        const res = await supplierCompaniesApi.uploadLogo(file)
+        setExtra((prev) => ({
+          ...prev,
+          photos: [...prev.photos, { src: res.logo, name: file.name }].slice(
+            0,
+            12,
+          ),
+        }))
+      } else {
+        setExtra((prev) => ({
+          ...prev,
+          photos: [
+            ...prev.photos,
+            { src: URL.createObjectURL(file), name: file.name },
+          ].slice(0, 12),
+        }))
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Не удалось загрузить фото"))
+      throw err
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
+
+  const handleCroppedPhoto = async (file: File) => {
+    const current = photoCrop
+    const slotsAfter = 12 - extra.photos.length - 1
+    await appendCroppedPhoto(file)
+    if (current?.src.startsWith("blob:")) URL.revokeObjectURL(current.src)
+
+    const next = current?.queue ?? []
+    if (next.length > 0 && slotsAfter > 0) {
+      const [first, ...rest] = next
+      setPhotoCrop({
+        src: URL.createObjectURL(first),
+        name: first.name,
+        queue: rest,
+      })
+      return
+    }
+    setPhotoCrop(null)
+  }
+
+  const handlePhotoCropOpenChange = (open: boolean) => {
+    if (open) return
+    if (photoCrop?.src.startsWith("blob:")) URL.revokeObjectURL(photoCrop.src)
+    setPhotoCrop(null)
   }
 
   const handleCerts = async (files: FileList | null) => {
@@ -591,7 +643,7 @@ export default function SupplierCompanyPage() {
                       multiple
                       className="sr-only"
                       onChange={(e) => {
-                        void handlePhotos(e.target.files)
+                        openPhotoCrop(e.target.files)
                         e.target.value = ""
                       }}
                     />
@@ -784,6 +836,19 @@ export default function SupplierCompanyPage() {
         onOpenChange={setInviteOpen}
         busy={teamBusy}
         onInvite={handleInvite}
+      />
+
+      <ImageCropDialog
+        open={Boolean(photoCrop)}
+        imageSrc={photoCrop?.src ?? null}
+        fileName={photoCrop?.name}
+        aspect={4 / 3}
+        title="Границы фото компании"
+        description="Настройте рамку 4∶3 — так фото будет выглядеть в профиле. Перетащите изображение и измените масштаб."
+        confirmLabel="Добавить фото"
+        busy={photoUploading}
+        onOpenChange={handlePhotoCropOpenChange}
+        onConfirm={handleCroppedPhoto}
       />
     </PageFrame>
   )

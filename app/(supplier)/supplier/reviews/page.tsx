@@ -10,8 +10,10 @@ import {
   useSupplierReceivedReviewsQuery,
   useSupplierReviewsQuery,
 } from "@/hooks/api/use-reviews-query"
+import { useEnrichReviewParties } from "@/hooks/api/use-enrich-review-parties"
 import { useSupplierContractsQuery } from "@/hooks/api/use-contracts-query"
 import { isApiEnabled } from "@/lib/api/config"
+import { formatReviewParty } from "@/lib/review-party"
 import { useCompaniesStore } from "@/lib/store/companies-store"
 import type { ContractWithRelations, Review } from "@/types"
 
@@ -30,6 +32,16 @@ const RatingStars = ({ rating }: { rating: number }) => (
     ))}
   </div>
 )
+
+const PartyCell = ({ review, fallback }: { review: Review; fallback: string }) => {
+  const { primary, secondary } = formatReviewParty(review.target, fallback)
+  return (
+    <div className="min-w-0">
+      <p className="font-semibold text-foreground truncate">{primary}</p>
+      {secondary && <p className="text-xs text-muted-foreground truncate">{secondary}</p>}
+    </div>
+  )
+}
 
 const GivenReviewsTable = ({
   reviews,
@@ -70,8 +82,11 @@ const GivenReviewsTable = ({
         <tbody className="divide-y divide-border">
           {reviews.map((review) => (
             <tr key={review.id} className="hover:bg-secondary/30">
-              <td className="px-4 py-3 font-semibold text-foreground">
-                {getBuyerName(review.target_actor_id)}
+              <td className="px-4 py-3">
+                <PartyCell
+                  review={review}
+                  fallback={getBuyerName(review.target_actor_id)}
+                />
               </td>
               <td className="px-4 py-3">
                 <RatingStars rating={review.rating} />
@@ -115,16 +130,21 @@ export default function SupplierReviewsPage() {
 
   const givenTotalPages = givenPage?.total_pages ?? 0
   const receivedTotalPages = receivedPage?.total_pages ?? 0
-  const given = givenPage?.items ?? []
-  const received = receivedPage?.items ?? []
+  const given = useEnrichReviewParties(givenPage?.items ?? [], hydrated && useApi)
+  const received = useEnrichReviewParties(
+    receivedPage?.items ?? [],
+    hydrated && useApi,
+  )
   const contracts = (contractsPage?.items ?? []) as ContractWithRelations[]
 
   const nameFromContracts = (actorId: number) => {
-    const match = contracts.find((c) => c.buyer_actor_id === actorId)
-    if (match?.conversation?.messages?.length) {
-      // no buyer title on contract — fall through
+    const match = contracts.find(
+      (c) => c.buyer_actor_id === actorId || c.supplier_actor_id === actorId,
+    )
+    if (match?.title) {
+      // title is deal title, not party — keep fallback below
     }
-    return getCompany(actorId)?.title ?? `Заказчик #${actorId}`
+    return getCompany(actorId)?.title ?? `Участник #${actorId}`
   }
 
   const getContractTitle = (contractId: number) =>

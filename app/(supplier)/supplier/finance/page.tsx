@@ -16,6 +16,7 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { getActorId } from "@/lib/auth-display"
 import { isApiEnabled } from "@/lib/api/config"
+import { getApiErrorMessage } from "@/lib/api/client"
 import {
   useSupplierBalanceQuery,
   useSupplierPaymentHistoryQuery,
@@ -27,11 +28,11 @@ import {
   useRequestWithdrawalMutation,
   useCreateDestinationMutation,
 } from "@/hooks/api/use-supplier-finance-query"
-import { getSupplierBalances } from "@/lib/finance-display"
+import { getSupplierBalances, withdrawalBankLabel } from "@/lib/finance-display"
 import { WithdrawalForm } from "@/components/supplier/finance/withdrawal-form"
 import { InvoicesTable } from "@/components/supplier/finance/invoices-table"
 import { isDealOpen } from "@/lib/process/deal-stages"
-import type { Currency, WithdrawalDestinationType } from "@/types"
+import type { Currency, WithdrawalBank, WithdrawalDestinationType } from "@/types"
 
 const WITHDRAWAL_LABEL: Record<string, string> = {
   pending: "В обработке",
@@ -141,7 +142,7 @@ export default function SupplierFinancePage() {
       (c) => c.supplier_actor_id === actorId && isDealOpen(c),
     )
     return Math.round(
-      open.reduce((sum, c) => sum + c.agreed_amount * 0.96, 0),
+      open.reduce((sum, c) => sum + c.agreed_amount * 0.97, 0),
     )
   }, [balances.escrowLocked, contracts, actorId])
 
@@ -160,10 +161,11 @@ export default function SupplierFinancePage() {
     }[] = []
 
     withdrawalList.forEach((w) => {
+      const bankName = withdrawalBankLabel(w.bank)
       rows.push({
         key: `w-${w.id}`,
         date: w.created_at,
-        what: "Вывод на счёт",
+        what: `Вывод через ${bankName}`,
         amount: -w.amount,
         currency: w.currency,
         status: w.status,
@@ -176,7 +178,7 @@ export default function SupplierFinancePage() {
         key: `p-${p.contract_id}-${p.milestone_id}`,
         date: p.created_at,
         what: p.title,
-        amount: p.status === "released" ? p.amount : p.amount,
+        amount: p.amount,
         currency: p.currency,
         status: p.status,
         statusLabel:
@@ -217,16 +219,21 @@ export default function SupplierFinancePage() {
   const handleWithdrawal = async (input: {
     destinationId: number
     amount: number
+    bank: WithdrawalBank
   }) => {
     if (!useApi) return requestWithdrawal(actorId, input)
     try {
       await withdrawalMutation.mutateAsync({
         destination_id: input.destinationId,
         amount: input.amount,
+        bank: input.bank,
       })
       return { ok: true as const }
-    } catch {
-      return { ok: false as const, error: "Не удалось создать заявку на вывод" }
+    } catch (err) {
+      return {
+        ok: false as const,
+        error: getApiErrorMessage(err, "Не удалось создать заявку на вывод"),
+      }
     }
   }
 
@@ -238,7 +245,7 @@ export default function SupplierFinancePage() {
     <PageFrame>
       <PageHeader
         title="Финансы"
-        description="Выплаты по завершённым сделкам"
+        description="Выплаты по завершённым сделкам через банк"
         actions={
           <Button type="button" size="lg" onClick={scrollToWithdraw}>
             <Landmark size={16} />
@@ -269,7 +276,7 @@ export default function SupplierFinancePage() {
         />
         <MetricTile
           label="Комиссия площадки"
-          value="4%"
+          value="3%"
           hint="только с завершённых сделок"
         />
       </section>
@@ -344,7 +351,11 @@ export default function SupplierFinancePage() {
         id="payout"
         className="mt-8 scroll-mt-24 rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,.04)] md:p-6"
       >
-        <b className="text-[15px]">Вывести средства</b>
+        <b className="text-[15px]">Вывести через банк</b>
+        <p className="mt-1 text-[13.5px] text-mute">
+          Выберите банк, счёт и сумму. Заявка уйдёт в обработку; для Alif
+          создаётся выплата в админке.
+        </p>
         <div className="mt-4 max-w-lg">
           <WithdrawalForm
             destinations={destinationList}

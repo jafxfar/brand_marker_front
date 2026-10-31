@@ -18,6 +18,7 @@ import { useContractsStore } from "@/lib/store/contracts-store"
 type RequestWithdrawalInput = {
   destinationId: number
   amount: number
+  bank?: "alif" | "dc" | "eskhata"
 }
 
 type RequestWithdrawalResult =
@@ -91,6 +92,14 @@ export const useFinanceStore = create<FinanceState>()(
       },
 
       requestWithdrawal: (actorId, input) => {
+        const bank = input.bank ?? "alif"
+        if (bank !== "alif") {
+          return {
+            ok: false,
+            error: `Вывод через ${bank === "dc" ? "DC" : "Eskhata"} пока недоступен`,
+          }
+        }
+
         const destination = get().destinations.find(
           (d) => d.id === input.destinationId && d.actor_id === actorId,
         )
@@ -116,6 +125,7 @@ export const useFinanceStore = create<FinanceState>()(
           amount: input.amount,
           currency: balances.currency,
           status: "pending",
+          bank,
           created_at: new Date().toISOString(),
           completed_at: null,
         }

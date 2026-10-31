@@ -73,6 +73,14 @@ export type ReviewPhoto = {
   sort_order?: number
 }
 
+export type ReviewParty = {
+  actor_id: number
+  kind: string
+  display_name: string
+  company_title?: string | null
+  user_name?: string | null
+}
+
 export type Review = {
   id: number
   contract_id: number
@@ -88,6 +96,8 @@ export type Review = {
   photos?: ReviewPhoto[]
   helpful_count?: number
   viewer_voted?: boolean
+  reviewer?: ReviewParty | null
+  target?: ReviewParty | null
 }
 
 export type Company = {
@@ -241,6 +251,8 @@ export type PublicSupplier = {
   industries: string[]
   active_catalog_count: number
   trust_level: string
+  /** Free shield ladder: none | verified | shield | silver | gold */
+  reputation_tier?: string
   completed_contracts?: number
   active_contracts?: number
   disputed_contracts?: number
@@ -261,6 +273,7 @@ export type PublicBuyer = {
   verification_status: VerificationStatus
   reviews_count: number
   trust_level: string
+  reputation_tier?: string
   completed_contracts?: number
   active_contracts?: number
   disputed_contracts?: number

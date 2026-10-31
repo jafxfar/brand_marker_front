@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Star } from "lucide-react"
 import type { Review } from "@/types"
+import { formatReviewParty } from "@/lib/review-party"
 
 type ReviewsReceivedTableProps = {
   reviews: Review[]
@@ -25,6 +26,24 @@ const RatingStars = ({ rating }: { rating: number }) => (
     ))}
   </div>
 )
+
+const PartyCell = ({
+  review,
+  fallback,
+}: {
+  review: Review
+  fallback: string
+}) => {
+  const { primary, secondary } = formatReviewParty(review.reviewer, fallback)
+  return (
+    <div className="min-w-0">
+      <p className="truncate font-semibold text-foreground">{primary}</p>
+      {secondary ? (
+        <p className="truncate text-xs text-muted-foreground">{secondary}</p>
+      ) : null}
+    </div>
+  )
+}
 
 export const ReviewsReceivedTable = ({
   reviews,
@@ -58,8 +77,11 @@ export const ReviewsReceivedTable = ({
           <tbody className="divide-y divide-border">
             {sorted.map((review) => (
               <tr key={review.id} className="hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">
-                  {getReviewerName(review.reviewer_actor_id)}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <PartyCell
+                    review={review}
+                    fallback={getReviewerName(review.reviewer_actor_id)}
+                  />
                 </td>
                 <td className="px-4 py-3">
                   <RatingStars rating={review.rating} />
@@ -84,10 +106,11 @@ export const ReviewsReceivedTable = ({
       <div className="md:hidden space-y-3">
         {sorted.map((review) => (
           <div key={review.id} className="rounded-xl border border-border p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-bold text-foreground">
-                {getReviewerName(review.reviewer_actor_id)}
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <PartyCell
+                review={review}
+                fallback={getReviewerName(review.reviewer_actor_id)}
+              />
               <RatingStars rating={review.rating} />
             </div>
             {review.comment && (

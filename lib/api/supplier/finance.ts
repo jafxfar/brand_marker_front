@@ -24,7 +24,11 @@ export const supplierFinanceApi = {
   withdrawals: (params: PageParams = {}) =>
     apiFetch<Page<Withdrawal>>(`${PREFIX}/withdrawals${buildPageQuery(params)}`),
 
-  requestWithdrawal: (data: { destination_id: number; amount: number }) =>
+  requestWithdrawal: (data: {
+    destination_id: number
+    amount: number
+    bank: "alif" | "dc" | "eskhata"
+  }) =>
     apiFetch<Withdrawal>(`${PREFIX}/withdrawals`, {
       method: "POST",
       body: JSON.stringify(data),

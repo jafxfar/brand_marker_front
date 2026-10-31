@@ -1,7 +1,12 @@
 import Link from "next/link"
-import { BadgeCheck, MapPin, Star } from "lucide-react"
+import { MapPin, Star } from "lucide-react"
 import type { PublicSupplier } from "@/types"
 import { performerUrl } from "@/lib/marketplace-routes"
+import { ReputationBadge } from "@/components/bm/reputation-badge"
+import {
+  resolveReputationTier,
+  reputationTierLabel,
+} from "@/lib/trust-levels"
 
 type CatalogItemSellerCardProps = {
   supplier: PublicSupplier
@@ -10,7 +15,9 @@ type CatalogItemSellerCardProps = {
 export const CatalogItemSellerCard = ({
   supplier,
 }: CatalogItemSellerCardProps) => {
-  const verified = supplier.verification_status === "verified"
+  const tier =
+    (supplier.reputation_tier as ReturnType<typeof resolveReputationTier> | undefined) ??
+    resolveReputationTier(supplier)
   const location = [supplier.city, supplier.country].filter(Boolean).join(", ")
 
   return (
@@ -22,12 +29,10 @@ export const CatalogItemSellerCard = ({
           </p>
           <Link
             href={performerUrl(supplier.actor_id)}
-            className="mt-1 inline-flex items-center gap-1.5 text-base font-bold text-foreground hover:text-primary"
+            className="mt-1 inline-flex max-w-full items-center gap-1.5 text-base font-bold text-foreground hover:text-primary"
           >
             <span className="truncate">{supplier.display_name}</span>
-            {verified && (
-              <BadgeCheck size={18} className="shrink-0 text-primary" aria-label="Проверен" />
-            )}
+            <ReputationBadge tier={tier} showLabel={false} size={20} />
           </Link>
           {location && (
             <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
@@ -55,7 +60,7 @@ export const CatalogItemSellerCard = ({
           </p>
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2">
-          <p className="text-sm font-semibold capitalize">{supplier.trust_level || "—"}</p>
+          <p className="text-sm font-semibold">{reputationTierLabel(tier)}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Уровень доверия</p>
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2">

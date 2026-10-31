@@ -24,7 +24,8 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/pagination"
 
 const MerchantSkeleton = () => (
   <PageFrame className="animate-pulse" aria-label="Загрузка балансов">
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-3">
+      <div className="h-40 rounded-xl bg-muted" />
       <div className="h-40 rounded-xl bg-muted" />
       <div className="h-40 rounded-xl bg-muted" />
     </div>
@@ -36,6 +37,9 @@ const Money = ({ value, currency }: { value: number; currency: string }) => (
   <span title={formatCurrencyExact(value, currency)}>{formatCurrency(value, currency)}</span>
 )
 
+const sourceLabel = (source: AdminMerchantCard["source"]) =>
+  source === "subscriptions" ? "Подписки" : "Сделки"
+
 const MerchantCard = ({ merchant }: { merchant: AdminMerchantCard }) => (
   <PageSurface className="p-5">
     <div className="flex items-start justify-between gap-3">
@@ -46,10 +50,16 @@ const MerchantCard = ({ merchant }: { merchant: AdminMerchantCard }) => (
             ? `Терминал ${merchant.terminal_masked}`
             : "Терминал не настроен"}
         </p>
+        {merchant.hint && (
+          <p className="mt-2 text-xs leading-snug text-muted-foreground">{merchant.hint}</p>
+        )}
       </div>
-      <Badge variant="outline" className={merchant.configured ? "" : "text-amber-700"}>
-        {merchant.configured ? "Настроен" : "Нет ID"}
-      </Badge>
+      <div className="flex flex-col items-end gap-1">
+        <Badge variant="outline">{sourceLabel(merchant.source)}</Badge>
+        <Badge variant="outline" className={merchant.configured ? "" : "text-amber-700"}>
+          {merchant.configured ? "Настроен" : "Нет ID"}
+        </Badge>
+      </div>
     </div>
     <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
       <div>
@@ -59,7 +69,7 @@ const MerchantCard = ({ merchant }: { merchant: AdminMerchantCard }) => (
         </dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Выплачено</dt>
+        <dt className="text-muted-foreground">Поступило</dt>
         <dd className="mt-0.5 text-lg font-bold">
           <Money value={merchant.released} currency={merchant.currency} />
         </dd>
@@ -81,10 +91,16 @@ const MerchantCard = ({ merchant }: { merchant: AdminMerchantCard }) => (
 )
 
 const TotalsRow = ({ totals }: { totals: AdminMerchantTotals }) => (
-  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
     {[
       { label: "Всего в escrow", value: totals.held, Icon: Landmark },
-      { label: "Выплачено мерчантам", value: totals.released, Icon: Building2 },
+      { label: "Поступило всего", value: totals.released, Icon: Building2 },
+      {
+        label: "Комиссия со сделок",
+        value: totals.deals_commission_released,
+        Icon: Building2,
+      },
+      { label: "Подписки", value: totals.subscriptions_released, Icon: Wallet },
       { label: "Доступно исполнителям", value: totals.supplier_available, Icon: Wallet },
       { label: "Выведено", value: totals.withdrawn, Icon: Wallet },
     ].map((item) => (
@@ -186,7 +202,7 @@ export function AdminMerchantBalancesContent({
         )}
       </PageSurface>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         {data.merchants.map((merchant) => (
           <MerchantCard key={merchant.role} merchant={merchant} />
         ))}

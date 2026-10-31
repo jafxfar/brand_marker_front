@@ -1909,11 +1909,16 @@ export type AdminEscrowResponse = {
   pages: number
 }
 
-export type AdminMerchantRole = "supplier_pool" | "platform"
+export type AdminMerchantRole =
+  | "supplier_pool"
+  | "platform_commission"
+  | "platform_subscriptions"
 
 export type AdminMerchantCard = {
   role: AdminMerchantRole
+  source: "deals" | "subscriptions"
   label: string
+  hint: string
   terminal_id: string | null
   terminal_masked: string | null
   held: number
@@ -1930,6 +1935,8 @@ export type AdminMerchantTotals = {
   refunded: number
   supplier_available: number
   withdrawn: number
+  deals_commission_released: number
+  subscriptions_released: number
   currency: string
 }
 

@@ -6,13 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import {
   ArrowLeft,
-  BadgeCheck,
   Check,
   Eye,
   MessageSquare,
   Star,
 } from "lucide-react"
 import { PageShell } from "@/components/marketplace/page-shell"
+import { ReputationBadge } from "@/components/bm/reputation-badge"
+import { resolveReputationTier } from "@/lib/trust-levels"
 import { ServiceCard } from "@/components/marketplace/service-card"
 import { Button } from "@/components/ui/button"
 import { getPerformer } from "@/lib/mock/marketplace-performers"
@@ -196,9 +197,18 @@ export const PerformerDetailContent = ({
                 <h1 className="text-[30px] leading-tight font-extrabold tracking-[-0.02em]">
                   {performer.name}
                 </h1>
-                {performer.verified ? (
-                  <BadgeCheck className="size-5 text-brand-600" aria-hidden />
-                ) : null}
+                <ReputationBadge
+                  tier={
+                    apiSupplier?.reputation_tier ??
+                    resolveReputationTier({
+                      verification_status: performer.verificationStatus,
+                      completed_contracts: apiSupplier?.completed_contracts,
+                      rating: performer.rating,
+                      success_rate: apiSupplier?.success_rate,
+                    })
+                  }
+                  size={22}
+                />
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                 {performer.verified ? (

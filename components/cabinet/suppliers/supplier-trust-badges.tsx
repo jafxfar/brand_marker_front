@@ -1,29 +1,32 @@
-import { ShieldCheck } from "lucide-react"
 import type { PublicSupplier } from "@/types"
 import { cn } from "@/lib/utils"
 import { formatCount } from "@/lib/format"
 import { BuyerRating } from "@/components/supplier/rfq/buyer-rating"
+import { ReputationBadge } from "@/components/bm/reputation-badge"
+import { resolveReputationTier } from "@/lib/trust-levels"
 
 type SupplierTrustProps = {
-  supplier: Pick<PublicSupplier, "verification_status" | "kind" | "rating" | "reviews_count">
+  supplier: Pick<
+    PublicSupplier,
+    | "verification_status"
+    | "kind"
+    | "rating"
+    | "reviews_count"
+    | "reputation_tier"
+    | "completed_contracts"
+    | "success_rate"
+  >
   compact?: boolean
   className?: string
 }
 
-/** Shown only for verified suppliers; other verification states are internal. */
+/** Shield ladder badge when the supplier has at least «Проверенный». */
 export const SupplierVerifiedBadge = ({ supplier, className }: SupplierTrustProps) => {
-  if (supplier.verification_status !== "verified") return null
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700",
-        className,
-      )}
-    >
-      <ShieldCheck size={12} aria-hidden="true" />
-      {supplier.kind === "individual" ? "Проверенный исполнитель" : "Проверенная компания"}
-    </span>
-  )
+  const tier =
+    (supplier.reputation_tier as ReturnType<typeof resolveReputationTier> | undefined) ??
+    resolveReputationTier(supplier)
+  if (tier === "none") return null
+  return <ReputationBadge tier={tier} className={className} />
 }
 
 export const SupplierRatingLine = ({ supplier, compact = false, className }: SupplierTrustProps) => {
