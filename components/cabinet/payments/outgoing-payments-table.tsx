@@ -4,7 +4,7 @@ import { statusPillClass } from "@/components/ui/status-badge"
 import Link from "next/link"
 import type { OutgoingPaymentRow } from "@/lib/buyer-payments-display"
 import { paymentHistoryTypeLabel } from "@/lib/buyer-payments-display"
-import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { formatCurrency, formatIsoDateTime } from "@/lib/format"
 
 type OutgoingPaymentsTableProps = {
   payments: OutgoingPaymentRow[]
@@ -35,7 +35,7 @@ export const OutgoingPaymentsTable = ({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/40">
-              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дата</th>
+              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дата и время</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Сделка</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Исполнитель</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Этап</th>
@@ -46,8 +46,8 @@ export const OutgoingPaymentsTable = ({
           <tbody className="divide-y divide-border">
             {payments.map((payment) => (
               <tr key={payment.id} className="hover:bg-secondary/30 transition-colors">
-                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                  {formatIsoDate(payment.at)}
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap tnum">
+                  {formatIsoDateTime(payment.at)}
                 </td>
                 <td className="px-4 py-3">
                   <Link
@@ -86,7 +86,8 @@ export const OutgoingPaymentsTable = ({
               <div>
                 <p className="text-sm font-bold text-foreground">{payment.contractTitle}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {getSupplierName(payment.supplierActorId)} · {formatIsoDate(payment.at)}
+                  {getSupplierName(payment.supplierActorId)} ·{" "}
+                  {formatIsoDateTime(payment.at)}
                 </p>
               </div>
               <p className="text-sm font-bold text-primary flex-shrink-0">

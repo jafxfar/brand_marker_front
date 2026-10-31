@@ -5,7 +5,7 @@ import { FileText, Landmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AddPayoutDestinationDialog } from "@/components/supplier/finance/add-payout-destination-dialog"
 import { PayoutAccountCard } from "@/components/supplier/finance/payout-account-card"
-import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { formatCurrency, formatIsoDateTime } from "@/lib/format"
 import { PageFrame, PageHeader } from "@/components/layout"
 import { ListPagination } from "@/components/list-pagination"
 import { MetricTile } from "@/components/process"
@@ -164,7 +164,8 @@ export default function SupplierFinancePage() {
       const bankName = withdrawalBankLabel(w.bank)
       rows.push({
         key: `w-${w.id}`,
-        date: w.created_at,
+        // Время вывода: когда выплатили; иначе время заявки
+        date: w.completed_at || w.created_at,
         what: `Вывод через ${bankName}`,
         amount: -w.amount,
         currency: w.currency,
@@ -291,7 +292,7 @@ export default function SupplierFinancePage() {
               <table className="w-full min-w-[560px] text-[14.5px]">
                 <thead>
                   <tr className="border-b border-line text-left">
-                    {["Дата", "Операция", "Сумма", "Статус"].map((h) => (
+                    {["Дата и время", "Операция", "Сумма", "Статус"].map((h) => (
                       <th
                         key={h}
                         className="px-5 py-3.5 text-[13px] font-semibold whitespace-nowrap text-mute"
@@ -304,8 +305,8 @@ export default function SupplierFinancePage() {
                 <tbody className="divide-y divide-line">
                   {historyRows.map((row) => (
                     <tr key={row.key}>
-                      <td className="whitespace-nowrap px-5 py-4 text-mute">
-                        {formatIsoDate(row.date)}
+                      <td className="whitespace-nowrap px-5 py-4 text-mute tnum">
+                        {formatIsoDateTime(row.date)}
                       </td>
                       <td className="px-5 py-4">{row.what}</td>
                       <td className="mono whitespace-nowrap px-5 py-4 font-semibold">

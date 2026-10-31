@@ -99,6 +99,20 @@ export const formatIsoDate = (iso: string): string =>
     year: "numeric",
   }).format(new Date(iso))
 
+/** Date + time for payment/withdrawal history (e.g. «31 окт. 2026, 10:31»). */
+export const formatIsoDateTime = (iso: string | null | undefined): string => {
+  if (!iso) return "—"
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return "—"
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date)
+}
+
 export const formatRating = (value: number): string => value.toFixed(1)
 
 /** Russian plural form: pluralRu(3, "заявка", "заявки", "заявок") → "заявки". */

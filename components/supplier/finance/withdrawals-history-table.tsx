@@ -3,7 +3,7 @@
 import { statusPillClass } from "@/components/ui/status-badge"
 import type { Withdrawal, WithdrawalDestination } from "@/types"
 import { withdrawalStatusMeta } from "@/lib/finance-display"
-import { formatCurrency, formatIsoDate } from "@/lib/format"
+import { formatCurrency, formatIsoDateTime } from "@/lib/format"
 
 type WithdrawalsHistoryTableProps = {
   withdrawals: Withdrawal[]
@@ -31,7 +31,7 @@ export const WithdrawalsHistoryTable = ({
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Счёт / кошелёк</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Сумма</th>
               <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Статус</th>
-              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дата</th>
+              <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground">Дата и время</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -58,8 +58,10 @@ export const WithdrawalsHistoryTable = ({
                       {meta.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                    {formatIsoDate(withdrawal.created_at.split("T")[0] ?? withdrawal.created_at)}
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap tnum">
+                    {formatIsoDateTime(
+                      withdrawal.completed_at || withdrawal.created_at,
+                    )}
                   </td>
                 </tr>
               )
@@ -82,8 +84,10 @@ export const WithdrawalsHistoryTable = ({
                   <p className="text-sm font-bold text-foreground">
                     {destination?.label ?? "—"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formatIsoDate(withdrawal.created_at.split("T")[0] ?? withdrawal.created_at)}
+                  <p className="mt-0.5 text-xs text-muted-foreground tnum">
+                    {formatIsoDateTime(
+                      withdrawal.completed_at || withdrawal.created_at,
+                    )}
                   </p>
                 </div>
                 <span className={`${statusPillClass} flex-shrink-0 ${meta.className}`}>
